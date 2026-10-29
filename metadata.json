@@ -1,0 +1,6 @@
+{
+  "name": "AniSync",
+  "description": "Kapsamlı anime, manga, oyun ve novel takip platformu, canlı Watch Party odaları, Otaku Rank başarım sistemi, Müzik Quizi ve yayın takvimi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,121 @@
+{
+  "entities": {
+    "ForumPost": {
+      "title": "ForumPost",
+      "description": "A public forum post in the community.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "author": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "avatar": { "type": "string" },
+            "isFriend": { "type": "boolean" },
+            "uid": { "type": "string" }
+          }
+        },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "likes": { "type": "number" },
+        "replies": { "type": "number" },
+        "category": { "type": "string" },
+        "type": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "WatchlistItem": {
+      "title": "WatchlistItem",
+      "description": "An anime on a user's watchlist.",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "userScore": { "type": "number" },
+        "episodesWatched": { "type": "number" },
+        "addedAt": { "type": "string" }
+      }
+    },
+    "RecentActivity": {
+      "title": "RecentActivity",
+      "description": "Activity log when community members add an anime to their lists.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userAvatarSeed": { "type": "string" },
+        "animeId": { "type": "number" },
+        "animeTitle": { "type": "string" },
+        "animeImage": { "type": "string" },
+        "status": { "type": "string" },
+        "listName": { "type": "string" },
+        "score": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "userName", "animeId", "animeTitle", "animeImage", "createdAt"]
+    },
+    "AnimeComment": {
+      "title": "AnimeComment",
+      "description": "Comments left by users on anime pages.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "animeId": { "type": "number" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userAvatarSeed": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["animeId", "userId", "userName", "content"]
+    },
+    "WatchPartyRoom": {
+      "title": "WatchPartyRoom",
+      "description": "A live synchronized watch party room.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "animeTitle": { "type": "string" },
+        "animeImage": { "type": "string" },
+        "animeId": { "type": "number" },
+        "videoUrl": { "type": "string" },
+        "youtubeId": { "type": "string" },
+        "hostId": { "type": "string" },
+        "hostName": { "type": "string" },
+        "hostAvatar": { "type": "string" },
+        "isPlaying": { "type": "boolean" },
+        "currentTime": { "type": "number" },
+        "updatedAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "participantCount": { "type": "number" },
+        "isLocked": { "type": "boolean" },
+        "isPrivate": { "type": "boolean" },
+        "roomCode": { "type": "string" }
+      },
+      "required": ["title", "animeTitle", "videoUrl", "hostId", "hostName"]
+    }
+  },
+  "firestore": {
+    "/forumPosts/{postId}": {
+      "schema": { "$ref": "#/entities/ForumPost" },
+      "description": "Global forum posts."
+    },
+    "/users/{userId}/watchlist/{animeId}": {
+      "schema": { "$ref": "#/entities/WatchlistItem" },
+      "description": "User specific watchlist."
+    },
+    "/recentActivities/{activityId}": {
+      "schema": { "$ref": "#/entities/RecentActivity" },
+      "description": "Live community recent activities log."
+    },
+    "/animeComments/{commentId}": {
+      "schema": { "$ref": "#/entities/AnimeComment" },
+      "description": "User comments on anime detail pages."
+    },
+    "/watchPartyRooms/{roomId}": {
+      "schema": { "$ref": "#/entities/WatchPartyRoom" },
+      "description": "Live synchronized watch party rooms."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "summary":  "Haftalık 50 soruluk anket ve meydan okuma döngüsü (Weekly Challenge) sistemi gün bazlı 6 soru (7 gün x 6 = 42 soru) + 8 soruluk Hafta Sonu Büyük Finali ile toplam 50 soru olarak kurgulandı; merkezi Zustand store, Ana Sayfa interaktif widget'ı, /challenge ve /polls rotaları ve Otaku rozetleri ile tamamlandı.",
+  "updatedAt":  "2026-10-29T15:58:22.939968083Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

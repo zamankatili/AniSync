@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for security validation
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Default Deny Security Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connection Health Check Probe
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+
+    // User Profiles & Watchlist
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId);
+
+      match /watchlist/{animeId} {
+        allow read: if true;
+        allow write: if isOwner(userId);
+      }
+
+      match /{allSubcollections=**} {
+        allow read: if true;
+        allow write: if isOwner(userId);
+      }
+    }
+
+    // Community Forum Posts & Comments
+    match /forumPosts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.author.uid == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && (resource.data.author.uid == request.auth.uid || resource.data.author.name == request.auth.token.name);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isSignedIn();
+      }
+    }
+
+    // Live Recent Community Activities
+    match /recentActivities/{activityId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // Watch Party Rooms, Messages & Reactions
+    match /watchPartyRooms/{roomId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.hostId == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.hostId == request.auth.uid;
+
+      match /messages/{messageId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if false;
+      }
+
+      match /reactions/{reactionId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if false;
+      }
+    }
+
+    // Daily Polls & Community Votes
+    match /polls/{pollId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+
+      match /votes/{voteId} {
+        allow read: if true;
+        allow write: if isSignedIn();
+      }
+    }
+
+    // Anime Detail Page Comments
+    match /animeComments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
