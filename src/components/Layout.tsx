@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame } from 'lucide-react';
+import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles } from 'lucide-react';
 import { cn, getSafeImageUrl, handleImageError } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ToastContainer } from './Toast';
@@ -23,6 +23,7 @@ import { AnimeErrorBoundary } from './AnimeErrorBoundary';
 const NAV_ITEMS = [
   { path: '/', labelKey: 'home', icon: Home },
   { path: '/challenge', labelKey: 'weekly_challenge', icon: Flame },
+  { path: '/dle', labelKey: 'dle', icon: Sparkles },
   { path: '/watch-party', labelKey: 'watch_party', icon: Tv2 },
   { path: '/music-quiz', labelKey: 'music_quiz', icon: Music2 },
   { path: '/calendar', labelKey: 'calendar', icon: Calendar },

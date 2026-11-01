@@ -13,6 +13,8 @@ import { cn, getSafeImageUrl } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Anime, DayOfWeek } from '../types';
 
+import { fetchLiveScheduleForDay } from '../lib/airingService';
+
 export const AiringCalendar: React.FC = () => {
   const { watchlist, addToWatchlist, incrementEpisode } = useAppStore();
   const { addToast } = useToastStore();
@@ -60,6 +62,7 @@ export const AiringCalendar: React.FC = () => {
   const [onlyReminders, setOnlyReminders] = useState(false);
   const [liveAnimeMap, setLiveAnimeMap] = useState<Partial<Record<DayOfWeek, AiringAnime[]>>>({});
   const [isSyncing, setIsSyncing] = useState(false);
+  const [sourceLabel, setSourceLabel] = useState<string>('Canlı Takvim');
 
   // Live schedule fetch per day
   useEffect(() => {
@@ -67,31 +70,10 @@ export const AiringCalendar: React.FC = () => {
     const fetchLiveSchedule = async () => {
       setIsSyncing(true);
       try {
-        const res = await fetch(`/api/sync/airing-schedule?day=${selectedDay}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.schedule && Array.isArray(json.schedule) && json.schedule.length > 0 && isMounted) {
-            const mapped: AiringAnime[] = json.schedule.map((item: any, idx: number) => ({
-              id: `live_${selectedDay}_${item.mal_id || idx}`,
-              mal_id: item.mal_id,
-              title: item.title,
-              title_english: item.title_english || item.title,
-              day: selectedDay,
-              timeTR: item.broadcastTime || '18:00',
-              timeJST: '23:00',
-              currentEpisode: item.episodes ? Math.min(8, item.episodes) : 6,
-              totalEpisodes: item.episodes || 12,
-              image: item.image || 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
-              studio: item.studio || 'Studio',
-              score: item.score || 8.2,
-              genres: item.genres || ['Aksiyon'],
-              synopsis: item.synopsis || '',
-              streamingOn: ['Crunchyroll', 'Netflix'],
-              seasonYear: '2026 Güncel'
-            }));
-
-            setLiveAnimeMap((prev) => ({ ...prev, [selectedDay]: mapped }));
-          }
+        const result = await fetchLiveScheduleForDay(selectedDay);
+        if (result.list && result.list.length > 0 && isMounted) {
+          setLiveAnimeMap((prev) => ({ ...prev, [selectedDay]: result.list }));
+          setSourceLabel(result.source);
         }
       } catch (_err) {
         // Fall back seamlessly to static verified 2026 list
@@ -200,9 +182,12 @@ export const AiringCalendar: React.FC = () => {
             <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase">
               HAFTALIK YAYIN TAKVİMİ
             </h1>
+            <span className="bg-rose-600 text-white font-black text-[10px] px-2 py-0.5 border border-white uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#fff]">
+              <Sparkles size={11} /> {sourceLabel}
+            </span>
           </div>
           <p className="text-sm font-black text-neutral-400 uppercase tracking-widest">
-            Türkiye saatleri ile haftalık yeni bölüm yayın akışı, anlık bildirimler ve seri takibi
+            Türkiye saatleri (UTC+3) ile haftalık yeni bölüm yayın akışı, anlık bildirimler ve seri takibi
           </p>
         </div>
 

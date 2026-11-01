@@ -18,6 +18,7 @@ const AnimeGridMaker = lazy(() => import('./pages/AnimeGridMaker').then(m => ({ 
 const MusicQuiz = lazy(() => import('./pages/MusicQuiz').then(m => ({ default: m.MusicQuiz })));
 const WatchParty = lazy(() => import('./pages/WatchParty').then(m => ({ default: m.WatchParty })));
 const WeeklyChallengePage = lazy(() => import('./pages/WeeklyChallengePage').then(m => ({ default: m.WeeklyChallengePage })));
+const AniSyncDle = lazy(() => import('./pages/AniSyncDle').then(m => ({ default: m.AniSyncDle })));
 
 export default function App() {
   return (
@@ -30,6 +31,8 @@ export default function App() {
               <Route index element={<Home />} />
               <Route path="challenge" element={<WeeklyChallengePage />} />
               <Route path="polls" element={<WeeklyChallengePage />} />
+              <Route path="dle" element={<AniSyncDle />} />
+              <Route path="anisyncdle" element={<AniSyncDle />} />
               <Route path="music-quiz" element={<MusicQuiz />} />
               <Route path="calendar" element={<AiringCalendar />} />
               <Route path="discover" element={<Discover />} />

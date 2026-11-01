@@ -6,117 +6,37 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToastStore } from '../store/useToastStore';
 import { cn, getSafeImageUrl } from '../lib/utils';
-
-export interface AnimeNewsItem {
-  id: string | number;
-  title: string;
-  summary: string;
-  source: string;
-  category: 'DUYURU' | 'FRAGMAN' | 'FİLM' | 'MANGA' | 'SEZON';
-  date: string;
-  imageUrl: string;
-  linkUrl?: string;
-  isHot?: boolean;
-}
-
-const FALLBACK_NEWS: AnimeNewsItem[] = [
-  {
-    id: 'news-2026-1',
-    title: 'Chainsaw Man: Reze Arc Sinema Filmi Dünya Prömiyeri ve Vizyon Tarihi Duyuruldu',
-    summary: 'MAPPA stüdyosu, Bomba Şeytanı Reze\'nin heyecanla beklenen sinema uyarlaması için yeni görsel ve resmi vizyon takvimini paylaştı.',
-    source: 'Anime News Network',
-    category: 'FİLM',
-    date: '1 saat önce',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1806/126216l.jpg',
-    linkUrl: 'https://www.animenewsnetwork.com',
-    isHot: true
-  },
-  {
-    id: 'news-2026-2',
-    title: 'Solo Leveling 2. Sezon "Arise from the Shadow" Bölümleri Rekor Kırıyor',
-    summary: 'Sung Jin-Woo ve Gölge Ordusu\'nun Jeju Adası seferi Crunchyroll ve küresel platformlarda en çok izlenen anime olmayı başardı.',
-    source: 'Crunchyroll News',
-    category: 'SEZON',
-    date: '3 saat önce',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1210/141049l.webp',
-    linkUrl: 'https://www.crunchyroll.com/news',
-    isHot: true
-  },
-  {
-    id: 'news-2026-3',
-    title: 'Sakamoto Days Anime Uyarlaması Netflix\'te Dünya Trendlerine Girdi',
-    summary: 'TMS Entertainment yapımı Sakamoto Days, efsanevi emekli suikastçı Taro Sakamoto\'nun aksiyon dolu maceralarıyla zirveye oturdu.',
-    source: 'Natalie.mu',
-    category: 'DUYURU',
-    date: '4 saat önce',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
-    linkUrl: 'https://natalie.mu/comic',
-    isHot: true
-  },
-  {
-    id: 'news-2026-4',
-    title: 'Dan Da Dan 2. Sezon İçin Science SARU Stüdyosundan İlk Teaser Fragmanı Geldi',
-    summary: 'Momo ve Okarun\'un uzaylılar ve lanetlerle dolu serüveni Science SARU stüdyosunun büyüleyici animasyonlarıyla devam ediyor.',
-    source: 'Anime Trending',
-    category: 'FRAGMAN',
-    date: 'Bugün',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1487/142079l.webp',
-    linkUrl: 'https://anitrendz.com'
-  },
-  {
-    id: 'news-2026-5',
-    title: 'Bleach: Thousand-Year Blood War Final Bölümleri Öncesi Özel Röportaj',
-    summary: 'Tite Kubo ve Pierrot Films ekibi, Ruh Kralı Sarayı ve Yhwach ile yapılacak nihai yüzleşmenin sinematik kalitesini anlattı.',
-    source: 'Comic Natalie',
-    category: 'DUYURU',
-    date: 'Bugün',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1912/143527l.webp',
-    linkUrl: 'https://natalie.mu/comic'
-  },
-  {
-    id: 'news-2026-6',
-    title: 'One Piece: Egghead Doruk Noktası Sonrası Elbaf Devler Diyarı Arkı Başlıyor',
-    summary: 'Eiichiro Oda\'nın efsanevi başyapıtında Hasır Şapka Korsanları kadim devlerin vatanı Elbaf\'a ayak basarak yeni dönemi açtı.',
-    source: 'Shonen Jump News',
-    category: 'MANGA',
-    date: 'Dün',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/6/73245l.webp',
-    linkUrl: 'https://www.shonenjump.com'
-  }
-];
+import { fetchLiveNews, AnimeNewsItem, CURATED_2026_NEWS } from '../lib/newsService';
 
 export const AnimeNewsFeed: React.FC = () => {
-  const [news, setNews] = useState<AnimeNewsItem[]>(FALLBACK_NEWS);
+  const [news, setNews] = useState<AnimeNewsItem[]>(CURATED_2026_NEWS);
   const [loading, setLoading] = useState<boolean>(false);
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<string>('Canlı');
-  const [isGrounded, setIsGrounded] = useState<boolean>(false);
+  const [sourceLabel, setSourceLabel] = useState<string>('Canlı Haber Akışı');
+  const [isGrounded, setIsGrounded] = useState<boolean>(true);
   const [savedNewsIds, setSavedNewsIds] = useState<Set<string | number>>(new Set());
   const { addToast } = useToastStore();
 
   const fetchLatestAnimeNews = async (isManualRefresh = false) => {
     setLoading(true);
     try {
-      const url = isManualRefresh ? '/api/anime-news?refresh=true' : '/api/anime-news';
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error('Haber servisi yanıt vermedi');
-      }
-      const data = await res.json();
-      if (data.news && Array.isArray(data.news) && data.news.length > 0) {
-        setNews(data.news);
-        setIsGrounded(!!data.isGrounded);
+      const result = await fetchLiveNews(isManualRefresh);
+      if (result.news && Array.isArray(result.news) && result.news.length > 0) {
+        setNews(result.news);
+        setIsGrounded(result.isGrounded);
+        setSourceLabel(result.source);
         setLastUpdated(new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
         if (isManualRefresh) {
-          addToast(data.isGrounded ? 'Güncel anime haberleri Google Search ile yenilendi!' : 'Haber akışı güncellendi!', 'success');
+          addToast(`Haberler güncellendi (${result.source})`, 'success');
         }
       } else {
-        setNews(FALLBACK_NEWS);
+        setNews(CURATED_2026_NEWS);
       }
     } catch (err) {
       console.warn('Anime news fetch notice, using curated feed:', err);
-      setNews(FALLBACK_NEWS);
+      setNews(CURATED_2026_NEWS);
     } finally {
       setLoading(false);
     }
@@ -166,11 +86,11 @@ export const AnimeNewsFeed: React.FC = () => {
                 CANLI ANİME HABER AKIŞI
               </h2>
               <span className="bg-cyan-500 text-black font-black text-[10px] px-2 py-0.5 border border-white uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#fff]">
-                <Globe size={11} /> GOOGLE SEARCH
+                <Globe size={11} /> {sourceLabel}
               </span>
             </div>
             <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider">
-              Dünyadan ve Japonya&apos;dan anlık anime, manga ve sinema haberleri • Son güncelleme: {lastUpdated}
+              Dünyadan ve Japonya&apos;dan anlık anime, manga ve sinema gelişmeleri • Son güncelleme: {lastUpdated}
             </p>
           </div>
         </div>

@@ -99,5 +99,17 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
+
+    // Live Anime News Feed
+    match /animeNews/{newsId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // AniSyncDle Daily Characters Pool
+    match /dailyCharacters/{charId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
   }
 }

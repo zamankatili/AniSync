@@ -116,6 +116,12 @@
     "/watchPartyRooms/{roomId}": {
       "schema": { "$ref": "#/entities/WatchPartyRoom" },
       "description": "Live synchronized watch party rooms."
+    },
+    "/animeNews/{newsId}": {
+      "description": "Community synchronized live anime news."
+    },
+    "/dailyCharacters/{charId}": {
+      "description": "AniSyncDle daily guessing game character pool."
     }
   }
 }

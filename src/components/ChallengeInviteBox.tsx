@@ -8,7 +8,7 @@ interface ChallengeInviteBoxProps {
   title: string;
   scoreDisplay: string;
   subtitle: string;
-  challengeType: 'music_daily' | 'music_arcade' | 'weekly_challenge';
+  challengeType: 'music_daily' | 'music_arcade' | 'weekly_challenge' | 'anisync_dle';
   statsData?: Record<string, any>;
 }
 
@@ -31,7 +31,12 @@ export const ChallengeInviteBox: React.FC<ChallengeInviteBoxProps> = ({
     base += `📌 ${subtitle}\n`;
     if (statsData.streak) base += `🔥 Seri: ${statsData.streak} Gün\n`;
     if (statsData.accuracy) base += `📊 Doğruluk: %${statsData.accuracy}\n`;
-    base += `\nCesaretin varsa bu skoru geç!\n🔗 ${window.location.origin}${challengeType === 'weekly_challenge' ? '/weekly-challenge' : '/music-quiz'}`;
+    const targetPath = challengeType === 'weekly_challenge' 
+      ? '/challenge' 
+      : challengeType === 'anisync_dle' 
+        ? '/dle' 
+        : '/music-quiz';
+    base += `\nCesaretin varsa bu skoru geç!\n🔗 ${window.location.origin}${targetPath}`;
     return base;
   };
 

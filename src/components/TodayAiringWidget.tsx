@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { AIRING_SCHEDULE, AiringAnime, DAYS_OF_WEEK } from '../data/airingSchedule';
+import { fetchLiveScheduleForDay } from '../lib/airingService';
 import { Calendar, Clock, ChevronRight, Bell, BellRing } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getSafeImageUrl, cn } from '../lib/utils';
@@ -25,9 +26,22 @@ export const TodayAiringWidget: React.FC = () => {
     return map[dayIndex] || 'monday';
   }, []);
 
-  const todayAnime = useMemo(() => {
-    return AIRING_SCHEDULE.filter(a => a.day === todayKey).slice(0, 3);
+  const [liveTodayAnime, setLiveTodayAnime] = useState<AiringAnime[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchLiveScheduleForDay(todayKey).then(res => {
+      if (isMounted && res.list && res.list.length > 0) {
+        setLiveTodayAnime(res.list.slice(0, 3));
+      }
+    }).catch(() => {});
+    return () => { isMounted = false; };
   }, [todayKey]);
+
+  const todayAnime = useMemo(() => {
+    if (liveTodayAnime.length > 0) return liveTodayAnime;
+    return AIRING_SCHEDULE.filter(a => a.day === todayKey).slice(0, 3);
+  }, [liveTodayAnime, todayKey]);
 
   const todayLabel = DAYS_OF_WEEK.find(d => d.key === todayKey)?.labelTR || 'Bugün';
 
