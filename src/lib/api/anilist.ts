@@ -5,6 +5,7 @@ const ENDPOINT = 'https://graphql.anilist.co';
 
 const MEDIA_FIELDS = `
   id
+  idMal
   type
   title { romaji english native }
   coverImage { extraLarge large color }
@@ -24,6 +25,7 @@ const MEDIA_FIELDS = `
 
 interface AniListMedia {
   id: number;
+  idMal: number | null;
   type: 'ANIME' | 'MANGA';
   title: { romaji: string; english: string | null; native: string | null };
   coverImage: { extraLarge: string; large: string; color: string | null };
@@ -206,4 +208,29 @@ export async function anilistDetail(type: 'anime' | 'manga', id: number): Promis
     .filter((m): m is AniListMedia => Boolean(m))
     .map(mapAniList);
   return { media: mapAniList(data.Media), related };
+}
+
+/**
+ * MAL kimliklerini AniList kayıtlarına çevirir (içe aktarmada kapak/özet için).
+ * AniList 90 istek/dk sınırına takılmamak için 40'lık gruplar hâlinde sorar.
+ */
+export async function anilistByMalIds(ids: number[]): Promise<Map<number, Media>> {
+  const out = new Map<number, Media>();
+  const unique = Array.from(new Set(ids.filter((n) => Number.isFinite(n))));
+  for (let i = 0; i < unique.length; i += 40) {
+    const chunk = unique.slice(i, i + 40);
+    try {
+      const data = await gql<PageResult>(
+        `query($ids: [Int]) { Page(page: 1, perPage: 50) { media(idMal_in: $ids, type: ANIME) { ${MEDIA_FIELDS} } } }`,
+        { ids: chunk },
+      );
+      for (const m of data.Page.media) {
+        if (m.idMal) out.set(m.idMal, mapAniList(m));
+      }
+    } catch (err) {
+      console.warn('MAL eşleme atlandı:', err);
+    }
+    if (i + 40 < unique.length) await new Promise((r) => setTimeout(r, 400));
+  }
+  return out;
 }

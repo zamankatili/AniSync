@@ -19,7 +19,7 @@ export function Avatar({ emoji, color, size = 40, className = '', ring = true }:
   return (
     <span
       aria-hidden
-      className={`inline-flex shrink-0 items-center justify-center rounded-full border ${className}`}
+      className={`avatar inline-flex shrink-0 items-center justify-center rounded-full border ${className}`}
       style={style}
     >
       <span style={{ lineHeight: 1, transform: 'translateY(1px)' }}>{emoji}</span>

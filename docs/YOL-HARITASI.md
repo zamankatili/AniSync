@@ -98,8 +98,10 @@ Beş oda, dört atmosfer, seviye mekaniği, gerçek veri, mobil düzen, yerel ka
 **Hedef:** v1'in "listeler ve takip" gücünü yeni kabuğa taşımak.
 
 - [x] Klasik tema varsayılan, Çay Evi L2
-- [ ] MAL XML + AniList JSON içe aktarma (dosya + yapıştırma)
-- [ ] Raf: çoklu seçim, toplu durum, sıralama (ad/puan/tarih), arama
+- [x] Klasik tema v1'e birebir yaklaştırıldı (nokta ızgara, 28 sn renk döngüsü, 4px gölge, beyaz şeritli kartlar)
+- [x] MAL XML + AniList JSON içe aktarma (dosya + yapıştırma; MAL kayıtları AniList kapaklarıyla eşleniyor)
+- [x] Raf: arama + sıralama (ad / puan / ilerleme / güncelleme)
+- [ ] Raf: çoklu seçim, toplu durum
 - [ ] Özel listelerin yönetimi (oluştur, kapak emoji, sırala, paylaşılabilir bağlantı)
 - [ ] Eser başına kişisel not (spoiler etiketli)
 - [ ] Atmosfer 5: "Şafak" (seviye 10 ödülü)

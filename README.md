@@ -47,13 +47,20 @@ Bu yüzden ürün kararları "daha çok özellik" değil, **daha çok aidiyet** 
 | --- | --- | --- |
 | **Salon** | Günün ilk ekranı. Selamlama, günün sorusu, kaldığın yer, öneriler, mekânda kim var | Kâğıt not üzerinde günün sorusu, "kaldığın yerden" hızlı ilerletme |
 | **Keşfet** | Anime / manga / novel / oyun tek arama | Tür filtresi, sezon, küratörlü oyun masası, anlık arama |
-| **Rafım** | Takip: izliyorum / okuyorum / oynuyorum / sırada / bitti | Durum filtreleri, tek dokunuşla bölüm ilerletme, puan, favori |
+| **Rafım** | Takip: izliyorum / okuyorum / oynuyorum / sırada / bitti | Durum filtreleri, arama, sıralama, MAL/AniList içe aktarma, puan, favori |
 | **Köşe** | Topluluk: 6 masa, gönderi, yanıt, spoiler etiketi | Masaya katılma, tür etiketli paylaşım, spoiler bulanıklığı |
 | **Ben** | Profil, seviye, rozetler, ayarlar | Çay bardağı seviye göstergesi, yedek al/yükle, tema tercihleri |
 
 Ekranlar: `src/pages/`. Kabuk ve gezinme: `src/components/AppShell.tsx`.
 
 Mobilde alt menü 5 sekme; masaüstünde sol raf. Klavye kısayolu: `Ctrl/Cmd + K` → arama.
+
+### Yedekten içe aktarma
+
+**Rafım → İçe aktar**: MyAnimeList XML veya AniList JSON yedeğini dosyadan ya da yapıştırarak al.
+MAL kayıtları AniList'in `idMal` eşlemesiyle kapak, özet ve doğru kimlikle zenginleştirilir; mevcut rafın korunur.
+
+<img src="docs/screens/import-mobil.jpg" width="300" alt="MAL/AniList içe aktarma" />
 
 ---
 
@@ -64,10 +71,12 @@ gölge sertliği, doku — hepsi CSS değişkeni (`src/styles.css`). Bileşenler
 
 | Atmosfer | Karakter | Açılış |
 | --- | --- | --- |
-| **AniSync Klasik** | v1'in kimliği ve **temel görünüm**: siyah, beyaz, kırmızı; 2px çizgi, 0 radius, sert gölge | Seviye 1 |
+| **AniSync Klasik** | v1'in **birebir** kimliği: 20px nokta ızgara, 28 sn renk döngüsü, 4px sert gölge, beyaz şeritli kartlar | Seviye 1 |
 | **Gece Çay Evi** | Krem/kehribar, serif başlıklar, yumuşak gölge, lamba ışığı | Seviye 2 |
 | **Mahalle Sineması** | Kadife kırmızı, sarı bilet, sıkıştırılmış büyük harf tipografi | Seviye 4 |
 | **Kağıt & Mürekkep** | Aydınlık kâğıt, bordo mürekkep, ince çizgi, Lora | Seviye 7 |
+
+![AniSync Klasik — masaüstü](docs/screens/klasik-masaustu.jpg)
 
 **Kilitli atmosferi 12 saniye deneyebilirsin.** Beğenirsen seviyeyi beklersin; bu, merakı ödüllendiren küçük bir oyun.
 
