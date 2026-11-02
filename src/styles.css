@@ -94,6 +94,7 @@
   --bg-image: radial-gradient(ellipse at 50% 0%, var(--theme-glow, rgba(225, 29, 72, 0.28)) 0%, transparent 60%),
     radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px);
   --grain-opacity: 0;
+  --app-dot-color: rgba(255, 255, 255, 0.2);
   --note-bg: var(--theme-accent, #e11d48);
   --note-ink: #ffffff;
   --note-tape: rgba(255, 255, 255, 0.7);
@@ -200,7 +201,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  /* Arka plan html'de; gövdeyi şeffaf bırakınca .app-bg ışığı görünür kalır. */
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
@@ -849,10 +851,14 @@ a {
 /* ---------- AniSync Klasik: v1 kimliğine sadık katman ---------- */
 
 [data-atmos="klasik"] .app-bg {
+  /* Gradyan bu katmanda çözülür; animasyon aynı elemanda olduğu için RGB döngüsü görünür. */
+  background-image:
+    radial-gradient(ellipse at 50% 0%, var(--theme-glow, rgba(225, 29, 72, 0.28)) 0%, transparent 60%),
+    radial-gradient(var(--app-dot-color, rgba(255, 255, 255, 0.2)) 1px, transparent 1px);
   background-size: 100% 700px, 20px 20px;
   background-repeat: no-repeat, repeat;
   animation: subtleRgbGlow 28s infinite ease-in-out;
-  transition: background-color 0.4s ease, background-image 0.4s ease;
+  transition: background-color 0.4s ease;
 }
 
 [data-atmos="klasik"] .app-bg::before {
@@ -1173,6 +1179,7 @@ html[data-atmos="klasik"][data-time-theme="light"] {
   --note-field-border: rgba(255, 255, 255, 0.5);
   --note-btn-bg: #ffffff;
   --note-btn-ink: #000000;
+  --app-dot-color: rgba(0, 0, 0, 0.07);
 }
 
 html[data-atmos="klasik"][data-time-theme="light"] .app-bg {
