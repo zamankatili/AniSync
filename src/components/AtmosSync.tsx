@@ -20,6 +20,7 @@ export function AtmosSync() {
         klasik: '#050505',
         sinema: '#140d0d',
         kutuphane: '#f1e7d5',
+        safak: '#fdf0e4',
       };
       meta.setAttribute('content', colors[effective] ?? '#17100e');
     }

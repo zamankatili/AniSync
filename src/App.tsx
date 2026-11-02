@@ -8,6 +8,7 @@ import { Kose } from './pages/Kose';
 import { Ben } from './pages/Ben';
 import { Atmosfer } from './pages/Atmosfer';
 import { Detay } from './pages/Detay';
+import { Listeler } from './pages/Listeler';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route index element={<Salon />} />
           <Route path="kesfet" element={<Kesfet />} />
           <Route path="raf" element={<Raf />} />
+          <Route path="listeler" element={<Listeler />} />
           <Route path="kose" element={<Kose />} />
           <Route path="ben" element={<Ben />} />
           <Route path="atmosfer" element={<Atmosfer />} />

@@ -4,6 +4,7 @@ import type {
   AtmosId,
   Author,
   Media,
+  NamedList,
   Post,
   PostKind,
   Profile,
@@ -62,6 +63,7 @@ interface StoreData {
   streak: number;
   lastVisitDay: string | null;
   answered: Record<string, string>;
+  lists: NamedList[];
 }
 
 interface Store extends StoreData {
@@ -92,6 +94,15 @@ interface Store extends StoreData {
   setScore: (id: string, score: number) => void;
   toggleFavorite: (id: string) => void;
   removeEntry: (id: string) => void;
+  bulkSetStatus: (ids: string[], status: ShelfStatus) => void;
+  bulkRemove: (ids: string[]) => void;
+  setEntryNote: (id: string, note: string, spoiler: boolean) => void;
+
+  createList: (input: { name: string; emoji: string; color: string; description?: string }) => string;
+  updateList: (id: string, patch: Partial<Pick<NamedList, 'name' | 'emoji' | 'color' | 'description'>>) => void;
+  deleteList: (id: string) => void;
+  toggleListItem: (listId: string, mediaId: string) => void;
+  bulkAddToList: (listId: string, mediaIds: string[]) => void;
 
   createPost: (input: PostInput) => string | null;
   likePost: (id: string) => void;
@@ -125,6 +136,7 @@ const freshData = (): StoreData => ({
   streak: 0,
   lastVisitDay: null,
   answered: {},
+  lists: [],
 });
 
 const at = (iso: string) => new Date(iso).getTime();
@@ -328,6 +340,89 @@ export const useStore = create<Store>()(
             return { shelf };
           });
           notify(`“${entry.media.title}” raftan çıkarıldı.`);
+        },
+
+        bulkSetStatus: (ids, status) => {
+          if (!ids.length) return;
+          const shelf = { ...get().shelf };
+          for (const id of ids) {
+            const entry = shelf[id];
+            if (!entry) continue;
+            const total = entry.media.totalUnits;
+            shelf[id] = {
+              ...entry,
+              status,
+              progress: status === 'done' && total ? total : entry.progress,
+              updatedAt: nowISO(),
+            };
+          }
+          set({ shelf });
+          notify(`${ids.length} kayıt güncellendi.`, 'success');
+          if (status === 'done') grant(XP.complete);
+        },
+
+        bulkRemove: (ids) => {
+          if (!ids.length) return;
+          const shelf = { ...get().shelf };
+          for (const id of ids) delete shelf[id];
+          set({ shelf });
+          notify(`${ids.length} kayıt raftan çıkarıldı.`);
+        },
+
+        setEntryNote: (id, note, spoiler) => {
+          const entry = get().shelf[id];
+          if (!entry) return;
+          patchEntry(id, { note: note.trim(), noteSpoiler: spoiler });
+          notify(note.trim() ? 'Not kaydedildi.' : 'Not silindi.');
+        },
+
+        createList: ({ name, emoji, color, description }) => {
+          const id = `list_${uid().slice(0, 8)}`;
+          const list: NamedList = {
+            id,
+            name: name.trim(),
+            emoji,
+            color,
+            description: description?.trim() || '',
+            mediaIds: [],
+            createdAt: nowISO(),
+          };
+          set((s) => ({ lists: [list, ...s.lists] }));
+          grant(10);
+          notify(`“${list.name}” listesi açıldı.`, 'success');
+          return id;
+        },
+
+        updateList: (id, patch) =>
+          set((s) => ({ lists: s.lists.map((l) => (l.id === id ? { ...l, ...patch } : l)) })),
+
+        deleteList: (id) => {
+          const list = get().lists.find((l) => l.id === id);
+          set((s) => ({ lists: s.lists.filter((l) => l.id !== id) }));
+          if (list) notify(`“${list.name}” listesi silindi.`);
+        },
+
+        toggleListItem: (listId, mediaId) =>
+          set((s) => ({
+            lists: s.lists.map((l) => {
+              if (l.id !== listId) return l;
+              const exists = l.mediaIds.includes(mediaId);
+              return {
+                ...l,
+                mediaIds: exists ? l.mediaIds.filter((m) => m !== mediaId) : [...l.mediaIds, mediaId],
+              };
+            }),
+          })),
+
+        bulkAddToList: (listId, mediaIds) => {
+          if (!mediaIds.length) return;
+          set((s) => ({
+            lists: s.lists.map((l) =>
+              l.id === listId ? { ...l, mediaIds: Array.from(new Set([...l.mediaIds, ...mediaIds])) } : l,
+            ),
+          }));
+          const list = get().lists.find((l) => l.id === listId);
+          notify(`${mediaIds.length} kayıt “${list?.name ?? 'liste'}” listesine eklendi.`, 'success');
         },
 
         createPost: ({ text, kind, ref, spoiler, clubId }) => {
@@ -544,6 +639,7 @@ export const useStore = create<Store>()(
         streak: s.streak,
         lastVisitDay: s.lastVisitDay,
         answered: s.answered,
+        lists: s.lists,
       }),
       onRehydrateStorage: () => (state) => {
         state?.markHydrated();
