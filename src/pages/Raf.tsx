@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookMarked, Heart, Plus, Sparkles, ArrowRight, LayoutGrid, Search, Upload } from 'lucide-react';
+import { BookMarked, Heart, Plus, Sparkles, ArrowRight, LayoutGrid, Search, Upload, ListPlus, CheckSquare, Check } from 'lucide-react';
 import { useShelfEntries, useStore } from '../store/useStore';
 import { statusLabel } from '../lib/level';
 import type { ShelfStatus } from '../lib/types';
@@ -25,10 +25,29 @@ export function Raf() {
   const entries = useShelfEntries();
   const profile = useStore((s) => s.profile)!;
   const toggleFavorite = useStore((s) => s.toggleFavorite);
+  const lists = useStore((s) => s.lists);
+  const bulkSetStatus = useStore((s) => s.bulkSetStatus);
+  const bulkRemove = useStore((s) => s.bulkRemove);
+  const bulkAddToList = useStore((s) => s.bulkAddToList);
   const [filter, setFilter] = useState<ShelfStatus | 'all'>('all');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<'updated' | 'title' | 'score' | 'progress'>('updated');
   const [importOpen, setImportOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const exitSelect = () => {
+    setSelectMode(false);
+    setSelected(new Set());
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('tr-TR');
@@ -67,7 +86,7 @@ export function Raf() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="eyebrow">rafım</p>
           <h1 className="h1 mt-1.5">Rafın</h1>
@@ -77,9 +96,21 @@ export function Raf() {
               : 'Henüz boş. İlk eserini bıraktığında burası ısınacak.'}
           </p>
         </div>
-        <button onClick={() => setImportOpen(true)} className="btn btn-ghost btn-sm shrink-0">
-          <Upload size={13} /> İçe aktar
-        </button>
+        <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
+          <button
+            onClick={() => (selectMode ? exitSelect() : setSelectMode(true))}
+            className={`btn ${selectMode ? 'btn-soft' : 'btn-ghost'} btn-sm`}
+            disabled={!entries.length}
+          >
+            <CheckSquare size={13} /> {selectMode ? 'Bitti' : 'Seç'}
+          </button>
+          <Link to="/listeler" className="btn btn-ghost btn-sm">
+            <ListPlus size={13} /> Listeler
+          </Link>
+          <button onClick={() => setImportOpen(true)} className="btn btn-ghost btn-sm">
+            <Upload size={13} /> İçe aktar
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -126,11 +157,93 @@ export function Raf() {
         })}
       </div>
 
+      {selectMode && (
+        <div className="card sticky top-[60px] z-20 flex flex-wrap items-center gap-2 p-2.5">
+          <span className="mr-1 text-[11.5px] font-bold">{selected.size} seçili</span>
+          <button
+            onClick={() => {
+              bulkSetStatus(Array.from(selected), 'active');
+              exitSelect();
+            }}
+            disabled={!selected.size}
+            className="btn btn-ghost btn-sm disabled:opacity-40"
+          >
+            Devam
+          </button>
+          <button
+            onClick={() => {
+              bulkSetStatus(Array.from(selected), 'done');
+              exitSelect();
+            }}
+            disabled={!selected.size}
+            className="btn btn-ghost btn-sm disabled:opacity-40"
+          >
+            Bitti
+          </button>
+          <button
+            onClick={() => {
+              bulkSetStatus(Array.from(selected), 'planned');
+              exitSelect();
+            }}
+            disabled={!selected.size}
+            className="btn btn-ghost btn-sm disabled:opacity-40"
+          >
+            Sırada
+          </button>
+          {lists.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => {
+                if (!e.target.value) return;
+                bulkAddToList(e.target.value, Array.from(selected));
+                exitSelect();
+              }}
+              disabled={!selected.size}
+              className="select !w-auto !py-1.5 text-[11px]"
+            >
+              <option value="">Listeye ekle…</option>
+              {lists.map((list) => (
+                <option key={list.id} value={list.id}>
+                  {list.emoji} {list.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={() => {
+              bulkRemove(Array.from(selected));
+              exitSelect();
+            }}
+            disabled={!selected.size}
+            className="btn btn-ghost btn-sm disabled:opacity-40"
+          >
+            Kaldır
+          </button>
+          <button onClick={exitSelect} className="btn btn-ghost btn-sm ml-auto">
+            Vazgeç
+          </button>
+        </div>
+      )}
+
       {filtered.length ? (
         <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-2">
           {filtered.map((entry) => (
             <div key={entry.media.id} className="card p-3">
               <div className="flex gap-3">
+                {selectMode && (
+                  <button
+                    onClick={() => toggleSelect(entry.media.id)}
+                    aria-label={`${entry.media.title} seç`}
+                    className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center border-2"
+                    style={{
+                      borderColor: selected.has(entry.media.id) ? 'var(--accent)' : 'var(--line-strong)',
+                      background: selected.has(entry.media.id) ? 'var(--accent)' : 'transparent',
+                      color: 'var(--accent-ink)',
+                    }}
+                  >
+                    {selected.has(entry.media.id) && <Check size={13} />}
+                  </button>
+                )}
                 <Link to={mediaLink(entry.media)} className="shrink-0">
                   <div className="h-[92px] w-[63px] overflow-hidden rounded-[var(--radius-xs)] bg-[var(--surface-3)]">
                     {entry.media.cover && (

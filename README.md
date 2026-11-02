@@ -18,7 +18,7 @@ Canlı (eski sürüm): https://anisync-tau.vercel.app/ · Yeni sürümü yayınl
 
 > Varsayılan görünüm v1'in **AniSync Klasik** teması. Sıcak **Gece Çay Evi** seviye 2'de, sinema seviye 4'te, kütüphane seviye 7'de açılıyor.
 
-Aynı bileşen ağacı, dört farklı mekân:
+Aynı bileşen ağacı, beş farklı mekân:
 
 | AniSync Klasik | Kağıt & Mürekkep |
 | --- | --- |
@@ -47,7 +47,7 @@ Bu yüzden ürün kararları "daha çok özellik" değil, **daha çok aidiyet** 
 | --- | --- | --- |
 | **Salon** | Günün ilk ekranı. Selamlama, günün sorusu, kaldığın yer, öneriler, mekânda kim var | Kâğıt not üzerinde günün sorusu, "kaldığın yerden" hızlı ilerletme |
 | **Keşfet** | Anime / manga / novel / oyun tek arama | Tür filtresi, sezon, küratörlü oyun masası, anlık arama |
-| **Rafım** | Takip: izliyorum / okuyorum / oynuyorum / sırada / bitti | Durum filtreleri, arama, sıralama, MAL/AniList içe aktarma, puan, favori |
+| **Rafım** | Takip: izliyorum / okuyorum / oynuyorum / sırada / bitti | Durum filtreleri, arama, sıralama, toplu işlem, MAL/AniList içe aktarma, özel listeler, puan, favori |
 | **Köşe** | Topluluk: 6 masa, gönderi, yanıt, spoiler etiketi | Masaya katılma, tür etiketli paylaşım, spoiler bulanıklığı |
 | **Ben** | Profil, seviye, rozetler, ayarlar | Çay bardağı seviye göstergesi, yedek al/yükle, tema tercihleri |
 
@@ -66,7 +66,7 @@ MAL kayıtları AniList'in `idMal` eşlemesiyle kapak, özet ve doğru kimlikle 
 
 ## 3. Atmosfer mekaniği (ürünün imzası)
 
-Tek bir bileşen ağacı var; **dört farklı mekân** aynı ağacı giydiriyor. Renk, tipografi, köşe yarıçapı,
+Tek bir bileşen ağacı var; **beş farklı mekân** aynı ağacı giydiriyor. Renk, tipografi, köşe yarıçapı,
 gölge sertliği, doku — hepsi CSS değişkeni (`src/styles.css`). Bileşenler tema bilmez, sadece token kullanır.
 
 | Atmosfer | Karakter | Açılış |
@@ -75,8 +75,13 @@ gölge sertliği, doku — hepsi CSS değişkeni (`src/styles.css`). Bileşenler
 | **Gece Çay Evi** | Krem/kehribar, serif başlıklar, yumuşak gölge, lamba ışığı | Seviye 2 |
 | **Mahalle Sineması** | Kadife kırmızı, sarı bilet, sıkıştırılmış büyük harf tipografi | Seviye 4 |
 | **Kağıt & Mürekkep** | Aydınlık kâğıt, bordo mürekkep, ince çizgi, Lora | Seviye 7 |
+| **Şafak** | Şeftali/gül tonları, Fraunces, yumuşak sabah ışığı | Seviye 10 |
 
 ![AniSync Klasik — masaüstü](docs/screens/klasik-masaustu.jpg)
+
+| Şafak (Seviye 10) | Listeler |
+| --- | --- |
+| <img src="docs/screens/safak-mobil.jpg" width="300" alt="Şafak atmosferi" /> | <img src="docs/screens/listeler-mobil.jpg" width="300" alt="Özel listeler" /> |
 
 **Kilitli atmosferi 12 saniye deneyebilirsin.** Beğenirsen seviyeyi beklersin; bu, merakı ödüllendiren küçük bir oyun.
 

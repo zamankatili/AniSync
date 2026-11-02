@@ -101,12 +101,12 @@ Beş oda, dört atmosfer, seviye mekaniği, gerçek veri, mobil düzen, yerel ka
 - [x] Klasik tema v1'e birebir yaklaştırıldı (nokta ızgara, 28 sn renk döngüsü, 4px gölge, beyaz şeritli kartlar)
 - [x] MAL XML + AniList JSON içe aktarma (dosya + yapıştırma; MAL kayıtları AniList kapaklarıyla eşleniyor)
 - [x] Raf: arama + sıralama (ad / puan / ilerleme / güncelleme)
-- [ ] Raf: çoklu seçim, toplu durum
-- [ ] Özel listelerin yönetimi (oluştur, kapak emoji, sırala, paylaşılabilir bağlantı)
-- [ ] Eser başına kişisel not (spoiler etiketli)
-- [ ] Atmosfer 5: "Şafak" (seviye 10 ödülü)
+- [x] Raf: çoklu seçim, toplu durum
+- [x] Özel listeler (oluştur, emoji/renk, eser ekle–çıkar, metin olarak paylaş)
+- [x] Eser başına kişisel not (spoiler etiketli)
+- [x] Atmosfer 5: "Şafak" (seviye 10 ödülü)
 
-**Kabul:** Bir MAL yedeği yüklenip 200+ kayıt 3 sn içinde rafta görünüyor; liste bağlantısı paylaşılabiliyor.
+**Kabul:** Bir MAL yedeği yüklenip 200+ kayıt 3 sn içinde rafta görünüyor; liste metni panoya kopyalanıyor. (Paylaşılabilir herkese açık bağlantı, hesaplarla birlikte Faz 3'te.)
 
 ### Faz 2 — Takvim, koleksiyon, analiz (2–3 gün)
 - [ ] Yayın takvimi (haftalık ızgara), "bugün" şeridi

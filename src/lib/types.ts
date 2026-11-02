@@ -37,6 +37,7 @@ export interface ShelfEntry {
   progress: number;
   score?: number;
   note?: string;
+  noteSpoiler?: boolean;
   favorite?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -94,7 +95,7 @@ export interface Profile {
   homeType: MediaType;
 }
 
-export type AtmosId = 'cay' | 'klasik' | 'sinema' | 'kutuphane';
+export type AtmosId = 'cay' | 'klasik' | 'sinema' | 'kutuphane' | 'safak';
 
 export interface Atmos {
   id: AtmosId;
@@ -113,4 +114,14 @@ export interface Badge {
   emoji: string;
   description: string;
   earned: boolean;
+}
+
+export interface NamedList {
+  id: string;
+  name: string;
+  emoji: string;
+  color: string;
+  description?: string;
+  mediaIds: string[];
+  createdAt: string;
 }

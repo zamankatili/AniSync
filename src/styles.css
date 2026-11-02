@@ -171,7 +171,47 @@
   --note-btn-ink: #f7e8bd;
 }
 
-/* ---------- temel ---------- */
+[data-atmos="safak"] {
+  color-scheme: light;
+  --bg: #fdf0e4;
+  --bg-2: #fbe6d4;
+  --surface: #fffaf3;
+  --surface-2: #fbeede;
+  --surface-3: #f2ddc8;
+  --ink: #2a1a1c;
+  --ink-2: #6b5150;
+  --ink-3: #9a7f7a;
+  --line: rgba(42, 26, 28, 0.14);
+  --line-strong: rgba(42, 26, 28, 0.35);
+  --accent: #d95d39;
+  --accent-ink: #fff8ef;
+  --accent-soft: rgba(217, 93, 57, 0.12);
+  --accent-2: #8a4f7d;
+  --good: #4f7a5c;
+  --warn: #b8792a;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --btn-radius: 999px;
+  --card-border: 1px solid var(--line);
+  --shadow: 0 20px 40px -26px rgba(93, 45, 35, 0.5);
+  --shadow-lift: 0 26px 50px -28px rgba(93, 45, 35, 0.55);
+  --font-display: "Fraunces", Georgia, serif;
+  --display-transform: none;
+  --display-tracking: -0.02em;
+  --display-weight: 600;
+  --bg-image: radial-gradient(900px 520px at 80% -10%, rgba(255, 190, 120, 0.55), transparent 60%),
+    radial-gradient(700px 500px at 0% 100%, rgba(217, 93, 57, 0.12), transparent 60%),
+    linear-gradient(180deg, #fdf3e8 0%, #fdf0e4 55%, #f8e3d1 100%);
+  --grain-opacity: 0.04;
+  --note-bg: #ffe6c7;
+  --note-ink: #3a2418;
+  --note-tape: rgba(217, 93, 57, 0.45);
+  --note-field-bg: rgba(255, 255, 255, 0.7);
+  --note-field-border: rgba(58, 36, 24, 0.2);
+  --note-btn-bg: #3a2418;
+  --note-btn-ink: #ffe6c7;
+}
 
 * {
   -webkit-tap-highlight-color: transparent;
@@ -526,7 +566,7 @@ a {
 }
 
 .tabbar {
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  background: color-mix(in srgb, var(--bg) 95%, transparent);
   border-top: 1px solid var(--line);
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
