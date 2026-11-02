@@ -1,8 +1,17 @@
 node_modules/
-build/
 dist/
+build/
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
+
+# yerel araçlar
+.tmp/
+.npm-cache/
+.chrome-profile/
+screens-tmp/
+
+# v1 kodu (main dalında; yerel referans olarak tutulur)
+legacy/

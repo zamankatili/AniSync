@@ -1,53 +1,42 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" data-atmos="klasik">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    
-    <!-- Primary Title & Meta Description -->
-    <title>AniSync (LOGOS) – Anime Takip, Topluluk, Watch Party & Yayın Takvimi</title>
-    <meta name="description" content="AniSync ile en güncel animeleri takip edin, Watch Party odalarında arkadaşlarınızla fragman izleyin, Müzik Quizi oynayın, Otaku Rank rozetleri kazanın ve anime topluluğuna katılın." />
-    <meta name="keywords" content="anime, anime izle, anime takip, manga, anime takvimi, watch party, anime quiz, otaku, anime topluluğu, anisync" />
-    <meta name="author" content="AniSync LOGOS-Core" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
+    <meta name="color-scheme" content="dark light" />
 
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://ais-pre-hsopxmo4jgn2wxkvljriym-98815859015.europe-west2.run.app" />
+    <title>AniSync — Otaku Mahallesi</title>
+    <meta
+      name="description"
+      content="Anime, manga, novel ve oyun sevenlerin aynı masada buluştuğu sıcak bir dijital mekân. Rafını kur, ilerlemeni takip et, köşelere katıl."
+    />
+    <meta name="keywords" content="anime, manga, novel, oyun, takip, topluluk, watch party, otaku, anisync" />
+    <meta name="author" content="AniSync" />
+    <meta name="theme-color" content="#050505" />
+    <link rel="canonical" href="https://anisync-tau.vercel.app/" />
 
-    <!-- OpenGraph Social Share Cards (Facebook, Discord, WhatsApp, LinkedIn) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="AniSync" />
-    <meta property="og:title" content="AniSync – Anime Takip, Watch Party & Topluluk Platformu" />
-    <meta property="og:description" content="En güncel anime ve mangaları takip edin, Watch Party ile arkadaşlarınızla canlı izleyin, Otaku Rank rozetleri kazanın ve toplulukla etkileşim kurun." />
-    <meta property="og:image" content="https://cdn.myanimelist.net/images/anime/1015/138006l.webp" />
+    <meta property="og:title" content="AniSync — Otaku Mahallesi" />
+    <meta
+      property="og:description"
+      content="Anime, manga, novel ve oyun sevenlerin aynı masada buluştuğu sıcak bir dijital mekân."
+    />
     <meta property="og:locale" content="tr_TR" />
-
-    <!-- Twitter / X Cards -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="AniSync – Anime Takip, Watch Party & Topluluk Platformu" />
-    <meta name="twitter:description" content="En güncel animeleri takip edin, Birlikte İzle (Watch Party) odalarına katılın ve Otaku Rank derecenizi yükseltin!" />
-    <meta name="twitter:image" content="https://cdn.myanimelist.net/images/anime/1015/138006l.webp" />
 
-    <!-- Schema.org Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "AniSync",
-      "alternateName": "AniSync LOGOS",
-      "applicationCategory": "EntertainmentApplication",
-      "operatingSystem": "All",
-      "inLanguage": "tr",
-      "description": "Kapsamlı anime ve manga takip platformu, canlı Birlikte İzle (Watch Party) odaları, Otaku Rank başarım sistemi, Müzik Quizi ve yayın takvimi.",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "TRY"
-      }
-    }
-    </script>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Bebas+Neue&family=Lora:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body class="bg-black text-white antialiased selection:bg-rose-600 selection:text-white">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
