@@ -104,7 +104,7 @@ Beş oda, dört atmosfer, seviye mekaniği, gerçek veri, mobil düzen, yerel ka
 - [x] Raf: çoklu seçim, toplu durum
 - [x] Özel listeler (oluştur, emoji/renk, eser ekle–çıkar, metin olarak paylaş)
 - [x] Eser başına kişisel not (spoiler etiketli)
-- [x] Atmosfer 5: "Şafak" (seviye 10 ödülü)
+- [x] v1 zaman bazlı palet sistemi: 5 atmosfer (Şafak/Öğle/Alacakaranlık/Gece/Işık), otomatik saat, kalıcı seçim, tema menüsü
 
 **Kabul:** Bir MAL yedeği yüklenip 200+ kayıt 3 sn içinde rafta görünüyor; liste metni panoya kopyalanıyor. (Paylaşılabilir herkese açık bağlantı, hesaplarla birlikte Faz 3'te.)
 
