@@ -88,6 +88,14 @@ gölge sertliği, doku — hepsi CSS değişkeni (`src/styles.css`). Bileşenler
 
 Otomatik mod açıkken saat 06/12/18/22'de palet kendiliğinden değişir; seçim `anisync_time_theme` / `anisync_auto_theme` anahtarlarında saklanır.
 
+### Hareketli RGB ışıma
+
+Klasik'in arka planı v1'deki gibi: **20 px nokta ızgarası** + ekranın üstünden yayılan ve **28 saniyede** kırmızı → mor → camgöbeği → yeşil dönen ışık. Işıma, `--theme-glow` değişkeninin `subtleRgbGlow` animasyonuyla sürülür; palet seçimi vurgu rengini, bu animasyon ise ortam ışığını yönetir.
+
+![RGB ışıma döngüsü](docs/screens/rgb-dongu.gif)
+
+![RGB döngüsünün dört fazı](docs/screens/rgb-kareler.jpg)
+
 ![AniSync Klasik — masaüstü](docs/screens/klasik-masaustu.jpg)
 
 | Zaman paletleri | Listeler |
