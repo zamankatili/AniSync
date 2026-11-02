@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookMarked, Heart, Plus, Sparkles, ArrowRight, LayoutGrid } from 'lucide-react';
+import { BookMarked, Heart, Plus, Sparkles, ArrowRight, LayoutGrid, Search, Upload } from 'lucide-react';
 import { useShelfEntries, useStore } from '../store/useStore';
 import { statusLabel } from '../lib/level';
 import type { ShelfStatus } from '../lib/types';
@@ -10,6 +10,7 @@ import { ProgressControl } from '../components/ProgressControl';
 import { EmptyState } from '../components/EmptyState';
 import { Section } from '../components/Section';
 import { recommendFrom } from '../lib/api';
+import { ImportSheet } from '../components/ImportSheet';
 
 const FILTERS: Array<{ id: ShelfStatus | 'all'; label: string }> = [
   { id: 'all', label: 'Tümü' },
@@ -25,8 +26,29 @@ export function Raf() {
   const profile = useStore((s) => s.profile)!;
   const toggleFavorite = useStore((s) => s.toggleFavorite);
   const [filter, setFilter] = useState<ShelfStatus | 'all'>('all');
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<'updated' | 'title' | 'score' | 'progress'>('updated');
+  const [importOpen, setImportOpen] = useState(false);
 
-  const filtered = filter === 'all' ? entries : entries.filter((e) => e.status === filter);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase('tr-TR');
+    const base = entries.filter((entry) => {
+      if (filter !== 'all' && entry.status !== filter) return false;
+      if (!q) return true;
+      return `${entry.media.title} ${entry.media.subtitle ?? ''}`.toLocaleLowerCase('tr-TR').includes(q);
+    });
+    if (sort === 'updated') return base;
+
+    const sorted = [...base];
+    if (sort === 'title') sorted.sort((a, b) => a.media.title.localeCompare(b.media.title, 'tr'));
+    if (sort === 'score') sorted.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+    if (sort === 'progress') {
+      const ratio = (entry: (typeof entries)[number]) =>
+        entry.media.totalUnits ? entry.progress / entry.media.totalUnits : entry.progress;
+      sorted.sort((a, b) => ratio(b) - ratio(a));
+    }
+    return sorted;
+  }, [entries, filter, query, sort]);
 
   const counts = useMemo(() => {
     const byStatus = (s: ShelfStatus) => entries.filter((e) => e.status === s).length;
@@ -45,15 +67,43 @@ export function Raf() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="eyebrow">rafım</p>
-        <h1 className="h1 mt-1.5">Rafın</h1>
-        <p className="mt-2 text-[13.5px] text-[var(--ink-2)]">
-          {counts.total > 0
-            ? `${counts.total} eser · ${counts.active} devam ediyor · ${counts.done} bitti`
-            : 'Henüz boş. İlk eserini bıraktığında burası ısınacak.'}
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <p className="eyebrow">rafım</p>
+          <h1 className="h1 mt-1.5">Rafın</h1>
+          <p className="mt-2 text-[13.5px] text-[var(--ink-2)]">
+            {counts.total > 0
+              ? `${counts.total} eser · ${counts.active} devam ediyor · ${counts.done} bitti`
+              : 'Henüz boş. İlk eserini bıraktığında burası ısınacak.'}
+          </p>
+        </div>
+        <button onClick={() => setImportOpen(true)} className="btn btn-ghost btn-sm shrink-0">
+          <Upload size={13} /> İçe aktar
+        </button>
       </header>
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-3)]" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rafında ara…"
+            className="input !py-2.5 !pl-9 text-[13px]"
+          />
+        </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as typeof sort)}
+          className="select !py-2.5 text-[12.5px] sm:w-[176px]"
+          aria-label="Sıralama"
+        >
+          <option value="updated">Son güncellenen</option>
+          <option value="title">Ad (A–Z)</option>
+          <option value="score">Puan</option>
+          <option value="progress">İlerleme</option>
+        </select>
+      </div>
 
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
         {FILTERS.map((f) => {
@@ -127,11 +177,13 @@ export function Raf() {
       ) : (
         <EmptyState
           icon={<BookMarked size={26} />}
-          title={filter === 'all' ? 'Rafın henüz boş' : 'Bu bölümde bir şey yok'}
+          title={query ? 'Rafında bulunamadı' : filter === 'all' ? 'Rafın henüz boş' : 'Bu bölümde bir şey yok'}
           description={
-            filter === 'all'
-              ? 'Keşfet’ten bir şey seç, “Rafıma ekle” de. İlerledikçe burada birikir.'
-              : 'Başka bir filtre seçebilir ya da yeni bir şey ekleyebilirsin.'
+            query
+              ? 'Farklı bir isim dene ya da aramayı temizle.'
+              : filter === 'all'
+                ? 'Keşfet’ten bir şey seç, “Rafıma ekle” de. İlerledikçe burada birikir.'
+                : 'Başka bir filtre seçebilir ya da yeni bir şey ekleyebilirsin.'
           }
           action={
             <Link to="/kesfet" className="btn btn-primary btn-sm">
@@ -162,6 +214,8 @@ export function Raf() {
           <LayoutGrid size={13} /> Atmosferler <ArrowRight size={13} />
         </Link>
       </div>
+
+      <ImportSheet open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }

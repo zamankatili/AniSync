@@ -30,7 +30,7 @@ export function MediaCard({ media, entry, showType = false, className = '', comp
   const percent = entry ? progressPercent(entry) : 0;
 
   return (
-    <Link to={mediaLink(media)} className={`group block ${className}`} aria-label={media.title}>
+    <Link to={mediaLink(media)} className={`media-card group block ${className}`} aria-label={media.title}>
       <div className={`poster ${compact ? 'rounded-[var(--radius-xs)]' : ''}`}>
         {!failed && media.cover ? (
           <img
@@ -66,7 +66,7 @@ export function MediaCard({ media, entry, showType = false, className = '', comp
         )}
 
         {media.score ? (
-          <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-[3px] text-[10px] font-bold text-white backdrop-blur">
+          <span className="media-score absolute right-2 top-2 rounded-full bg-black/55 px-2 py-[3px] text-[10px] font-bold text-white backdrop-blur">
             ★ {score10(media.score)}
           </span>
         ) : null}
@@ -89,7 +89,7 @@ export function MediaCard({ media, entry, showType = false, className = '', comp
       </div>
 
       {!compact && (
-        <div className="mt-2 px-0.5">
+        <div className="media-caption mt-2 px-0.5">
           <h3 className="line-clamp-2 text-[12.5px] font-semibold leading-snug text-[var(--ink)] transition-colors group-hover:text-[var(--accent)]">
             {media.title}
           </h3>

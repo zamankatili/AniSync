@@ -11,6 +11,7 @@ import type {
   ShelfStatus,
 } from '../lib/types';
 import { ATMOSPHERES, XP, levelFromXp } from '../lib/level';
+import type { ImportItem } from '../lib/import';
 import { buildSeedPosts } from '../data/seed';
 import { CLUBS } from '../data/clubs';
 
@@ -98,6 +99,7 @@ interface Store extends StoreData {
   answerPrompt: (question: string, text: string) => string | null;
 
   joinClub: (id: string) => void;
+  importShelfItems: (items: ImportItem[]) => number;
   updateProfile: (patch: Partial<Profile>) => void;
   setAtmos: (id: AtmosId) => boolean;
   previewAtmos: (id: AtmosId) => void;
@@ -403,6 +405,44 @@ export const useStore = create<Store>()(
           const club = CLUBS.find((c) => c.id === id);
           grant(XP.joinClub);
           notify(`${club?.name ?? 'Köşe'} masasına oturdun.`, 'success');
+        },
+
+        importShelfItems: (items) => {
+          if (!items.length) return 0;
+          const shelf = { ...get().shelf };
+          const now = nowISO();
+
+          for (const item of items) {
+            const existing = shelf[item.media.id];
+            const total = item.media.totalUnits ?? 0;
+            const progress =
+              item.status === 'done' && total > 0 ? Math.max(item.progress, total) : Math.max(0, item.progress);
+
+            if (existing) {
+              shelf[item.media.id] = {
+                ...existing,
+                media: existing.media.cover ? existing.media : item.media,
+                status: item.status,
+                progress: Math.max(existing.progress ?? 0, progress),
+                score: item.score ?? existing.score,
+                updatedAt: now,
+              };
+            } else {
+              shelf[item.media.id] = {
+                media: item.media,
+                status: item.status,
+                progress,
+                score: item.score,
+                createdAt: now,
+                updatedAt: now,
+              };
+            }
+          }
+
+          set({ shelf });
+          grant(20);
+          notify(`${items.length} kayıt rafa aktarıldı.`, 'success');
+          return items.length;
         },
 
         updateProfile: (patch) =>
