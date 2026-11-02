@@ -1,0 +1,21 @@
+{
+  "name": "AniSync — Otaku Mahallesi",
+  "short_name": "AniSync",
+  "description": "Anime, manga, novel ve oyun sevenlerin aynı masada buluştuğu sıcak bir dijital mekân.",
+  "lang": "tr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Salon", "url": "/" },
+    { "name": "Rafım", "url": "/raf" },
+    { "name": "Keşfet", "url": "/kesfet" }
+  ]
+}
