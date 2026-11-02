@@ -95,7 +95,7 @@ export interface Profile {
   homeType: MediaType;
 }
 
-export type AtmosId = 'cay' | 'klasik' | 'sinema' | 'kutuphane' | 'safak';
+export type AtmosId = 'cay' | 'klasik' | 'sinema' | 'kutuphane';
 
 export interface Atmos {
   id: AtmosId;

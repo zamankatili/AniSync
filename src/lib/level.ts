@@ -92,18 +92,6 @@ export const ATMOSPHERES: Atmos[] = [
     scene:
       'Yüksek tavanlı bir okuma odası. Pencereden öğleden sonra ışığı giriyor, masada açık bir defter ve soğumuş kahve.',
   },
-  {
-    id: 'safak',
-    name: 'Şafak',
-    tagline: 'Mekân sabahın ilk ışığıyla açılıyor.',
-    description:
-      'Şeftali ve gül tonlarında aydınlık bir sabah. Uzun bir gecenin ardından gelen o ilk çay. Seviye 10’da açılır.',
-    unlockLevel: 10,
-    icon: '🌅',
-    swatches: ['#d95d39', '#8a4f7d', '#fdf0e4'],
-    scene:
-      'Perdeler yarı aralık, masada dün geceden kalmış bir kitap ve yeni demlenmiş çay. Dışarıda şehir uyanıyor.',
-  },
 ];
 
 export const atmosById = (id: AtmosId): Atmos => ATMOSPHERES.find((a) => a.id === id) ?? ATMOSPHERES[0];

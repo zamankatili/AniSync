@@ -3,6 +3,8 @@ import { Check, Eye, Lock, Sparkles, ArrowRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { ATMOSPHERES, levelProgress, rankFor } from '../lib/level';
 import { TeaMeter } from '../components/TeaMeter';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
+import { THEME_CONFIGS, useThemeStore } from '../store/useThemeStore';
 
 function AtmosPreview({ id }: { id: string }) {
   return (
@@ -59,15 +61,25 @@ function AtmosPreview({ id }: { id: string }) {
   );
 }
 
+const SHORT: Record<keyof typeof THEME_CONFIGS, string> = {
+  dawn: '\u015Eafak',
+  noon: '\u00D6\u011Fle',
+  twilight: 'Alacakaranl\u0131k',
+  midnight: 'Gece',
+  light: 'I\u015F\u0131k',
+};
+
 export function Atmosfer() {
   const xp = useStore((s) => s.xp);
   const atmos = useStore((s) => s.atmos);
   const setAtmos = useStore((s) => s.setAtmos);
   const previewAtmos = useStore((s) => s.previewAtmos);
   const preview = useStore((s) => s.preview);
+  const { currentTheme, isAutoMode, setTheme, toggleAutoMode } = useThemeStore();
 
   const progress = levelProgress(xp);
   const rank = rankFor(progress.level);
+  const activeTime = THEME_CONFIGS[currentTheme];
 
   return (
     <div className="space-y-6">
@@ -97,6 +109,50 @@ export function Atmosfer() {
           XP kazan <ArrowRight size={13} />
         </Link>
       </div>
+
+      <section className="card p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="eyebrow">klasik içinde</p>
+            <p className="display text-[1.15rem]">Günün saatine göre 5 palet</p>
+            <p className="mt-1 text-[11px] text-[var(--ink-3)]">
+              Seçili: {activeTime.icon} {activeTime.nameTR} · {isAutoMode ? 'otomatik' : 'sabit'}
+            </p>
+          </div>
+          <ThemeSwitcher />
+        </div>
+
+        <div className="mt-3 grid grid-cols-5 gap-1.5">
+          {(Object.keys(THEME_CONFIGS) as Array<keyof typeof THEME_CONFIGS>).map((id) => {
+            const cfg = THEME_CONFIGS[id];
+            const selected = currentTheme === id;
+            return (
+              <button
+                key={id}
+                onClick={() => {
+                  setTheme(id);
+                  setAtmos('klasik');
+                }}
+                className="rounded-[var(--radius-xs)] border p-2 text-center transition-colors"
+                style={{
+                  borderColor: selected ? 'var(--accent)' : 'var(--line)',
+                  background: selected ? 'var(--accent-soft)' : 'transparent',
+                }}
+              >
+                <span className="text-[16px] leading-none">{cfg.icon}</span>
+                <span className="mt-1 block text-[8px] font-bold uppercase leading-tight text-[var(--ink-2)]">
+                  {SHORT[id]}
+                </span>
+                <span className="mt-1.5 block h-1.5 w-full rounded-full" style={{ background: cfg.accentColor }} />
+              </button>
+            );
+          })}
+        </div>
+
+        <button onClick={toggleAutoMode} className="btn btn-ghost btn-sm mt-3 w-full">
+          {isAutoMode ? 'Otomatik modu kapat' : 'Otomatik saate bırak (06 · 12 · 18 · 22)'}
+        </button>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {ATMOSPHERES.map((a) => {

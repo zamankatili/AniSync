@@ -18,7 +18,7 @@ Canlı (eski sürüm): https://anisync-tau.vercel.app/ · Yeni sürümü yayınl
 
 > Varsayılan görünüm v1'in **AniSync Klasik** teması. Sıcak **Gece Çay Evi** seviye 2'de, sinema seviye 4'te, kütüphane seviye 7'de açılıyor.
 
-Aynı bileşen ağacı, beş farklı mekân:
+Aynı bileşen ağacı, dört mekân — ve Klasik'in içinde beş zaman paleti:
 
 | AniSync Klasik | Kağıt & Mürekkep |
 | --- | --- |
@@ -66,7 +66,7 @@ MAL kayıtları AniList'in `idMal` eşlemesiyle kapak, özet ve doğru kimlikle 
 
 ## 3. Atmosfer mekaniği (ürünün imzası)
 
-Tek bir bileşen ağacı var; **beş farklı mekân** aynı ağacı giydiriyor. Renk, tipografi, köşe yarıçapı,
+Tek bir bileşen ağacı var; **dört mekân** aynı ağacı giydiriyor. Klasik ayrıca günün saatine göre **beş renk paleti** kullanıyor. Renk, tipografi, köşe yarıçapı,
 gölge sertliği, doku — hepsi CSS değişkeni (`src/styles.css`). Bileşenler tema bilmez, sadece token kullanır.
 
 | Atmosfer | Karakter | Açılış |
@@ -75,13 +75,24 @@ gölge sertliği, doku — hepsi CSS değişkeni (`src/styles.css`). Bileşenler
 | **Gece Çay Evi** | Krem/kehribar, serif başlıklar, yumuşak gölge, lamba ışığı | Seviye 2 |
 | **Mahalle Sineması** | Kadife kırmızı, sarı bilet, sıkıştırılmış büyük harf tipografi | Seviye 4 |
 | **Kağıt & Mürekkep** | Aydınlık kâğıt, bordo mürekkep, ince çizgi, Lora | Seviye 7 |
-| **Şafak** | Şeftali/gül tonları, Fraunces, yumuşak sabah ışığı | Seviye 10 |
+
+**Klasik içindeki zaman paletleri** (v1 sistemi: `--theme-accent`, `--theme-secondary`, `--theme-glow`, `--theme-shadow`):
+
+| Palet | Saat | Renk |
+| --- | --- | --- |
+| 🌅 Tokyo Şafağı | 06:00 – 11:59 | `#f59e0b` / `#ea580c` |
+| ☀️ Akihabara Öğlesi | 12:00 – 17:59 | `#e11d48` / `#ffffff` |
+| 🌇 Shinjuku Alacakaranlık | 18:00 – 21:59 | `#d946ef` / `#a855f7` |
+| 🌙 Neo-Tokyo Gece | 22:00 – 05:59 | `#06b6d4` / `#10b981` |
+| 💡 Yüksek Kontrast Işık | manuel | `#000000` / `#ffffff` |
+
+Otomatik mod açıkken saat 06/12/18/22'de palet kendiliğinden değişir; seçim `anisync_time_theme` / `anisync_auto_theme` anahtarlarında saklanır.
 
 ![AniSync Klasik — masaüstü](docs/screens/klasik-masaustu.jpg)
 
-| Şafak (Seviye 10) | Listeler |
+| Zaman paletleri | Listeler |
 | --- | --- |
-| <img src="docs/screens/safak-mobil.jpg" width="300" alt="Şafak atmosferi" /> | <img src="docs/screens/listeler-mobil.jpg" width="300" alt="Özel listeler" /> |
+| <img src="docs/screens/zaman-temalari.jpg" width="300" alt="Zaman bazlı atmosfer menüsü" /> | <img src="docs/screens/listeler-mobil.jpg" width="300" alt="Özel listeler" /> |
 
 **Kilitli atmosferi 12 saniye deneyebilirsin.** Beğenirsen seviyeyi beklersin; bu, merakı ödüllendiren küçük bir oyun.
 

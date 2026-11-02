@@ -9,6 +9,8 @@ import { Toasts } from './Toasts';
 import { LevelUpModal } from './LevelUpModal';
 import { Onboarding } from '../pages/Onboarding';
 import { ErrorBoundary } from './ErrorBoundary';
+import { ThemeSwitcher } from './ThemeSwitcher';
+import { useThemeStore } from '../store/useThemeStore';
 
 const NAV = [
   { to: '/', label: 'Salon', icon: House },
@@ -28,6 +30,13 @@ export function AppShell() {
   const navigate = useNavigate();
   const preview = useStore((s) => s.preview);
   const clearPreview = useStore((s) => s.clearPreview);
+  const checkAutoTheme = useThemeStore((s) => s.checkAutoTheme);
+
+  useEffect(() => {
+    checkAutoTheme();
+    const timer = setInterval(checkAutoTheme, 5 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [checkAutoTheme]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -148,6 +157,7 @@ export function AppShell() {
                 <Flame size={11} /> {streak}
               </span>
             )}
+            <ThemeSwitcher compact />
             <button onClick={openSearch} className="btn btn-ghost btn-icon h-9 w-9" aria-label="Ara">
               <Search size={17} />
             </button>
@@ -169,6 +179,7 @@ export function AppShell() {
           </button>
 
           <div className="ml-auto flex items-center gap-2">
+            <ThemeSwitcher />
             <Link to="/atmosfer" className="btn btn-ghost btn-sm">
               <Lamp size={14} /> Atmosfer
             </Link>
