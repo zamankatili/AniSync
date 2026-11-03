@@ -37,6 +37,19 @@ describe('örnek gönderiler', () => {
       ...state().posts.filter((p) => !p.seed).map((p) => p.id),
     ]);
   });
+
+  it('v2 kaydı göçle örnek gönderileri tanır', async () => {
+    const unflagged = state().posts.map((p) => ({ ...p, seed: undefined }));
+    localStorage.setItem(
+      'anisync.v2',
+      JSON.stringify({ state: { ...state(), posts: unflagged }, version: 2 }),
+    );
+
+    await useStore.persist.rehydrate();
+
+    expect(state().posts.every((p) => p.seed)).toBe(true);
+    expect(state().posts.filter((p) => p.seed).length).toBe(unflagged.length);
+  });
 });
 
 describe('yedek al / yükle', () => {

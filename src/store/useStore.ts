@@ -639,7 +639,16 @@ export const useStore = create<Store>()(
     },
     {
       name: 'anisync.v2',
-      version: 2,
+      version: 3,
+      migrate: (persisted, version) => {
+        const state = persisted as Partial<StoreData> | undefined;
+        if (!state || version >= 3 || !Array.isArray(state.posts)) return state as Store;
+        // v2 kayıtlarında örnek gönderiler seed bayrağı olmadan yazılmıştı.
+        return {
+          ...state,
+          posts: state.posts.map((p) => (/^seed-/.test(p.id) && !p.seed ? { ...p, seed: true } : p)),
+        } as Store;
+      },
       partialize: (s) => ({
         onboarded: s.onboarded,
         profile: s.profile,
