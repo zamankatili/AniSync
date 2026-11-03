@@ -115,5 +115,5 @@ export function buildSeedPosts(): Post[] {
       replies: [],
     },
   ];
-  return posts;
+  return posts.map((p) => ({ ...p, seed: true }));
 }

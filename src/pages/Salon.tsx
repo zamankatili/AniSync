@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Flame, PenLine, Plus, Sparkles, Coffee, ChevronRight } from 'lucide-react';
+import { ArrowRight, Flame, PenLine, Sparkles, Coffee, ChevronRight } from 'lucide-react';
 import { useStore, todayKey } from '../store/useStore';
 import { useShelfEntries } from '../store/useStore';
 import { greeting, todayLabel, timeAgo } from '../lib/format';
@@ -326,7 +326,6 @@ export function Salon() {
 }
 
 function ContinueCard({ entry }: { entry: ShelfEntry }) {
-  const bump = useStore((s) => s.bumpProgress);
   return (
     <div className="card w-[268px] shrink-0 p-2.5">
       <div className="flex gap-2.5">

@@ -337,7 +337,12 @@ export const useStore = create<Store>()(
           set((s) => {
             const shelf = { ...s.shelf };
             delete shelf[id];
-            return { shelf };
+            return {
+              shelf,
+              lists: s.lists.map((l) =>
+                l.mediaIds.includes(id) ? { ...l, mediaIds: l.mediaIds.filter((m) => m !== id) } : l,
+              ),
+            };
           });
           notify(`“${entry.media.title}” raftan çıkarıldı.`);
         },
@@ -345,10 +350,12 @@ export const useStore = create<Store>()(
         bulkSetStatus: (ids, status) => {
           if (!ids.length) return;
           const shelf = { ...get().shelf };
+          let newlyDone = 0;
           for (const id of ids) {
             const entry = shelf[id];
             if (!entry) continue;
             const total = entry.media.totalUnits;
+            if (status === 'done' && entry.status !== 'done') newlyDone += 1;
             shelf[id] = {
               ...entry,
               status,
@@ -358,7 +365,7 @@ export const useStore = create<Store>()(
           }
           set({ shelf });
           notify(`${ids.length} kayıt güncellendi.`, 'success');
-          if (status === 'done') grant(XP.complete);
+          if (newlyDone) grant(XP.complete * newlyDone);
         },
 
         bulkRemove: (ids) => {
@@ -586,6 +593,7 @@ export const useStore = create<Store>()(
               streak: s.streak,
               lastVisitDay: s.lastVisitDay,
               answered: s.answered,
+              lists: s.lists,
             },
           };
           return JSON.stringify(payload, null, 2);
@@ -601,12 +609,17 @@ export const useStore = create<Store>()(
             if (typeof data.xp === 'number') next.xp = data.xp;
             if (data.shelf && typeof data.shelf === 'object') next.shelf = data.shelf;
             if (Array.isArray(data.joined)) next.joined = data.joined;
-            if (Array.isArray(data.posts)) next.posts = [...data.posts, ...get().posts.filter((p) => p.seed)];
+            if (Array.isArray(data.posts)) {
+              // Eski yedekler örnek gönderileri seed bayrağı olmadan taşıyabiliyordu; id üzerinden tekilleştirilir.
+              const merged = [...data.posts, ...get().posts.filter((p) => p.seed)];
+              next.posts = Array.from(new Map(merged.map((p) => [p.id, p])).values());
+            }
             if (data.atmos) next.atmos = data.atmos;
             if (data.settings) next.settings = { ...defaultSettings, ...data.settings };
             if (typeof data.streak === 'number') next.streak = data.streak;
             if (data.lastVisitDay) next.lastVisitDay = data.lastVisitDay;
             if (data.answered) next.answered = data.answered;
+            if (Array.isArray(data.lists)) next.lists = data.lists;
             if (data.onboarded) next.onboarded = true;
             set(next);
             notify('Yedek geri yüklendi.', 'success');

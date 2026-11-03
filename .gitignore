@@ -13,5 +13,5 @@ coverage/
 .chrome-profile/
 screens-tmp/
 
-# v1 kodu (main dalında; yerel referans olarak tutulur)
+# v1 kodu (yerel referans; depoya girmez — tek kalıcı kopya bu dizindir)
 legacy/

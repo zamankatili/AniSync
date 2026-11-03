@@ -6,7 +6,7 @@ Bu depo, ilk sürümün (v1) yeniden kurgulanmış hâli: aynı fikir, ama artı
 > v1: 100+ bileşen, 11 maddelik alt menü, çoğu birbirinden habersiz özellik, örnek veriler.
 > v2: 5 sekme, tek tasarım dili, 4 atmosfer, seviye mekaniği, gerçek veri kaynakları, mobil öncelikli.
 
-Canlı (eski sürüm): https://anisync-tau.vercel.app/ · Yeni sürümü yayınlamak için aşağıdaki **Yayın** adımına bak.
+Canlı: https://anisync-tau.vercel.app/ — bu depoyle aynı sürüm (v2) yayında. Eski v1 arayüzü artık canlıda değil; kodu `legacy/`de yerel referans olarak duruyor.
 
 <p align="center">
   <img src="docs/screens/salon-mobil.jpg" width="240" alt="Salon — günün sorusu ve kaldığın yer" />
@@ -159,7 +159,7 @@ Profil, raf, gönderiler, katıldığın köşeler, XP, tema, seri, ayarlar.
 Hesap ve gerçek zamanlı topluluk için önerilen geçiş yolu **Supabase**:
 `profiles`, `shelf_entries`, `posts`, `replies`, `clubs`, `club_members` tabloları + RLS.
 Zustand store'daki eylemler (`addToShelf`, `createPost`, `likePost` …) zaten tek kapı; kalıcılık katmanını
-oraya eklemek yeterli. Firebase'e dönmek istersen v1 kodu **`main` dalında** duruyor.
+oraya eklemek yeterli. Firebase'e dönmek istersen v1 kodu `legacy/` altında duruyor — `legacy/` v1 arşivle **birebir aynı** kaynak, ama `.gitignore` yüzünden depoya girmez; yani kalıcı tek kopya bu cihazdadır.
 
 ---
 
@@ -167,8 +167,10 @@ oraya eklemek yeterli. Firebase'e dönmek istersen v1 kodu **`main` dalında** d
 
 ```bash
 npm install
-npm run dev        # http://127.0.0.1:5173
+npm run dev        # http://127.0.0.1:5180
+npm run lint       # ESLint (src)
 npm run typecheck  # TypeScript
+npm test           # vitest — store eylemleri, API eşleme, seviye eğrisi, içe aktarma
 npm run build      # dist/
 npm run preview    # build'i sun
 ```
@@ -204,7 +206,7 @@ Sonrasında bildirim (push), yerel hatırlatıcı ve mağaza içi satın alma i�
 - Bildirimler: yeni bölüm, yanıt, seviye/atmosfer açılışı.
 - Türkçe özet/öneri metinleri (çeviri hattı veya LLM ile önbellekli üretim).
 - Arama: AniList + OL + Steam'in yanına TMDB/RAWG anahtarları (opsiyonel).
-- Temel testler: store eylemleri, API eşleme, kritik akışlar (Playwright).
+- Testler: store eylemleri, API eşleme, seviye eğrisi ve içe aktarma örtüldü (vitest). Kalan: kritik akışlar için uçtan uca test (Playwright).
 
 **P1 — mekânı derinleştirmek**
 - Watch party (v1'de vardı; gerçek zamanlı oda + sohbet ile geri getir).
@@ -227,7 +229,7 @@ Sonrasında bildirim (push), yerel hatırlatıcı ve mağaza içi satın alma i�
 - **Özet metinleri İngilizce** (AniList'ten geldiği gibi). Arayüz Türkçe.
 - **Oyun kataloğu statik**: 41 küratörlü oyun; yeni oyun eklemek için `src/data/games.ts`.
 - Kapak/görsel telifleri kaynak sitelerde (AniList CDN, Open Library, Steam CDN).
-- v1'in Watch Party, müzik quizi, DLE, takvim ve grid maker özellikleri **bu sürümde yok**; `main` dalında duruyor, fazlarla taşınacak.
+- v1'in Watch Party, müzik quizi, DLE, takvim ve grid maker özellikleri **bu sürümde yok**; kaynakları `legacy/`de duruyor, fazlarla taşınacak.
 
 ---
 

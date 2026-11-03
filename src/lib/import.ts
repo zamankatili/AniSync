@@ -46,6 +46,9 @@ const decode = (value: string): string =>
     .replace(/&apos;/g, "'")
     .trim();
 
+/** MAL yedekleri `http://` kapak URL'leri taşıyor; HTTPS yayında karma içerik olarak engellenir. */
+const toHttps = (url: string): string => url.replace(/^http:\/\//i, 'https://');
+
 const normalizeScore = (value: unknown): number | undefined => {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return undefined;
@@ -112,7 +115,7 @@ export function parseMalXml(xml: string): ImportResult {
         source: 'local',
         type: 'anime',
         title,
-        cover: image,
+        cover: toHttps(image),
         genres: [],
         score: null,
         year: null,
