@@ -1,0 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --theme-accent: #e11d48;
+  --theme-secondary: #ffffff;
+  --theme-glow: rgba(225, 29, 72, 0.28);
+  --theme-shadow: 4px 4px 0px 0px #e11d48;
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ---- Safe area (notch / home indicator) ---- */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  .safe-area-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .safe-area-all {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+
+  /* Minimum 44x44 dokunma hedefi (iOS HIG / Android erişilebilirlik) */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Yalnızca dokunmatik cihazlarda uygulanacak yardımcılar */
+  .coarse-only {
+    display: none;
+  }
+
+  .neo-shadow {
+    box-shadow: 4px 4px 0px 0px var(--theme-accent, #e11d48);
+  }
+  .neo-shadow-white {
+    box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 1);
+  }
+}
+
+@media (pointer: coarse) {
+  .coarse-only {
+    display: initial;
+  }
+}
+
+html, body {
+  background-color: #050505;
+  color: #fff;
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, var(--theme-glow, rgba(225, 29, 72, 0.25)) 0%, transparent 60%),
+    radial-gradient(#ffffff33 1px, transparent 1px);
+  background-size: 100% 700px, 20px 20px;
+  background-repeat: no-repeat, repeat;
+  transition: background-color 0.4s ease, background-image 0.4s ease;
+  animation: subtleRgbGlow 28s infinite ease-in-out;
+  /* Mobil: adres çubuğu taşmalarını ve metin büyütmeyi kontrol altına al */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  color-scheme: dark;
+}
+
+html {
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  isolation: isolate;
+}
+
+/* iOS'ta yüzen klavye ile input kaymalarını azalt */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: inherit;
+  }
+}
+
+html[data-time-theme="light"] {
+  color-scheme: light;
+}
+
+@keyframes subtleRgbGlow {
+  0% {
+    --theme-glow: rgba(225, 29, 72, 0.22);
+  }
+  25% {
+    --theme-glow: rgba(147, 51, 234, 0.22);
+  }
+  50% {
+    --theme-glow: rgba(6, 182, 212, 0.22);
+  }
+  75% {
+    --theme-glow: rgba(16, 185, 129, 0.22);
+  }
+  100% {
+    --theme-glow: rgba(225, 29, 72, 0.22);
+  }
+}
+
+html[data-time-theme="light"], body[data-time-theme="light"] {
+  animation: none !important;
+}
+
+/* Atmospheric Ambient Time Themes */
+html[data-time-theme="dawn"] {
+  --theme-accent: #f59e0b;
+  --theme-secondary: #ea580c;
+  --theme-glow: rgba(245, 158, 11, 0.35);
+  --theme-shadow: 4px 4px 0px 0px #f59e0b;
+}
+
+html[data-time-theme="noon"] {
+  --theme-accent: #e11d48;
+  --theme-secondary: #ffffff;
+  --theme-glow: rgba(225, 29, 72, 0.28);
+  --theme-shadow: 4px 4px 0px 0px #e11d48;
+}
+
+html[data-time-theme="twilight"] {
+  --theme-accent: #d946ef;
+  --theme-secondary: #a855f7;
+  --theme-glow: rgba(217, 70, 239, 0.35);
+  --theme-shadow: 4px 4px 0px 0px #d946ef;
+}
+
+html[data-time-theme="midnight"] {
+  --theme-accent: #06b6d4;
+  --theme-secondary: #10b981;
+  --theme-glow: rgba(6, 182, 212, 0.35);
+  --theme-shadow: 4px 4px 0px 0px #06b6d4;
+}
+
+html[data-time-theme="light"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(0, 0, 0, 0.05) 0%, transparent 60%),
+    radial-gradient(#00000010 1px, transparent 1px) !important;
+  --theme-accent: #000000;
+  --theme-secondary: #ffffff;
+  --theme-glow: rgba(0, 0, 0, 0.08);
+  --theme-shadow: 4px 4px 0px 0px #000000;
+}

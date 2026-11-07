@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /list
+Disallow: /lists
+Disallow: /profile
+Disallow: /watch-party
+Disallow: /grid-maker
+Disallow: /api/
+
+Sitemap: https://anisync.app/sitemap.xml

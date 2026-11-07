@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover: notch / safe-area desteği. maximum-scale kaldırıldı (erişilebilirlik). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Primary Title & Meta Description -->
+    <title>AniSync (LOGOS) – Anime, Manga, Novel ve Oyun Dünyası</title>
+    <meta name="description" content="AniSync ile anime, manga, light novel ve oyunları keşfedin; Watch Party odalarında arkadaşlarınızla izleyin, Müzik Quizi oynayın, Otaku Rank rozetleri kazanın ve topluluğa katılın." />
+    <meta name="keywords" content="anime, manga, light novel, oyun, anime takip, anime takvimi, watch party, anime quiz, otaku, anime topluluğu, anisync" />
+    <meta name="author" content="AniSync LOGOS-Core" />
+
+    <!-- PWA / Mobil -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AniSync" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://anisync-tau.vercel.app/" />
+
+    <!-- OpenGraph Social Share Cards (Facebook, Discord, WhatsApp, LinkedIn) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AniSync" />
+    <meta property="og:title" content="AniSync – Anime Takip, Watch Party & Topluluk Platformu" />
+    <meta property="og:description" content="En güncel anime ve mangaları takip edin, Watch Party ile arkadaşlarınızla canlı izleyin, Otaku Rank rozetleri kazanın ve toplulukla etkileşim kurun." />
+    <meta property="og:image" content="https://cdn.myanimelist.net/images/anime/1015/138006l.webp" />
+    <meta property="og:locale" content="tr_TR" />
+
+    <!-- Twitter / X Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AniSync – Anime Takip, Watch Party & Topluluk Platformu" />
+    <meta name="twitter:description" content="En güncel animeleri takip edin, Birlikte İzle (Watch Party) odalarına katılın ve Otaku Rank derecenizi yükseltin!" />
+    <meta name="twitter:image" content="https://cdn.myanimelist.net/images/anime/1015/138006l.webp" />
+
+    <!-- Schema.org Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "AniSync",
+      "alternateName": "AniSync LOGOS",
+      "applicationCategory": "EntertainmentApplication",
+      "operatingSystem": "All",
+      "inLanguage": "tr",
+      "description": "Kapsamlı anime ve manga takip platformu, canlı Birlikte İzle (Watch Party) odaları, Otaku Rank başarım sistemi, Müzik Quizi ve yayın takvimi.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TRY"
+      }
+    }
+    </script>
+  </head>
+  <body class="bg-black text-white antialiased selection:bg-rose-600 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

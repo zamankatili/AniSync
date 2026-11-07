@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AniSync</string>
+    <string name="title_activity_main">AniSync</string>
+    <string name="package_name">app.anisync.mobile</string>
+    <string name="custom_url_scheme">app.anisync.mobile</string>
+</resources>
