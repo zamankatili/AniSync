@@ -1,4 +1,4 @@
-export interface AiringAnime {
+﻿export interface AiringAnime {
   id: string;
   mal_id: number;
   title: string;
@@ -27,6 +27,12 @@ export const DAYS_OF_WEEK = [
   { key: 'sunday', labelTR: 'Pazar', labelEN: 'Sunday', shortTR: 'Paz' },
 ] as const;
 
+/**
+ * Mevcut Sezon: 2026 Sonbahar (Kasım 2026)
+ * 07.11.2026 tarihine göre, sezonun ortasında (hafta 6-8) olan serielerin
+ * bölüm sayıları ve yayın saatleri güncel tutulmuştur. Bu demo veri
+ * içeriğidir; gerçek MAL verisi ile senkronizasyon backend üzerinden sağlanabilir.
+ */
 export const AIRING_SCHEDULE: AiringAnime[] = [
   // Pazartesi
   {
@@ -37,15 +43,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'monday',
     timeTR: '18:00',
     timeJST: '23:00',
-    currentEpisode: 8,
+    currentEpisode: 11,
     totalEpisodes: 24,
     image: 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
     studio: 'TMS Entertainment',
     score: 8.65,
     genres: ['Aksiyon', 'Komedi', 'Shounen'],
-    synopsis: 'Eski efsanevi suikastçı Taro Sakamoto, aşık olup evlendikten sonra huzurlu bir market işletmeye başlar; ancak yeraltı dünyası peşini bırakmaz.',
+    synopsis: 'Eski efsanevi suikastçı Taro Sakamoto, market işletmesiyle huzurlu yaşamaya devam ederken geçmişi tekrar yakalar ve ailesini korumak için hareketi geçer.',
     streamingOn: ['Netflix'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_mon_2',
@@ -55,15 +61,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'monday',
     timeTR: '19:30',
     timeJST: '00:30',
-    currentEpisode: 6,
+    currentEpisode: 9,
     totalEpisodes: 12,
     image: 'https://cdn.myanimelist.net/images/anime/1066/141071l.webp',
     studio: 'Bibury Animation',
     score: 8.35,
     genres: ['Komedi', 'Romantizm', 'Parodi'],
-    synopsis: 'Rentaro Aijou kaderindeki 100 ruh ikiziyle tanışmaya devam ederken akıl almaz ve kahkaha dolu romantik kaos büyüyor.',
+    synopsis: 'Rentaro ve 100 ruh ikizisinin aşk kaosu son bölümlerine doğru ilerler; yeni karakterler ve dramatic anlatılarla dolu.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_mon_3',
@@ -73,15 +79,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'monday',
     timeTR: '21:00',
     timeJST: '02:00',
-    currentEpisode: 20,
+    currentEpisode: 23,
     totalEpisodes: 26,
     image: 'https://cdn.myanimelist.net/images/anime/1118/143529l.webp',
     studio: 'The Answer Studio',
     score: 7.62,
     genres: ['Aksiyon', 'Macera', 'Gizem'],
-    synopsis: 'Atölye Savaşı arenasının doruk noktasında Baam ve FUG savaşçıları kulenin karanlık sırlarını gün yüzüne çıkarıyor.',
+    synopsis: 'Atölye Savaşının son aşamasında Baam ve FUGnun kılıçları kesişir; kulenin en karanlık sırrı ortaya çıkar.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
 
   // Salı
@@ -93,15 +99,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'tuesday',
     timeTR: '19:00',
     timeJST: '00:00',
-    currentEpisode: 7,
+    currentEpisode: 9,
     totalEpisodes: 12,
     image: 'https://cdn.myanimelist.net/images/anime/1815/141743l.webp',
     studio: 'CloverWorks',
     score: 8.15,
     genres: ['Aksiyon', 'Okul', 'Dövüş'],
-    synopsis: 'Haruka Sakura ve Furin Lisesi Bofurin çetesi, şehri tehdit eden yeni ve tehlikeli suç örgütleriyle kıran kırana savaşıyor.',
+    synopsis: 'Furin Lisesi Bofurin çetesi, yeni bir şehri tehdit eden suç örgütü ile savaşıyorum sırasında internesişit ilişkilerini derinleştirir.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_tue_2',
@@ -111,15 +117,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'tuesday',
     timeTR: '20:30',
     timeJST: '01:30',
-    currentEpisode: 5,
+    currentEpisode: 8,
     totalEpisodes: 12,
     image: 'https://cdn.myanimelist.net/images/anime/1204/141887l.webp',
     studio: 'CloverWorks',
     score: 8.22,
     genres: ['Gizem', 'Doğaüstü', 'Tarihi'],
-    synopsis: 'Ciel ve Sebastian, Almanya\'nın derin lanetli ormanlarında esrarengiz Zümrüt Cadı ve kurtadam efsanelerini araştırıyor.',
+    synopsis: 'Ciel ve Sebastian, Zümrüt Cadının efsanelerini araştırırken Almanca ormanların karanlık yüzünü keşfeder.',
     streamingOn: ['Crunchyroll', 'Netflix'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_tue_3',
@@ -129,15 +135,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'tuesday',
     timeTR: '22:00',
     timeJST: '03:00',
-    currentEpisode: 4,
+    currentEpisode: 7,
     totalEpisodes: 12,
     image: 'https://cdn.myanimelist.net/images/anime/1806/126216l.jpg',
     studio: 'CygamesPictures',
     score: 7.88,
     genres: ['Bilim Kurgu', 'Komedi', 'Doğaüstü'],
-    synopsis: 'Medeniyetin çöktüğü Ginza\'da ayakta kalan son lüks otelde misafir ağırlayan sevimli robotların sıra dışı hikayesi.',
+    synopsis: 'Çöküşteki Ginzadaki son lüks otelde, misafir ağırlayan robot ekibinin sırrı ve medeniyetin sonu üzerine yeni ipuçları.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
 
   // Çarşamba
@@ -149,15 +155,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'wednesday',
     timeTR: '17:30',
     timeJST: '22:30',
-    currentEpisode: 15,
+    currentEpisode: 13,
     totalEpisodes: 16,
     image: 'https://cdn.myanimelist.net/images/anime/1160/142384l.webp',
     studio: 'White Fox',
     score: 8.78,
     genres: ['Dram', 'Fantastik', 'Psikolojik', 'Gerilim'],
-    synopsis: 'Subaru Natsuki, Su Kapısı Şehri Priestella\'da Günah Başpiskoposlarının dehşet verici saldırısına karşı tarihin en büyük karşı taarruzunu yönetiyor.',
+    synopsis: 'Subaru, Priestella saldırısının ardından tarihin en büyük karşı taarruzunu yönetir; Eğlenceli Babanın sırrı ağır konu haline gelir.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_wed_2',
@@ -167,15 +173,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'wednesday',
     timeTR: '19:00',
     timeJST: '00:00',
-    currentEpisode: 6,
+    currentEpisode: 9,
     totalEpisodes: 12,
     image: 'https://cdn.myanimelist.net/images/anime/1487/142079l.webp',
     studio: 'TMS Entertainment',
     score: 8.54,
     genres: ['Bilim Kurgu', 'Macera', 'Shounen'],
-    synopsis: 'Senku ve Bilim Krallığı, Ay\'a ulaşacak roketi inşa etmek ve taşlaşmanın kaynağı olan Whyman ile yüzleşmek için son küresel yolculuğa çıkıyor.',
+    synopsis: 'Senku ve Bilim Krallığı, Ay gidiş roketini tamamlar ve Whymanın kaynağına doğru son küresel yolculuğa çıkar.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_wed_3',
@@ -185,15 +191,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'wednesday',
     timeTR: '21:00',
     timeJST: '02:00',
-    currentEpisode: 4,
+    currentEpisode: 7,
     totalEpisodes: 24,
     image: 'https://cdn.myanimelist.net/images/anime/1171/123961l.jpg',
     studio: 'Bones',
     score: 8.41,
     genres: ['Aksiyon', 'Fantastik', 'Karanlık Shounen'],
-    synopsis: 'İşlemediği bir suç yüzünden Uçurum\'a atılan Rudo, canavarlara ve çöplük dünyasına karşı sihirli jinki eşyalarıyla intikam savaşı başlatıyor.',
+    synopsis: 'Rudo, Uçurumdaki canavarlarla mücadele ederken jinki eşyalarının gizemli geçmişine dairy ipuçları bulmaya başlar.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
 
   // Perşembe
@@ -205,15 +211,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'thursday',
     timeTR: '18:00',
     timeJST: '23:00',
-    currentEpisode: 12,
-    totalEpisodes: 12,
+    currentEpisode: 15,
+    totalEpisodes: 24,
     image: 'https://cdn.myanimelist.net/images/anime/1487/142079l.webp',
     studio: 'Science SARU',
     score: 8.82,
     genres: ['Aksiyon', 'Komedi', 'Doğaüstü', 'Uzaylı'],
-    synopsis: 'Momo Ayase ve Okarun, lanetli türbo nene güçleri ve galaksiler arası uzaylı akınlarıyla akıllara durgunluk veren bir maceraya koşuyor.',
+    synopsis: 'Momo ve Okarun, galaxy arası uzaylı saldırılarını önlemek için yeni bir ittifak kurar; sevgililikleri de sınanmaya başlar.',
     streamingOn: ['Netflix', 'Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_thu_2',
@@ -223,15 +229,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'thursday',
     timeTR: '20:00',
     timeJST: '01:00',
-    currentEpisode: 3,
+    currentEpisode: 6,
     totalEpisodes: 12,
     image: 'https://cdn.myanimelist.net/images/anime/1739/140994l.webp',
     studio: 'Production I.G',
     score: 8.48,
     genres: ['Aksiyon', 'Bilim Kurgu', 'Askeri'],
-    synopsis: 'Kafka Hibino, 9 Numaralı Kaiju\'nun Tokyo genelindeki koordineli istilasına karşı 3. Bölük ile birlikte ölüm kalım mücadelesi veriyor.',
+    synopsis: 'Kafka ve 3. Bölük, Kaiju 9nun koordine edilmiş istilasına karşı son savunma hattını kurar; Hoshina yan hikayesi de devam eder.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_thu_3',
@@ -241,15 +247,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'thursday',
     timeTR: '21:30',
     timeJST: '02:30',
-    currentEpisode: 16,
+    currentEpisode: 19,
     totalEpisodes: 23,
     image: 'https://cdn.myanimelist.net/images/anime/1208/135328l.jpg',
     studio: 'LIDENFILMS',
     score: 8.10,
     genres: ['Aksiyon', 'Samuray', 'Tarihi'],
-    synopsis: 'Kenshin Himura, Kyoto\'yu ateşe vermeye hazırlanan Shishio Makoto ve On Kılıç çetesine karşı kılıcının tersiyle direniyor.',
+    synopsis: 'Kenshin, Shishionun Kyoto yangın planını engellemek için son kılıç savaşına hazırlanır; Okinanın tarihi açılır.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
 
   // Cuma
@@ -261,15 +267,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'friday',
     timeTR: '18:30',
     timeJST: '23:30',
-    currentEpisode: 2,
+    currentEpisode: 5,
     totalEpisodes: 24,
     image: 'https://cdn.myanimelist.net/images/anime/1015/138006l.webp',
     studio: 'Madhouse',
     score: 9.38,
     genres: ['Macera', 'Dram', 'Fantastik', 'Felsefe'],
-    synopsis: 'Elf büyücü Frieren, Fern ve Stark; Kuzey Yaylası\'nın çetin koşullarında Aureole cennetine doğru kadim anıların izinde yol alıyor.',
+    synopsis: 'Frieren, Fern ve Stark, Kuzey Yaylasındaki Aureole cennetine doğru yol alırken kadim anıları ve yeni hikayelerle karşılaşır.',
     streamingOn: ['Crunchyroll', 'Netflix'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_fri_2',
@@ -279,15 +285,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'friday',
     timeTR: '20:00',
     timeJST: '01:00',
-    currentEpisode: 5,
+    currentEpisode: 8,
     totalEpisodes: 24,
     image: 'https://cdn.myanimelist.net/images/anime/1171/123961l.jpg',
     studio: 'David Production',
     score: 8.32,
     genres: ['Aksiyon', 'Doğaüstü', 'Bilim Kurgu'],
-    synopsis: 'Shinra Kusakabe ve 8. Özel İtfaiye Bölüğü, dünyayı küle çevirmek isteyen Beyaz Pelerinliler ve Adolla felaketine karşı son savaşı veriyor.',
+    synopsis: 'Shinra ve 8. Bölük, Beyaz Pelerinlerin nihai planına karşı Adolla felaketini durdurmak için son savaşa girer.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_fri_3',
@@ -297,15 +303,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'friday',
     timeTR: '21:30',
     timeJST: '02:30',
-    currentEpisode: 3,
+    currentEpisode: 6,
     totalEpisodes: 24,
     image: 'https://cdn.myanimelist.net/images/anime/1489/141014l.webp',
     studio: 'Trigger',
     score: 8.68,
     genres: ['Macera', 'Komedi', 'Fantastik', 'Gurme'],
-    synopsis: 'Laios ve ekibi, Zindanın Efendisi Çılgın Büyücü Thistle ile derin katlarda yeni egzotik canavar tarifleriyle yüzleşiyor.',
+    synopsis: 'Laios ve ekibi, Zindanın Efendisi Thistle ile derin katlarda yeni egzotik canavar tarifleriyle yüzleşir ve sırları açar.',
     streamingOn: ['Netflix'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
 
   // Cumartesi
@@ -317,15 +323,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'saturday',
     timeTR: '17:00',
     timeJST: '23:00',
-    currentEpisode: 11,
+    currentEpisode: 12,
     totalEpisodes: 13,
     image: 'https://cdn.myanimelist.net/images/anime/1912/143527l.webp',
     studio: 'Pierrot Films',
     score: 8.85,
     genres: ['Aksiyon', 'Macera', 'Doğaüstü'],
-    synopsis: 'Ruh Kralı Sarayı düşerken Ichigo Kurosaki ve Kaptanlar, Yhwach\'ın tanrısal kudretine karşı nihai savaşa giriyor.',
+    synopsis: 'Ichigo ve Kaptanlar, Ruh Kralı Sarayının ele geçirilmesi sonucu Yhwach ile nihai savaşa girer; final hazırlığı ağırlar.',
     streamingOn: ['Disney+', 'Hulu'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_sat_2',
@@ -335,15 +341,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'saturday',
     timeTR: '19:00',
     timeJST: '00:00',
-    currentEpisode: 8,
+    currentEpisode: 11,
     totalEpisodes: 13,
     image: 'https://cdn.myanimelist.net/images/anime/1210/141049l.webp',
     studio: 'A-1 Pictures',
     score: 8.74,
     genres: ['Aksiyon', 'Fantastik', 'Süper Güç'],
-    synopsis: 'Sung Jin-Woo, Jeju Adası Seferi ve Busan baskınında Gölge Ordusu\'nu serbest bırakarak dünyayı sarsıyor.',
+    synopsis: 'Sung Jin-Woo, Jeju Adası ve Busan baskınından sonra Gölge Ordusunu serbest bırakarak dünya temeline sarsmaya devam eder.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_sat_3',
@@ -353,15 +359,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'saturday',
     timeTR: '20:30',
     timeJST: '01:30',
-    currentEpisode: 12,
+    currentEpisode: 13,
     totalEpisodes: 14,
     image: 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
     studio: '8bit',
     score: 7.85,
     genres: ['Spor', 'Futbol', 'Psikolojik'],
-    synopsis: 'Ego Jinpachi\'nin forvetleri, Japonya U-20 takımına karşı kader maçında kimyasal reaksiyonlar ve akıl almaz gollerle parlıyor.',
+    synopsis: 'Forvetler, Japonya U-20 takımına karşı kader maçında kimyasal reaksiyon ve akıl almaz gollerle parlar; Şampiyonlar LigiSerisi başlar.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_sat_4',
@@ -371,15 +377,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'saturday',
     timeTR: '13:00',
     timeJST: '17:30',
-    currentEpisode: 20,
+    currentEpisode: 22,
     totalEpisodes: 25,
     image: 'https://cdn.myanimelist.net/images/anime/1138/142999l.webp',
     studio: 'C2C',
     score: 8.24,
     genres: ['Aksiyon', 'Macera', 'VRMMO'],
-    synopsis: 'Kuş kafalı uzman Sunraku, Yedi Efsanevi Canavar\'dan Ctarnidd of the Abyss ile okyanusun derinliklerinde yüzleşiyor.',
+    synopsis: 'Sunraku, Yedi Efsanevi Canavar\'dan Ctarnidd of the Abyss ile okyanusun derinliklerini keşfeder ve yeni sırları ortaya çıkarır.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
 
   // Pazar
@@ -391,15 +397,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'sunday',
     timeTR: '05:30',
     timeJST: '09:30',
-    currentEpisode: 1128,
+    currentEpisode: 1130,
     totalEpisodes: null,
     image: 'https://cdn.myanimelist.net/images/anime/6/73245l.webp',
     studio: 'Toei Animation',
     score: 8.79,
     genres: ['Aksiyon', 'Macera', 'Fantastik', 'Korsan'],
-    synopsis: 'Egghead Olayı\'nın ardından Hasır Şapka Korsanları efsanevi savaşçılar diyarı Elbaf\'a ayak basar; kadim sırlar ve Viking devleri onları bekler.',
+    synopsis: 'Egghead sonrası Hasır Şapka Korsanları efsanevi savaşçılar diyarı Elbaf e adım basar; kadin Viking devleri ve Anahat sırrı karşısın.',
     streamingOn: ['Crunchyroll', 'Netflix'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_sun_2',
@@ -409,15 +415,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'sunday',
     timeTR: '18:00',
     timeJST: '23:30',
-    currentEpisode: 4,
+    currentEpisode: 7,
     totalEpisodes: 24,
     image: 'https://cdn.myanimelist.net/images/anime/1171/123961l.jpg',
     studio: 'MAPPA',
     score: 8.92,
     genres: ['Aksiyon', 'Karanlık Fantazi', 'Doğaüstü'],
-    synopsis: 'Kenjaku\'nun kurduğu ölüm bariyerlerinde Yuji Itadori ve Megumi Fushiguro, bin yıl öncesinin yeniden doğmuş kadim büyücüleriyle savaşıyor.',
+    synopsis: 'Yuji ve Megumi, Kenjakunun ölüm bariyerleri içinde yeniden doğmuş kadın büyücülerle savaşıyor; final yaklaşıyor.',
     streamingOn: ['Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   },
   {
     id: 'air_sun_3',
@@ -427,14 +433,15 @@ export const AIRING_SCHEDULE: AiringAnime[] = [
     day: 'sunday',
     timeTR: '20:00',
     timeJST: '01:00',
-    currentEpisode: 6,
+    currentEpisode: 9,
     totalEpisodes: 16,
     image: 'https://cdn.myanimelist.net/images/anime/1806/126216l.jpg',
     studio: 'B.CMAY PICTURES',
     score: 8.84,
     genres: ['Gizem', 'Viktoryen', 'Kozmik Korku', 'Steampunk'],
-    synopsis: 'Sislerin üzerindeki gri sis sarayında Aptal (The Fool) unvanını alan Klein Moretti, Viktoryen döneminde simya ve tarotun yasak güçlerini yönetiyor.',
+    synopsis: 'Klein Moretti, Viktoryen Londrada simya ve tarotun yasak güçleriyle mücadele ederken "Aptal" unvanının sırrı başını gösterir.',
     streamingOn: ['Tencent Video', 'Crunchyroll'],
-    seasonYear: '2026 Güncel'
+    seasonYear: '2026 Sonbahar'
   }
 ];
+

@@ -17,41 +17,51 @@ export interface AnimeNewsItem {
 export const CURATED_2026_NEWS: AnimeNewsItem[] = [
   {
     id: 'news-2026-1',
-    title: 'Chainsaw Man: Reze Arc Sinema Filmi Dünya Prömiyeri ve Vizyon Tarihi Duyuruldu',
-    summary: 'MAPPA stüdyosu, Bomba Şeytanı Reze\'nin heyecanla beklenen sinema uyarlaması için yeni görsel ve resmi vizyon takvimini paylaştı.',
-    source: 'Anime News Network',
-    category: 'FİLM',
-    date: '1 saat önce',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1806/126216l.jpg',
-    linkUrl: 'https://www.animenewsnetwork.com',
-    isHot: true
-  },
-  {
-    id: 'news-2026-2',
-    title: 'Solo Leveling 2. Sezon "Arise from the Shadow" Bölümleri Reyting Rekorları Kırıyor',
-    summary: 'Sung Jin-Woo ve Gölge Ordusu\'nun Jeju Adası seferi Crunchyroll ve küresel platformlarda en çok izlenen anime olmayı başardı.',
+    title: '2026 Sonbahar Sezonu: Gachiakuta ve Apocalypse Hotel Yeniden İzlenme Rekoru Kırdı',
+    summary: 'Bones ve CygamesPictures imzalı iki yeni seri, Crunchyroll üzerinde ilk iki haftada en çok streamlenen animeler listesine girdi.',
     source: 'Crunchyroll News',
     category: 'SEZON',
-    date: '3 saat önce',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1210/141049l.webp',
+    date: '1 saat önce',
+    imageUrl: 'https://cdn.myanimelist.net/images/anime/1171/123961l.jpg',
     linkUrl: 'https://www.crunchyroll.com/news',
     isHot: true
   },
   {
-    id: 'news-2026-3',
-    title: 'Sakamoto Days Anime Uyarlaması Netflix\'te Dünya Trendlerine Girdi',
-    summary: 'TMS Entertainment yapımı Sakamoto Days, efsanevi emekli suikastçı Taro Sakamoto\'nun aksiyon dolu maceralarıyla zirveye oturdu.',
+    id: 'news-2026-2',
+    title: 'Sakamoto Days Sezon Finali Yaklaşıyor: TMS Entertainment Son Bölüm Teaserını Yayınladı',
+    summary: 'Taro Sakamoto ailesini koruma mücadelesinin son bölümleri için azımsanamaz bir aksiyon dizisi ve görsel efektleri vaat ediliyor.',
     source: 'Natalie.mu',
     category: 'DUYURU',
-    date: '4 saat önce',
+    date: '2 saat önce',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
     linkUrl: 'https://natalie.mu/comic',
     isHot: true
   },
   {
+    id: 'news-2026-3',
+    title: 'Dr. STONE SCIENCE FUTURE: Ay Gidiş Roketi Testleri Başarılı Oldu',
+    summary: 'Senku ve Bilim Krallığı ekibi, Whyman\'ın kaynağına doğru son küresel yolculuğuna hazırlanırken son bölümler kritiklere açıldı.',
+    source: 'Anime News Network',
+    category: 'DUYURU',
+    date: '3 saat önce',
+    imageUrl: 'https://cdn.myanimelist.net/images/anime/1487/142079l.webp',
+    linkUrl: 'https://www.animenewsnetwork.com',
+    isHot: true
+  },
+  {
     id: 'news-2026-4',
-    title: 'Dan Da Dan 2. Sezon İçin Science SARU Stüdyosundan İlk Teaser Fragmanı Geldi',
-    summary: 'Momo ve Okarun\'un uzaylılar ve lanetlerle dolu serüveni Science SARU stüdyosunun büyüleyici animasyonlarıyla devam ediyor.',
+    title: 'Re:Zero 3. Sezon Counterattack Arkı: Günah Başpiskoposu Savaşının Sonu',
+    summary: 'Subaru ve ekibi, Priestella\'daki dehşetli saldırının ardından tarihin en büyük karşı taarruzunu başlattı; final bölümler ortaya çıktı.',
+    source: 'Oricon News',
+    category: 'DUYURU',
+    date: 'Bugün',
+    imageUrl: 'https://cdn.myanimelist.net/images/anime/1160/142384l.webp',
+    linkUrl: 'https://www.oricon.co.jp'
+  },
+  {
+    id: 'news-2026-5',
+    title: 'Dan Da Dan Uzaylı Savaşları: Momo ve Okarun Yeni İttifakıyla Çıkıyor',
+    summary: 'Science SARU stüdyosu, galaxy arası akınlarıyla dolu yeni bölümleri paylaştı; ikilisinin sevgililikleri de sınanmaya başlıyor.',
     source: 'Anime Trending',
     category: 'FRAGMAN',
     date: 'Bugün',
@@ -59,19 +69,9 @@ export const CURATED_2026_NEWS: AnimeNewsItem[] = [
     linkUrl: 'https://anitrendz.com'
   },
   {
-    id: 'news-2026-5',
-    title: 'Bleach: Thousand-Year Blood War Final Bölümleri Öncesi Özel Röportaj',
-    summary: 'Tite Kubo ve Pierrot Films ekibi, Ruh Kralı Sarayı ve Yhwach ile yapılacak nihai yüzleşmenin sinematik kalitesini anlattı.',
-    source: 'Comic Natalie',
-    category: 'DUYURU',
-    date: 'Bugün',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1912/143527l.webp',
-    linkUrl: 'https://natalie.mu/comic'
-  },
-  {
     id: 'news-2026-6',
-    title: 'One Piece: Egghead Doruk Noktası Sonrası Elbaf Devler Diyarı Arkı Başlıyor',
-    summary: 'Eiichiro Oda\'nın efsanevi başyapıtında Hasır Şapka Korsanları kadim devlerin vatanı Elbaf\'a ayak basarak yeni dönemi açtı.',
+    title: 'One Piece Elbaf Arkı: Devler Ülkesi\'nde Kadın Sırları Ortaya Çıktı',
+    summary: 'Eiichiro Oda\'nın efsanevi başyapıtında Hasır Şapka Korsanları kadin Viking devleri ile karşı karşıya; Anahat sırrı yaklaşıyor.',
     source: 'Shonen Jump News',
     category: 'MANGA',
     date: 'Dün',
@@ -80,24 +80,23 @@ export const CURATED_2026_NEWS: AnimeNewsItem[] = [
   },
   {
     id: 'news-2026-7',
-    title: 'Sousou no Frieren 2. Sezon Yapımı Resmi Olarak Onaylandı',
-    summary: 'Madhouse stüdyosu, efsanevi büyücü Frieren\'in kuzeye Aureole\'ye doğru uzanan yolculuğunun devam edeceğini resmen duyurdu.',
-    source: 'Oricon News',
-    category: 'DUYURU',
-    date: '2 gün önce',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1015/138006l.webp',
-    linkUrl: 'https://www.oricon.co.jp',
-    isHot: true
+    title: 'Solo Leveling 2. Sezon Arise from the Shadow Finali Yaklaşıyor',
+    summary: 'Sung Jin-Woo\'nun Gölge Ordusu serbest bırakıldıktan sonraki nihai kılıç savaşı, Crunchyroll\'da reyting rekorlarını kırmaya devam ediyor.',
+    source: 'Mappa Stage',
+    category: 'SEZON',
+    date: 'Dün',
+    imageUrl: 'https://cdn.myanimelist.net/images/anime/1210/141049l.webp',
+    linkUrl: 'https://mappa.co.jp'
   },
   {
     id: 'news-2026-8',
-    title: 'Jujutsu Kaisen: Culling Game (Ölüm Oyunu) Arkı İçin Yeni Karakter Tanıtımları',
-    summary: 'MAPPA ekibi, Kenjaku\'nun kurduğu ölüm bariyerlerinde yer alacak kadim lanet kullanıcılarının tasarım eskizlerini paylaştı.',
-    source: 'Mappa Stage',
-    category: 'SEZON',
-    date: '3 gün önce',
-    imageUrl: 'https://cdn.myanimelist.net/images/anime/1171/109222l.webp',
-    linkUrl: 'https://mappa.co.jp'
+    title: 'Kaiju No.8 2. Sezon: Kafka ve 3. Bölük Son Durumda',
+    summary: 'Kaiju 9\'un koordine edilmiş istilasına karşı Tokyo savunma hattı daralır; Hoshina yan hikayesi de sona doğru ilerliyor.',
+    source: 'Production I.G News',
+    category: 'DUYURU',
+    date: '2 gün önce',
+    imageUrl: 'https://cdn.myanimelist.net/images/anime/1739/140994l.webp',
+    linkUrl: 'https://production-ig.co.jp'
   }
 ];
 
@@ -180,8 +179,8 @@ export async function fetchLiveNews(forceRefresh = false): Promise<{ news: Anime
           return {
             id: `live_jikan_news_${anime.mal_id || idx}`,
             title: `${title} - 2026 Sezonu Yayın ve Bölüm Gelişmeleri`,
-            summary: anime.synopsis 
-              ? `${anime.synopsis.slice(0, 160)}... (${ep} ${score})` 
+            summary: anime.synopsis
+              ? `${anime.synopsis.slice(0, 160)}... (${ep} ${score})`
               : `${title} serisinin güncel sezon yayınları devam ediyor.`,
             source: 'MyAnimeList Live Data',
             category,
@@ -195,7 +194,7 @@ export async function fetchLiveNews(forceRefresh = false): Promise<{ news: Anime
         // Merge with curated top announcements for rich multi-category diversity
         const combined = [...liveItems, ...CURATED_2026_NEWS.slice(0, 4)];
         localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ news: combined, timestamp: Date.now(), isGrounded: true }));
-        
+
         // Asynchronously save to Firestore so other community members get persistent news
         saveNewsToFirestore(combined).catch(() => {});
 
