@@ -5,7 +5,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_1',
     name: 'Monkey D. Luffy',
     series: 'One Piece',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/9/131031.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/9/310307.jpg',
     difficulty: 'easy',
     genre: 'Shounen',
     hints: ['Hasır Şapka Korsanları Kaptanı', 'Gomu Gomu no Mi / Hito Hito no Mi', 'Korsanlar Kralı olmak istiyor']
@@ -32,7 +32,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_4',
     name: 'Levi Ackerman',
     series: 'Attack on Titan',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/2/241416.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/2/241413.jpg',
     difficulty: 'easy',
     genre: 'Seinen/Shounen',
     hints: ['İnsanlığın En Güçlü Askeri', 'Keşif Birliği Özel Harekat Tim Lideri', 'Temizlik takıntısı var']
@@ -68,7 +68,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_8',
     name: 'Frieren',
     series: 'Sousou no Frieren',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/7/523292.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/7/525105.jpg',
     difficulty: 'easy',
     genre: 'Fantasy',
     hints: ['Bin yaşını aşkın elf büyücü', 'Kahraman Himmel\'in yol arkadaşı', 'Büyü büyü kitapları toplar']
@@ -95,7 +95,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_11',
     name: 'L Lawliet',
     series: 'Death Note',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/10/76530.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/10/249647.jpg',
     difficulty: 'easy',
     genre: 'Psychological',
     hints: ['Dünyanın en iyi dedektifi', 'Garip oturuş tarzı ve tatlı düşkünlüğü', 'Kira soruşturmasını yönetti']
@@ -104,7 +104,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_12',
     name: 'Guts',
     series: 'Berserk',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/15/73138.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/13/284125.jpg',
     difficulty: 'medium',
     genre: 'Seinen',
     hints: ['Kara Kılıç Ustası (The Black Swordsman)', 'Ejderha Biçici (Dragonslayer) kılıcı', 'Kader ve Tanrı Eli\'ne karşı savaşır']
@@ -131,7 +131,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_15',
     name: 'Spike Spiegel',
     series: 'Cowboy Bebop',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/4/51162.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/11/516853.jpg',
     difficulty: 'medium',
     genre: 'Classic/Sci-Fi',
     hints: ['Bebop gemisinde ödül avcısı', 'Jeet Kune Do dövüş stili', '"Bang" repliğiyle tarihe geçti']
@@ -140,7 +140,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_16',
     name: 'Sung Jin-Woo',
     series: 'Solo Leveling',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/12/533481.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/2/540692.jpg',
     difficulty: 'easy',
     genre: 'Action/Fantasy',
     hints: ['Gölge Hükümdarı (Shadow Monarch)', '"Arise" (Uyan) komutu', 'En zayıf E-seviye avcıdan tek başına level atlayan efsaneye']
@@ -149,7 +149,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_17',
     name: 'Taro Sakamoto',
     series: 'Sakamoto Days',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/13/554122.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/7/508475.jpg',
     difficulty: 'medium',
     genre: 'Shounen',
     hints: ['Eski efsanevi suikastçı', 'Huzurlu bir market işletmecisi ve aile babası', 'Kavga anında zayıflayıp eski formuna döner']
@@ -158,7 +158,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_18',
     name: 'Thorfinn',
     series: 'Vinland Saga',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/8/415174.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/9/309871.jpg',
     difficulty: 'medium',
     genre: 'Seinen',
     hints: ['Thors\'un oğlu', 'Askeladd\'dan intikam almak için yıllarca savaştı', '"Benim hiç düşmanım yok" felsefesini benimsedi']
@@ -167,7 +167,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_19',
     name: 'Ken Kaneki',
     series: 'Tokyo Ghoul',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/9/265033.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/15/307255.jpg',
     difficulty: 'easy',
     genre: 'Dark Fantasy',
     hints: ['Tek Gözlü Hortlak (One-Eyed Ghoul)', 'Beyaz saç ve kırkayak kagune', 'Parmak çıtlatma alışkanlığı']
@@ -176,7 +176,7 @@ export const CHARACTERS_POOL: (AnimeCharacter & { hints: string[]; genre: string
     id: 'char_20',
     name: 'Tanjiro Kamado',
     series: 'Demon Slayer: Kimetsu no Yaiba',
-    imageUrl: 'https://cdn.myanimelist.net/images/characters/12/386457.jpg',
+    imageUrl: 'https://cdn.myanimelist.net/images/characters/6/386735.jpg',
     difficulty: 'easy',
     genre: 'Shounen',
     hints: ['Su ve Güneş Nefesi kullanıcısı', 'Kız kardeşi Nezuko\'yu insana dönüştürmeye çalışır', 'Koku alma duyusu son derece gelişmiştir']
