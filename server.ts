@@ -75,6 +75,54 @@ async function startServer() {
     }
   });
 
+  // Auto-refresh anime news (called by Vercel Cron every 12 hours)
+  app.get("/api/refresh-news", async (req, res) => {
+    try {
+      const jikanRes = await fetch('https://api.jikan.moe/v4/seasons/now?limit=12');
+      if (!jikanRes.ok) {
+        return res.status(502).json({ error: "Jikan API failed", status: jikanRes.status });
+      }
+      const json = await jikanRes.json();
+      if (!json || !Array.isArray(json.data)) {
+        return res.status(502).json({ error: "Invalid Jikan response" });
+      }
+
+      const liveItems = json.data.map((anime: any, idx: number) => {
+        const catOptions = ['SEZON', 'DUYURU', 'FRAGMAN'];
+        const category = catOptions[idx % catOptions.length];
+        const title = anime.title_english || anime.title;
+        const score = anime.score ? `★ ${anime.score}` : '';
+        const ep = anime.episodes ? `${anime.episodes} Bölüm` : 'Devam Ediyor';
+
+        return {
+          id: `live_jikan_${anime.mal_id || idx}`,
+          title: `${title} - 2026 Sezonu Yayın ve Bölüm Gelişmeleri`,
+          summary: anime.synopsis
+            ? `${anime.synopsis.slice(0, 160)}... (${ep} ${score})`
+            : `${title} serisinin güncel sezon yayınları devam ediyor.`,
+          source: 'MyAnimeList Live Data',
+          category,
+          date: 'Canlı Güncellendi',
+          imageUrl: anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
+          linkUrl: anime.url || `https://myanimelist.net/anime/${anime.mal_id}`,
+          isHot: idx < 3
+        };
+      });
+
+      const response = {
+        news: liveItems,
+        source: 'Jikan v4 + AniSync Canlı Haber Motoru',
+        isGrounded: true,
+        refreshedAt: new Date().toISOString()
+      };
+
+      res.json(response);
+    } catch (err: any) {
+      console.error('Refresh news error:', err);
+      res.status(500).json({ error: "Failed to refresh news", message: err?.message });
+    }
+  });
+
   // iTunes Audio Preview Search Proxy
   app.get("/api/music-preview", async (req, res) => {
     try {

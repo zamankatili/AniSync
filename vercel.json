@@ -6,6 +6,12 @@
       "destination": "/index.html"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/refresh-news",
+      "schedule": "0 */12 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

@@ -101,7 +101,7 @@ export const CURATED_2026_NEWS: AnimeNewsItem[] = [
 ];
 
 const NEWS_CACHE_KEY = 'anisync_live_news_v2';
-const NEWS_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const NEWS_CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
 
 export async function fetchLiveNews(forceRefresh = false): Promise<{ news: AnimeNewsItem[]; source: string; isGrounded: boolean }> {
   // 1. Check client-side localStorage cache

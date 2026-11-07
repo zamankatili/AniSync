@@ -44,8 +44,16 @@ export const AnimeNewsFeed: React.FC = () => {
     }
   };
 
+  // Auto-refresh every 12 hours
   useEffect(() => {
     fetchLatestAnimeNews(false);
+    
+    const twelveHours = 12 * 60 * 60 * 1000;
+    const interval = setInterval(() => {
+      fetchLatestAnimeNews(true);
+    }, twelveHours);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const toggleSaveNews = (id: string | number) => {
