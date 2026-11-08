@@ -31,9 +31,6 @@ interface WeeklyChallengeState {
   // Selected day index to view/play (0-7: 0:Pzt ... 6:Paz, 7:Final)
   selectedDayIndex: number;
 
-  // Additional live votes cast by user (questionId -> optionId -> number of extra votes)
-  extraVotes: Record<string, Record<string, number>>;
-
   // User streak (days where all 6 questions were answered)
   streakDays: number;
   lastCompletedDateStr: string | null;
@@ -64,10 +61,6 @@ interface WeeklyChallengeState {
   // Badge list
   getBadges: () => ChallengeBadge[];
 
-  // Helper for option votes (original votes + extra votes)
-  getOptionVotes: (questionId: string, optionId: string, baseVotes: number) => number;
-  getTotalQuestionVotes: (question: ChallengeQuestion) => number;
-
   // Reset or clear
   resetProgress: () => void;
 }
@@ -84,7 +77,6 @@ export const useWeeklyChallengeStore = create<WeeklyChallengeState>()(
       return {
         answers: {},
         selectedDayIndex: getTodayIndex(),
-        extraVotes: {},
         streakDays: 1,
         lastCompletedDateStr: null,
         totalChallengeXp: 0,
@@ -129,16 +121,6 @@ export const useWeeklyChallengeStore = create<WeeklyChallengeState>()(
             }
           };
 
-          // Record extra vote
-          const currentExtra = state.extraVotes[questionId] || {};
-          const updatedExtraVotes = {
-            ...state.extraVotes,
-            [questionId]: {
-              ...currentExtra,
-              [optionId]: (currentExtra[optionId] || 0) + 1
-            }
-          };
-
           // Check if today's day questions are fully completed with this answer
           let newStreak = state.streakDays;
           let newLastCompletedDate = state.lastCompletedDateStr;
@@ -154,7 +136,6 @@ export const useWeeklyChallengeStore = create<WeeklyChallengeState>()(
 
           set({
             answers: updatedAnswers,
-            extraVotes: updatedExtraVotes,
             totalChallengeXp: state.totalChallengeXp + (isFirstAnswer ? xpEarned : 0),
             streakDays: newStreak,
             lastCompletedDateStr: newLastCompletedDate
@@ -219,19 +200,6 @@ export const useWeeklyChallengeStore = create<WeeklyChallengeState>()(
             completedDaysCount,
             isGrandMaster: completedCount >= 50
           };
-        },
-
-        getOptionVotes: (questionId: string, optionId: string, baseVotes: number) => {
-          const extra = get().extraVotes[questionId]?.[optionId] || 0;
-          return baseVotes + extra;
-        },
-
-        getTotalQuestionVotes: (question: ChallengeQuestion) => {
-          const state = get();
-          return question.options.reduce((sum, opt) => {
-            const extra = state.extraVotes[question.id]?.[opt.id] || 0;
-            return sum + (opt.votes || 0) + extra;
-          }, 0);
         },
 
         getBadges: () => {
@@ -306,7 +274,6 @@ export const useWeeklyChallengeStore = create<WeeklyChallengeState>()(
         resetProgress: () => {
           set({
             answers: {},
-            extraVotes: {},
             totalChallengeXp: 0,
             streakDays: 1,
             lastCompletedDateStr: null

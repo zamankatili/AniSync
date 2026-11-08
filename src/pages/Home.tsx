@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
-import { useAnimeData } from '../hooks/useAnimeData';
-import { 
-  MessageSquare, Heart, Share2, MoreHorizontal, Star, 
-  Sparkles, Shuffle, Search as SearchIcon, Image as ImageIcon, Flame, Loader2,
-  Activity, Music, ChevronRight, Tv2, Newspaper, BookOpen
+import {
+  MessageSquare, Star,
+  Sparkles, Search as SearchIcon, Image as ImageIcon, Flame,
+  Activity, Music, ChevronRight, Tv2, Newspaper, BookOpen,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
-import { Anime } from '../types';
 import { DAILY_PICKS } from '../data/picks';
 import { DailyPollModal } from '../components/DailyPollModal';
 import { DailyChallengeModal } from '../components/DailyChallengeModal';
 import { TasteProfileSurveyModal } from '../components/TasteProfileSurveyModal';
-import { FeedPost } from '../components/FeedPost';
+
 import { MemeZone } from '../components/MemeZone';
 import { RecentActivityFeed } from '../components/RecentActivityFeed';
 import { QuickContinueWatching } from '../components/QuickContinueWatching';
@@ -31,14 +28,11 @@ import { localizeGenres } from '../lib/genreNames';
 export const Home = () => {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
-  const { forumPosts, addForumPost, userProfile, currentUser, activePoll } = useAppStore();
+  const { addForumPost, userProfile, currentUser, activePoll } = useAppStore();
   const { addToast } = useToastStore();
-  const { fetchRandom } = useAnimeData();
-  
+
   const [activeTab, setActiveTab] = useState<'feed' | 'activity' | 'multimedia' | 'memes' | 'news'>('feed');
   const [newPostContent, setNewPostContent] = useState('');
-  const [isRolling, setIsRolling] = useState(false);
-  const [suggestedAnime, setSuggestedAnime] = useState<Anime | null>(null);
 
   const [isPollModalOpen, setIsPollModalOpen] = useState(false);
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
@@ -51,9 +45,6 @@ export const Home = () => {
 
   const [todayPick, setTodayPick] = useState(DAILY_PICKS[0]);
 
-  const currentHour = new Date().getHours();
-  const isPollActive = currentHour >= 10 && currentHour < 22;
-
   useEffect(() => {
     // Determine today's pick based on date to ensure it changes every midnight
     const daysSinceEpoch = Math.floor(new Date().getTime() / (1000 * 60 * 60 * 24));
@@ -61,39 +52,14 @@ export const Home = () => {
     setTodayPick(DAILY_PICKS[index]);
   }, []);
 
-  // For the recommendation widget
-  const handleRandomize = async () => {
-    setIsRolling(true);
-    const result = await fetchRandom();
-    if (result) {
-      setSuggestedAnime(result);
-    }
-    setIsRolling(false);
-  };
-
-  const shareSuggestion = () => {
-    if (!suggestedAnime) return;
-    addForumPost({
-      title: `${suggestedAnime.title_english || suggestedAnime.title} İzlemeye Değer Mi?`,
-      content: 'Sistem bana az önce bu animeyi önerdi. Aranızda izleyen var mı? Düşüncelerinizi merak ediyorum!',
-      likes: 0,
-      replies: 0,
-      category: 'Discussion',
-      type: 'recommendation',
-      animeRef: {
-        id: suggestedAnime.mal_id,
-        title: suggestedAnime.title_english || suggestedAnime.title,
-        image: suggestedAnime.images.webp.image_url,
-        score: suggestedAnime.score
-      }
-    });
-    setSuggestedAnime(null);
-    addToast(t('suggestion_shared'), 'success');
-  };
-
   const handlePost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostContent.trim()) return;
+    if (!currentUser) {
+      // Misafir gönderileri yalnızca yerel kalır ve yenileyince kaybolur — engellenir
+      addToast(t('chat_login_required'), 'info');
+      return;
+    }
 
     addForumPost({
       title: 'Topluluk Gönderisi',
@@ -109,28 +75,8 @@ export const Home = () => {
 
   return (
     <div className="w-full min-w-0 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-      <Helmet>
-        <title>AniSync - Anime Tracking, Discovery & Community Platform</title>
-        <meta name="description" content="Track your favorite anime, discover trending series, join watch parties, play anime music quizzes, and connect with anime enthusiasts worldwide on AniSync." />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="AniSync - Anime Tracking, Discovery & Community Platform" />
-        <meta property="og:description" content="Track your favorite anime, discover trending series, join watch parties, play anime music quizzes, and connect with anime enthusiasts worldwide on AniSync." />
-        <meta property="og:site_name" content="AniSync" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="AniSync - Anime Tracking & Community" />
-        <meta name="twitter:description" content="Discover trending series, create custom anime lists, play music quizzes, and track your anime journey with AniSync." />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'WebApplication',
-            'name': 'AniSync',
-            'applicationCategory': 'EntertainmentApplication',
-            'operatingSystem': 'All',
-            'description': 'Comprehensive anime tracking, discovery, music quiz, watch party, and social community platform.'
-          })}
-        </script>
-      </Helmet>
-      
+      {/* Başlık/meta SEOManager (App seviyesi, i18n'li) tarafından yönetilir */}
+
       {/* Main Feed */}
       <div className="flex-1 min-w-0 max-w-2xl w-full">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -173,6 +119,42 @@ export const Home = () => {
               {t('home_tab_news')}
             </button>
           </div>
+        </div>
+
+        {/* Mobil: widget şeridi (sidebar yalnızca lg+ ekranda; mobilde bunlar görünür) */}
+        <div className="flex lg:hidden gap-2 mb-6 overflow-x-auto hide-scrollbar pb-1 -mx-1 px-1">
+          {activePoll && (
+            <button
+              onClick={() => setIsPollModalOpen(true)}
+              className="flex items-center gap-1.5 shrink-0 px-3 py-2 bg-black border-2 border-orange-500 text-orange-400 text-[10px] font-black uppercase tracking-wider cursor-pointer"
+            >
+              <Flame size={14} strokeWidth={2.5} /> {t('daily_poll')}
+            </button>
+          )}
+          <button
+            onClick={() => setIsChallengeModalOpen(true)}
+            className="flex items-center gap-1.5 shrink-0 px-3 py-2 bg-black border-2 border-rose-600 text-rose-400 text-[10px] font-black uppercase tracking-wider cursor-pointer"
+          >
+            <Flame size={14} strokeWidth={2.5} /> {t('challenge_title')}
+          </button>
+          <button
+            onClick={() => navigate('/music-quiz')}
+            className="flex items-center gap-1.5 shrink-0 px-3 py-2 bg-black border-2 border-amber-400 text-amber-400 text-[10px] font-black uppercase tracking-wider cursor-pointer"
+          >
+            <Music size={14} strokeWidth={2.5} /> {t('anime_music_quiz')}
+          </button>
+          <button
+            onClick={() => navigate('/watch-party')}
+            className="flex items-center gap-1.5 shrink-0 px-3 py-2 bg-black border-2 border-rose-500 text-rose-300 text-[10px] font-black uppercase tracking-wider cursor-pointer"
+          >
+            <Tv2 size={14} strokeWidth={2.5} /> {t('watch_party_title')}
+          </button>
+          <button
+            onClick={() => setIsTasteModalOpen(true)}
+            className="flex items-center gap-1.5 shrink-0 px-3 py-2 bg-black border-2 border-cyan-400 text-cyan-300 text-[10px] font-black uppercase tracking-wider cursor-pointer"
+          >
+            <Sparkles size={14} strokeWidth={2.5} /> {t('taste_badge')}
+          </button>
         </div>
 
         {activeTab === 'feed' ? (
@@ -258,19 +240,6 @@ export const Home = () => {
               </div>
             </div>
 
-            <div className="space-y-6 pb-20">
-              {forumPosts.length > 0 ? (
-                forumPosts.map((post, i) => (
-                  <FeedPost key={post.id} post={post} index={i} />
-                ))
-              ) : (
-                <div className="bg-black p-10 border-2 border-white/20 text-center neo-shadow">
-                  <MessageSquare size={64} strokeWidth={1} className="mx-auto text-white/20 mb-6" />
-                  <h3 className="text-2xl font-black uppercase tracking-widest text-white mb-2">{t('no_post_yet')}</h3>
-                  <p className="text-neutral-500 font-bold uppercase tracking-wider">{t('be_first_post')}</p>
-                </div>
-              )}
-            </div>
           </motion.div>
         ) : activeTab === 'activity' ? (
           <motion.div
@@ -340,7 +309,7 @@ export const Home = () => {
         </div>
         
         {/* Daily Poll Widget */}
-        {isPollActive && activePoll ? (
+        {activePoll ? (
           <div className="bg-black p-6 border-2 border-white neo-shadow-white relative overflow-hidden group">
             <h3 className="font-black text-white mb-2 flex items-center gap-2 relative z-10 uppercase tracking-widest text-lg">
               <Flame size={24} strokeWidth={2.5} className="text-orange-500" /> {t('daily_poll')}

@@ -21,9 +21,11 @@ export const MemeZone = () => {
   const { addToast } = useToastStore();
   const [memes, setMemes] = useState<RedditPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   const fetchMemes = async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const res = await fetch(`https://meme-api.com/gimme/animemes/30`);
       if (!res.ok) throw new Error('API Error');
@@ -43,34 +45,9 @@ export const MemeZone = () => {
       setMemes(fetchedMemes);
     } catch (err) {
       console.error('Error fetching memes', err);
-      // Fallback memes
-      setMemes([
-        {
-          id: 'fb-1',
-          title: 'When you finish a 24-episode anime in one sitting at 4 AM',
-          url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop',
-          ups: 1420,
-          author: 'OtakuMaster',
-          permalink: '#'
-        },
-        {
-          id: 'fb-2',
-          title: 'Zoro getting lost in another anime universe',
-          url: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800&auto=format&fit=crop',
-          ups: 2890,
-          author: 'ZoroFan',
-          permalink: '#'
-        },
-        {
-          id: 'fb-3',
-          title: 'Me waiting for Season 2 of my favorite underrated anime',
-          url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop',
-          ups: 3100,
-          author: 'FrierenAppreciator',
-          permalink: '#'
-        }
-      ]);
-      addToast('Meme akışı yedek sunucudan yüklendi.', 'info');
+      // Canlı kaynak yoksa uydurma meme göstermek yerine dürüst boş durum
+      setMemes([]);
+      setFetchError(true);
     }
     setLoading(false);
   };
@@ -116,6 +93,17 @@ export const MemeZone = () => {
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <Loader2 size={48} className="animate-spin text-white" />
           <p className="font-black text-white tracking-widest uppercase">MEMELER YÜKLENİYOR...</p>
+        </div>
+      ) : fetchError || memes.length === 0 ? (
+        <div className="border-4 border-white/20 bg-black p-12 text-center">
+          <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">{t('meme_load_failed_title')}</h3>
+          <p className="text-neutral-400 font-bold uppercase text-xs mb-6">{t('meme_load_failed_desc')}</p>
+          <button
+            onClick={fetchMemes}
+            className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-black uppercase text-xs tracking-wider border-2 border-white cursor-pointer"
+          >
+            {t('meme_retry')}
+          </button>
         </div>
       ) : (
         <div className="columns-1 md:columns-2 gap-6 space-y-6">

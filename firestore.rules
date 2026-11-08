@@ -120,6 +120,12 @@ service cloud.firestore {
     }
 
     // ─── Anime yorumları ───────────────────────────────────────
+    // Chat canlı etkinlik RSVP'leri: everyone reads count; only own write
+    match /chatEventRsvps/{uid} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn() && request.auth.uid == uid;
+    }
+
     match /animeComments/{id} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid

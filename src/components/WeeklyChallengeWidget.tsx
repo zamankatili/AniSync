@@ -44,9 +44,7 @@ export const WeeklyChallengeWidget: React.FC<WeeklyChallengeWidgetProps> = ({
     getDayProgress,
     getOverallProgress,
     streakDays,
-    totalChallengeXp,
-    getOptionVotes,
-    getTotalQuestionVotes
+    totalChallengeXp
   } = useWeeklyChallengeStore();
 
   // Active question index within selected day (0 to 5, or 0 to 7 for finale)
@@ -292,13 +290,10 @@ export const WeeklyChallengeWidget: React.FC<WeeklyChallengeWidgetProps> = ({
           {/* Options List */}
           <div className="space-y-2.5 mb-4">
             {(() => {
-              const totalVotes = getTotalQuestionVotes(currentQ);
               const userChosenId = currentAnswer?.selectedOptionId || selectedOptId;
 
               return currentQ.options.map((opt) => {
                 const isSelected = userChosenId === opt.id;
-                const optVotes = getOptionVotes(currentQ.id, opt.id, opt.votes);
-                const percent = totalVotes > 0 ? Math.round((optVotes / totalVotes) * 100) : 0;
 
                 // Color logic
                 let borderStyle = "border-white/20 hover:border-white bg-black";
@@ -336,19 +331,6 @@ export const WeeklyChallengeWidget: React.FC<WeeklyChallengeWidgetProps> = ({
                       borderStyle
                     )}
                   >
-                    {/* Live Vote Percentage Fill Bar */}
-                    {isCurrentAnswered && (
-                      <div 
-                        className={cn(
-                          "absolute top-0 left-0 bottom-0 opacity-25 transition-all duration-700",
-                          currentQ.isOpinionPoll 
-                            ? isSelected ? "bg-purple-500" : "bg-neutral-600"
-                            : opt.isCorrect ? "bg-emerald-500" : "bg-red-500"
-                        )}
-                        style={{ width: `${percent}%` }}
-                      />
-                    )}
-
                     <div className="relative z-10 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className={cn(
@@ -362,18 +344,6 @@ export const WeeklyChallengeWidget: React.FC<WeeklyChallengeWidgetProps> = ({
                           {opt.text}
                         </span>
                       </div>
-
-                      {isCurrentAnswered && (
-                        <div className="flex items-center gap-2 shrink-0 font-mono text-xs font-black">
-                          <span className="text-neutral-400">({t('challenge_votes_count', { count: optVotes })})</span>
-                          <span className={cn(
-                            "px-2 py-0.5 border text-xs",
-                            opt.isCorrect ? "border-emerald-400 text-emerald-300 bg-emerald-950" : "border-white/30 text-white"
-                          )}>
-                            %{percent}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </button>
                 );

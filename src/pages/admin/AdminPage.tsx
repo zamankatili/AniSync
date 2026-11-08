@@ -277,6 +277,26 @@ export const AdminPage: React.FC = () => {
               )}
             </div>
           </div>
+          <div className="border-2 border-white/20 p-4 space-y-2">
+            <h3 className="text-xs font-black uppercase text-white">{t('admin_chat_event_title', 'Canlı Sohbet Etkinliği')}</h3>
+            <p className="text-[10px] text-neutral-500">{t('admin_chat_event_hint', 'Sohbete özel etkinlik bandını ve RSVP sayacını açar. Boş bırakılırsa bant tamamen gizlenir.')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <label className="text-[10px] font-black text-neutral-400 uppercase">TR
+                <textarea rows={2} value={draft.chatEvent?.tr || ''} onChange={(e) => setDraft(d => ({ ...d, chatEvent: { ...(d.chatEvent || { tr: '', en: '' }), tr: e.target.value } }))} className="w-full mt-1 bg-black border-2 border-white/20 text-white text-xs p-2" placeholder="Ör: Cuma 21:00 — 1. Sezon Finali İzleme Gecesi!" />
+              </label>
+              <label className="text-[10px] font-black text-neutral-400 uppercase">EN
+                <textarea rows={2} value={draft.chatEvent?.en || ''} onChange={(e) => setDraft(d => ({ ...d, chatEvent: { ...(d.chatEvent || { tr: '', en: '' }), en: e.target.value } }))} className="w-full mt-1 bg-black border-2 border-white/20 text-white text-xs p-2" placeholder="e.g. Friday 9pm — Season 1 finale watch night!" />
+              </label>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className="text-[10px] font-black text-neutral-400 uppercase flex items-center gap-2">{t('admin_chat_event_date', 'Tarih/Saat')}
+                <input type="text" value={draft.chatEvent?.date || ''} onChange={(e) => setDraft(d => ({ ...d, chatEvent: { ...(d.chatEvent || { tr: '', en: '' }), date: e.target.value || undefined } }))} className="bg-black text-white border-2 border-white/20 px-2 py-1 text-xs" placeholder="Cuma 21:00" />
+              </label>
+              {(draft.chatEvent?.tr || draft.chatEvent?.en) && (
+                <button onClick={() => setDraft(d => ({ ...d, chatEvent: null }))} className="px-3 py-1 bg-rose-700 hover:bg-rose-600 text-white text-xs font-black uppercase border border-white/30 cursor-pointer">{t('admin_chat_event_clear', 'Kaldır')}</button>
+              )}
+            </div>
+          </div>
           <div className="border-2 border-white/20 p-4 flex items-center justify-between gap-3 flex-wrap">
             <div>
               <h3 className="text-xs font-black uppercase text-white">{t('admin_polls_title', 'Günün Anketi')}</h3>

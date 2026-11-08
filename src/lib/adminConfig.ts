@@ -16,10 +16,20 @@ export interface RemoteAnnouncement {
   endsAt?: string;
 }
 
+/** Chat'teki "CANLI ETKİNLİK" bandı — admin \`config/app.chatEvent\`'e yazar; `null` ise gizli. */
+export interface RemoteChatEvent {
+  tr: string;
+  en: string;
+  ja?: string;
+  fr?: string;
+  date?: string; // admin'in serbest metin tarih/saati (ör. "Cuma 21:00")
+}
+
 export interface RemoteConfig {
   maintenanceMode: boolean;
   featureFlags: Record<string, number | boolean>;
   announcement?: RemoteAnnouncement | null;
+  chatEvent?: RemoteChatEvent | null;
   limits?: Record<string, number>;
 }
 

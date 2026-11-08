@@ -41,8 +41,6 @@ export const WeeklyChallengePage: React.FC = () => {
     streakDays,
     totalChallengeXp,
     getBadges,
-    getOptionVotes,
-    getTotalQuestionVotes,
     resetProgress
   } = useWeeklyChallengeStore();
 
@@ -343,7 +341,6 @@ export const WeeklyChallengePage: React.FC = () => {
           filteredQuestions.map((q, qIndex) => {
             const userAnswer = answers[q.id];
             const isAnswered = !!userAnswer;
-            const totalVotes = getTotalQuestionVotes(q);
 
             return (
               <div 
@@ -398,8 +395,6 @@ export const WeeklyChallengePage: React.FC = () => {
                 <div className="space-y-3 mb-4">
                   {q.options.map((opt) => {
                     const isSelected = userAnswer?.selectedOptionId === opt.id;
-                    const optVotes = getOptionVotes(q.id, opt.id, opt.votes);
-                    const percent = totalVotes > 0 ? Math.round((optVotes / totalVotes) * 100) : 0;
 
                     let borderClass = "border-white/20 hover:border-white bg-neutral-950";
                     let textClass = "text-white";
@@ -435,19 +430,6 @@ export const WeeklyChallengePage: React.FC = () => {
                           borderClass
                         )}
                       >
-                        {/* Vote Percent Bar */}
-                        {isAnswered && (
-                          <div 
-                            className={cn(
-                              "absolute top-0 left-0 bottom-0 opacity-20 transition-all duration-700",
-                              q.isOpinionPoll 
-                                ? isSelected ? "bg-purple-500" : "bg-neutral-600"
-                                : opt.isCorrect ? "bg-emerald-500" : "bg-red-500"
-                            )}
-                            style={{ width: `${percent}%` }}
-                          />
-                        )}
-
                         <div className="relative z-10 flex items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
                             <div className={cn(
@@ -462,17 +444,6 @@ export const WeeklyChallengePage: React.FC = () => {
                             </span>
                           </div>
 
-                          {isAnswered && (
-                            <div className="flex items-center gap-2 shrink-0 font-mono text-xs font-black">
-                              <span className="text-neutral-400">({t('challenge_votes_count', { count: optVotes })})</span>
-                              <span className={cn(
-                                "px-2 py-0.5 border text-xs",
-                                opt.isCorrect ? "border-emerald-400 text-emerald-300 bg-emerald-950" : "border-white/30 text-white"
-                              )}>
-                                %{percent}
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </button>
                     );

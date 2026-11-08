@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  X, CheckCircle2, Award, Sparkles, ChevronRight, 
-  Share2, Flame, Trophy, Check, ArrowRight
+  X, CheckCircle2, ChevronRight,
+  Share2, Flame, Trophy, ArrowRight
 } from 'lucide-react';
 import { useWeeklyChallengeStore } from '../store/useWeeklyChallengeStore';
 import { WEEK_DAYS_CONFIG, ChallengeQuestion } from '../data/weeklyChallengeBank';
@@ -35,8 +35,6 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     getOverallProgress,
     streakDays,
     totalChallengeXp,
-    getOptionVotes,
-    getTotalQuestionVotes
   } = useWeeklyChallengeStore();
 
   // Active question index within selected day
@@ -171,13 +169,9 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
               {/* Options List */}
               <div className="space-y-2.5 pt-1">
                 {(() => {
-                  const totalVotes = getTotalQuestionVotes(currentQuestion);
                   const effectiveChosen = currentAnswer?.selectedOptionId || selectedOptionId;
-
                   return currentQuestion.options.map((option) => {
                     const isSelected = effectiveChosen === option.id;
-                    const optVotes = getOptionVotes(currentQuestion.id, option.id, option.votes);
-                    const percent = totalVotes > 0 ? Math.round((optVotes / totalVotes) * 100) : 0;
 
                     let optionStyle = "bg-neutral-50 hover:bg-neutral-100 text-black border-black";
                     if (isSelected && !isAnswered) {
@@ -207,13 +201,6 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                           optionStyle
                         )}
                       >
-                        {isAnswered && (
-                          <div 
-                            className="absolute top-0 left-0 bottom-0 bg-black/10 transition-all duration-500" 
-                            style={{ width: `${percent}%` }}
-                          />
-                        )}
-
                         <div className="flex items-center gap-2 relative z-10">
                           <span className="w-5 h-5 rounded-none border border-black bg-white text-black flex items-center justify-center text-[10px] font-mono shrink-0 font-bold">
                             {option.id.charAt(0).toUpperCase()}
@@ -222,7 +209,6 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                         </div>
 
                         <div className="flex items-center gap-2 relative z-10 shrink-0 font-mono text-xs">
-                          {isAnswered && <span>%{percent}</span>}
                           {isAnswered && !currentQuestion.isOpinionPoll && option.isCorrect && (
                             <CheckCircle2 size={16} className="text-black shrink-0" />
                           )}

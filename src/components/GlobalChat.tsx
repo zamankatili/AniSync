@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../context/AppStore';
 import { 
-  MessageSquare, X, Send, Loader2, Sparkles, Hash, Users, 
-  Calendar, Flame, Music, Swords, Plus, Check, ChevronDown 
+  MessageSquare, X, Send, Hash, Calendar, Plus
 } from 'lucide-react';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, where, getDoc, getCountFromServer, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useRemoteConfig } from '../hooks/useRemoteConfig';
 import { cn, formatRelativeTime } from '../lib/utils';
 import { useToastStore } from '../store/useToastStore';
 import { ReportButton } from './ReportButton';
@@ -53,14 +53,23 @@ export const GlobalChat = () => {
   const [newRoomName, setNewRoomName] = useState('');
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [eventJoined, setEventJoined] = useState(false);
-  const [eventAttendees, setEventAttendees] = useState(48);
+  const [eventAttendees, setEventAttendees] = useState<number | null>(null); // null = yükleniyor; Firestore'dan gerçekte
+  const [rsvpBusy, setRsvpBusy] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const { currentUser, userProfile } = useAppStore();
   const { addToast } = useToastStore();
-  const { t } = useAppTranslation();
+  const { t, i18n } = useAppTranslation();
+  const { config } = useRemoteConfig();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastSentAt = useRef(0);
+
+  // Admin'in açtığı canlı etkinlik (yoksa bant hiç gösterilmez)
+  const chatEvent = config?.chatEvent;
+  const eventLang = ((i18n.language || 'tr').slice(0, 2) as 'tr' | 'en' | 'ja' | 'fr');
+  const eventTitle = chatEvent ? (chatEvent[eventLang] || chatEvent.tr || chatEvent.en || '') : '';
+  const eventVisible = !!eventTitle;
 
   const allRooms = [...DEFAULT_ROOMS, ...customRooms];
   const currentRoom = allRooms.find(r => r.id === activeRoomId) || DEFAULT_ROOMS[0];
@@ -69,35 +78,51 @@ export const GlobalChat = () => {
   const roomTopic = (room: ChatRoom) => t(`chat_room_topic_${room.id}`, { defaultValue: room.topic });
   const roomBadge = (room: ChatRoom) => t(`chat_room_badge_${room.id}`, { defaultValue: room.badge });
 
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    // Listen to messages for active room
-    // Note: For backwards compatibility, 'genel' room also displays messages without a roomId field
-    const chatRef = collection(db, 'globalChat');
-    const q = query(chatRef, orderBy('createdAt', 'desc'), limit(50));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs: ChatMessage[] = [];
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data() as ChatMessage;
-        const msgRoom = data.roomId || 'genel';
-        if (msgRoom === activeRoomId) {
-          msgs.push({ ...data, id: docSnap.id });
-        }
-      });
-      setMessages(msgs.reverse());
-      setTimeout(scrollToBottom, 100);
-    }, (err) => {
-      console.warn("GlobalChat listener error:", err);
-    });
-    
-    return () => unsubscribe();
-  }, [isOpen, activeRoomId]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const applySnapshot = (snapshot: any) => {
+    const msgs: ChatMessage[] = [];
+    snapshot.forEach((docSnap: any) => {
+      const data = docSnap.data() as ChatMessage;
+      const msgRoom = data.roomId || 'genel';
+      if (msgRoom === activeRoomId) {
+        msgs.push({ ...data, id: docSnap.id });
+      }
+    });
+    setMessages(msgs.reverse());
+    setTimeout(scrollToBottom, 100);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const chatRef = collection(db, 'globalChat');
+    let unsubscribe: (() => void) | undefined;
+
+    // Önce oda-bazlı sorgu (kompozit indeks için firestore.indexes.json);
+    // indeks yoksa (FAILED_PRECONDITION) istemci tarafında filtreleyerek devam et.
+    const runFallback = () => {
+      const q = query(chatRef, orderBy('createdAt', 'desc'), limit(50));
+      unsubscribe = onSnapshot(q, applySnapshot, (err) => {
+        console.warn('GlobalChat fallback listener error:', err);
+      });
+    };
+
+    try {
+      const q = query(chatRef, where('roomId', '==', activeRoomId), orderBy('createdAt', 'desc'), limit(50));
+      unsubscribe = onSnapshot(q, applySnapshot, (err) => {
+        console.warn('GlobalChat room query error (indeks gerekebilir), fallback kullanılıyor:', err);
+        runFallback();
+      });
+    } catch (err) {
+      console.warn('GlobalChat room query failed to start, fallback kullanılıyor:', err);
+      runFallback();
+    }
+
+    return () => unsubscribe?.();
+  }, [isOpen, activeRoomId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +137,13 @@ export const GlobalChat = () => {
       addToast(t('chat_message_too_long'), "error");
       return;
     }
+    const now = Date.now();
+    if (now - lastSentAt.current < 1500) {
+      // Basit hız sınırı: kullanıcı başına 1.5 sn'de 1 mesaj
+      addToast(t('chat_slow_down'), 'info');
+      return;
+    }
+    lastSentAt.current = now;
 
     const text = newMessage.trim();
     setNewMessage('');
@@ -147,7 +179,8 @@ export const GlobalChat = () => {
       name: newRoomName.trim().toLowerCase().replace(/\s+/g, '-'),
       topic: t('chat_custom_room_topic'),
       icon: '✨',
-      badge: t('chat_custom_room_badge'),
+      // Yalnızca bu cihazda (localStorage) görünür — açıkça etiketlenir
+      badge: t('chat_local_room_badge'),
       isOfficial: false
     };
 
@@ -163,15 +196,51 @@ export const GlobalChat = () => {
     addToast(t('chat_room_created', { name: created.name }), 'success');
   };
 
-  const handleToggleEvent = () => {
-    if (eventJoined) {
-      setEventAttendees(prev => prev - 1);
-      setEventJoined(false);
-      addToast(t('chat_event_left'), "info");
-    } else {
-      setEventAttendees(prev => prev + 1);
-      setEventJoined(true);
-      addToast(t('chat_event_joined'), "success");
+  // Gerçek RSVP verisini yükle (yalnızca etkinlik banner'ı görünürken)
+  useEffect(() => {
+    if (!eventVisible || !isOpen) return;
+    let alive = true;
+    (async () => {
+      try {
+        const countSnap = await getCountFromServer(collection(db, 'chatEventRsvps'));
+        if (alive) setEventAttendees(countSnap.data().count);
+        if (currentUser) {
+          const mine = await getDoc(doc(db, 'chatEventRsvps', currentUser.uid));
+          if (alive) setEventJoined(mine.exists());
+        }
+      } catch (err) {
+        console.warn('RSVP load error:', err);
+        if (alive) setEventAttendees(0);
+      }
+    })();
+    return () => { alive = false; };
+  }, [eventVisible, isOpen, currentUser]);
+
+  const handleToggleEvent = async () => {
+    if (!eventVisible || rsvpBusy) return;
+    if (!currentUser) {
+      addToast(t('chat_login_required'), 'info');
+      return;
+    }
+    setRsvpBusy(true);
+    try {
+      const mineRef = doc(db, 'chatEventRsvps', currentUser.uid);
+      if (eventJoined) {
+        await deleteDoc(mineRef);
+        setEventJoined(false);
+        setEventAttendees((c) => (typeof c === 'number' ? Math.max(0, c - 1) : c));
+        addToast(t('chat_event_left'), 'info');
+      } else {
+        await setDoc(mineRef, { uid: currentUser.uid, createdAt: new Date().toISOString() });
+        setEventJoined(true);
+        setEventAttendees((c) => (typeof c === 'number' ? c + 1 : c));
+        addToast(t('chat_event_joined'), 'success');
+      }
+    } catch (err) {
+      console.warn('RSVP toggle error:', err);
+      addToast(t('chat_event_failed'), 'error');
+    } finally {
+      setRsvpBusy(false);
     }
   };
 
@@ -226,32 +295,35 @@ export const GlobalChat = () => {
                 </button>
               </div>
 
-              {/* Live Event Sticky Banner (When on #etkinlik room or top) */}
-              <div className="bg-gradient-to-r from-rose-900/60 to-purple-900/60 border-b-2 border-white/20 p-2.5 px-3 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Calendar size={14} className="text-amber-400 shrink-0" />
-                  <div className="truncate">
-                    <span className="text-[10px] font-black text-white uppercase tracking-wider block truncate">
-                      {t('chat_event_title')}
-                    </span>
-                    <span className="text-[9px] text-neutral-300 font-bold uppercase">
-                      {t('chat_attendees', { count: eventAttendees })}
-                    </span>
+              {/* Admin'in açtığı canlı etkinlik bandı (yoksa gizlenir) */}
+              {eventVisible && (
+                <div className="bg-gradient-to-r from-rose-900/60 to-purple-900/60 border-b-2 border-white/20 p-2.5 px-3 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Calendar size={14} className="text-amber-400 shrink-0" />
+                    <div className="truncate">
+                      <span className="text-[10px] font-black text-white uppercase tracking-wider block truncate">
+                        {eventTitle}
+                      </span>
+                      <span className="text-[9px] text-neutral-300 font-bold uppercase">
+                        {chatEvent?.date ? `${chatEvent.date} · ` : ''}{eventAttendees === null ? t('chat_attendees_loading') : t('chat_attendees', { count: eventAttendees })}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  onClick={handleToggleEvent}
-                  className={cn(
-                    "px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border transition-colors shrink-0 cursor-pointer",
-                    eventJoined 
-                      ? "bg-emerald-500 text-black border-black" 
-                      : "bg-white text-black hover:bg-amber-400 border-black"
-                  )}
-                >
-                  {eventJoined ? t('chat_joined') : t('chat_join')}
-                </button>
-              </div>
+                  <button
+                    onClick={handleToggleEvent}
+                    disabled={rsvpBusy}
+                    className={cn(
+                      "px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border transition-colors shrink-0 cursor-pointer disabled:opacity-50",
+                      eventJoined
+                        ? "bg-emerald-500 text-black border-black"
+                        : "bg-white text-black hover:bg-amber-400 border-black"
+                    )}
+                  >
+                    {rsvpBusy ? '...' : eventJoined ? t('chat_joined') : t('chat_join')}
+                  </button>
+                </div>
+              )}
 
               {/* Room Selector Tabs Bar */}
               <div className="bg-neutral-900 border-b-2 border-white/20 p-1.5 flex items-center gap-1 overflow-x-auto">
