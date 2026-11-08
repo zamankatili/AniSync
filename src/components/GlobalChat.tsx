@@ -82,7 +82,7 @@ export const GlobalChat = () => {
         const data = docSnap.data() as ChatMessage;
         const msgRoom = data.roomId || 'genel';
         if (msgRoom === activeRoomId) {
-          msgs.push({ id: docSnap.id, ...data });
+          msgs.push({ ...data, id: docSnap.id });
         }
       });
       setMessages(msgs.reverse());

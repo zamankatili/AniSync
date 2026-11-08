@@ -22,7 +22,7 @@ export default defineConfig(() => {
           manualChunks: {
             react: ['react', 'react-dom', 'react-router-dom'],
             firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
-            motion: ['framer-motion'],
+            motion: ['framer-motion', 'motion'],
             charts: ['recharts'],
             i18n: ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
           },

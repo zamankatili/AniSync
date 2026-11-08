@@ -147,6 +147,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_region_adventure": "Serüven",
     "als_detail_close": "Kapat",
     "als_region_detail_btn": "Detay",
+    "als_time_stopped": "Zaman Durdu",
+    "als_auto_decide": "OTO-KARAR",
+    "als_auto_decide_hint": "Otomatik karar açıkken seçim olaylarında 8 saniye sonra güvenli seçimi kendisi yapar (odak olaylarında mevcut odağını korur).",
+    "als_auto_decide_badge": "Oto-karar · {{seconds}} sn",
     "als_unnamed": "İsimsiz",
   },
   en: {
@@ -292,6 +296,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_region_adventure": "Adventure",
     "als_detail_close": "Close",
     "als_region_detail_btn": "Details",
+    "als_time_stopped": "Time Stopped",
+    "als_auto_decide": "AUTO-DECIDE",
+    "als_auto_decide_hint": "When auto-decide is on, choice events resolve automatically after 8 seconds with the safest option (focus check-ins keep your current focus).",
+    "als_auto_decide_badge": "Auto-decide · {{seconds}}s",
     "als_unnamed": "Unnamed",
   },
   ja: {
@@ -437,6 +445,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_region_adventure": "冒険",
     "als_detail_close": "閉じる",
     "als_region_detail_btn": "詳細",
+    "als_time_stopped": "時間停止",
+    "als_auto_decide": "自動決定",
+    "als_auto_decide_hint": "自動決定がオンのとき、選択イベントは8秒後に最も安全な選択を自動で選びます（フォーカスチェックインでは現在のフォーカスを維持します）。",
+    "als_auto_decide_badge": "自動決定 · {{seconds}}秒",
     "als_unnamed": "名前なし",
   },
   fr: {
@@ -582,6 +594,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_region_adventure": "Aventure",
     "als_detail_close": "Fermer",
     "als_region_detail_btn": "Détails",
+    "als_time_stopped": "Le temps s'arrête",
+    "als_auto_decide": "DÉCISION AUTO",
+    "als_auto_decide_hint": "Avec la décision auto, les événements de choix se résolvent après 8 secondes avec l'option la plus sûre (les points focus gardent ta concentration actuelle).",
+    "als_auto_decide_badge": "Décision auto · {{seconds}} s",
     "als_unnamed": "Sans nom",
   },
 };

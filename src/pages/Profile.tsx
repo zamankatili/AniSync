@@ -44,7 +44,7 @@ export const Profile = () => {
     localStorage.setItem('user_featured_badge', badgeId);
   };
 
-  const isOwnProfile = !uid || (currentUser && uid === currentUser.uid);
+  const isOwnProfile = !uid || Boolean(currentUser && uid === currentUser.uid);
   const watchlist = isOwnProfile ? myWatchlist : targetWatchlist;
   const userProfile = isOwnProfile ? myProfile : (targetProfile || myProfile);
 
@@ -311,7 +311,7 @@ export const Profile = () => {
                   dataKey="value"
                   stroke="#000"
                   strokeWidth={4}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }: any) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                   labelLine={true}
                 >
                   {typesData.map((entry, index) => (

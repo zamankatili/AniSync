@@ -70,6 +70,10 @@ export const AnimeLifeSim: React.FC = () => {
   const [regionDetail, setRegionDetail] = useState<AnimeRegion | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [lifeAge, setLifeAge] = useState(0);
+  const [autoDecide, setAutoDecide] = useState<boolean>(() => {
+    try { return localStorage.getItem('als_auto_decide') === '1'; } catch { return false; }
+  });
+  const [autoSecondsLeft, setAutoSecondsLeft] = useState<number | null>(null);
   const [pastLives, setPastLives] = useState<PastLife[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const recordedLifeRef = useRef<string | null>(null);
@@ -269,6 +273,45 @@ export const AnimeLifeSim: React.FC = () => {
       playSound(550, 100, 'triangle');
     }
   }, [lifeAge, phase, life, showEvent, currentEventIndex]);
+
+  // Otomatik karar: açıkken seçim olaylarında 8 saniye bekler ve güvenli seçimi yapar.
+  useEffect(() => {
+    if (phase !== 'playing' || !life || !showEvent || !autoDecide) {
+      setAutoSecondsLeft(null);
+      return;
+    }
+    const event = life.events[currentEventIndex];
+    if (!event || !event.choices || event.choices.length === 0 || choicesMade[event.id]) {
+      setAutoSecondsLeft(null);
+      return;
+    }
+    let seconds = 8;
+    setAutoSecondsLeft(seconds);
+    const id = window.setInterval(() => {
+      seconds -= 1;
+      if (seconds <= 0) {
+        window.clearInterval(id);
+        setAutoSecondsLeft(0);
+        setChoicesMade(prevChoices => {
+          if (prevChoices[event.id]) return prevChoices;
+          let pick: string | undefined;
+          if (event.id.startsWith('focus_') && life.focus) {
+            pick = event.choices!.find(c => c.id === `focus_${life.focus}`)?.id;
+          }
+          if (!pick) {
+            const order = { low: 0, medium: 1, high: 2, extreme: 3 } as const;
+            pick = [...event.choices!].sort((a, b) => order[a.risk] - order[b.risk])[0]?.id;
+          }
+          return pick ? { ...prevChoices, [event.id]: pick } : prevChoices;
+        });
+        if (typeof window !== 'undefined') playSound(660, 150, 'square');
+      } else {
+        setAutoSecondsLeft(seconds);
+      }
+    }, 1000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, life, showEvent, autoDecide, currentEventIndex, choicesMade]);
 
   // Uzun oturumlarda mola hatırlatması (referanstaki 2+ saat davranışı).
   useEffect(() => {
@@ -917,6 +960,21 @@ export const AnimeLifeSim: React.FC = () => {
               >
                 {muted ? `🔇 ${t('als_unmute')}` : `🔊 ${t('als_mute')}`}
               </button>
+              <button
+                onClick={() => setAutoDecide(v => {
+                  const next = !v;
+                  try { localStorage.setItem('als_auto_decide', next ? '1' : '0'); } catch { /* ignore */ }
+                  return next;
+                })}
+                className={cn(
+                  "px-2 py-1 text-[10px] font-black border cursor-pointer",
+                  autoDecide ? "bg-white text-black border-white" : "bg-black text-neutral-300 border-white/20 hover:border-white"
+                )}
+                aria-pressed={autoDecide}
+                title={t('als_auto_decide_hint')}
+              >
+                🤖 {t('als_auto_decide')}
+              </button>
             </div>
           </div>
 
@@ -936,8 +994,21 @@ export const AnimeLifeSim: React.FC = () => {
           )}
 
           {/* Event Card */}
+          {/* Event Modal — "zaman durur, soru sorulur" (referanstaki gibi) */}
           {showEvent ? (
-          <div className="bg-neutral-900 border-4 border-white p-6 md:p-8 neo-shadow-white space-y-4">
+          <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-[3px] flex items-start justify-center overflow-y-auto p-3 md:p-8" role="dialog" aria-modal="true" aria-label={currentEvent.title}>
+            <div className="w-full max-w-2xl bg-neutral-900 border-4 border-amber-400 p-4 md:p-6 neo-shadow-white space-y-4 my-4">
+             <div className="flex items-center justify-between gap-2 border-b-2 border-white/10 pb-2">
+               <span className="text-[9px] font-black uppercase tracking-[0.25em] text-amber-400 flex items-center gap-2">
+                 <span className="w-2 h-2 bg-amber-400 animate-pulse inline-block" aria-hidden="true" />
+                 {t('als_time_stopped')}
+               </span>
+               {autoDecide && currentEvent.choices && currentEvent.choices.length > 0 && !choicesMade[currentEvent.id] && (
+                 <span className="text-[9px] font-black uppercase tracking-widest bg-white text-black px-2 py-0.5 border border-black">
+                   {t('als_auto_decide_badge', { seconds: autoSecondsLeft ?? 8 })}
+                 </span>
+               )}
+             </div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">
                 {currentEvent.type === 'birth' ? '👶' :
@@ -1049,6 +1120,7 @@ export const AnimeLifeSim: React.FC = () => {
                 {currentEvent.isDeath ? t('als_go_memorial') : t('als_continue')}
               </button>
             )}
+            </div>
           </div>
           ) : (
             <div className="bg-black border-4 border-white p-6 md:p-8 neo-shadow-white text-center space-y-4">
