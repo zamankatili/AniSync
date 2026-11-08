@@ -71,7 +71,7 @@ export const getSafeImageUrl = (url?: string): string => {
   }
 
   // Upgrade http to https
-  let secureUrl = trimmed.startsWith('http://') ? trimmed.replace('http://', 'https://') : trimmed;
+  const secureUrl = trimmed.startsWith('http://') ? trimmed.replace('http://', 'https://') : trimmed;
 
   return secureUrl;
 };

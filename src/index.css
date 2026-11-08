@@ -188,3 +188,20 @@ html[data-time-theme="light"] {
   --theme-glow: rgba(0, 0, 0, 0.08);
   --theme-shadow: 4px 4px 0px 0px #000000;
 }
+/* ERİŞİLEBİLİRLİK: hareket tercihine saygı duy */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ERİŞİLEBİLİRLİK: klavye odağı her yerde görünür kalır */
+:focus-visible {
+  outline: 3px solid var(--theme-accent, #fbbf24);
+  outline-offset: 2px;
+}

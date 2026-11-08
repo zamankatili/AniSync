@@ -130,7 +130,7 @@ export const useQuizStore = create<QuizState>((set, get) => {
       const nextStage = isFinished ? state.dailyCurrentStage : Math.min(DAILY_UNLOCK_STAGES.length - 1, state.dailyCurrentStage + 1);
 
       let newStreak = state.dailyStreak;
-      let newStats = { ...state.stats };
+      const newStats = { ...state.stats };
 
       if (isFinished) {
         newStats.totalPlayed += 1;
@@ -175,7 +175,7 @@ export const useQuizStore = create<QuizState>((set, get) => {
       const nextStage = isFinished ? state.dailyCurrentStage : Math.min(DAILY_UNLOCK_STAGES.length - 1, state.dailyCurrentStage + 1);
 
       let newStreak = state.dailyStreak;
-      let newStats = { ...state.stats };
+      const newStats = { ...state.stats };
 
       if (isFinished) {
         newStats.totalPlayed += 1;

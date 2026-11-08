@@ -1,0 +1,29 @@
+name: Deploy Firestore Rules
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'firestore.rules'
+      - 'firebase.json'
+  workflow_dispatch: # elle de tetiklenebilir
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy rules to Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "::error::FIREBASE_TOKEN secret is not set. Run 'firebase login:ci' and add the token as a repository secret."
+            exit 1
+          fi
+          npx --yes firebase-tools deploy --only firestore:rules --token "$FIREBASE_TOKEN" --project folkloric-centaur-q6tp2
