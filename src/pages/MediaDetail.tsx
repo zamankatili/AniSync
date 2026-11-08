@@ -20,6 +20,7 @@ import { cn, getSafeImageUrl, handleImageError } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useToastStore } from '../store/useToastStore';
 import { apiUrl } from '../lib/apiBase';
+import { auth } from '../firebase';
 import { getCachedTranslation, setCachedTranslation } from '../lib/translationCache';
 import { localizeGenre } from '../lib/genreNames';
 
@@ -88,6 +89,11 @@ export const MediaDetail = () => {
       setTranslatedSynopsis(null);
       return;
     }
+    if (!auth.currentUser) {
+      // Çeviri ucu Gemini kotası tüketir — giriş gerekiyor
+      addToast(t('chat_login_required'), 'info');
+      return;
+    }
 
     setIsTranslating(true);
     try {
@@ -98,9 +104,10 @@ export const MediaDetail = () => {
         return;
       }
 
+      const token = await auth.currentUser?.getIdToken();
       const res = await fetch(apiUrl('/api/translate'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ text: media.synopsis, targetLang }),
       });
 

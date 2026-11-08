@@ -8,6 +8,7 @@ import { ForumPost } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { apiUrl } from '../lib/apiBase';
+import { auth } from '../firebase';
 import { getCachedTranslation, setCachedTranslation } from '../lib/translationCache';
 
 interface FeedPostProps {
@@ -32,6 +33,12 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
        return;
     }
     
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+       addToast(t('chat_login_required'), 'info');
+       return;
+    }
+
     setIsTranslating(true);
     try {
        const targetLang = i18n.language || 'tr';
@@ -41,9 +48,10 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
          return;
        }
 
+       const token = await currentUser.getIdToken();
        const res = await fetch(apiUrl('/api/translate'), {
          method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
+         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
          body: JSON.stringify({ text: post.content, targetLang })
        });
        

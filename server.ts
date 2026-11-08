@@ -1,8 +1,8 @@
-import express from "express";
+﻿import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
 import { ingestAnimeNews } from "./src/lib/rssIngest";
+import { handleTranslate, handleAiRecommendations } from "./src/lib/geminiEndpoints";
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -11,69 +11,10 @@ async function startServer() {
   const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
   app.use(express.json());
 
-  // Google Gemini Setup
-  let ai: GoogleGenAI | null = null;
-  if (process.env.GEMINI_API_KEY) {
-    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  }
-
-  // Translate API
-  const translationCache = new Map<string, string>();
-  const MAX_TRANSLATION_CACHE = 300;
-  const hashText = (value: string): string => {
-    let result = 5381;
-    for (let i = 0; i < value.length; i += 1) {
-      result = ((result << 5) + result + value.charCodeAt(i)) | 0;
-    }
-    return (result >>> 0).toString(36);
-  };
-
+  // Ortak Gemini çekirdeği (`src/lib/geminiEndpoints.ts`) — kimlik + kota burada.
   app.post("/api/translate", async (req, res) => {
-    try {
-      if (!ai) {
-        return res.status(500).json({ error: "Gemini API key is not configured" });
-      }
-      const { text, targetLang } = req.body;
-      if (!text || !targetLang) {
-         return res.status(400).json({ error: "Missing text or targetLang" });
-      }
-
-      const lang = String(targetLang).toLowerCase().slice(0, 2);
-      if (!["tr", "en", "ja", "fr"].includes(lang)) {
-        return res.status(400).json({ error: "Unsupported target language" });
-      }
-
-      // Aynı çeviri tekrar istenirse Gemini kotasını harcamadan dön.
-      const cacheKey = `${lang}:${hashText(text)}:${text.length}`;
-      const cached = translationCache.get(cacheKey);
-      if (cached) {
-        return res.json({ translation: cached, cached: true });
-      }
-
-      const prompt = `Translate the following text to ${lang}. Return ONLY the translated text. Do not include any other explanations.\n\nText: ${text}`;
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
-        contents: prompt,
-      });
-
-      const translation = response.text ?? "";
-      if (translation) {
-        if (translationCache.size >= MAX_TRANSLATION_CACHE) {
-          const oldest = translationCache.keys().next().value;
-          if (oldest) translationCache.delete(oldest);
-        }
-        translationCache.set(cacheKey, translation);
-      }
-
-      res.json({ translation });
-    } catch (error: any) {
-      console.error("Translation error", error);
-      if (error?.status === 429 || error?.code === 429 || error?.message?.includes("429") || error?.message?.includes("quota")) {
-        return res.status(429).json({ error: "LIMIT_REACHED" });
-      }
-      res.status(500).json({ error: "Translation failed" });
-    }
+    const r = await handleTranslate(req.body, req.headers as Record<string, unknown>);
+    res.status(r.status).json(r.body);
   });
 
   // Canlı anime haber hattı — src/lib/rssIngest.ts ile paylaşılır (Vercel /api/refresh-news de aynı).
@@ -86,7 +27,15 @@ async function startServer() {
   };
 
   // Cron çağırır; canlı RSS'i çekip önbelleği tazeler (12 saatte bir).
-  app.get("/api/refresh-news", async (_req, res) => {
+  // CRON_SECRET tanımlıysa `Authorization: Bearer <CRON_SECRET>` zorunludur.
+  app.get("/api/refresh-news", async (req, res) => {
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret) {
+      const auth = String(req.headers.authorization ?? '');
+      if (auth !== `Bearer ${cronSecret}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+    }
     const result = await ingestAnimeNews(true);
     res.json({
       news: result.items,
@@ -144,50 +93,8 @@ async function startServer() {
 
   // Gemini AI Personalized Recommendations Endpoint
   app.post("/api/ai-recommendations", async (req, res) => {
-    try {
-      const { savedTitles, savedGenres } = req.body || {};
-      const titlesList = Array.isArray(savedTitles) && savedTitles.length > 0 ? savedTitles.join(", ") : "Attack on Titan, Demon Slayer, Jujutsu Kaisen";
-      const genresList = Array.isArray(savedGenres) && savedGenres.length > 0 ? savedGenres.join(", ") : "Aksiyon, Fantezi, Gizem";
-
-      if (!ai) {
-        return res.json({ recommendations: [], fallback: true });
-      }
-
-      const prompt = `Kullanıcının kaydettiği izleme listesi anileleri: [${titlesList}] ve sevdiği türler: [${genresList}].
-Bu izleme profiline dayanarak kullanıcı için tam 4 adet kişiselleştirilmiş anime tavsiyesi üret.
-Çıktıyı SADECE aşağıdaki JSON dizisi formatında ver:
-[
-  {
-    "id": 52991,
-    "title": "Anime Başlığı",
-    "englishTitle": "English Title",
-    "genres": ["Aksiyon", "Fantezi"],
-    "score": 8.9,
-    "episodes": 24,
-    "matchPercentage": 96,
-    "reason": "1-2 cümlelik Türkçe özel gerekçe (Kullanıcının izleme listesindeki serilere neden benziyor)",
-    "imageUrl": "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg",
-    "synopsis": "Kısa konu özeti (Türkçe)"
-  }
-]
-Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
-        contents: prompt
-      });
-
-      let rawText = response.text || "";
-      rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
-
-      const parsedRecs = JSON.parse(rawText);
-      if (Array.isArray(parsedRecs) && parsedRecs.length > 0) {
-        return res.json({ recommendations: parsedRecs, aiGenerated: true });
-      }
-      return res.json({ recommendations: [], fallback: true });
-    } catch (_err) {
-      return res.json({ recommendations: [], fallback: true });
-    }
+    const r = await handleAiRecommendations(req.body, req.headers as Record<string, unknown>);
+    res.status(r.status).json(r.body);
   });
 
   // ==========================================
@@ -196,49 +103,8 @@ Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
   let airingScheduleCache: { data: any; timestamp: number } | null = null;
   const AIRING_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-  // NOT: SCHEDULE_2026 arşiv/ÖRNEK bir listidir; sezon doğrulaması YOKTUR.
-  // Jikan'dan canlı veri çekilemezse yalnızca `stale: true` + "örnek veri"
-  // etiketiyle döndürülür; istemci bunu asla "Canlı" olarak göstermez.
-  const SCHEDULE_2026: Record<string, any[]> = {
-    monday: [
-      { mal_id: 58941, title: "Sakamoto Days", title_english: "SAKAMOTO DAYS", image: "https://cdn.myanimelist.net/images/anime/1169/143761l.webp", score: 8.65, broadcastTime: "18:00", broadcastDay: "monday", genres: ["Aksiyon", "Komedi"], synopsis: "Eski efsanevi suikastçı Taro Sakamoto'nun aksiyon dolu maceraları.", episodes: 24, studio: "TMS Entertainment" },
-      { mal_id: 54857, title: "The 100 Girlfriends Who Really Love You 2nd Season", title_english: "The 100 Girlfriends Season 2", image: "https://cdn.myanimelist.net/images/anime/1066/141071l.webp", score: 8.35, broadcastTime: "19:30", broadcastDay: "monday", genres: ["Komedi", "Romantizm"], synopsis: "Rentaro ve 100 ruh ikizinin romantik kaos serüveni.", episodes: 12, studio: "Bibury Animation" },
-      { mal_id: 55644, title: "Tower of God Season 2: Workshop Battle", title_english: "Tower of God: Workshop Battle", image: "https://cdn.myanimelist.net/images/anime/1118/143529l.webp", score: 7.62, broadcastTime: "21:00", broadcastDay: "monday", genres: ["Aksiyon", "Macera"], synopsis: "Atölye Savaşı arenasındaki ölümcül testler.", episodes: 26, studio: "The Answer Studio" }
-    ],
-    tuesday: [
-      { mal_id: 56784, title: "Wind Breaker Season 2", title_english: "Wind Breaker Season 2", image: "https://cdn.myanimelist.net/images/anime/1815/141743l.webp", score: 8.15, broadcastTime: "19:00", broadcastDay: "tuesday", genres: ["Aksiyon", "Dövüş"], synopsis: "Furin Lisesi'nin sokak savunucuları.", episodes: 12, studio: "CloverWorks" },
-      { mal_id: 54900, title: "Kuroshitsuji: Emerald Witch Arc", title_english: "Black Butler: Emerald Witch Arc", image: "https://cdn.myanimelist.net/images/anime/1204/141887l.webp", score: 8.22, broadcastTime: "20:30", broadcastDay: "tuesday", genres: ["Gizem", "Doğaüstü"], synopsis: "Zümrüt Cadı ve kurtadam efsaneleri.", episodes: 12, studio: "CloverWorks" },
-      { mal_id: 57400, title: "Apocalypse Hotel", title_english: "Apocalypse Hotel", image: "https://cdn.myanimelist.net/images/anime/1806/126216l.jpg", score: 7.88, broadcastTime: "22:00", broadcastDay: "tuesday", genres: ["Bilim Kurgu", "Komedi"], synopsis: "Kıyamet sonrası ayakta kalan son lüks otel.", episodes: 12, studio: "CygamesPictures" }
-    ],
-    wednesday: [
-      { mal_id: 54857, title: "Re:ZERO Season 3 (Counterattack)", title_english: "Re:ZERO Season 3", image: "https://cdn.myanimelist.net/images/anime/1160/142384l.webp", score: 8.78, broadcastTime: "17:30", broadcastDay: "wednesday", genres: ["Dram", "Fantastik"], synopsis: "Su Kapısı Şehri Priestella'daki büyük karşı taarruz.", episodes: 16, studio: "White Fox" },
-      { mal_id: 57520, title: "Dr. STONE SCIENCE FUTURE", title_english: "Dr. STONE Final Season", image: "https://cdn.myanimelist.net/images/anime/1487/142079l.webp", score: 8.54, broadcastTime: "19:00", broadcastDay: "wednesday", genres: ["Bilim Kurgu", "Macera"], synopsis: "Ay'a yolculuk ve taşlaşmanın sırrı.", episodes: 12, studio: "TMS Entertainment" },
-      { mal_id: 59301, title: "Gachiakuta", title_english: "Gachiakuta", image: "https://cdn.myanimelist.net/images/anime/1171/123961l.jpg", score: 8.41, broadcastTime: "21:00", broadcastDay: "wednesday", genres: ["Aksiyon", "Karanlık Shounen"], synopsis: "Uçurum'a atılan Rudo'nun intikam savaşı.", episodes: 24, studio: "Bones" }
-    ],
-    thursday: [
-      { mal_id: 57334, title: "DAN DA DAN", title_english: "DAN DA DAN", image: "https://cdn.myanimelist.net/images/anime/1487/142079l.webp", score: 8.82, broadcastTime: "18:00", broadcastDay: "thursday", genres: ["Aksiyon", "Doğaüstü"], synopsis: "Momo ve Okarun'un uzaylılar ve lanetlerle serüveni.", episodes: 12, studio: "Science SARU" },
-      { mal_id: 59120, title: "Kaiju No. 8 Season 2", title_english: "Kaiju No. 8 Season 2", image: "https://cdn.myanimelist.net/images/anime/1739/140994l.webp", score: 8.48, broadcastTime: "20:00", broadcastDay: "thursday", genres: ["Aksiyon", "Askeri"], synopsis: "9 Numaralı Kaiju'nun Tokyo istilasına karşı savunma.", episodes: 12, studio: "Production I.G" },
-      { mal_id: 58210, title: "Rurouni Kenshin: Kyoto Disturbance", title_english: "Rurouni Kenshin Season 2", image: "https://cdn.myanimelist.net/images/anime/1208/135328l.jpg", score: 8.10, broadcastTime: "21:30", broadcastDay: "thursday", genres: ["Samuray", "Aksiyon"], synopsis: "Shishio Makoto'ya karşı Kyoto savunması.", episodes: 23, studio: "LIDENFILMS" }
-    ],
-    friday: [
-      { mal_id: 52991, title: "Sousou no Frieren Season 2", title_english: "Frieren: Beyond Journey's End Season 2", image: "https://cdn.myanimelist.net/images/anime/1015/138006l.webp", score: 9.38, broadcastTime: "18:30", broadcastDay: "friday", genres: ["Macera", "Fantastik"], synopsis: "Kuzey Yaylası yolculuğu ve Aureole cenneti.", episodes: 24, studio: "Madhouse" },
-      { mal_id: 58712, title: "Fire Force Season 3", title_english: "Fire Force Season 3", image: "https://cdn.myanimelist.net/images/anime/1171/123961l.jpg", score: 8.32, broadcastTime: "20:00", broadcastDay: "friday", genres: ["Aksiyon", "Doğaüstü"], synopsis: "Büyük Afet ve Adolla felaketine karşı son savaş.", episodes: 24, studio: "David Production" },
-      { mal_id: 54842, title: "Delicious in Dungeon Season 2", title_english: "Delicious in Dungeon Season 2", image: "https://cdn.myanimelist.net/images/anime/1489/141014l.webp", score: 8.68, broadcastTime: "21:30", broadcastDay: "friday", genres: ["Macera", "Gurme"], synopsis: "Zindanın derinliklerinde yeni canavar tarifleri.", episodes: 24, studio: "Trigger" }
-    ],
-    saturday: [
-      { mal_id: 52701, title: "Bleach: Thousand-Year Blood War - The Conflict", title_english: "Bleach: TYBW Part 3", image: "https://cdn.myanimelist.net/images/anime/1912/143527l.webp", score: 8.85, broadcastTime: "17:00", broadcastDay: "saturday", genres: ["Aksiyon", "Doğaüstü"], synopsis: "Ruh Kralı Sarayı ve Yhwach ile nihai yüzleşme.", episodes: 13, studio: "Pierrot Films" },
-      { mal_id: 52347, title: "Solo Leveling Season 2: Arise from the Shadow", title_english: "Solo Leveling Season 2", image: "https://cdn.myanimelist.net/images/anime/1210/141049l.webp", score: 8.74, broadcastTime: "19:00", broadcastDay: "saturday", genres: ["Aksiyon", "Fantastik"], synopsis: "Sung Jin-Woo ve Gölge Ordusu'nun savaşı.", episodes: 13, studio: "A-1 Pictures" },
-      { mal_id: 58514, title: "Blue Lock vs. U-20 Japan", title_english: "Blue Lock Season 2", image: "https://cdn.myanimelist.net/images/anime/1169/143761l.webp", score: 7.85, broadcastTime: "20:30", broadcastDay: "saturday", genres: ["Spor", "Futbol"], synopsis: "Ego Jinpachi ve forvetlerin U-20 mücadelesi.", episodes: 14, studio: "8bit" },
-      { mal_id: 54112, title: "Shangri-La Frontier Season 2", title_english: "Shangri-La Frontier Season 2", image: "https://cdn.myanimelist.net/images/anime/1138/142999l.webp", score: 8.24, broadcastTime: "13:00", broadcastDay: "saturday", genres: ["Aksiyon", "VRMMO"], synopsis: "Yedi Efsanevi Canavar ile yüzleşme.", episodes: 25, studio: "C2C" }
-    ],
-    sunday: [
-      { mal_id: 21, title: "One Piece (Elbaf Arkı: Devler Diyarı)", title_english: "One Piece - Elbaf Arc", image: "https://cdn.myanimelist.net/images/anime/6/73245l.webp", score: 8.79, broadcastTime: "05:30", broadcastDay: "sunday", genres: ["Aksiyon", "Macera"], synopsis: "Hasır Şapkalar efsanevi Elbaf devler diyarına ayak basar.", episodes: 1130, studio: "Toei Animation" },
-      { mal_id: 5114, title: "Jujutsu Kaisen 3. Sezon: The Culling Game", title_english: "Jujutsu Kaisen Season 3", image: "https://cdn.myanimelist.net/images/anime/1171/123961l.jpg", score: 8.92, broadcastTime: "18:00", broadcastDay: "sunday", genres: ["Aksiyon", "Karanlık Fantazi"], synopsis: "Ölüm bariyerlerinde kadim büyücülerle savaş.", episodes: 24, studio: "MAPPA" },
-      { mal_id: 59880, title: "Lord of the Mysteries", title_english: "Lord of the Mysteries", image: "https://cdn.myanimelist.net/images/anime/1806/126216l.jpg", score: 8.84, broadcastTime: "20:00", broadcastDay: "sunday", genres: ["Gizem", "Viktoryen"], synopsis: "Klein Moretti ve Tarot Kulübü'nün gizemleri.", episodes: 16, studio: "B.CMAY PICTURES" }
-    ]
-  };
 
-  // 1. Automated Live Airing Schedule Sync (Jikan API v4 + arşiv/örnek fallback)
+  // 1. Automated Live Airing Schedule Sync (Jikan v4; çevrimdışıysa boş + stale)
   app.get("/api/sync/airing-schedule", async (req, res) => {
     const now = Date.now();
     const day = ((req.query.day as string) || "monday").toLowerCase();
@@ -294,24 +160,23 @@ Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
         }
       }
     } catch (_err) {
-      // Fall through to 2026 verified schedule
+      // Jikan düştü → boş stale yanıt döner (aşağıda)
     }
 
-    // Son çare: arşiv/ÖRNEK liste — AÇIKÇA bayat olarak işaretlenir
-    const dayList = SCHEDULE_2026[day] || SCHEDULE_2026.monday;
+    // Jikan da düştüyse uydurma yayın saati DÖNDÜRME — boş + stale dön.
     const fetchedAt = new Date().toISOString();
     if (!airingScheduleCache) {
       airingScheduleCache = { data: {}, timestamp: now };
     }
     airingScheduleCache.data[day] = {
-      items: dayList,
-      source: "Örnek veri (çevrimdışı — güncel sezon değil)",
+      items: [],
+      source: "Kaynak yok (çevrimdışı)",
       liveSync: false,
       stale: true,
       fetchedAt,
     };
 
-    return res.json({ schedule: dayList, source: "Örnek veri (çevrimdışı — güncel sezon değil)", liveSync: false, stale: true, fetchedAt, season });
+    return res.json({ schedule: [], source: "Kaynak yok (çevrimdışı)", liveSync: false, stale: true, fetchedAt, season });
   });
 
   // 2. Automated Trending & Seasonal Anime Sync

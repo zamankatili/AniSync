@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { localizeGenre } from '../lib/genreNames';
 import { AI_FALLBACK_REASONS, AI_FALLBACK_SYNOPSIS, pickLocalized } from '../data/localizedContent';
@@ -85,6 +86,7 @@ export const AIRecommendationsSection: React.FC = () => {
   const navigate = useNavigate();
 
   const [recommendations, setRecommendations] = useState<AIRecommendationItem[]>(FALLBACK_RECOMMENDATIONS);
+  const [isAiGenerated, setIsAiGenerated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
 
@@ -94,9 +96,10 @@ export const AIRecommendationsSection: React.FC = () => {
   const fetchAIRecommendations = async () => {
     setLoading(true);
     try {
+      const token = await auth.currentUser?.getIdToken();
       const res = await fetch(apiUrl('/api/ai-recommendations'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           savedTitles: userSavedTitles,
           savedGenres: userSavedGenres,
@@ -109,13 +112,16 @@ export const AIRecommendationsSection: React.FC = () => {
       const data = await res.json();
       if (data.recommendations && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
         setRecommendations(data.recommendations);
+        setIsAiGenerated(data.aiGenerated === true);
         addToast(t('ai_recs_updated'), 'success');
       } else {
         setRecommendations(FALLBACK_RECOMMENDATIONS);
+        setIsAiGenerated(false);
       }
     } catch (err) {
       console.warn('AI recommendations fetch notice:', err);
       setRecommendations(FALLBACK_RECOMMENDATIONS);
+      setIsAiGenerated(false);
     } finally {
       setLoading(false);
     }
@@ -161,10 +167,10 @@ export const AIRecommendationsSection: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl md:text-2xl font-black uppercase text-white tracking-tight">
-                {t('ai_recs_title')}
+                {isAiGenerated ? t('ai_recs_title') : t('ai_recs_curated')}
               </h2>
-              <span className="bg-rose-600 text-white font-black text-[10px] px-2 py-0.5 border border-white uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#fff]">
-                <Sparkles size={11} /> AI POWERED
+              <span className={`${isAiGenerated ? 'bg-rose-600' : 'bg-neutral-800'} text-white font-black text-[10px] px-2 py-0.5 border border-white uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#fff]`}>
+                <Sparkles size={11} /> {isAiGenerated ? 'AI POWERED' : 'EDITOR'}
               </span>
             </div>
             <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider">
@@ -196,11 +202,13 @@ export const AIRecommendationsSection: React.FC = () => {
               transition={{ delay: index * 0.08 }}
               className="bg-neutral-950 border-2 border-amber-400/50 hover:border-amber-400 p-4 transition-all duration-200 group flex flex-col sm:flex-row gap-4 relative overflow-hidden"
             >
-              {/* Match Percentage Badge */}
-              <div className="absolute top-2 right-2 bg-amber-400 text-black font-black text-[10px] px-2 py-0.5 border border-black uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#000] z-10">
-                <Zap size={10} fill="currentColor" />
-                <span>{t('ai_match', { percent: rec.matchPercentage })}</span>
-              </div>
+              {/* Match Percentage Badge — yalnızca AI üretimi eşleşmeler için gösterilir */}
+              {isAiGenerated && (
+                <div className="absolute top-2 right-2 bg-amber-400 text-black font-black text-[10px] px-2 py-0.5 border border-black uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#000] z-10">
+                  <Zap size={10} fill="currentColor" />
+                  <span>{t('ai_match', { percent: rec.matchPercentage })}</span>
+                </div>
+              )}
 
               {/* Cover Image */}
               <div 

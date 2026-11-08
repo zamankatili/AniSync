@@ -237,6 +237,7 @@ const resources = {
       "followed_toast": "{{name}} takip edilmeye başlandı.",
       "coming_soon_toast": "Bu özellik yakında!",
       "ai_recs_title": "GEMINI AI KİŞİSELLEŞTİRİLMİŞ TAVSİYELER",
+      "ai_recs_curated": "KÜRATorlü SEÇİMLER",
       "ai_recs_subtitle": "Kaydedilen {{count}} serilik izleme geçmişine göre Gemini yapay zekası tarafından önerilmiştir",
       "ai_match": "%{{percent}} UYUMLU",
       "ai_why_this": "Neden Bu Anime?",
@@ -1651,6 +1652,7 @@ const resources = {
       "followed_toast": "Now following {{name}}.",
       "coming_soon_toast": "This feature is coming soon!",
       "ai_recs_title": "GEMINI AI PERSONALIZED PICKS",
+      "ai_recs_curated": "CURATED PICKS",
       "ai_recs_subtitle": "Suggested by Gemini AI based on your {{count}}-show watch history",
       "ai_match": "{{percent}}% MATCH",
       "ai_why_this": "Why This Anime?",
@@ -3063,6 +3065,7 @@ const resources = {
       "followed_toast": "{{name}} をフォローしました。",
       "coming_soon_toast": "この機能は近日公開予定です！",
       "ai_recs_title": "GEMINI AI パーソナルおすすめ",
+      "ai_recs_curated": "編集部の厳選おすすめ",
       "ai_recs_subtitle": "視聴履歴の{{count}}作品をもとに、Gemini AIがおすすめを提案しました",
       "ai_match": "{{percent}}% 一致",
       "ai_why_this": "なぜこのアニメ？",
@@ -4477,6 +4480,7 @@ const resources = {
       "followed_toast": "Tu suis maintenant {{name}}.",
       "coming_soon_toast": "Cette fonctionnalité arrive bientôt !",
       "ai_recs_title": "SUGGESTIONS IA PERSONNALISÉES",
+      "ai_recs_curated": "SÉLECTION DE LA RÉDACTION",
       "ai_recs_subtitle": "Suggéré par Gemini IA à partir de ton historique de {{count}} séries",
       "ai_match": "{{percent}} % COMPATIBLE",
       "ai_why_this": "Pourquoi Cet Anime ?",
@@ -5672,8 +5676,8 @@ const resources = {
 const HTML_LANG: Record<string, string> = { tr: 'tr', en: 'en', ja: 'ja', fr: 'fr' };
 const syncHtmlLang = (lng?: string) => {
   if (typeof document === 'undefined') return;
-  const base = (lng || 'tr').split('-')[0].toLowerCase();
-  document.documentElement.lang = HTML_LANG[base] || 'tr';
+  const base = (lng || 'en').split('-')[0].toLowerCase();
+  document.documentElement.lang = HTML_LANG[base] || 'en';
 };
 
 i18n
@@ -5681,7 +5685,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'tr',
+    fallbackLng: 'en',
     supportedLngs: ['tr', 'en', 'ja', 'fr'],
     nonExplicitSupportedLngs: true,
     interpolation: {

@@ -1,15 +1,15 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <!-- viewport-fit=cover: notch / safe-area desteği. maximum-scale kaldırıldı (erişilebilirlik). -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <!-- Primary Title & Meta Description -->
-    <title>AniSync (LOGOS) – Anime, Manga, Novel ve Oyun Dünyası</title>
-    <meta name="description" content="AniSync ile anime, manga, light novel ve oyunları keşfedin; Watch Party odalarında arkadaşlarınızla izleyin, Müzik Quizi oynayın, Otaku Rank rozetleri kazanın ve topluluğa katılın." />
-    <meta name="keywords" content="anime, manga, light novel, oyun, anime takip, anime takvimi, watch party, anime quiz, otaku, anime topluluğu, anisync" />
-    <meta name="author" content="AniSync LOGOS-Core" />
+    <!-- Primary Title & Meta Description (İngilizce varsayılan; SEOManager istemcide dile göre günceller) -->
+    <title>AniSync – Anime, Manga, Novel & Game Tracker, Watch Party & Community</title>
+    <meta name="description" content="Discover anime, manga, light novels and games with AniSync; watch together in Watch Party rooms, play the Music Quiz, earn Otaku Rank badges and join the community. Türkçe: Watch Party ile canlı izleyin, Otaku Rank kazanın." />
+    <meta name="keywords" content="anime, manga, light novel, games, anime tracker, anime calendar, watch party, anime quiz, otaku, anisync" />
+    <meta name="author" content="AniSync" />
 
     <!-- PWA / Mobil -->
     <meta name="theme-color" content="#000000" />
@@ -30,16 +30,25 @@
     <!-- OpenGraph Social Share Cards (Facebook, Discord, WhatsApp, LinkedIn) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="AniSync" />
-    <meta property="og:title" content="AniSync – Anime Takip, Watch Party & Topluluk Platformu" />
-    <meta property="og:description" content="En güncel anime ve mangaları takip edin, Watch Party ile arkadaşlarınızla canlı izleyin, Otaku Rank rozetleri kazanın ve toplulukla etkileşim kurun." />
+    <meta property="og:title" content="AniSync – Watch Party, Anime Tracker & Community Platform" />
+    <meta property="og:description" content="Track anime and manga, watch together live in Watch Party rooms, climb Otaku Rank and join the community. Live calendar, seasonal charts and real-time chat." />
     <meta property="og:image" content="https://cdn.myanimelist.net/images/anime/1015/138006l.webp" />
-    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:locale:alternate" content="fr_FR" />
 
     <!-- Twitter / X Cards -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="AniSync – Anime Takip, Watch Party & Topluluk Platformu" />
-    <meta name="twitter:description" content="En güncel animeleri takip edin, Birlikte İzle (Watch Party) odalarına katılın ve Otaku Rank derecenizi yükseltin!" />
+    <meta name="twitter:title" content="AniSync – Watch Party, Anime Tracker & Community Platform" />
+    <meta name="twitter:description" content="Track anime, join Watch Party rooms, climb your Otaku Rank!" />
     <meta name="twitter:image" content="https://cdn.myanimelist.net/images/anime/1015/138006l.webp" />
+    <!-- Dil alternatifleri (LanguageDetector `?lang=` parametresini okur) -->
+    <link rel="alternate" hreflang="en" href="https://anisync-tau.vercel.app/?lang=en" />
+    <link rel="alternate" hreflang="tr" href="https://anisync-tau.vercel.app/?lang=tr" />
+    <link rel="alternate" hreflang="ja" href="https://anisync-tau.vercel.app/?lang=ja" />
+    <link rel="alternate" hreflang="fr" href="https://anisync-tau.vercel.app/?lang=fr" />
+    <link rel="alternate" hreflang="x-default" href="https://anisync-tau.vercel.app/" />
 
     <!-- Schema.org Structured Data (JSON-LD) -->
     <script type="application/ld+json">
@@ -50,8 +59,8 @@
       "alternateName": "AniSync LOGOS",
       "applicationCategory": "EntertainmentApplication",
       "operatingSystem": "All",
-      "inLanguage": "tr",
-      "description": "Kapsamlı anime ve manga takip platformu, canlı Birlikte İzle (Watch Party) odaları, Otaku Rank başarım sistemi, Müzik Quizi ve yayın takvimi.",
+      "inLanguage": ["en", "tr", "ja", "fr"],
+      "description": "Complete anime and manga tracking platform with Watch Party rooms, Otaku Rank achievements, Music Quiz and airing calendar. Anime, manga, oyun ve roman takip platformu.",
       "offers": {
         "@type": "Offer",
         "price": "0",
