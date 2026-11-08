@@ -1,13 +1,15 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
-import { ANIME_REGIONS, getRegionsByWorld } from '../data/animeRegions';
+import { ANIME_REGIONS, getRegionsByWorld, getRegionById } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
 import {
   generateLife,
   LifeResult,
   generateShareText,
+  generateMemorialText,
   LIFE_FOCUSES,
   computeStatsAt,
   computeAssetsAt,
@@ -21,8 +23,25 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type Phase = 'select' | 'playing' | 'memorial';
 
+interface PastLife {
+  id: string;
+  name: string;
+  worldId: string;
+  regionId: string;
+  age: number;
+  year: number;
+  cause: string;
+  date: number;
+  power: number;
+  intelligence: number;
+  luck: number;
+  socialClass: number;
+  health: number;
+}
+
 export const AnimeLifeSim: React.FC = () => {
   const { t, currentLang } = useAppTranslation();
+  const navigate = useNavigate();
   const [selectedWorld, setSelectedWorld] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [lifeDuration, setLifeDuration] = useState<'30min' | '1h' | '1.5h'>('1h');
@@ -36,13 +55,22 @@ export const AnimeLifeSim: React.FC = () => {
   const [period, setPeriod] = useState<'today' | 'past' | 'future'>('today');
   const [focus, setFocus] = useState<'study' | 'combat' | 'social' | 'exploration' | 'survival'>('study');
   const eduMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edu') === '1';
+  const [ageConfirmed, setAgeConfirmed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const edu = new URLSearchParams(window.location.search).get('edu') === '1';
+    return edu || localStorage.getItem('als_age_ok') === '1';
+  });
   const [parallelLives, setParallelLives] = useState<LifeResult[]>([]);
   const [savedLifeIndex, setSavedLifeIndex] = useState(0);
   const [muted, setMuted] = useState(false);
   const [showEvent, setShowEvent] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [lifeAge, setLifeAge] = useState(0);
+  const [pastLives, setPastLives] = useState<PastLife[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const recordedLifeRef = useRef<string | null>(null);
+  const sessionStartRef = useRef(Date.now());
+  const lastBreakRef = useRef(0);
   const addToast = useToastStore((s) => s.addToast);
 
   const DURATION_MS: Record<'30min' | '1h' | '1.5h', number> = {
@@ -89,6 +117,7 @@ export const AnimeLifeSim: React.FC = () => {
     setLifeAge(0);
     setShowEvent(true);
     setIsPaused(false);
+    recordedLifeRef.current = null;
     handleClearSave();
   };
 
@@ -160,6 +189,26 @@ export const AnimeLifeSim: React.FC = () => {
   const currentAssets = life && currentStats ? computeAssetsAt(life, currentStats) : life?.assets ?? 0;
   const finalLifeStats = life ? computeStatsAt(life, life.events.length - 1, choicesMade) : null;
 
+  // Anma metni, oyuncu seçimlerinin etkisini de yansıtsın.
+  const memorialText = useMemo(() => {
+    if (!life || !world || !region || !finalLifeStats) return life?.memorialText ?? '';
+    return generateMemorialText(
+      world,
+      region,
+      life.birthYear,
+      life.deathAge,
+      life.deathCause,
+      finalLifeStats,
+      life.events,
+      life.gender,
+      life.period,
+      life.characterName,
+      getFamilyStatus(finalLifeStats.socialClass),
+      getEducationTier(finalLifeStats.intelligence),
+      computeAssetsAt(life, finalLifeStats)
+    );
+  }, [life, world, region, finalLifeStats]);
+
   const playSound = (freq: number, duration: number, type: OscillatorType = 'square') => {
     if (muted) return;
     try {
@@ -212,6 +261,19 @@ export const AnimeLifeSim: React.FC = () => {
     }
   }, [lifeAge, phase, life, showEvent, currentEventIndex]);
 
+  // Uzun oturumlarda mola hatırlatması (referanstaki 2+ saat davranışı).
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const elapsed = Date.now() - sessionStartRef.current;
+      if (elapsed >= 2 * 60 * 60 * 1000 && Date.now() - lastBreakRef.current >= 2 * 60 * 60 * 1000) {
+        lastBreakRef.current = Date.now();
+        addToast(t('als_break_reminder'), 'info');
+      }
+    }, 5 * 60 * 1000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Load saved life from localStorage on mount
   useEffect(() => {
     try {
@@ -220,6 +282,11 @@ export const AnimeLifeSim: React.FC = () => {
         const parsed = JSON.parse(raw) as LifeResult;
         setSavedLife(parsed);
         setSavedLifeIndex(Number(localStorage.getItem('als_saved_index') || '0'));
+      }
+      const historyRaw = localStorage.getItem('als_past_lives');
+      if (historyRaw) {
+        const history = JSON.parse(historyRaw) as PastLife[];
+        if (Array.isArray(history)) setPastLives(history);
       }
     } catch {
       // ignore
@@ -259,6 +326,48 @@ export const AnimeLifeSim: React.FC = () => {
     }
   }, [life, phase, currentEventIndex, world, region, lifeDuration, choicesMade, parallelLives]);
 
+  // Tamamlanan hayatları geçmişe kaydet (en fazla 20).
+  useEffect(() => {
+    if (phase !== 'memorial' || !life) return;
+    const id = `${life.birthYear}-${life.deathAge}-${life.characterName}`;
+    if (recordedLifeRef.current === id) return;
+    recordedLifeRef.current = id;
+    const stats = computeStatsAt(life, life.events.length - 1, choicesMade);
+    const entry: PastLife = {
+      id,
+      name: life.characterName,
+      worldId: life.worldId,
+      regionId: life.regionId,
+      age: life.deathAge,
+      year: life.deathYear,
+      cause: life.deathCause,
+      date: Date.now(),
+      power: stats.power,
+      intelligence: stats.intelligence,
+      luck: stats.luck,
+      socialClass: stats.socialClass,
+      health: stats.health,
+    };
+    setPastLives(prev => {
+      const next = [entry, ...prev.filter(p => p.id !== id)].slice(0, 20);
+      try {
+        localStorage.setItem('als_past_lives', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, [phase, life, choicesMade]);
+
+  const handleClearHistory = () => {
+    try {
+      localStorage.removeItem('als_past_lives');
+    } catch {
+      // ignore
+    }
+    setPastLives([]);
+  };
+
   const handleResume = () => {
     try {
       const raw = localStorage.getItem('als_saved_life');
@@ -292,6 +401,9 @@ export const AnimeLifeSim: React.FC = () => {
       setIsPaused(localStorage.getItem('als_saved_paused') === '1');
       setPhase(savedPhase);
       setSavedLife(parsed);
+      if (savedPhase === 'memorial') {
+        recordedLifeRef.current = `${parsed.birthYear}-${parsed.deathAge}-${parsed.characterName}`;
+      }
     } catch {
       // ignore
     }
@@ -365,6 +477,42 @@ export const AnimeLifeSim: React.FC = () => {
 
       {phase === 'select' && (
         <div className="space-y-6">
+          {!ageConfirmed && (
+            <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="max-w-md w-full bg-neutral-950 border-4 border-white neo-shadow-white p-6 space-y-4">
+                <span className="inline-block bg-rose-600 text-white font-black text-[10px] px-2 py-1 border border-white uppercase tracking-wider">
+                  {t('als_age_gate_badge')}
+                </span>
+                <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                  {t('als_age_gate_title')}
+                </h2>
+                <p className="text-xs text-neutral-300 font-medium leading-relaxed">
+                  {t('als_age_gate_desc')}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      try {
+                        localStorage.setItem('als_age_ok', '1');
+                      } catch {
+                        // ignore
+                      }
+                      setAgeConfirmed(true);
+                    }}
+                    className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black uppercase text-xs border-2 border-white cursor-pointer"
+                  >
+                    {t('als_age_gate_confirm')}
+                  </button>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="flex-1 py-3 bg-black hover:bg-neutral-800 text-neutral-300 font-black uppercase text-xs border-2 border-white/30 cursor-pointer"
+                  >
+                    {t('als_age_gate_leave')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {savedLife && (
             <div className="bg-amber-400/20 border-2 border-amber-400 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-amber-300 text-xs font-bold">
@@ -425,6 +573,45 @@ export const AnimeLifeSim: React.FC = () => {
               {t('als_random_birth_button')}
             </button>
           </div>
+
+          {/* Past lives */}
+          {pastLives.length > 0 && (
+            <div className="bg-neutral-900 border-2 border-white/30 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-black text-white uppercase tracking-wider">
+                  {t('als_past_lives_title', { count: pastLives.length })}
+                </h2>
+                <button
+                  onClick={handleClearHistory}
+                  className="px-3 py-1 bg-black hover:bg-neutral-800 text-neutral-400 hover:text-white font-black text-[10px] uppercase border border-white/20 cursor-pointer"
+                >
+                  {t('als_past_lives_clear')}
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {pastLives.map((entry) => {
+                  const w = getWorldById(entry.worldId);
+                  const r = getRegionById(entry.regionId);
+                  return (
+                    <div key={entry.id + entry.date} className="bg-black border border-white/20 p-3 text-[10px] font-mono">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-white font-black text-xs truncate">
+                          {w?.emoji} {entry.name}
+                        </span>
+                        <span className="text-amber-400 font-black shrink-0">{entry.age} {t('als_years_unit')}</span>
+                      </div>
+                      <div className="text-neutral-400 mt-1 truncate">
+                        {w ? worldName(w) : entry.worldId} · {r ? regionName(r) : entry.regionId}
+                      </div>
+                      <div className="text-neutral-500 mt-0.5 truncate">
+                        {entry.cause} · {entry.year}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* World Selection */}
           <div className="bg-neutral-900 border-2 border-white p-5">
@@ -907,7 +1094,7 @@ export const AnimeLifeSim: React.FC = () => {
             </div>
 
             <div className="bg-neutral-950 border-2 border-white/20 p-4 md:p-6 font-mono text-xs text-neutral-200 whitespace-pre-wrap leading-relaxed">
-              {life.memorialText}
+              {memorialText}
             </div>
 
             {/* Achievements */}
@@ -956,7 +1143,10 @@ export const AnimeLifeSim: React.FC = () => {
                       <span className="text-lg font-black font-mono text-white block">{pl.deathAge}</span>
                       <span className="text-[9px] text-neutral-400 block">{pl.deathCause}</span>
                       <div className="mt-1 text-[8px] text-neutral-500 font-mono">
-                        G:{pl.finalStats.power} Z:{pl.finalStats.intelligence} Ş:{pl.finalStats.luck}
+                        {(() => {
+                          const s = idx === 0 && finalLifeStats ? finalLifeStats : pl.finalStats;
+                          return `${t('als_stat_power')}:${s.power} ${t('als_stat_intelligence')}:${s.intelligence} ${t('als_stat_luck')}:${s.luck}`;
+                        })()}
                       </div>
                     </div>
                   ))}

@@ -824,7 +824,7 @@ export function generateLife(
 
 // ─── Anma Sayfası (Memorial) ─────────────────────────────
 
-function generateMemorialText(
+export function generateMemorialText(
   world: AnimeWorld,
   region: AnimeRegion,
   birthYear: number,
