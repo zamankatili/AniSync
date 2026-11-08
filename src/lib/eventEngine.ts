@@ -52,6 +52,8 @@ export interface LifeChoice {
 export interface LifeResult {
   worldId: string;
   regionId: string;
+  period: 'today' | 'past' | 'future';
+  gender: 'male' | 'female';
   birthYear: number;
   deathYear: number;
   deathAge: number;
@@ -447,7 +449,10 @@ function createMilestoneEvent(world: AnimeWorld, region: AnimeRegion, age: numbe
 
 export interface GenerateLifeOptions {
   includeHeavy?: boolean;
+  period?: 'today' | 'past' | 'future';
 }
+
+export type LifePeriod = 'today' | 'past' | 'future';
 
 export function generateLife(
   world: AnimeWorld,
@@ -456,8 +461,24 @@ export function generateLife(
   options: GenerateLifeOptions = {}
 ): LifeResult {
   const includeHeavy = options.includeHeavy !== false;
+  const period = options.period || 'today';
+  const gender: 'male' | 'female' = Math.random() < 0.5 ? 'male' : 'female';
+  // Yaşam beklentisi ve çocuk ölümü döneme göre ayarlanır
+  const periodMultiplier = period === 'past' ? 0.85 : period === 'future' ? 1.1 : 1.0;
+  const genderMultiplier = gender === 'female' ? 1.04 : 0.97;
+  const adjustedLE: [number, number] = [
+    Math.round(world.lifeExpectancy[0] * periodMultiplier * genderMultiplier),
+    Math.round(world.lifeExpectancy[1] * periodMultiplier * genderMultiplier)
+  ];
   const stats = generateInitialStats(world, region);
-  const birthYear = 2026 - Math.floor(Math.random() * 20); // Random birth year in last 20 years
+  let birthYear: number;
+  if (period === 'past') {
+    birthYear = 1950 + Math.floor(Math.random() * 76); // 1950-2025
+  } else if (period === 'future') {
+    birthYear = 2027 + Math.floor(Math.random() * 24); // 2027-2050
+  } else {
+    birthYear = 2026;
+  }
   const events: LifeEvent[] = [];
 
   // Life duration mapping
@@ -466,7 +487,7 @@ export function generateLife(
                     rollDice(65, 90);
 
   // Clamp by world life expectancy
-  const clampedLife = clamp(lifeYears, world.lifeExpectancy[0], world.lifeExpectancy[1]);
+  const clampedLife = clamp(lifeYears, adjustedLE[0], adjustedLE[1]);
 
   // Birth event
   events.push(createBirthEvent(world, region, birthYear));
@@ -537,14 +558,14 @@ export function generateLife(
   if (Math.random() < childMortality) {
     deathAge = rollDice(0, 4);
   } else {
-    const mean = (world.lifeExpectancy[0] + world.lifeExpectancy[1]) / 2;
-    const sd = (world.lifeExpectancy[1] - world.lifeExpectancy[0]) / 4;
+    const mean = (adjustedLE[0] + adjustedLE[1]) / 2;
+    const sd = (adjustedLE[1] - adjustedLE[0]) / 4;
     // Box-Muller normal approximation
     const u1 = Math.max(0.0001, Math.random());
     const u2 = Math.random();
     const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
     deathAge = Math.round(mean + z * sd);
-    deathAge = clamp(deathAge, 5, world.lifeExpectancy[1] + 8);
+    deathAge = clamp(deathAge, 5, adjustedLE[1] + 8);
   }
   deathAge = clamp(deathAge, 0, 120);
 
@@ -589,7 +610,7 @@ export function generateLife(
   events.sort((a, b) => a.age - b.age);
 
   // Generate memorial text
-  const memorialText = generateMemorialText(world, region, birthYear, deathAge, deathCause, stats, events);
+  const memorialText = generateMemorialText(world, region, birthYear, deathAge, deathCause, stats, events, gender, period);
 
   // Generate achievements
   const achievements = generateAchievements(world, region, stats, events, deathAge);
@@ -601,6 +622,8 @@ export function generateLife(
   return {
     worldId: world.id,
     regionId: region.id,
+    period,
+    gender,
     birthYear,
     deathYear: birthYear + deathAge,
     deathAge,
@@ -623,7 +646,9 @@ function generateMemorialText(
   deathAge: number,
   deathCause: string,
   stats: LifeStats,
-  events: LifeEvent[]
+  events: LifeEvent[],
+  gender: 'male' | 'female' = 'male',
+  period: 'today' | 'past' | 'future' = 'today'
 ): string {
   const canonEncounters = events.filter(e => e.isCanonEncounter).map(e => e.canonCharacter);
 
@@ -632,6 +657,8 @@ function generateMemorialText(
   text += `═══════════════════════════════════════\n\n`;
   text += `🌍 Evren: ${world.nameTR}\n`;
   text += `📍 Bölge: ${region.nameTR}\n`;
+  text += `👤 Cinsiyet: ${gender === 'male' ? 'Erkek' : 'Kadın'}\n`;
+  text += `⏳ Dönem: ${period === 'past' ? 'Geçmiş' : period === 'future' ? 'Gelecek' : 'Bugün'}\n`;
   text += `📅 Doğum: ${birthYear}\n`;
   text += `💀 Ölüm: ${birthYear + deathAge} (${deathAge} yaşında)\n`;
   text += `Cause: ${deathCause}\n\n`;

@@ -20,6 +20,7 @@ export const AnimeLifeSim: React.FC = () => {
   const [speed, setSpeed] = useState<number>(1);
   const [savedLife, setSavedLife] = useState<LifeResult | null>(null);
   const [heavyContent, setHeavyContent] = useState<boolean>(true);
+  const [period, setPeriod] = useState<'today' | 'past' | 'future'>('today');
   const eduMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edu') === '1';
   const [parallelLives, setParallelLives] = useState<LifeResult[]>([]);
 
@@ -30,10 +31,10 @@ export const AnimeLifeSim: React.FC = () => {
   const handleStartLife = () => {
     if (!world || !region) return;
     const includeHeavy = heavyContent && !eduMode;
-    const main = generateLife(world, region, lifeDuration, { includeHeavy });
+    const main = generateLife(world, region, lifeDuration, { includeHeavy, period });
     const parallels: LifeResult[] = [];
     for (let i = 0; i < 3; i++) {
-      parallels.push(generateLife(world, region, lifeDuration, { includeHeavy }));
+      parallels.push(generateLife(world, region, lifeDuration, { includeHeavy, period }));
     }
     setLife(main);
     setParallelLives([main, ...parallels]);
@@ -323,6 +324,29 @@ export const AnimeLifeSim: React.FC = () => {
             </div>
           </div>
 
+          {/* Period Selection */}
+          <div className="bg-neutral-900 border-2 border-white p-5">
+            <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-4">
+              Doğacağın Dönem
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {(['today', 'past', 'future'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={cn(
+                    "px-4 py-2.5 border-2 font-black text-xs uppercase tracking-wider transition-all cursor-pointer",
+                    period === p
+                      ? "bg-amber-400 text-black border-amber-400 shadow-[2px_2px_0px_0px_#fff]"
+                      : "bg-black text-neutral-300 border-white/20 hover:border-white"
+                  )}
+                >
+                  {p === 'today' ? 'Bugün' : p === 'past' ? 'Geçmiş (1950-2025)' : 'Gelecek (2027-2050)'}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Ethical Mode Toggle */}
           <div className="bg-neutral-900 border-2 border-white/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -361,7 +385,7 @@ export const AnimeLifeSim: React.FC = () => {
           <div className="bg-black border-4 border-white neo-shadow-white p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-black text-white uppercase tracking-wider">
-                {t('als_progress_world_region', { world: world?.nameTR, region: region?.nameTR })}
+                {t('als_progress_world_region', { world: world?.nameTR, region: region?.nameTR })} · {life?.gender === 'female' ? '♀' : '♂'} · {life?.period === 'past' ? 'Geçmiş' : life?.period === 'future' ? 'Gelecek' : 'Bugün'}
               </span>
               <span className="text-xs font-mono font-bold text-neutral-400">
                 {t('als_progress_age', { age: currentEvent.age, deathAge: life.deathAge, unit: t('als_years_unit') })}
