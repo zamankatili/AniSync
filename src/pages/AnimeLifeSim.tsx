@@ -4,7 +4,7 @@ import { useAppTranslation } from '../hooks/useAppTranslation';
 import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
 import { ANIME_REGIONS, getRegionsByWorld } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
-import { generateLife, LifeResult, generateShareText } from '../lib/eventEngine';
+import { generateLife, LifeResult, generateShareText, LIFE_FOCUSES } from '../lib/eventEngine';
 import { cn } from '../lib/utils';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -24,6 +24,7 @@ export const AnimeLifeSim: React.FC = () => {
   const [savedLife, setSavedLife] = useState<LifeResult | null>(null);
   const [heavyContent, setHeavyContent] = useState<boolean>(true);
   const [period, setPeriod] = useState<'today' | 'past' | 'future'>('today');
+  const [focus, setFocus] = useState<'study' | 'combat' | 'social' | 'exploration' | 'survival'>('study');
   const eduMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edu') === '1';
   const [parallelLives, setParallelLives] = useState<LifeResult[]>([]);
 
@@ -34,10 +35,10 @@ export const AnimeLifeSim: React.FC = () => {
   const handleStartLife = () => {
     if (!world || !region) return;
     const includeHeavy = heavyContent && !eduMode;
-    const main = generateLife(world, region, lifeDuration, { includeHeavy, period });
+    const main = generateLife(world, region, lifeDuration, { includeHeavy, period, focus });
     const parallels: LifeResult[] = [];
     for (let i = 0; i < 3; i++) {
-      parallels.push(generateLife(world, region, lifeDuration, { includeHeavy, period }));
+      parallels.push(generateLife(world, region, lifeDuration, { includeHeavy, period, focus }));
     }
     setLife(main);
     setParallelLives([main, ...parallels]);
@@ -382,6 +383,30 @@ export const AnimeLifeSim: React.FC = () => {
                   )}
                 >
                   {p === 'today' ? 'Bugün' : p === 'past' ? 'Geçmiş (1950-2025)' : 'Gelecek (2027-2050)'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Focus Selection */}
+          <div className="bg-neutral-900 border-2 border-white p-5">
+            <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-4">
+              Hayat Odakın
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {LIFE_FOCUSES.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFocus(f.id)}
+                  className={cn(
+                    "p-3 border-2 text-left transition-all cursor-pointer",
+                    focus === f.id
+                      ? "bg-white text-black border-white shadow-[2px_2px_0px_0px_#e11d48]"
+                      : "bg-black text-white border-white/20 hover:border-white"
+                  )}
+                >
+                  <span className="font-black text-xs uppercase tracking-tight block">{f.label}</span>
+                  <span className="text-[10px] text-neutral-400 font-medium leading-snug">{f.description}</span>
                 </button>
               ))}
             </div>

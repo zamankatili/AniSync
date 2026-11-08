@@ -55,6 +55,7 @@ export interface LifeResult {
   regionId: string;
   period: 'today' | 'past' | 'future';
   gender: 'male' | 'female';
+  focus: LifeFocus;
   birthYear: number;
   deathYear: number;
   deathAge: number;
@@ -81,7 +82,37 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-export function generateInitialStats(world: AnimeWorld, region: AnimeRegion): LifeStats {
+// ─── Odak (Focus) Seçimi ─────────────────────────────────
+// Oyuncu başlangıçta bir odak seçer; bu odak stat gelişimini ve olayları etkiler.
+export type LifeFocus = 'study' | 'combat' | 'social' | 'exploration' | 'survival';
+
+export interface FocusOption {
+  id: LifeFocus;
+  label: string;
+  description: string;
+  statBias: Partial<LifeStats>;
+}
+
+export const LIFE_FOCUSES: FocusOption[] = [
+  { id: 'study', label: 'Eğitim & Bilgi', description: 'Okul, araştırma, zeka odaklı', statBias: { intelligence: 15, socialClass: 5 } },
+  { id: 'combat', label: 'Güç & Savaş', description: 'Antrenman, dövüş, güç odaklı', statBias: { power: 15, health: -3 } },
+  { id: 'social', label: 'Sosyal & İlişkiler', description: 'Arkadaşlık, ağ, sosyal statü', statBias: { socialClass: 15, luck: 5 } },
+  { id: 'exploration', label: 'Keşif & Macera', description: 'Dünya keşfi, risk alma', statBias: { luck: 12, power: 5, health: -3 } },
+  { id: 'survival', label: 'Hayatta Kalma', description: 'Sağlık, dayanıklılık, güvenlik', statBias: { health: 15, socialClass: -5 } }
+];
+
+function applyFocusBias(stats: LifeStats, focus: LifeFocus): LifeStats {
+  const opt = LIFE_FOCUSES.find(f => f.id === focus);
+  if (!opt) return stats;
+  const result = { ...stats };
+  for (const [key, val] of Object.entries(opt.statBias)) {
+    const k = key as keyof LifeStats;
+    result[k] = clamp(result[k] + (val || 0), 0, 100);
+  }
+  return result;
+}
+
+function generateInitialStats(world: AnimeWorld, region: AnimeRegion): LifeStats {
   const basePower = rollDice(10, 40);
   const baseIntelligence = rollDice(10, 40);
   const baseLuck = rollDice(5, 30);
@@ -459,6 +490,7 @@ function createMilestoneEvent(world: AnimeWorld, region: AnimeRegion, age: numbe
 export interface GenerateLifeOptions {
   includeHeavy?: boolean;
   period?: 'today' | 'past' | 'future';
+  focus?: LifeFocus;
 }
 
 export type LifePeriod = 'today' | 'past' | 'future';
@@ -471,6 +503,7 @@ export function generateLife(
 ): LifeResult {
   const includeHeavy = options.includeHeavy !== false;
   const period = options.period || 'today';
+  const focus: LifeFocus = options.focus || LIFE_FOCUSES[Math.floor(Math.random() * LIFE_FOCUSES.length)].id;
   const gender: 'male' | 'female' = Math.random() < 0.5 ? 'male' : 'female';
   // Yaşam beklentisi ve çocuk ölümü döneme göre ayarlanır
   const periodMultiplier = period === 'past' ? 0.85 : period === 'future' ? 1.1 : 1.0;
@@ -479,7 +512,8 @@ export function generateLife(
     Math.round(world.lifeExpectancy[0] * periodMultiplier * genderMultiplier),
     Math.round(world.lifeExpectancy[1] * periodMultiplier * genderMultiplier)
   ];
-  const stats = generateInitialStats(world, region);
+  const baseStats = generateInitialStats(world, region);
+  const stats = applyFocusBias(baseStats, focus);
   let birthYear: number;
   if (period === 'past') {
     birthYear = 1950 + Math.floor(Math.random() * 76); // 1950-2025
@@ -508,6 +542,23 @@ export function generateLife(
 
   // Faction choice (age 15)
   events.push(createFactionEvent(world, region, 15, birthYear + 15, stats));
+
+  // Yearly focus events (her 5 yılda bir odak bazlı gelişim)
+  for (let age = 10; age <= Math.min(60, clampedLife - 3); age += 5) {
+    const focusOpt = LIFE_FOCUSES.find(f => f.id === focus);
+    if (focusOpt) {
+      events.push({
+        id: `focus_${age}`,
+        age,
+        year: birthYear + age,
+        title: `Odak Gelişimi: ${focusOpt.label}`,
+        description: `${age} yaşındasın. ${focusOpt.description} odaklı hayatın meyvelerini topluyorsun.`,
+        type: 'special',
+        statChanges: focusOpt.statBias,
+        isCanonEncounter: false
+      });
+    }
+  }
 
   // Milestone events at key ages
   const milestoneAges = [5, 15, 30, 50, 70];
@@ -633,6 +684,7 @@ export function generateLife(
     regionId: region.id,
     period,
     gender,
+    focus,
     birthYear,
     deathYear: birthYear + deathAge,
     deathAge,
