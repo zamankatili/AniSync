@@ -401,7 +401,7 @@ export const getRegionById = (id: string): AnimeRegion | undefined =>
   ANIME_REGIONS.find(r => r.id === id);
 
 export const getRegionsByWorld = (worldId: string): AnimeRegion[] =>
-  ANIME_REGIONS.filter(r => r.id === worldId);
+  ANIME_REGIONS.filter(r => r.worldId === worldId);
 
 export const REGION_COLORS: Record<string, string> = {
   konoha: 'emerald',
