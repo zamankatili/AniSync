@@ -52,6 +52,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_resume": "DEVAM ET",
     "als_clear_save": "SİL",
     "als_speed": "HIZ",
+    "als_download_card": "KART İNDİR",
+    "als_parallel_title": "Aynı Anda Doğan 4 Bebek",
+    "als_parallel_you": "Sen",
+    "als_parallel_baby": "Bebek {{n}}",
   },
   en: {
     "als_page_title": "Anime Life Simulation (1 in 8 Billion) | AniSync",
@@ -101,6 +105,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_resume": "RESUME",
     "als_clear_save": "CLEAR",
     "als_speed": "SPEED",
+    "als_download_card": "DOWNLOAD CARD",
+    "als_parallel_title": "4 Babies Born at the Same Moment",
+    "als_parallel_you": "You",
+    "als_parallel_baby": "Baby {{n}}",
   },
   ja: {
     "als_page_title": "アニメライフシミュレーション (80億の世界に1つ) | AniSync",
@@ -150,6 +158,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_resume": "再開",
     "als_clear_save": "削除",
     "als_speed": "速度",
+    "als_download_card": "カード保存",
+    "als_parallel_title": "同時に生まれた4人の赤ちゃん",
+    "als_parallel_you": "あなた",
+    "als_parallel_baby": "赤ちゃん {{n}}",
   },
   fr: {
     "als_page_title": "Simulation de Vie Anime (1 parmi 8 milliards) | AniSync",
@@ -199,5 +211,9 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_resume": "REPRENDRE",
     "als_clear_save": "EFFACER",
     "als_speed": "VITESSE",
+    "als_download_card": "TÉLÉCHARGER CARTE",
+    "als_parallel_title": "4 Bébés Nés au Même Moment",
+    "als_parallel_you": "Toi",
+    "als_parallel_baby": "Bébé {{n}}",
   },
 };

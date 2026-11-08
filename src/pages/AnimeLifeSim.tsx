@@ -21,6 +21,7 @@ export const AnimeLifeSim: React.FC = () => {
   const [savedLife, setSavedLife] = useState<LifeResult | null>(null);
   const [heavyContent, setHeavyContent] = useState<boolean>(true);
   const eduMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edu') === '1';
+  const [parallelLives, setParallelLives] = useState<LifeResult[]>([]);
 
   const world = selectedWorld ? getWorldById(selectedWorld) : null;
   const regions = selectedWorld ? getRegionsByWorld(selectedWorld) : [];
@@ -28,8 +29,14 @@ export const AnimeLifeSim: React.FC = () => {
 
   const handleStartLife = () => {
     if (!world || !region) return;
-    const result = generateLife(world, region, lifeDuration, { includeHeavy: heavyContent && !eduMode });
-    setLife(result);
+    const includeHeavy = heavyContent && !eduMode;
+    const main = generateLife(world, region, lifeDuration, { includeHeavy });
+    const parallels: LifeResult[] = [];
+    for (let i = 0; i < 3; i++) {
+      parallels.push(generateLife(world, region, lifeDuration, { includeHeavy }));
+    }
+    setLife(main);
+    setParallelLives([main, ...parallels]);
     setPhase('playing');
     setCurrentEventIndex(0);
     setChoicesMade({});
@@ -58,6 +65,7 @@ export const AnimeLifeSim: React.FC = () => {
   const handleRestart = () => {
     setPhase('select');
     setLife(null);
+    setParallelLives([]);
     setCurrentEventIndex(0);
     setChoicesMade({});
     setSelectedWorld(null);
@@ -534,6 +542,32 @@ export const AnimeLifeSim: React.FC = () => {
               </div>
             )}
 
+            {/* Parallel Lives */}
+            {parallelLives.length > 0 && (
+              <div className="mt-6 bg-neutral-950 border-2 border-white/20 p-4">
+                <h3 className="text-sm font-black text-white uppercase tracking-wider mb-3">
+                  {t('als_parallel_title')}
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {parallelLives.map((pl, idx) => (
+                    <div key={idx} className={cn(
+                      "bg-black border p-2 text-center",
+                      idx === 0 ? "border-amber-400" : "border-white/20"
+                    )}>
+                      <span className="text-[9px] font-black text-neutral-500 uppercase block">
+                        {idx === 0 ? t('als_parallel_you') : t('als_parallel_baby', { n: idx + 1 })}
+                      </span>
+                      <span className="text-lg font-black font-mono text-white block">{pl.deathAge}</span>
+                      <span className="text-[9px] text-neutral-400 block">{pl.deathCause}</span>
+                      <div className="mt-1 text-[8px] text-neutral-500 font-mono">
+                        G:{pl.finalStats.power} Z:{pl.finalStats.intelligence} Ş:{pl.finalStats.luck}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Share */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button
@@ -552,6 +586,54 @@ export const AnimeLifeSim: React.FC = () => {
                 className="flex-1 py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
               >
                 {t('als_copy_result')}
+              </button>
+              <button
+                onClick={() => {
+                  if (!life || !world || !region) return;
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 600;
+                  canvas.height = 400;
+                  const ctx = canvas.getContext('2d');
+                  if (!ctx) return;
+                  ctx.fillStyle = '#000';
+                  ctx.fillRect(0, 0, 600, 400);
+                  ctx.strokeStyle = '#fff';
+                  ctx.lineWidth = 4;
+                  ctx.strokeRect(8, 8, 584, 384);
+                  ctx.fillStyle = '#e11d48';
+                  ctx.fillRect(8, 8, 584, 40);
+                  ctx.fillStyle = '#fff';
+                  ctx.font = 'bold 20px monospace';
+                  ctx.fillText('ANIME LIFE SIMULATION', 20, 34);
+                  ctx.fillStyle = '#fff';
+                  ctx.font = 'bold 14px monospace';
+                  ctx.fillText(`${world.emoji} ${world.nameTR} - ${region.nameTR}`, 20, 70);
+                  ctx.fillText(`Yas: ${life.deathAge} | Neden: ${life.deathCause}`, 20, 95);
+                  ctx.fillText(`Guc: ${life.finalStats.power}  Zeka: ${life.finalStats.intelligence}  Sans: ${life.finalStats.luck}`, 20, 120);
+                  ctx.fillText(`Sosyal: ${life.finalStats.socialClass}  Saglik: ${life.finalStats.health}`, 20, 145);
+                  if (life.achievements.length > 0) {
+                    ctx.fillText(`Basarilar: ${life.achievements.slice(0, 3).join(', ')}`, 20, 175);
+                  }
+                  if (life.isCanonEncountered) {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillText(`Kanon: ${life.canonEncounters.join(', ')}`, 20, 200);
+                  }
+                  ctx.fillStyle = '#666';
+                  ctx.font = '10px monospace';
+                  ctx.fillText('AniSync 8 Milyar Evrende 1', 20, 380);
+                  canvas.toBlob((blob) => {
+                    if (!blob) return;
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'anime-life-sim.png';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  });
+                }}
+                className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
+              >
+                {t('als_download_card')}
               </button>
               <button
                 onClick={handleRestart}
