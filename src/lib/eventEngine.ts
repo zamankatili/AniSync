@@ -1,0 +1,489 @@
+/**
+ * Anime/Manga Yaşam Simülasyonu — Olay Motoru
+ * DeepSeek konsept analizine dayalı: "1 in 8 Billion" uyarlaması
+ * 
+ * Temel kurallar:
+ * - Plot armor yok: kanon karakterler ölmez, sen ölebilirsin
+ * - Sıradan NPC olarak doğarsın (balıkçı çocuğu, köylü, çırak)
+ * - Kanon karakterler sadece "hava durumu" gibi sahneye girer
+ * - Gizli istatistikler: güç, zeka, şans, sosyal sınıf
+ * - Seçimler 3 kart halinde sunulur
+ * - Ölüm ekranında Anma Sayfası çıkar
+ */
+
+import { AnimeWorld } from '../data/animeWorlds';
+import { AnimeRegion } from '../data/animeRegions';
+
+// ─── Tipler ───────────────────────────────────────────────
+
+export interface LifeStats {
+  power: number;       // 0-100: fiziksel güç
+  intelligence: number; // 0-100: zeka/strateji
+  luck: number;         // 0-100: şans
+  socialClass: number;   // 0-100: sosyal sınıf (0=yoksul, 100=soylu)
+  health: number;        // 0-100: sağlık
+}
+
+export interface LifeEvent {
+  id: string;
+  age: number;
+  year: number; // evren içi yıl
+  title: string;
+  description: string;
+  type: 'birth' | 'childhood' | 'faction' | 'encounter' | 'crisis' | 'choice' | 'death' | 'special';
+  choices?: LifeChoice[];
+  outcome?: string;
+  statChanges?: Partial<LifeStats>;
+  isDeath?: boolean;
+  deathCause?: string;
+  isCanonEncounter?: boolean;
+  canonCharacter?: string;
+}
+
+export interface LifeChoice {
+  id: string;
+  label: string;
+  description: string;
+  statChanges: Partial<LifeStats>;
+  consequences: string[];
+  risk: 'low' | 'medium' | 'high' | 'extreme';
+}
+
+export interface LifeResult {
+  worldId: string;
+  regionId: string;
+  birthYear: number;
+  deathYear: number;
+  deathAge: number;
+  deathCause: string;
+  finalStats: LifeStats;
+  events: LifeEvent[];
+  memorialText: string;
+  achievements: string[];
+  isCanonEncountered: boolean;
+  canonEncounters: string[];
+}
+
+// ─── İstatistik Hesaplama ────────────────────────────────
+
+function rollDice(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function rollChance(probability: number): boolean {
+  return Math.random() < probability;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+export function generateInitialStats(world: AnimeWorld, region: AnimeRegion): LifeStats {
+  const basePower = rollDice(10, 40);
+  const baseIntelligence = rollDice(10, 40);
+  const baseLuck = rollDice(5, 30);
+  const baseSocialClass = Math.round(region.stats.povertyRate * -50 + 50 + rollDice(-10, 10));
+  const baseHealth = rollDice(60, 100);
+
+  return {
+    power: clamp(basePower, 0, 100),
+    intelligence: clamp(baseIntelligence, 0, 100),
+    luck: clamp(baseLuck, 0, 100),
+    socialClass: clamp(baseSocialClass, 0, 100),
+    health: clamp(baseHealth, 0, 100)
+  };
+}
+
+// ─── Olay Üreticileri ────────────────────────────────────
+
+function createBirthEvent(world: AnimeWorld, region: AnimeRegion, birthYear: number): LifeEvent {
+  const hasPowerPotential = rollChance(region.stats.powerAwakeningRate);
+  const hasAdventurePotential = rollChance(region.stats.adventureRate);
+
+  return {
+    id: 'birth',
+    age: 0,
+    year: birthYear,
+    title: 'Doğum',
+    description: `${region.nameTR} bölgesinde, ${world.nameTR} evreninde doğdun. ${hasPowerPotential ? 'Gizli bir güç potansiyelin var.' : 'Sıradan bir ailenin çocuğusun.'} ${hasAdventurePotential ? 'Macera dolu bir hayat seni bekliyor olabilir.' : 'Huzurlu bir yaşam sürmen olası.'}`,
+    type: 'birth',
+    statChanges: hasPowerPotential ? { power: 5, luck: 5 } : {},
+    isCanonEncounter: false
+  };
+}
+
+function createChildhoodEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
+  const childhoodEvents: { title: string; description: string; choices: LifeChoice[] }[] = [
+    {
+      title: 'Çocukluk Yılları',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde büyüyor, ${world.nameTR} evreninin kurallarını öğreniyorsun.`,
+      choices: [
+        { id: 'school', label: 'Okula Git', description: 'Bilgi ve sosyal beceriler kazan', statChanges: { intelligence: 10, socialClass: 5 }, consequences: ['Okuryazarlık', 'Sosyal bağlar'], risk: 'low' },
+        { id: 'work', label: 'Çalışmaya Başla', description: 'Erken para kazan, pratik beceriler edin', statChanges: { power: 5, socialClass: -5 }, consequences: ['Pratik beceriler', 'Erken bağımsızlık'], risk: 'medium' },
+        { id: 'explore', label: 'Keşfet ve Oyna', description: 'Dünyayı tanı, özgürlüğü seç', statChanges: { luck: 8, health: -3 }, consequences: ['Keşif ruhu', 'Risk alma alışkanlığı'], risk: 'high' }
+      ]
+    },
+    {
+      title: 'Aile ve Toplum',
+      description: `Ailen ${region.stats.povertyRate > 0.2 ? 'yoksul' : 'orta halli'} bir aile. ${world.dangerLevel === 'extreme' ? 'Hayatta kalmak için her gün mücadele ediyorsun.' : 'Huzurlu ama sıradan bir yaşamın var.'}`,
+      choices: [
+        { id: 'family', label: 'Aileye Yardım Et', description: 'Aile bağlarını güçlendir', statChanges: { socialClass: 5, health: 5 }, consequences: ['Aile desteği', 'Güvenlik'], risk: 'low' },
+        { id: 'friends', label: 'Arkadaşlarla Zaman Geçir', description: 'Sosyal ağ oluştur', statChanges: { intelligence: 3, luck: 5 }, consequences: ['Sosyal ağ', 'Bilgi paylaşımı'], risk: 'medium' },
+        { id: 'alone', label: 'Kendi Başına Çalış', description: 'Bağımsızlığı seç', statChanges: { power: 5, intelligence: 5, socialClass: -3 }, consequences: ['Bağımsızlık', 'İzolasyon'], risk: 'high' }
+      ]
+    }
+  ];
+
+  const event = childhoodEvents[age % childhoodEvents.length];
+  return {
+    id: `childhood_${age}`,
+    age,
+    year: year,
+    title: event.title,
+    description: event.description,
+    type: 'childhood',
+    choices: event.choices,
+    isCanonEncounter: false
+  };
+}
+
+function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
+  // Faction options depend on the world
+  const factionOptions: Record<string, LifeChoice[]> = {
+    shonen_battle: [
+      { id: 'marine', label: 'Denizci Ol', description: 'Adalet ve disiplin yolu', statChanges: { socialClass: 10, power: 5 }, consequences: ['Disiplin', 'Güvenlik'], risk: 'low' },
+      { id: 'pirate', label: 'Korsan Ol', description: 'Özgürlük ve macera yolu', statChanges: { power: 10, luck: 5, socialClass: -10 }, consequences: ['Macera', 'Risk'], risk: 'high' },
+      { id: 'civilian', label: 'Sivil Kal', description: 'Huzurlu ve güvenli yaşam', statChanges: { health: 10, socialClass: 5 }, consequences: ['Güvenlik', 'Sıradanlık'], risk: 'low' },
+      { id: 'revolutionary', label: 'Devrimci Katıl', description: 'Dünyayı değiştirmek için savaş', statChanges: { power: 8, intelligence: 5, socialClass: -15 }, consequences: ['İdealizm', 'Tehlike'], risk: 'extreme' }
+    ],
+    dark_fantasy: [
+      { id: 'soldier', label: 'Asker Ol', description: 'Savaşmak ve hayatta kalmak', statChanges: { power: 10, health: -5 }, consequences: ['Savaş deneyimi', 'Travma'], risk: 'high' },
+      { id: 'hunter', label: 'Avcı Ol', description: 'Canavar avlamak ve keşfetmek', statChanges: { power: 8, luck: 5 }, consequences: ['Keşif', 'Risk'], risk: 'medium' },
+      { id: 'civilian', label: 'Sivil Kal', description: 'Hayatta kalmaya çalış', statChanges: { health: 10, socialClass: -5 }, consequences: ['Güvenlik', 'Yoksulluk'], risk: 'low' },
+      { id: 'cultist', label: 'Kült Katıl', description: 'Karanlık güçlerle anlaşma yap', statChanges: { power: 15, health: -10, luck: -5 }, consequences: ['Güç', 'Lanet'], risk: 'extreme' }
+    ],
+    isekai: [
+      { id: 'adventurer', label: 'Maceracı Ol', description: 'Görevler ve maceralar', statChanges: { power: 8, intelligence: 5, luck: 5 }, consequences: ['Macera', 'XP'], risk: 'medium' },
+      { id: 'merchant', label: 'Tüccar Ol', description: 'Ticaret ve ekonomi', statChanges: { intelligence: 10, socialClass: 10 }, consequences: ['Para', 'Sosyal statü'], risk: 'low' },
+      { id: 'scholar', label: 'Bilgin Ol', description: 'Büyü ve araştırma', statChanges: { intelligence: 15, power: -3 }, consequences: ['Bilgi', 'Güçsüzlük'], risk: 'medium' },
+      { id: 'hermit', label: 'Münzevi Ol', description: 'Yalnız yaşam ve meditasyon', statChanges: { power: 5, intelligence: 8, socialClass: -10 }, consequences: ['Gizem', 'İzolasyon'], risk: 'low' }
+    ]
+  };
+
+  const options = factionOptions[world.id] || factionOptions.shonen_battle;
+
+  return {
+    id: `faction_${age}`,
+    age,
+    year,
+    title: 'Fraksiyon Seçimi',
+    description: `${age} yaşındasın. ${region.nameTR} bölgesinde ${world.nameTR} evreninde bir fraksiyon seçmen gerekiyor. Bu seçim hayatının yönünü belirleyecek.`,
+    type: 'faction',
+    choices: options,
+    isCanonEncounter: false
+  };
+}
+
+function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
+  const crisisTypes: { title: string; description: string; choices: LifeChoice[] }[] = [
+    {
+      title: 'Hastalık ve Kayıp',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde bir salgın veya hastalık yayılıyor. Sevdiklerinden biri etkilenmiş olabilir.`,
+      choices: [
+        { id: 'heal', label: 'Tedavi Ara', description: 'Tıp veya büyü ile çare bul', statChanges: { health: 10, intelligence: 5 }, consequences: ['Sağlık', 'Bilgi'], risk: 'medium' },
+        { id: 'protect', label: 'Sevdiklerini Koru', description: 'Kendi sağlığını riske at', statChanges: { health: -10, socialClass: 5 }, consequences: ['Fedakarlık', 'Bağ'], risk: 'high' },
+        { id: 'flee', label: 'Kaç', description: 'Hayatta kal, sonra dönerim', statChanges: { health: 5, socialClass: -5, luck: -3 }, consequences: ['Hayatta kalma', 'Suçluluk'], risk: 'low' }
+      ]
+    },
+    {
+      title: 'Savaş ve Çatışma',
+      description: `${age} yaşındasın. ${world.nameTR} evreninde bir çatışma patlak verdi. ${region.nameTR} bölgesi de etkileniyor.`,
+      choices: [
+        { id: 'fight', label: 'Savaş', description: 'Cepheye git', statChanges: { power: 10, health: -15 }, consequences: ['Deneyim', 'Travma'], risk: 'extreme' },
+        { id: 'hide', label: 'Saklan', description: 'Güvenli bir yer bul', statChanges: { health: 5, socialClass: -5 }, consequences: ['Güvenlik', 'Suçluluk'], risk: 'low' },
+        { id: 'medic', label: 'Medik Ol', description: 'Yaralıları tedavi et', statChanges: { intelligence: 10, health: -5 }, consequences: ['Bilgi', 'Saygı'], risk: 'medium' }
+      ]
+    },
+    {
+      title: 'Güç Uyanışı',
+      description: `${age} yaşındasın. ${world.powerSystem} sisteminde bir uyanış belirtisi hissediyorsun. Bu güç seni değiştirebilir.`,
+      choices: [
+        { id: 'embrace', label: 'Gücü Kabul Et', description: 'Gücü kabul et ve eğit', statChanges: { power: 15, health: -5 }, consequences: ['Güç', 'Risk'], risk: 'high' },
+        { id: 'reject', label: 'Gücü Reddet', description: 'Sıradan kal, güvenli ol', statChanges: { health: 10, socialClass: 5 }, consequences: ['Güvenlik', 'Sıradanlık'], risk: 'low' },
+        { id: 'study', label: 'Gücü Çalış', description: 'Bilimsel olarak incele', statChanges: { intelligence: 15, power: 5 }, consequences: ['Bilgi', 'Güç'], risk: 'medium' }
+      ]
+    }
+  ];
+
+  const crisis = crisisTypes[Math.floor(Math.random() * crisisTypes.length)];
+  return {
+    id: `crisis_${age}`,
+    age,
+    year,
+    title: crisis.title,
+    description: crisis.description,
+    type: 'crisis',
+    choices: crisis.choices,
+    isCanonEncounter: false
+  };
+}
+
+function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: number, year: number): LifeEvent | null {
+  // Canon character encounters based on world and age
+  const encounters: Record<string, { minAge: number; maxAge: number; character: string; description: string; probability: number }[]> = {
+    shonen_battle: [
+      { minAge: 8, maxAge: 15, character: 'Luffy', description: 'Uzakta, deniz kenarında bir çocuk koşuyor. "Korsanlar Kralı olacağım!" diye bağırıyor.', probability: 0.15 },
+      { minAge: 12, maxAge: 20, character: 'Zoro', description: 'Bir kılıç ustası, antrenman yaparken görürsün. Üç kılıç kullanıyor.', probability: 0.10 },
+      { minAge: 15, maxAge: 25, character: 'Naruto', description: 'Turuncu kıyafetli bir ninja köyden geçiyor. "Dattebayo!" diye bağırıyor.', probability: 0.12 },
+      { minAge: 18, maxAge: 30, character: 'Gojo', description: 'Beyaz saçlı, körbandı takan bir adam seni geçip gidiyor. Çevresinde hava farklı hissediliyor.', probability: 0.08 },
+      { minAge: 10, maxAge: 20, character: 'Tanjiro', description: 'Kırmızı gözlü bir genç, kılıç çantasıyla yolculuk ediyor. Yanında bir kutu taşıyor.', probability: 0.10 }
+    ],
+    dark_fantasy: [
+      { minAge: 10, maxAge: 20, character: 'Guts', description: 'Dev kılıç taşıyan bir adam gece yarısı geçip gidiyor. Gözlerinde derin bir hüzün var.', probability: 0.08 },
+      { minAge: 15, maxAge: 25, character: 'Levi', description: 'Kısa boylu, temizlik takıntılı bir asker komutan geçiyor. Hiç kimse ona laf etmiyor.', probability: 0.07 }
+    ],
+    isekai: [
+      { minAge: 12, maxAge: 25, character: 'Subaru', description: 'Bir genç, "Emilia-tan!" diye bağırarak koşuyor. Yanında mavi saçlı bir kız var.', probability: 0.10 },
+      { minAge: 10, maxAge: 20, character: 'Kazuma', description: 'Yeşil saçlı bir maceracı, "Chunchunmaru!" diye bağırarak geçiyor.', probability: 0.08 }
+    ],
+    cyberpunk: [
+      { minAge: 15, maxAge: 30, character: 'David', description: 'Siberpsikoz belirtileri gösteren bir genç, çatıdan çatıya atlıyor.', probability: 0.09 },
+      { minAge: 18, maxAge: 35, character: 'Akane', description: 'Mavi saçlı bir müfettiş, Dominatör ile suç katsayısı ölçüyor.', probability: 0.07 }
+    ],
+    seinen_psych: [
+      { minAge: 18, maxAge: 40, character: 'L', description: 'Beyaz gömlekli, çömelmiş oturan bir dedektif görürsün. Tatlı yiyor.', probability: 0.06 },
+      { minAge: 20, maxAge: 45, character: 'Johan', description: 'Sarı saçlı, masum yüzlü bir adam. Gözlerinde korkunç bir boşluk var.', probability: 0.04 }
+    ]
+  };
+
+  const worldEncounters = encounters[world.id] || [];
+  const validEncounters = worldEncounters.filter(e => age >= e.minAge && age <= e.maxAge);
+  if (validEncounters.length === 0) return null;
+
+  const encounter = validEncounters[Math.floor(Math.random() * validEncounters.length)];
+  if (!rollChance(encounter.probability)) return null;
+
+  return {
+    id: `canon_${encounter.character}_${age}`,
+    age,
+    year,
+    title: 'Kanon Karakter Karşılaşması',
+    description: encounter.description,
+    type: 'special',
+    outcome: `Uzaktan ${encounter.character}'ı gördün. Bu anı ömür boyu hatırlayacaksın.`,
+    isCanonEncounter: true,
+    canonCharacter: encounter.character
+  };
+}
+
+// ─── Ana Yaşam Üretici ───────────────────────────────────
+
+export function generateLife(
+  world: AnimeWorld,
+  region: AnimeRegion,
+  duration: '30min' | '1h' | '1.5h'
+): LifeResult {
+  const stats = generateInitialStats(world, region);
+  const birthYear = 2026 - Math.floor(Math.random() * 20); // Random birth year in last 20 years
+  const events: LifeEvent[] = [];
+
+  // Life duration mapping
+  const lifeYears = duration === '30min' ? rollDice(15, 35) :
+                    duration === '1h' ? rollDice(35, 65) :
+                    rollDice(65, 90);
+
+  // Clamp by world life expectancy
+  const clampedLife = clamp(lifeYears, world.lifeExpectancy[0], world.lifeExpectancy[1]);
+
+  // Birth event
+  events.push(createBirthEvent(world, region, birthYear));
+
+  // Childhood events (ages 5-12)
+  for (let age = 5; age <= 12; age += 3) {
+    events.push(createChildhoodEvent(world, region, age, birthYear + age, stats));
+  }
+
+  // Faction choice (age 15)
+  events.push(createFactionEvent(world, region, 15, birthYear + 15, stats));
+
+  // Canon encounter check (age 10-25)
+  for (let age = 10; age <= 25; age += 5) {
+    const encounter = createCanonEncounter(world, region, age, birthYear + age);
+    if (encounter) events.push(encounter);
+  }
+
+  // Crisis events (ages 18-40, random)
+  for (let age = 18; age <= Math.min(40, clampedLife - 5); age += rollDice(5, 8)) {
+    if (rollChance(0.4)) {
+      events.push(createCrisisEvent(world, region, age, birthYear + age, stats));
+    }
+  }
+
+  // Death
+  const deathAge = clampedLife;
+  const deathCauses = [
+    'Yaşlılık',
+    'Hastalık',
+    'Savaş yarası',
+    'Kaza',
+    'Doğa felaketi',
+    'Bilinmeyen neden'
+  ];
+  const deathCause = deathCauses[Math.floor(Math.random() * deathCauses.length)];
+
+  const deathEvent: LifeEvent = {
+    id: 'death',
+    age: deathAge,
+    year: birthYear + deathAge,
+    title: 'Ölüm',
+    description: `${deathAge} yaşında ${region.nameTR} bölgesinde hayatın sona erdi. Neden: ${deathCause}.`,
+    type: 'death',
+    isDeath: true,
+    deathCause
+  };
+  events.push(deathEvent);
+
+  // Sort events by age
+  events.sort((a, b) => a.age - b.age);
+
+  // Generate memorial text
+  const memorialText = generateMemorialText(world, region, birthYear, deathAge, deathCause, stats, events);
+
+  // Generate achievements
+  const achievements = generateAchievements(world, region, stats, events, deathAge);
+
+  // Check canon encounters
+  const canonEncounters = events.filter(e => e.isCanonEncounter).map(e => e.canonCharacter || '');
+  const isCanonEncountered = canonEncounters.length > 0;
+
+  return {
+    worldId: world.id,
+    regionId: region.id,
+    birthYear,
+    deathYear: birthYear + deathAge,
+    deathAge,
+    deathCause,
+    finalStats: stats,
+    events,
+    memorialText,
+    achievements,
+    isCanonEncountered,
+    canonEncounters
+  };
+}
+
+// ─── Anma Sayfası (Memorial) ─────────────────────────────
+
+function generateMemorialText(
+  world: AnimeWorld,
+  region: AnimeRegion,
+  birthYear: number,
+  deathAge: number,
+  deathCause: string,
+  stats: LifeStats,
+  events: LifeEvent[]
+): string {
+  const canonEncounters = events.filter(e => e.isCanonEncounter).map(e => e.canonCharacter);
+
+  let text = `═══════════════════════════════════════\n`;
+  text += `         ANMA SAYFASI — HATIRLANAN HAYAT\n`;
+  text += `═══════════════════════════════════════\n\n`;
+  text += `🌍 Evren: ${world.nameTR}\n`;
+  text += `📍 Bölge: ${region.nameTR}\n`;
+  text += `📅 Doğum: ${birthYear}\n`;
+  text += `💀 Ölüm: ${birthYear + deathAge} (${deathAge} yaşında)\n`;
+  text += `Cause: ${deathCause}\n\n`;
+  text += `📊 İstatistikler:\n`;
+  text += `   Güç: ${stats.power}/100\n`;
+  text += `   Zeka: ${stats.intelligence}/100\n`;
+  text += `   Şans: ${stats.luck}/100\n`;
+  text += `   Sosyal Sınıf: ${stats.socialClass}/100\n`;
+  text += `   Sağlık: ${stats.health}/100\n\n`;
+
+  if (canonEncounters.length > 0) {
+    text += `✨ Kanon Karakter Karşılaşmaları:\n`;
+    canonEncounters.forEach(c => {
+      text += `   • ${c} ile karşılaştın\n`;
+    });
+    text += `\n`;
+  }
+
+  text += `📝 Hayat Özeti:\n`;
+  text += `   ${events.length} olay yaşandı.\n`;
+  text += `   ${deathAge} yıl boyunca ${region.nameTR} bölgesinde yaşadın.\n\n`;
+
+  if (stats.socialClass < 30) {
+    text += `   Yoksul bir aileden doğdun, hayatta kalmak için mücadele ettin.\n`;
+  } else if (stats.socialClass > 70) {
+    text += `   Soylu bir aileden doğdun, konforlu bir yaşam sürdün.\n`;
+  } else {
+    text += `   Orta halli bir aileden doğdun, dengeli bir yaşam sürdün.\n`;
+  }
+
+  if (stats.power > 60) {
+    text += `   Güçlü bir savaşçıydın.\n`;
+  }
+  if (stats.intelligence > 60) {
+    text += `   Zeki ve stratejik biriydin.\n`;
+  }
+  if (stats.luck > 60) {
+    text += `   Şanslı bir hayat sürdün.\n`;
+  }
+
+  text += `\n═══════════════════════════════════════\n`;
+  text += `İsmin hatırlanmadı. Ama bir hayat yaşandı.\n`;
+  text += `═══════════════════════════════════════`;
+
+  return text;
+}
+
+// ─── Başarılar (Achievements) ────────────────────────────
+
+function generateAchievements(
+  world: AnimeWorld,
+  region: AnimeRegion,
+  stats: LifeStats,
+  events: LifeEvent[],
+  deathAge: number
+): string[] {
+  const achievements: string[] = [];
+
+  if (deathAge >= 80) achievements.push('Yaşlılık');
+  if (deathAge >= 60 && deathAge < 80) achievements.push('Uzun Yaşam');
+  if (deathAge < 20) achievements.push('Erken Vefat');
+  if (stats.power > 70) achievements.push('Güçlü Savaşçı');
+  if (stats.intelligence > 70) achievements.push('Zeka Küpü');
+  if (stats.luck > 70) achievements.push('Şanslı');
+  if (stats.socialClass > 70) achievements.push('Soylu');
+  if (stats.socialClass < 20) achievements.push('Yoksul');
+  if (stats.health > 80) achievements.push('Sağlıklı');
+  if (events.some(e => e.isCanonEncounter)) achievements.push('Kanon Karakterle Karşılaştı');
+  if (world.dangerLevel === 'extreme' && deathAge >= 30) achievements.push('Hayatta Kalma Ustası');
+  if (world.dangerLevel === 'low' && deathAge >= 70) achievements.push('Huzurlu Yaşam');
+  if (events.filter(e => e.type === 'crisis').length >= 3) achievements.push('Kriz Yöneticisi');
+  if (events.filter(e => e.type === 'choice').length >= 2) achievements.push('Seçimci');
+
+  return achievements;
+}
+
+// ─── Hayat Süresi Hesaplama ──────────────────────────────
+
+export function getLifeDurationMinutes(duration: '30min' | '1h' | '1.5h'): number {
+  return duration === '30min' ? 30 : duration === '1h' ? 60 : 90;
+}
+
+// ─── Olay Zaman Çizelgesi ────────────────────────────────
+
+export function getEventTimeline(life: LifeResult): { age: number; event: LifeEvent }[] {
+  return life.events.map(e => ({ age: e.age, event: e }));
+}
+
+// ─── Paylaşım Metni ──────────────────────────────────────
+
+export function generateShareText(life: LifeResult, world: AnimeWorld, region: AnimeRegion): string {
+  return `🌍 ${world.nameTR} evreninde ${region.nameTR} bölgesinde ${life.deathAge} yıl yaşadım.\n` +
+    `Cause of death: ${life.deathCause}\n` +
+    `Güç: ${life.finalStats.power} | Zeka: ${life.finalStats.intelligence} | Şans: ${life.finalStats.luck}\n` +
+    (life.isCanonEncountered ? `✨ Kanon karakterlerle karşılaştım: ${life.canonEncounters.join(', ')}\n` : '') +
+    `AniSync 8 Milyar Evrende 1`;
+}
