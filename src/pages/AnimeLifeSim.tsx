@@ -5,6 +5,8 @@ import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
 import { ANIME_REGIONS, getRegionsByWorld } from '../data/animeRegions';
 import { generateLife, LifeResult, generateShareText } from '../lib/eventEngine';
 import { cn } from '../lib/utils';
+import { db, auth } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type Phase = 'select' | 'playing' | 'memorial';
 
@@ -658,6 +660,33 @@ export const AnimeLifeSim: React.FC = () => {
                 className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
               >
                 {t('als_download_card')}
+              </button>
+              <button
+                onClick={async () => {
+                  const user = auth.currentUser;
+                  if (!user || !life || !world || !region) return;
+                  try {
+                    await addDoc(collection(db, 'recentActivities'), {
+                      userId: user.uid,
+                      userName: user.displayName || 'AniSync User',
+                      userAvatar: user.photoURL || null,
+                      animeId: 'anime-life-sim',
+                      animeTitle: `Anime Life Sim: ${world.nameTR} - ${region.nameTR}`,
+                      animeImage: null,
+                      actionType: 'life_sim_completed',
+                      deathAge: life.deathAge,
+                      deathCause: life.deathCause,
+                      world: world.id,
+                      region: region.id,
+                      createdAt: serverTimestamp()
+                    });
+                  } catch (e) {
+                    console.warn('Could not share life sim result:', e);
+                  }
+                }}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
+              >
+                TOPLULUKTA PAYLAŞ
               </button>
               <button
                 onClick={handleRestart}
