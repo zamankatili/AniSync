@@ -371,6 +371,73 @@ function createTimeLoopEvent(world: AnimeWorld, region: AnimeRegion, age: number
   };
 }
 
+// ─── Dönüm Noktası Olayı (Milestone: 5/15/30/50/70) ────
+function createMilestoneEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
+  const milestones: Record<number, { title: string; description: string; choices: LifeChoice[] }> = {
+    5: {
+      title: 'Çocukluk Dönüm Noktası',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde çocukluğunun ilk yılları geride kaldı. ${world.nameTR} evreninde nasıl biri olacağını seçme zamanı.`,
+      choices: [
+        { id: 'curious', label: 'Meraklı Ol', description: 'Dünyayı keşfet, sorular sor', statChanges: { intelligence: 8, luck: 5 }, consequences: ['Merak', 'Bilgi'], risk: 'low' },
+        { id: 'obedient', label: 'İtaatkâr Ol', description: 'Kurallara uy, güvenli kal', statChanges: { socialClass: 5, health: 5 }, consequences: ['Güvenlik', 'Uyum'], risk: 'low' },
+        { id: 'rebel', label: 'Asi Ol', description: 'Kuralları sorgula', statChanges: { power: 5, socialClass: -5, luck: 3 }, consequences: ['Bağımsızlık', 'Risk'], risk: 'medium' }
+      ]
+    },
+    15: {
+      title: 'Gençlik Dönüm Noktası',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde ergenlik çağındasın. ${world.nameTR} evreninde geleceğin için ilk büyük kararı verme zamanı.`,
+      choices: [
+        { id: 'study', label: 'Eğitime Odaklan', description: 'Okul ve bilgi', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Bilgi', 'Kariyer'], risk: 'low' },
+        { id: 'train', label: 'Güç Antrenmanı', description: 'Fiziksel güç', statChanges: { power: 12, health: -3 }, consequences: ['Güç', 'Disiplin'], risk: 'medium' },
+        { id: 'social', label: 'Sosyal Ağ', description: 'İlişkiler ve bağlantılar', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Ağ', 'Fırsat'], risk: 'medium' },
+        { id: 'freedom', label: 'Özgürlüğü Seç', description: 'Kendi yolunu çiz', statChanges: { luck: 8, power: 5, socialClass: -5 }, consequences: ['Özgürlük', 'Risk'], risk: 'high' }
+      ]
+    },
+    30: {
+      title: 'Yetişkinlik Dönüm Noktası',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde yetişkin hayatının ortasındasın. ${world.nameTR} evreninde kurduğun hayatın meyvelerini toplama veya yön değiştirme zamanı.`,
+      choices: [
+        { id: 'settle', label: 'Yerleş ve İstikrar', description: 'Aile ve kariyer', statChanges: { socialClass: 10, health: 5 }, consequences: ['İstikrar', 'Güvenlik'], risk: 'low' },
+        { id: 'adventure', label: 'Macera Peşinde', description: 'Yeni ufuklar', statChanges: { luck: 10, power: 5, health: -5 }, consequences: ['Macera', 'Risk'], risk: 'high' },
+        { id: 'mentor', label: 'Mentor Ol', description: 'Gençlere rehberlik et', statChanges: { socialClass: 8, intelligence: 8 }, consequences: ['Saygı', 'Etki'], risk: 'medium' },
+        { id: 'change', label: 'Yön Değiştir', description: 'Yeni bir başlangıç', statChanges: { intelligence: 8, luck: 8, socialClass: -3 }, consequences: ['Yenilik', 'Belirsizlik'], risk: 'medium' }
+      ]
+    },
+    50: {
+      title: 'Olgunluk Dönüm Noktası',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde hayatının ikinci yarısındasın. ${world.nameTR} evreninde mirasın ve etkin ne olacak?`,
+      choices: [
+        { id: 'legacy', label: 'Miras Bırak', description: 'Bir şeyler yarat ve öğret', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Miras', 'Saygı'], risk: 'low' },
+        { id: 'enjoy', label: 'Hayatın Tadını Çıkar', description: 'Dinlen ve yaşa', statChanges: { health: 10, luck: 5 }, consequences: ['Mutluluk', 'Sağlık'], risk: 'low' },
+        { id: 'fight', label: 'Mücadeleye Devam', description: 'Hâlâ güçlüsün', statChanges: { power: 10, health: -5 }, consequences: ['Güç', 'Risk'], risk: 'high' },
+        { id: 'reflect', label: 'Düşün ve Değerlendir', description: 'Hayatını gözden geçir', statChanges: { intelligence: 10, socialClass: 5 }, consequences: ['Bilgelik', 'Huzur'], risk: 'low' }
+      ]
+    },
+    70: {
+      title: 'Yaşlılık Dönüm Noktası',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde hayatının son evresindesin. ${world.nameTR} evreninde nasıl hatırlanmak istersin?`,
+      choices: [
+        { id: 'peace', label: 'Huzur İçinde', description: 'Sakin ve mutlu yaşa', statChanges: { health: 10, luck: 5 }, consequences: ['Huzur', 'Sağlık'], risk: 'low' },
+        { id: 'story', label: 'Hikayeni Anlat', description: 'Deneyimlerini paylaş', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Miras', 'Saygı'], risk: 'low' },
+        { id: 'final', label: 'Son Bir Macera', description: 'Risk al, son kez', statChanges: { power: 8, luck: 8, health: -10 }, consequences: ['Macera', 'Risk'], risk: 'extreme' },
+        { id: 'family', label: 'Aileyle Ol', description: 'Sevdiklerinle zaman geçir', statChanges: { socialClass: 8, health: 5 }, consequences: ['Bağ', 'Mutluluk'], risk: 'low' }
+      ]
+    }
+  };
+  const m = milestones[age];
+  if (!m) return null as any;
+  return {
+    id: `milestone_${age}`,
+    age,
+    year,
+    title: m.title,
+    description: m.description,
+    type: 'special',
+    choices: m.choices,
+    isCanonEncounter: false
+  };
+}
+
 // ─── Ana Yaşam Üretici ───────────────────────────────────
 
 export function generateLife(
@@ -400,6 +467,21 @@ export function generateLife(
 
   // Faction choice (age 15)
   events.push(createFactionEvent(world, region, 15, birthYear + 15, stats));
+
+  // Milestone events at key ages
+  const milestoneAges = [5, 15, 30, 50, 70];
+  for (const mAge of milestoneAges) {
+    if (mAge === 5 || mAge === 15) continue; // already covered by childhood/faction
+    if (mAge <= clampedLife - 2) {
+      const me = createMilestoneEvent(world, region, mAge, birthYear + mAge, stats);
+      if (me) events.push(me);
+    }
+  }
+  // Milestone at 5 (extra, before childhood ends) and 15 already has faction; add 5
+  if (clampedLife >= 7) {
+    const m5 = createMilestoneEvent(world, region, 5, birthYear + 5, stats);
+    if (m5) events.push(m5);
+  }
 
   // Tournament event (age 18, chance)
   if (rollChance(0.6)) {
