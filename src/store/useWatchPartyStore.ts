@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { 
-  collection, doc, onSnapshot, setDoc, updateDoc, addDoc, 
-  serverTimestamp, query, orderBy, limit, getDoc 
+  collection, doc, onSnapshot, updateDoc, addDoc, 
+  serverTimestamp, query, orderBy, limit
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { 
-  WatchPartyRoomData, WatchPartyMessage, FloatingReaction, 
-  INITIAL_FEATURED_ROOMS, REACTION_TYPES, extractYouTubeId 
+  WatchPartyRoomData, WatchPartyMessage, FloatingReaction,
+  REACTION_TYPES, extractYouTubeId
 } from '../data/watchPartySeed';
 
 interface WatchPartyState {
@@ -32,7 +32,7 @@ interface WatchPartyState {
 }
 
 export const useWatchPartyStore = create<WatchPartyState>((set, get) => ({
-  rooms: INITIAL_FEATURED_ROOMS,
+  rooms: [],
   activeRoom: null,
   messages: [],
   reactions: [],
@@ -47,23 +47,20 @@ export const useWatchPartyStore = create<WatchPartyState>((set, get) => ({
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (snapshot.empty) {
-        // If Firestore is empty, use seed rooms
-        set({ rooms: INITIAL_FEATURED_ROOMS, isLoading: false });
+        // Topluluk odaları henüz yok — dürüst boş durum
+        set({ rooms: [], isLoading: false });
         return;
       }
-      
+
       const firestoreRooms: WatchPartyRoomData[] = [];
       snapshot.forEach((d) => {
         firestoreRooms.push({ id: d.id, ...d.data() } as WatchPartyRoomData);
       });
 
-      // Merge firestore rooms with seed rooms so initial rooms are always accessible
-      const existingIds = new Set(firestoreRooms.map(r => r.id));
-      const remainingSeed = INITIAL_FEATURED_ROOMS.filter(r => !existingIds.has(r.id));
-      set({ rooms: [...firestoreRooms, ...remainingSeed], isLoading: false });
+      set({ rooms: firestoreRooms, isLoading: false });
     }, (err) => {
-      console.warn('WatchParty fetch error, using local fallback:', err);
-      set({ rooms: INITIAL_FEATURED_ROOMS, isLoading: false });
+      console.warn('WatchParty fetch error:', err);
+      set({ rooms: [], isLoading: false });
     });
 
     return unsubscribe;
@@ -74,35 +71,17 @@ export const useWatchPartyStore = create<WatchPartyState>((set, get) => ({
 
     const roomDocRef = doc(db, 'watchPartyRooms', roomId);
 
-    // 1. Ensure room exists in Firestore
-    getDoc(roomDocRef).then((snap) => {
-      if (!snap.exists()) {
-        const seed = INITIAL_FEATURED_ROOMS.find(r => r.id === roomId);
-        if (seed) {
-          setDoc(roomDocRef, {
-            ...seed,
-            updatedAt: new Date().toISOString(),
-            createdAt: new Date().toISOString()
-          }).catch(console.error);
-        }
-      }
-    }).catch(console.error);
-
     // 2. Listen to room updates
     const unsubRoom = onSnapshot(roomDocRef, (snap) => {
       if (snap.exists()) {
         const data = { id: snap.id, ...snap.data() } as WatchPartyRoomData;
         set({ activeRoom: data, isLoading: false });
       } else {
-        const seed = INITIAL_FEATURED_ROOMS.find(r => r.id === roomId);
-        if (seed) {
-          set({ activeRoom: seed, isLoading: false });
-        }
+        set({ isLoading: false });
       }
     }, (err) => {
-      console.warn('Room listener error, using fallback:', err);
-      const seed = INITIAL_FEATURED_ROOMS.find(r => r.id === roomId);
-      if (seed) set({ activeRoom: seed, isLoading: false });
+      console.warn('Room listener error:', err);
+      set({ isLoading: false });
     });
 
     // 3. Listen to messages

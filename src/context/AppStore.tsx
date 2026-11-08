@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { WatchlistItem, WatchStatus, Anime, ForumPost, Friend, UserProfile, UserNamedList } from '../types';
 import { auth, googleProvider, db } from '../firebase';
+import { useDailyPoll } from '../hooks/useDailyPoll';
 import { onAuthStateChanged, signInWithPopup, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -37,72 +38,6 @@ interface AppState {
   activePoll: any;
 }
 
-const mockFriends: Friend[] = [
-  { id: '1', name: 'KiraYukimura', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kira', lastOnline: '2m ago', currentlyWatching: "Frieren: Beyond Journey's End" },
-  { id: '2', name: 'ZoroLostAgain', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Zoro', lastOnline: '1h ago', currentlyWatching: 'One Piece' },
-  { id: '3', name: 'GojoSaturo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Gojo', lastOnline: '1d ago', currentlyWatching: 'Jujutsu Kaisen' },
-];
-
-const mockForumPosts: ForumPost[] = [
-  {
-    id: 'post3',
-    author: { name: 'SakuraBlossom', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sakura', isFriend: false },
-    title: 'Haftanın Önerisi: Sousou no Frieren',
-    content: 'Fantastik dünyaları seviyorsanız bu başyapıtı kesinlikle kaçırmamalısınız. Müzikleri, çizimleri, karakter gelişimi her şeyiyle mükemmel. Puanım 10/10!',
-    likes: 342,
-    replies: 89,
-    category: 'Recommendations',
-    type: 'recommendation',
-    createdAt: new Date(Date.now() - 1800000).toISOString(),
-    animeRef: {
-      id: 52991,
-      title: 'Sousou no Frieren',
-      image: 'https://cdn.myanimelist.net/images/anime/1015/138006l.webp',
-      score: 9.38
-    }
-  },
-  {
-    id: 'post4',
-    author: { name: 'GojoSaturo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Gojo', isFriend: true },
-    title: 'Benim Top 5 Shounen Listem 🏆',
-    content: 'Aksiyon dolu shounen serilerini sıraladım, sizin favoriniz hangisi?',
-    likes: 215,
-    replies: 56,
-    category: 'Lists',
-    type: 'list_share',
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-    listRef: {
-      listName: 'En İyi Aksiyon Serileri',
-      animes: [
-        { id: 5114, title: 'Fullmetal Alchemist', image: 'https://cdn.myanimelist.net/images/anime/1223/96541l.webp' },
-        { id: 11061, title: 'Hunter x Hunter', image: 'https://cdn.myanimelist.net/images/anime/1337/99013l.webp' },
-        { id: 40748, title: 'Jujutsu Kaisen', image: 'https://cdn.myanimelist.net/images/anime/1171/109222l.webp' },
-      ]
-    }
-  },
-  {
-    id: 'post1',
-    author: { name: 'KiraYukimura', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kira', isFriend: true },
-    title: 'Thoughts on the latest Solo Leveling episode?',
-    content: 'The animation quality was absolutely insane, Ufotable level almost! What did you guys think of the pacing?',
-    likes: 124,
-    replies: 45,
-    category: 'Discussion',
-    type: 'discussion',
-    createdAt: new Date(Date.now() - 7200000).toISOString()
-  },
-  {
-    id: 'post2',
-    author: { name: 'OtakuMaster99', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Otaku', isFriend: false },
-    title: 'Need recommendations for emotional romance anime',
-    content: 'I just finished Your Lie in April and Clannad After Story. I need something to fill the void, please help.',
-    likes: 89,
-    replies: 112,
-    category: 'Discussion',
-    type: 'discussion',
-    createdAt: new Date(Date.now() - 86400000).toISOString()
-  }
-];
 
 const DEFAULT_USER_NAMED_LISTS: UserNamedList[] = [
   {
@@ -127,8 +62,8 @@ const DEFAULT_USER_NAMED_LISTS: UserNamedList[] = [
   },
   {
     id: 'seasonal',
-    name: 'Seasonal (Sonbahar 2026)',
-    description: 'Sonbahar 2026 sezonunda haftalık takip ettiğim güncel seriler.',
+    name: 'Seasonal',
+    description: 'Bu sezon haftalık takip ettiğim güncel seriler.',
     emoji: '🍂',
     color: '#f43f5e',
     animeIds: [],
@@ -167,48 +102,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   });
   
-  const [forumPosts, setForumPosts] = useState<ForumPost[]>(mockForumPosts);
-  const [friends] = useState<Friend[]>(mockFriends);
+  const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
+  const [friends] = useState<Friend[]>([]);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   
-  // Daily Poll state from Firestore
-  const [activePoll, setActivePoll] = useState<any>(null);
-
-  // Firestore Sync Effect for Polls
-  useEffect(() => {
-    // We listen to a specific document that stores the "Current Daily Poll"
-    // Or we just fetch all polls and pick one based on the day.
-    // To make it fully "Database Driven", we'll sync the polls collection.
-    const pollsRef = collection(db, 'polls');
-    const unsubscribe = onSnapshot(pollsRef, async (snapshot) => {
-      try {
-        if (snapshot.empty) {
-          // Anketler admin panelinden tohumlanır (Firestore kuralları normal kullanıcıların
-          // yazmasını engellediği için istemci burada seed yapmaz)
-          setActivePoll(null);
-        } else {
-          const pollsList: any[] = [];
-          snapshot.forEach(doc => pollsList.push({ id: doc.id, ...doc.data() }));
-          
-          const minuteOfHour = Math.floor(new Date().getTime() / 1000 / 60);
-          const current = pollsList.find(p => p.pollIndex === (minuteOfHour % pollsList.length));
-          if (current) {
-            setActivePoll(current);
-          } else if (pollsList.length > 0) {
-            setActivePoll(pollsList[0]);
-          }
-        }
-      } catch (err) {
-        console.warn('Polls sync warning:', err);
-      }
-    }, (error) => {
-      console.warn("Polls listener permission or network error (falling back to local):", error);
-    });
-    
-    return () => unsubscribe();
-  }, []);
+  // Daily Poll (src/hooks/useDailyPoll.ts — koleksiyonu dinler, rotasyona göre seçer)
+  const activePoll = useDailyPoll();
 
   // Firestore Sync Effect for Forum Posts
   useEffect(() => {
@@ -222,9 +123,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
            isLikedByMe: auth.currentUser ? (data.likedBy || []).includes(auth.currentUser.uid) : false
         });
       });
-      if (posts.length > 0) {
-        setForumPosts(posts);
-      }
+      // Güncel listeyi her zaman uygula (silinen gönderiler ekranda kalmasın)
+      setForumPosts(posts);
     }, (error) => {
       console.warn("Forum posts listener permission or network error (using cached posts):", error);
     });

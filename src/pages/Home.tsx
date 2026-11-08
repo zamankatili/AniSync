@@ -4,7 +4,7 @@ import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { useAnimeData } from '../hooks/useAnimeData';
 import { 
-  MessageSquare, Heart, Share2, MoreHorizontal, UserPlus, Star, 
+  MessageSquare, Heart, Share2, MoreHorizontal, Star, 
   Sparkles, Shuffle, Search as SearchIcon, Image as ImageIcon, Flame, Loader2,
   Activity, Music, ChevronRight, Tv2, Newspaper, BookOpen
 } from 'lucide-react';
@@ -31,7 +31,7 @@ import { localizeGenres } from '../lib/genreNames';
 export const Home = () => {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
-  const { forumPosts, friends, addForumPost, userProfile, currentUser, activePoll } = useAppStore();
+  const { forumPosts, addForumPost, userProfile, currentUser, activePoll } = useAppStore();
   const { addToast } = useToastStore();
   const { fetchRandom } = useAnimeData();
   
@@ -356,21 +356,13 @@ export const Home = () => {
             </button>
           </div>
         ) : (
-          <div className="bg-orange-500 p-6 border-2 border-white neo-shadow-white relative overflow-hidden">
-            <h3 className="font-black text-black mb-1 flex items-center gap-2 relative z-10 uppercase tracking-widest text-md">
-              <Flame size={20} strokeWidth={2.5} className="text-black" /> {t('poll_winner')}
+          <div className="bg-black p-6 border-2 border-white/20 relative overflow-hidden">
+            <h3 className="font-black text-white mb-2 flex items-center gap-2 relative z-10 uppercase tracking-widest text-md">
+              <Flame size={20} strokeWidth={2.5} className="text-neutral-500" /> {t('poll_empty_title')}
             </h3>
-            <p className="text-sm text-black/80 font-bold mb-4 relative z-10 uppercase tracking-wider mt-3">
-               TOPLULUK OYLAMASINA GÖRE <span className="text-white font-black bg-black px-1 rounded-sm">BU GÜN GÜNLERDEN NARUTO!</span> SEN DE NİNJA YOLUNA KATIL.
+            <p className="text-sm text-neutral-400 font-bold mb-2 relative z-10 uppercase tracking-wider mt-3">
+              {t('poll_empty_desc')}
             </p>
-            <div className="bg-black p-3 flex gap-3 border-2 border-black relative z-10 hover:border-white transition-colors cursor-pointer group" onClick={() => addToast(t('coming_soon_toast'), 'info')}>
-              <img src={getSafeImageUrl("https://cdn.myanimelist.net/images/anime/13/17405l.webp")} alt="Naruto" className="w-16 h-20 object-cover border border-white grayscale group-hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-              <div className="flex-1 flex flex-col justify-center">
-                 <div className="font-black text-white mb-1 uppercase">NARUTO</div>
-                 <div className="text-xs text-neutral-400 font-bold uppercase tracking-wider">AKSİYON, MACERA, NİNJA</div>
-                 <div className="text-xs text-rose-500 flex items-center gap-1 font-black mt-2"><Star size={14} strokeWidth={2.5} fill="currentColor" /> 7.99</div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -447,50 +439,6 @@ export const Home = () => {
 
         {/* Today's Airing Anime Widget */}
         <TodayAiringWidget />
-        
-        {/* Haftanın Enleri */}
-        <div className="bg-black p-6 border-2 border-white/20">
-          <h3 className="font-black tracking-widest uppercase text-white mb-6 flex items-center gap-2">
-            <Flame size={20} className="text-white" strokeWidth={2.5} /> {t('trend_topics')}
-          </h3>
-          <div className="space-y-5">
-            {[
-              { id: 1, topic: 'GÜNDEM', hashtag: '#SOLOLEVELING', posts: '12.4K' },
-              { id: 2, topic: 'İNCELEME', hashtag: 'FRİEREN SEZON FİNALİ', posts: '8.2K' },
-              { id: 3, topic: 'SORU', hashtag: 'EN İYİ ROMANTİZM', posts: '5.1K' }
-            ].map(trend => (
-              <div key={trend.id} className="cursor-pointer group/trend relative border-b-2 border-white/10 pb-4 last:border-0 last:pb-0">
-                <div className="text-xs text-rose-500 font-black uppercase">{trend.id} • {trend.topic}</div>
-                <div className="font-black text-lg text-white group-hover/trend:text-rose-500 transition-colors uppercase tracking-tight mt-1 mb-1">{trend.hashtag}</div>
-                <div className="text-xs text-neutral-500 font-bold uppercase">{trend.posts} {t('posts_suffix')}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Kimi Takip Etmeli */}
-        <div className="bg-black p-6 border-2 border-white/20">
-          <h3 className="font-black tracking-widest uppercase text-white mb-6 flex items-center gap-2">
-            <UserPlus size={20} className="text-white" strokeWidth={2.5} /> {t('who_to_follow')}
-          </h3>
-          <div className="space-y-4">
-            {friends.slice(0, 3).map((friend) => (
-              <div key={friend.id} className="flex items-center gap-4 group/user py-2 border-b-2 border-white/10 last:border-0 cursor-pointer">
-                <img src={friend.avatar} alt={friend.name} className="w-12 h-12 border-2 border-white bg-white grayscale group-hover/user:grayscale-0 transition-all object-cover" />
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-black uppercase tracking-wider text-white text-sm truncate group-hover/user:text-white transition-colors">{friend.name}</h4>
-                  <p className="text-xs font-bold text-neutral-500 truncate w-full uppercase">@{friend.name.toLowerCase()}</p>
-                </div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); addToast(t('followed_toast', { name: friend.name }), 'success'); }}
-                  className="bg-white border-2 border-white text-black font-black text-xs uppercase px-4 py-2 hover:bg-black hover:text-white transition-all shadow-sm"
-                >
-                  {t('follow')}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Weekly 50-Challenge Loop Widget */}
         <div className="bg-black p-5 border-4 border-rose-600 neo-shadow-white relative overflow-hidden group">

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Send, MessageSquare, Users, Crown, Clock, 
   Sparkles, Check, Share2, Copy, ShieldCheck 
@@ -28,6 +28,17 @@ export const WatchPartyChat: React.FC<WatchPartyChatProps> = ({
   const [attachTimestamp, setAttachTimestamp] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Gerçek katılımcılar: oda sahibi + sen + odada mesaj yazmış kullanıcılar.
+  const participants = useMemo(() => {
+    const map = new Map<string, { uid: string; name: string; isHost: boolean }>();
+    map.set(room.hostId, { uid: room.hostId, name: room.hostName, isHost: true });
+    map.set(currentUser.uid, { uid: currentUser.uid, name: currentUser.displayName || 'You', isHost: currentUser.uid === room.hostId });
+    for (const m of messages) {
+      if (!map.has(m.uid)) map.set(m.uid, { uid: m.uid, name: m.userName, isHost: m.uid === room.hostId });
+    }
+    return Array.from(map.values());
+  }, [room.hostId, room.hostName, currentUser.uid, currentUser.displayName, messages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,7 +89,7 @@ export const WatchPartyChat: React.FC<WatchPartyChatProps> = ({
             )}
           >
             <Users size={13} />
-            <span>{t('watch_party_chat_tab_participants', { count: room.participantCount })}</span>
+            <span>{t('watch_party_chat_tab_participants', { count: participants.length })}</span>
           </button>
         </div>
 
@@ -216,7 +227,7 @@ export const WatchPartyChat: React.FC<WatchPartyChatProps> = ({
         /* Participants Tab */
         <div className="flex-1 p-3 bg-neutral-50 overflow-y-auto space-y-2">
           <div className="text-xs font-black uppercase text-neutral-500 mb-2">
-            {t('watch_party_chat_present', { count: room.participantCount })}
+            {t('watch_party_chat_present', { count: participants.length })}
           </div>
 
           {/* Host Card */}
@@ -240,35 +251,35 @@ export const WatchPartyChat: React.FC<WatchPartyChatProps> = ({
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
           </div>
 
-          {/* Simulated Active Members */}
-          {[
-            { name: 'KagamineOtaku', status: 'Senkronize', isMe: false },
-            { name: 'LeviAckerman_Fan', status: 'Senkronize', isMe: false },
-            { name: 'MakimaObserver', status: '0.2s gecikme', isMe: false },
-            { name: 'ZoroLostAgain', status: 'Senkronize', isMe: false },
-            { name: currentUser.displayName || 'Sen', status: 'Senkronize', isMe: true }
-          ].map((part, idx) => (
-            <div
-              key={idx}
-              className={cn(
-                "p-2 bg-white border-2 border-black flex items-center justify-between shadow-[2px_2px_0px_0px_#000]",
-                part.isMe && "border-rose-500 bg-rose-50"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-neutral-200 border border-black flex items-center justify-center font-bold text-xs">
-                  {part.name.charAt(0)}
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-black">
-                    {part.name} {part.isMe && "(Sen)"}
-                  </span>
-                  <p className="text-[9px] text-emerald-600 font-bold uppercase">{part.status}</p>
+          {/* Gerçek katılımcılar (oda sahibi + sen + sohbet edenler) */}
+          {participants.map((part) => {
+            const isMe = part.uid === currentUser.uid;
+            return (
+              <div
+                key={part.uid}
+                className={cn(
+                  "p-2 bg-white border-2 border-black flex items-center justify-between shadow-[2px_2px_0px_0px_#000]",
+                  isMe && "border-rose-500 bg-rose-50"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-neutral-200 border border-black flex items-center justify-center font-bold text-xs">
+                    {part.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="font-bold text-xs text-black">
+                      {part.name} {isMe && `(${t('watch_party_you')})`}
+                    </span>
+                    {part.isHost && (
+                      <p className="text-[9px] text-amber-700 font-black uppercase flex items-center gap-0.5">
+                        <Crown size={9} /> {t('watch_party_chat_room_host')}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
