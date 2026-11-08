@@ -33,6 +33,7 @@ const NAV_ITEMS = [
   { path: '/lists', labelKey: 'top_lists', icon: LayoutList },
   { path: '/list', labelKey: 'my_list', icon: List },
   { path: '/profile', labelKey: 'profile', icon: User },
+  { path: '/anime-life-sim', labelKey: 'anime_life_sim', icon: Compass },
 ];
 
 // Mobil alt menüde en fazla 5 birincil sekme gösterilir (taşmayı önler).

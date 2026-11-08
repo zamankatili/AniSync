@@ -1,4 +1,4 @@
-﻿import i18n from 'i18next';
+import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
@@ -56,6 +56,7 @@ const resources = {
       "home_tab_news": "HABERLER",
       "more": "DAHA",
       "arcade": "ARCADE",
+      "anime_life_sim": "YAŞAM SİMÜLASYONU",
       "arcade_tagline": "OTAKU MAHALLESİNİN RETRO KÖŞESİ",
       "play": "OYNA",
       "back_to_arcade": "ARCADE'E DÖN",
@@ -1459,6 +1460,7 @@ const resources = {
       "home_tab_news": "NEWS",
       "more": "MORE",
       "arcade": "ARCADE",
+      "anime_life_sim": "LIFE SIMULATION",
       "arcade_tagline": "THE OTAKU DISTRICT'S RETRO CORNER",
       "play": "PLAY",
       "back_to_arcade": "BACK TO ARCADE",
@@ -2862,6 +2864,7 @@ const resources = {
       "home_tab_news": "ニュース",
       "more": "もっと",
       "arcade": "アーケード",
+      "anime_life_sim": "ライフシミュレーション",
       "arcade_tagline": "オタク街のレトロコーナー",
       "play": "プレイ",
       "back_to_arcade": "アーケードに戻る",
@@ -4263,6 +4266,7 @@ const resources = {
       "home_tab_news": "ACTUALITÉS",
       "more": "PLUS",
       "arcade": "ARCADE",
+      "anime_life_sim": "SIMULATION DE VIE",
       "arcade_tagline": "LE COIN RÉTRO DU QUARTIER OTAKU",
       "play": "JOUER",
       "back_to_arcade": "RETOUR À L'ARCADE",
