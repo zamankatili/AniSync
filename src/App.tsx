@@ -21,6 +21,7 @@ const WatchParty = lazy(() => import('./pages/WatchParty').then(m => ({ default:
 const WeeklyChallengePage = lazy(() => import('./pages/WeeklyChallengePage').then(m => ({ default: m.WeeklyChallengePage })));
 const AniSyncDle = lazy(() => import('./pages/AniSyncDle').then(m => ({ default: m.AniSyncDle })));
 const Arcade = lazy(() => import('./pages/Arcade').then(m => ({ default: m.Arcade })));
+const AnimeLifeSim = lazy(() => import('./pages/AnimeLifeSim').then(m => ({ default: m.AnimeLifeSim })));
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
               <Route path="anisyncdle" element={<AniSyncDle />} />
               <Route path="music-quiz" element={<MusicQuiz />} />
               <Route path="arcade" element={<Arcade />} />
+              <Route path="anime-life-sim" element={<AnimeLifeSim />} />
               <Route path="calendar" element={<AiringCalendar />} />
               <Route path="discover" element={<Discover />} />
               <Route path="anime/:id" element={<AnimeDetail />} />
