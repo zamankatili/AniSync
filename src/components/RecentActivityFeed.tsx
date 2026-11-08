@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
-import { RecentActivity, WatchStatus, Anime } from '../types';
+import { RecentActivity, Anime } from '../types';
 import { getSafeImageUrl, formatRelativeTime, cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { 
   Activity, BookmarkPlus, Check, Star, ExternalLink, Filter, 
-  Layers, Clock, Film, Sparkles, RefreshCw, Plus, Zap,
+  Layers, Clock, Film, Sparkles, RefreshCw, Plus,
   Volume2, VolumeX, Radio, Eye, Flame, ArrowRight, X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -39,224 +39,6 @@ const playNeoChime = () => {
   }
 };
 
-// Realistic initial community activities to ensure rich display even on fresh DBs
-const SEED_ACTIVITIES: RecentActivity[] = [
-  {
-    id: 'seed-1',
-    userId: 'user_kira',
-    userName: 'KiraYukimura',
-    userAvatarSeed: 'Kira',
-    animeId: 52991,
-    animeTitle: 'Sousou no Frieren',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1015/138006l.webp',
-    actionType: 'added_to_watchlist',
-    status: 'watching',
-    listName: 'İzleniyor',
-    score: 9.38,
-    genres: ['Macera', 'Dram', 'Fantezi'],
-    episodes: 28,
-    createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString()
-  },
-  {
-    id: 'seed-2',
-    userId: 'user_sakura',
-    userName: 'SakuraBlossom',
-    userAvatarSeed: 'Sakura',
-    animeId: 52299,
-    animeTitle: 'Ore dake Level Up na Ken (Solo Leveling)',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1500/140813l.webp',
-    actionType: 'added_to_watchlist',
-    status: 'plan_to_watch',
-    listName: 'İzlenecekler',
-    score: 8.35,
-    genres: ['Aksiyon', 'Fantezi'],
-    episodes: 12,
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
-  },
-  {
-    id: 'seed-3',
-    userId: 'user_gojo',
-    userName: 'GojoSaturo',
-    userAvatarSeed: 'Gojo',
-    animeId: 5114,
-    animeTitle: 'Fullmetal Alchemist: Brotherhood',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1223/96541l.webp',
-    actionType: 'added_to_custom_list',
-    listName: 'Tüm Zamanların Başyapıtları',
-    score: 9.10,
-    genres: ['Aksiyon', 'Macera', 'Dram'],
-    episodes: 64,
-    createdAt: new Date(Date.now() - 1000 * 60 * 110).toISOString()
-  },
-  {
-    id: 'seed-4',
-    userId: 'user_zoro',
-    userName: 'ZoroLostAgain',
-    userAvatarSeed: 'Zoro',
-    animeId: 21,
-    animeTitle: 'One Piece',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/6/73245l.webp',
-    actionType: 'added_to_watchlist',
-    status: 'watching',
-    listName: 'İzleniyor',
-    score: 8.72,
-    genres: ['Aksiyon', 'Macera', 'Fantezi'],
-    episodes: 1100,
-    createdAt: new Date(Date.now() - 1000 * 60 * 220).toISOString()
-  },
-  {
-    id: 'seed-5',
-    userId: 'user_otaku',
-    userName: 'OtakuMaster99',
-    userAvatarSeed: 'Otaku',
-    animeId: 40748,
-    animeTitle: 'Jujutsu Kaisen',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1171/109222l.webp',
-    actionType: 'added_to_watchlist',
-    status: 'completed',
-    listName: 'Tamamlandı',
-    score: 8.61,
-    genres: ['Aksiyon', 'Doğaüstü'],
-    episodes: 24,
-    createdAt: new Date(Date.now() - 1000 * 60 * 360).toISOString()
-  },
-  {
-    id: 'seed-6',
-    userId: 'user_makima',
-    userName: 'MakimaEyes',
-    userAvatarSeed: 'Makima',
-    animeId: 44511,
-    animeTitle: 'Chainsaw Man',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1806/126216l.webp',
-    actionType: 'added_to_watchlist',
-    status: 'plan_to_watch',
-    listName: 'İzlenecekler',
-    score: 8.48,
-    genres: ['Aksiyon', 'Korku'],
-    episodes: 12,
-    createdAt: new Date(Date.now() - 1000 * 60 * 540).toISOString()
-  }
-];
-
-// Curated pool of high-profile anime for realistic live simulation
-const SIMULATED_ANIME_POOL = [
-  {
-    animeId: 16498,
-    animeTitle: 'Shingeki no Kyojin (Attack on Titan)',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/10/47347l.webp',
-    score: 8.55,
-    genres: ['Aksiyon', 'Dram', 'Gizem'],
-    episodes: 25
-  },
-  {
-    animeId: 9253,
-    animeTitle: 'Steins;Gate',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1935/127974l.webp',
-    score: 9.07,
-    genres: ['Bilim Kurgu', 'Gerilim', 'Dram'],
-    episodes: 24
-  },
-  {
-    animeId: 38000,
-    animeTitle: 'Kimetsu no Yaiba (Demon Slayer)',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1286/99889l.webp',
-    score: 8.49,
-    genres: ['Aksiyon', 'Fantezi', 'Tarih'],
-    episodes: 26
-  },
-  {
-    animeId: 1535,
-    animeTitle: 'Death Note',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/9/9453l.webp',
-    score: 8.62,
-    genres: ['Doğaüstü', 'Gerilim', 'Gizem'],
-    episodes: 37
-  },
-  {
-    animeId: 50265,
-    animeTitle: 'Spy x Family',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1441/122795l.webp',
-    score: 8.49,
-    genres: ['Aksiyon', 'Komedi'],
-    episodes: 12
-  },
-  {
-    animeId: 52991,
-    animeTitle: 'Sousou no Frieren',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1015/138006l.webp',
-    score: 9.38,
-    genres: ['Macera', 'Dram', 'Fantezi'],
-    episodes: 28
-  },
-  {
-    animeId: 5114,
-    animeTitle: 'Fullmetal Alchemist: Brotherhood',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1223/96541l.webp',
-    score: 9.10,
-    genres: ['Aksiyon', 'Macera', 'Dram'],
-    episodes: 64
-  },
-  {
-    animeId: 51009,
-    animeTitle: 'Bocchi the Rock!',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1448/127956l.webp',
-    score: 8.78,
-    genres: ['Komedi', 'Müzik', 'Yaşamdan Kesitler'],
-    episodes: 12
-  },
-  {
-    animeId: 40748,
-    animeTitle: 'Jujutsu Kaisen',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1171/109222l.webp',
-    score: 8.61,
-    genres: ['Aksiyon', 'Doğaüstü', 'Fantezi'],
-    episodes: 24
-  },
-  {
-    animeId: 30276,
-    animeTitle: 'One Punch Man',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/12/76049l.webp',
-    score: 8.50,
-    genres: ['Aksiyon', 'Komedi', 'Süper Güç'],
-    episodes: 12
-  },
-  {
-    animeId: 32281,
-    animeTitle: 'Kimi no Na wa. (Your Name)',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1935/127974l.webp',
-    score: 8.84,
-    genres: ['Dram', 'Doğaüstü', 'Romantik'],
-    episodes: 1
-  }
-];
-
-const SIMULATED_USERS = [
-  { name: 'LeviAckerman', avatarSeed: 'Levi' },
-  { name: 'KurisuMakise', avatarSeed: 'Kurisu' },
-  { name: 'TanjiroKamado', avatarSeed: 'Tanjiro' },
-  { name: 'AnyaForger', avatarSeed: 'Anya' },
-  { name: 'MegumiFushiguro', avatarSeed: 'Megumi' },
-  { name: 'HitoriGotoh', avatarSeed: 'Bocchi' },
-  { name: 'SaitamaSensei', avatarSeed: 'Saitama' },
-  { name: 'KiraYukimura', avatarSeed: 'Kira' },
-  { name: 'SakuraBlossom', avatarSeed: 'Sakura' },
-  { name: 'GojoSaturo', avatarSeed: 'Gojo' }
-];
-
-const SIMULATED_ACTIONS: Array<{
-  actionType: 'added_to_watchlist' | 'added_to_custom_list';
-  status?: WatchStatus;
-  listName: string;
-}> = [
-  { actionType: 'added_to_watchlist', status: 'watching', listName: 'İzleniyor' },
-  { actionType: 'added_to_watchlist', status: 'plan_to_watch', listName: 'İzlenecekler' },
-  { actionType: 'added_to_watchlist', status: 'completed', listName: 'Tamamlandı' },
-  { actionType: 'added_to_custom_list', listName: 'Tüm Zamanların Başyapıtları' },
-  { actionType: 'added_to_custom_list', listName: 'Hafta Sonu Maratonu' },
-  { actionType: 'added_to_custom_list', listName: 'Duygusal Fırtına Serileri' },
-  { actionType: 'added_to_watchlist', status: 'watching', listName: 'İzleniyor' }
-];
-
 interface RecentActivityFeedProps {
   compact?: boolean;
   onViewAll?: () => void;
@@ -269,14 +51,13 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
   maxItems = 25 
 }) => {
   const navigate = useNavigate();
-  const { watchlist, addToWatchlist, currentUser } = useAppStore();
+  const { watchlist, addToWatchlist } = useAppStore();
   const { addToast } = useToastStore();
   const { t } = useAppTranslation();
 
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'plan_to_watch' | 'watching' | 'completed' | 'custom'>('all');
-  const [isSimulating, setIsSimulating] = useState(false);
   
   // Real-time tracking of newly arrived items via onSnapshot
   const isInitialLoad = useRef(true);
@@ -290,46 +71,6 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
     time: string;
   } | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // Generates a realistic community activity and writes directly to Firestore
-  const handleSimulateActivity = async () => {
-    if (isSimulating) return;
-    setIsSimulating(true);
-
-    try {
-      const randomAnime = SIMULATED_ANIME_POOL[Math.floor(Math.random() * SIMULATED_ANIME_POOL.length)];
-      const randomUser = SIMULATED_USERS[Math.floor(Math.random() * SIMULATED_USERS.length)];
-      const randomAction = SIMULATED_ACTIONS[Math.floor(Math.random() * SIMULATED_ACTIONS.length)];
-
-      const simulatedDoc = {
-        userId: currentUser?.uid || `user_sim_${Date.now().toString(36)}`,
-        userName: randomUser.name,
-        userAvatarSeed: randomUser.avatarSeed,
-        userAvatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${randomUser.avatarSeed}`,
-        animeId: randomAnime.animeId,
-        animeTitle: randomAnime.animeTitle,
-        animeImage: randomAnime.animeImage,
-        actionType: randomAction.actionType,
-        status: randomAction.status || 'plan_to_watch',
-        listName: randomAction.listName,
-        score: randomAnime.score,
-        genres: randomAnime.genres,
-        episodes: randomAnime.episodes,
-        createdAt: serverTimestamp()
-      };
-
-      await addDoc(collection(db, 'recentActivities'), simulatedDoc);
-      addToast(
-        t('recent_activity_sim_success', { title: randomAnime.animeTitle, user: randomUser.name }),
-        'success'
-      );
-    } catch (error) {
-      console.error('Error generating simulated activity in Firestore:', error);
-      addToast(t('recent_activity_sim_error'), 'error');
-    } finally {
-      setIsSimulating(false);
-    }
-  };
 
   useEffect(() => {
     // Listen to live community additions using onSnapshot
@@ -404,21 +145,13 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
           });
         });
 
-        // Merge real data with fallback seeds if database has few items
-        if (fetched.length === 0) {
-          setActivities(SEED_ACTIVITIES);
-        } else if (fetched.length < 5) {
-          const existingIds = new Set(fetched.map(f => f.animeId));
-          const filteredSeeds = SEED_ACTIVITIES.filter(s => !existingIds.has(s.animeId));
-          setActivities([...fetched, ...filteredSeeds]);
-        } else {
-          setActivities(fetched);
-        }
+        // Veritabanında henüz kayıt yoksa dürüstçe boş göster (uydurma aktivite yok)
+        setActivities(fetched);
         setLoading(false);
       },
       (err) => {
-        console.warn('Could not fetch recent activities from firestore, using fallback:', err);
-        setActivities(SEED_ACTIVITIES);
+        console.warn('Could not fetch recent activities from firestore:', err);
+        setActivities([]);
         setLoading(false);
       }
     );
@@ -559,20 +292,6 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
               className="p-1 text-xs border border-white/40 hover:border-white text-neutral-300 hover:text-white transition-colors cursor-pointer"
             >
               {soundEnabled ? <Volume2 size={14} className="text-amber-400" /> : <VolumeX size={14} className="text-neutral-500" />}
-            </button>
-
-            <button
-              onClick={handleSimulateActivity}
-              disabled={isSimulating}
-              className="px-3 py-1 text-xs font-black bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-black border-2 border-black uppercase tracking-wider transition-all flex items-center gap-1.5 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer neo-shadow"
-              title={t('recent_activity_sim_title')}
-            >
-              {isSimulating ? (
-                <RefreshCw size={12} className="animate-spin text-black" strokeWidth={3} />
-              ) : (
-                <Zap size={12} className="text-black fill-black" strokeWidth={2.5} />
-              )}
-              <span>{t('recent_activity_sim_test')}</span>
             </button>
 
             {onViewAll && (
@@ -758,25 +477,6 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
             <span className="text-xs font-black text-neutral-400 uppercase tracking-widest bg-neutral-900 border-2 border-white/30 px-3 py-2 flex items-center gap-2">
               <Sparkles size={14} className="text-amber-400" /> {activities.length} {t('recent_activity_activity')}
             </span>
-
-            <button
-              onClick={handleSimulateActivity}
-              disabled={isSimulating}
-              className="px-4 py-2 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-black border-2 border-black font-black uppercase text-xs tracking-wider transition-all neo-shadow flex items-center gap-2 cursor-pointer active:translate-x-0.5 active:translate-y-0.5"
-              title={t('recent_activity_sim_desc')}
-            >
-              {isSimulating ? (
-                <>
-                  <RefreshCw size={14} className="animate-spin text-black" strokeWidth={3} />
-                  <span>{t('recent_activity_posting')}</span>
-                </>
-              ) : (
-                <>
-                  <Zap size={14} className="text-black fill-black" strokeWidth={2.5} />
-                  <span>{t('recent_activity_sim_generate')}</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
 
@@ -887,15 +587,9 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
           <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">
             {t('recent_activity_no_activity_title')}
           </h3>
-          <p className="text-neutral-400 font-bold uppercase text-sm mb-6">
+          <p className="text-neutral-400 font-bold uppercase text-sm">
             {t('recent_activity_no_activity_desc')}
           </p>
-          <button
-            onClick={handleSimulateActivity}
-            className="px-6 py-3 bg-amber-400 text-black border-2 border-black font-black uppercase text-xs tracking-wider neo-shadow hover:bg-amber-300 transition-all cursor-pointer"
-          >
-            {t('recent_activity_sim_generate_btn')}
-          </button>
         </div>
       ) : (
         <div className="space-y-4">

@@ -3,7 +3,7 @@ import { WatchlistItem, WatchStatus, Anime, ForumPost, Friend, UserProfile, User
 import { auth, googleProvider, db } from '../firebase';
 import { onAuthStateChanged, signInWithPopup, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
-import { SEED_POLLS, generateMorePolls } from '../data/polls';
+
 
 interface AppState {
   watchlist: WatchlistItem[];
@@ -185,15 +185,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const unsubscribe = onSnapshot(pollsRef, async (snapshot) => {
       try {
         if (snapshot.empty) {
-          // Seed the database with 50 polls if empty!
-          const batch = writeBatch(db);
-          const allPolls = [...SEED_POLLS, ...generateMorePolls(35)]; // 15 + 35 = 50 polls
-          
-          allPolls.forEach((pollItem, index) => {
-            const newDocRef = doc(collection(db, 'polls'), `poll_${index}`);
-            batch.set(newDocRef, { ...pollItem, pollIndex: index, createdAt: new Date().toISOString() });
-          });
-          await batch.commit();
+          // Anketler admin panelinden tohumlanır (Firestore kuralları normal kullanıcıların
+          // yazmasını engellediği için istemci burada seed yapmaz)
+          setActivePoll(null);
         } else {
           const pollsList: any[] = [];
           snapshot.forEach(doc => pollsList.push({ id: doc.id, ...doc.data() }));
@@ -413,32 +407,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addToWatchlist = async (anime: Anime, status: WatchStatus) => {
     if (!currentUser) {
-      // Fallback local
+      // Misafirler için yalnızca yerel kayıt (topluluk akışına sahte kayıt yazılmaz)
       setWatchlist(prev => {
         if (prev.some(item => item.anime.mal_id === anime.mal_id)) return prev;
         return [...prev, { anime, status, userScore: 0, episodesWatched: 0, addedAt: new Date().toISOString() }];
       });
-      // Also log activity to recentActivities so the community feed updates in real-time
-      try {
-        await addDoc(collection(db, 'recentActivities'), {
-          userId: 'guest_' + Math.random().toString(36).substring(2, 8),
-          userName: userProfile.name || userProfile.handle || 'Misafir Otaku',
-          userAvatarSeed: userProfile.avatarSeed || 'Me',
-          userAvatar: null,
-          animeId: anime.mal_id,
-          animeTitle: anime.title_english || anime.title,
-          animeImage: anime.images?.webp?.large_image_url || anime.images?.webp?.image_url || anime.images?.jpg?.image_url || '',
-          actionType: 'added_to_watchlist',
-          status,
-          listName: status === 'watching' ? 'İzleniyor' : status === 'completed' ? 'Tamamlandı' : status === 'plan_to_watch' ? 'İzlenecekler' : status === 'on_hold' ? 'Beklemede' : 'Bırakılanlar',
-          score: anime.score ?? null,
-          genres: anime.genres?.map(g => g.name) || [],
-          episodes: anime.episodes ?? null,
-          createdAt: serverTimestamp()
-        });
-      } catch (e) {
-        console.warn("Could not log guest activity:", e);
-      }
       return;
     }
     const item: WatchlistItem = { anime, status, userScore: 0, episodesWatched: 0, addedAt: new Date().toISOString() };
@@ -503,11 +476,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     }
 
-    // Log live activity if completed or milestone
-    if (isCompleted) {
+    // Log live activity if completed (yalnızca giriş yapmış kullanıcılar)
+    if (isCompleted && currentUser) {
       try {
         await addDoc(collection(db, 'recentActivities'), {
-          userId: currentUser?.uid || 'guest_' + Math.random().toString(36).substring(2, 8),
+          userId: currentUser.uid,
           userName: currentUser?.displayName || userProfile.name || userProfile.handle || 'Otaku',
           userAvatarSeed: userProfile.avatarSeed || 'Me',
           userAvatar: currentUser?.photoURL || null,
@@ -660,8 +633,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isLikedByMe = true;
     }
     
+    const { isLikedByMe: _localIsLiked, ...postData } = post;
     const updatedPost = {
-      ...post,
+      ...postData,
       likes: updatedLikedBy.length,
       likedBy: updatedLikedBy
     };
@@ -710,8 +684,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
     
+    const { isLikedByMe: _localIsLiked2, ...postData } = post;
     const updatedPost = {
-      ...post,
+      ...postData,
       replies: post.replies + 1,
       comments: [...(post.comments || []), newComment]
     };

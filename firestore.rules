@@ -11,19 +11,23 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    function isAdmin() {
-      return isBootstrapAdminEmail()
-        || (isSignedIn()
-            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-            && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'moderator'));
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
-    // Moderatör: sadece report içeriğini silme/banlama yetkisi; config/flag değiştirme sadece admin
+    function hasRole(role) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().data.role == role;
+    }
+    // Moderatör: içerik silme/banlama yetkisi; config/flag/announcement değiştirme sadece admin
+    function isAdmin() {
+      return isBootstrapAdminEmail() || hasRole('admin') || hasRole('moderator');
+    }
     function isAdminOnly() {
-      return isBootstrapAdminEmail()
-        || (isSignedIn()
-            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      return isBootstrapAdminEmail() || hasRole('admin');
+    }
+    function affectedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
     }
 
     // ─── Admin & sistem ─────────────────────────────────────
@@ -32,23 +36,32 @@ service cloud.firestore {
       allow write: if isAdminOnly();
     }
     match /adminActions/{doc} {
-      allow read: if isAdminOnly();
+      allow read: if isAdmin();
       allow write: if isAdminOnly();
     }
     match /reports/{doc} {
-      allow read: if isAdminOnly();
+      allow read: if isAdmin();
       allow create: if isSignedIn();
-      allow update, delete: if isAdminOnly();
+      allow update, delete: if isAdmin();
     }
 
-    // ─── Yer tutucu tanımlar (uygulama şeması) ─────────────────
+    // ─── Kullanıcı profili ────────────────────────────────────
+    // ÖNEMLİ: hiçbir kullanıcı kendi `role`/`banUntil`/`banReason` alanını yazamaz.
+    // Admin, ban (banUntil/banReason) alanlarını değiştirebilir; `role` sadece admin-only admin.
     match /users/{uid} {
       allow read: if true;
-      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      // Oluşturma: rol/ban alanları yok sayılır (yetki yükseltme koruması)
+      allow create: if isSignedIn() && request.auth.uid == uid
+        && !request.resource.data.keys().hasAny(['role', 'banUntil', 'banReason']);
+      // Sahip güncellemesi: rol/ban alanlarına dokunamaz
+      allow update: if isSignedIn() && request.auth.uid == uid
+        && !affectedKeys().hasAny(['role', 'banUntil', 'banReason']);
+      // Moderatör/admin: SADECE ban alanları değiştirebilir
+      allow update: if isAdmin()
+        && affectedKeys().hasOnly(['banUntil', 'banReason']);
+      // Admin: her şey (role dahil)
+      allow update: if isAdminOnly();
       allow delete: if isAdminOnly();
-      // `role` alanı yalnız admin tarafından değiştirilebilir
-      allow update: if isAdminOnly()
-        && request.resource.data.keys().hasOnly(['name', 'handle', 'photoURL', 'banUntil', 'banReason', 'role', 'namedLists', 'joinedAt']);
 
       match /watchlist/{mal_id} {
         allow read: if true;
@@ -63,20 +76,133 @@ service cloud.firestore {
       }
     }
 
-    // ─── Topluluk içeriği (herkes okur, giriş yapmış yazar, admin siler) ──────
-    match /polls/{id}          { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
-    match /suggestedPolls/{id} { allow read: if isAdminOnly(); allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
-    match /forumPosts/{id}     { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid || isAdminOnly(); }
-    match /recentActivities/{id} { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
-    match /animeComments/{id}  { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid || isAdminOnly(); }
-    match /animeReviews/{animeId}/userReviews/{uid} { allow read: if true; allow write: if isSignedIn() && request.auth.uid == uid; }
-    match /customLists/{id}    { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid || isAdminOnly(); }
-    match /socialFeed/{id}     { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid || isAdminOnly(); }
-    match /globalChat/{id}     { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
-    match /watchPartyRooms/{id} { allow read: if true; allow create, update: if isSignedIn(); allow delete: if isAdminOnly(); }
-    match /watchPartyRooms/{id}/messages/{mid} { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly() || (isSignedIn() && request.resource.data.userId == request.auth.uid); }
-    match /sharedLives/{id}    { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
-    match /animeNews/{id}      { allow read: if true; allow create, update, delete: if isAdminOnly(); }
+    // ─── Anketler: içerik admin tarafında yayınlanır; oy sayacı +1/oy yazımı imzalı herkese açık ───
+    match /polls/{id} {
+      allow read: if true;
+      allow create, delete: if isAdminOnly();
+      // Sadece `votes` haritasını değiştirebilir (oy sayacı sapması düşük riskli, admin sıfırlayabilir)
+      allow update: if isAdminOnly() || (isSignedIn() && affectedKeys().hasOnly(['votes']));
+
+      match /votes/{uid} {
+        allow read: if true;
+        allow write: if isSignedIn() && request.auth.uid == uid;
+      }
+    }
+    match /suggestedPolls/{id} { allow read: if isAdmin(); allow create: if isSignedIn(); allow update, delete: if isAdmin(); }
+
+    // ─── Forum: yazar veya moderatör/admin ─────────────────────
+    match /forumPosts/{id} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.author.uid == request.auth.uid;
+      // Yazar her şeyi; diğer imzalı kullanıcılar SADECE like/yorum alanlarını değiştirebilir
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.author.uid == request.auth.uid)
+        || (isSignedIn() && affectedKeys().hasOnly(['likedBy', 'likes', 'comments', 'replies']));
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.author.uid == request.auth.uid);
+    }
+
+    // ─── Topluluk aktiviteleri: sadece kendi adına yazma ───────
+    match /recentActivities/{id} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdminOnly();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // ─── Anime yorumları ───────────────────────────────────────
+    match /animeComments/{id} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 2000;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // ─── Anime incelemeleri: yazar tam yetki; herkes sadece like alanını değiştirebilir ───
+    match /animeReviews/{animeId}/userReviews/{uid} {
+      allow read: if true;
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow update: if isAdmin()
+        || (isSignedIn() && affectedKeys().hasOnly(['likes', 'likedBy']));
+    }
+
+    // ─── Özel listeler: `creatorId` alanı ──────────────────────
+    match /customLists/{id} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.creatorId == request.auth.uid);
+    }
+
+    // ─── Sosyal akış ───────────────────────────────────────────
+    match /socialFeed/{id} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Yazar her şeyi; diğer imzalı kullanıcılar SADECE like alanlarını değiştirebilir
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid)
+        || (isSignedIn() && affectedKeys().hasOnly(['likedBy', 'likes']));
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // ─── Genel sohbet: `uid` alanı ─────────────────────────────
+    match /globalChat/{id} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 500;
+      allow update: if isAdminOnly();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    // ─── İzleme partisi odaları ────────────────────────────────
+    match /watchPartyRooms/{id} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.hostId == request.auth.uid;
+      // İzleme senkronu herkese açık (oda içi), silme host/admin'e
+      allow update: if isSignedIn();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.hostId == request.auth.uid);
+
+      match /messages/{mid} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid
+          && request.resource.data.text.size() <= 500;
+        allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      }
+      match /reactions/{rid} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+        allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      }
+    }
+
+    // ─── Anma defteri (paylaşılan hayatlar) ─────────────────────
+    // Oluşturma: giriş zorunlu + userId uyumu + candles=0 + bilinen alanlar.
+    // Güncelleme: imzalı kullanıcılar SADECE mum sayısını +1 artırabilir; admin her şeyi yapar.
+    match /sharedLives/{id} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.candles == 0
+        && request.resource.data.keys().hasOnly([
+             'characterName', 'worldEmoji', 'worldNameTR', 'worldNameEN',
+             'regionNameTR', 'regionNameEN', 'deathAge', 'birthYear', 'deathCause',
+             'power', 'intelligence', 'luck', 'socialClass', 'health',
+             'eventsCount', 'candles', 'createdAt', 'userId'
+           ]);
+      allow update: if isAdminOnly()
+        || (isSignedIn()
+            && affectedKeys().hasOnly(['candles'])
+            && request.resource.data.candles is int
+            && request.resource.data.candles == resource.data.candles + 1);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // ─── Haberler: yalnız admin yayınlar ───────────────────────
+    match /animeNews/{id} {
+      allow read: if true;
+      allow write: if isAdminOnly();
+    }
 
     // Varsayılan: kapalı (geri kalan her şey reddedilir)
     match /{document=**} {

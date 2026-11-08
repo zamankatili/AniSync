@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Star, MessageSquare, ThumbsUp, Send, Sparkles, User, ShieldCheck, Clock, Award 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  collection, doc, onSnapshot, setDoc, query, orderBy, limit, updateDoc, increment 
+  collection, doc, onSnapshot, setDoc, query, orderBy, limit, updateDoc, increment, arrayUnion, arrayRemove
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAppStore } from '../context/AppStore';
@@ -30,49 +30,6 @@ interface AnimeCommunityReviewsProps {
   animeTitle?: string;
 }
 
-const INITIAL_SEED_REVIEWS: Record<number, CommunityReview[]> = {
-  52991: [
-    {
-      id: 'rev-frieren-1',
-      animeId: 52991,
-      userId: 'user-otaku-1',
-      userName: 'FrierenFanatic',
-      userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=frieren1',
-      rating: 5,
-      blurb: 'Son yıllarda izlediğim en derin atmosferik fantastik anime. Müzikler, sahneler ve zaman algısının işlenişi kusursuz!',
-      createdAt: '2 saat önce',
-      likes: 24,
-      likedBy: []
-    },
-    {
-      id: 'rev-frieren-2',
-      animeId: 52991,
-      userId: 'user-otaku-2',
-      userName: 'KagamineLevi',
-      userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=levi99',
-      rating: 5,
-      blurb: 'Savaş sahnelerindeki ses tasarımı ve Fern ile Stark arkadaşlığı muhteşem. Tam puanı hakediyor.',
-      createdAt: '5 saat önce',
-      likes: 18,
-      likedBy: []
-    }
-  ],
-  52299: [
-    {
-      id: 'rev-solo-1',
-      animeId: 52299,
-      userId: 'user-otaku-3',
-      userName: 'ShadowMonarch',
-      userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sungjinwoo',
-      rating: 5,
-      blurb: 'Sung Jinwoo dönüşümü ve Hiroyuki Sawano müzikleri efsanevi! Webtoon uyarlaması beklentileri aştı.',
-      createdAt: 'Bugün',
-      likes: 31,
-      likedBy: []
-    }
-  ]
-};
-
 export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({ 
   animeId, 
   animeTitle 
@@ -81,7 +38,7 @@ export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({
   const { addToast } = useToastStore();
   const { t } = useAppTranslation();
 
-  const [reviews, setReviews] = useState<CommunityReview[]>(() => INITIAL_SEED_REVIEWS[animeId] || []);
+  const [reviews, setReviews] = useState<CommunityReview[]>([]);
   const [userRating, setUserRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [blurbText, setBlurbText] = useState<string>('');
@@ -93,13 +50,11 @@ export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({
     const q = query(reviewsCol, orderBy('createdAt', 'desc'), limit(30));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const firestoreList: CommunityReview[] = [];
-        snapshot.forEach((d) => {
-          firestoreList.push({ id: d.id, ...d.data() } as CommunityReview);
-        });
-        setReviews(firestoreList);
-      }
+      const firestoreList: CommunityReview[] = [];
+      snapshot.forEach((d) => {
+        firestoreList.push({ id: d.id, ...d.data() } as CommunityReview);
+      });
+      setReviews(firestoreList);
     }, (err) => {
       console.warn('Firestore review listener error, using local state:', err);
     });
@@ -107,25 +62,29 @@ export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({
     return () => unsubscribe();
   }, [animeId]);
 
-  // Calculate Community Average Rating out of 5
+  // Community average (yoksa '—' göster — uydurma puan yok)
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
-    : '4.8';
+    : '—';
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      addToast(t('chat_login_required'), 'info');
+      return;
+    }
     if (!blurbText.trim()) {
       addToast(t('write_review_error'), 'error');
       return;
     }
 
     setIsSubmitting(true);
-    const userId = currentUser?.uid || 'guest-' + (userProfile?.name || 'otaku');
+    const userId = currentUser.uid;
     const userName = userProfile?.name || currentUser?.displayName || 'AnimeSever';
     const userAvatar = currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`;
 
     const newReview: CommunityReview = {
-      id: 'rev-' + Date.now(),
+      id: currentUser.uid,
       animeId,
       userId,
       userName,
@@ -142,25 +101,32 @@ export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({
     setBlurbText('');
 
     try {
-      const reviewDocRef = doc(db, 'animeReviews', animeId.toString(), 'userReviews', newReview.id);
+      // Kurallar gereği doküman ID'si kullanıcının uid'si olmalı (kullanıcı başına 1 inceleme)
+      const reviewDocRef = doc(db, 'animeReviews', animeId.toString(), 'userReviews', currentUser.uid);
       await setDoc(reviewDocRef, newReview);
       addToast(t('review_published'), 'success');
     } catch (err) {
-      console.warn('Firestore review write info:', err);
-      addToast(t('review_saved'), 'success');
+      console.warn('Firestore review write failed:', err);
+      addToast(t('write_review_error'), 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleLikeReview = async (reviewId: string) => {
-    const currentUid = currentUser?.uid || 'guest-user';
+    if (!currentUser) {
+      addToast(t('chat_login_required'), 'info');
+      return;
+    }
+    const currentUid = currentUser.uid;
+    const target = reviews.find((r) => r.id === reviewId);
+    const wasLiked = target?.likedBy?.includes(currentUid) ?? false;
 
     setReviews((prev) => prev.map((r) => {
       if (r.id === reviewId) {
         const liked = r.likedBy?.includes(currentUid);
         const newLikes = liked ? r.likes - 1 : r.likes + 1;
-        const newLikedBy = liked 
+        const newLikedBy = liked
           ? (r.likedBy || []).filter(id => id !== currentUid)
           : [...(r.likedBy || []), currentUid];
         return { ...r, likes: Math.max(0, newLikes), likedBy: newLikedBy };
@@ -170,7 +136,10 @@ export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({
 
     try {
       const docRef = doc(db, 'animeReviews', animeId.toString(), 'userReviews', reviewId);
-      await updateDoc(docRef, { likes: increment(1) });
+      await updateDoc(docRef, {
+        likes: increment(wasLiked ? -1 : 1),
+        likedBy: wasLiked ? arrayRemove(currentUid) : arrayUnion(currentUid)
+      });
     } catch (_err) {
       // Handled optimistically
     }

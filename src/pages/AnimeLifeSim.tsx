@@ -536,9 +536,14 @@ export const AnimeLifeSim: React.FC = () => {
 
   const handleAddToBoard = async () => {
     if (!life || !world || !region) return;
+    if (!auth.currentUser) {
+      addToast(t('als_board_failed'), 'info');
+      return;
+    }
     const finalStats = computeStatsAt(life, life.events.length - 1, choicesMade);
     try {
       await addDoc(collection(db, 'sharedLives'), {
+        userId: auth.currentUser.uid,
         characterName: displayName,
         worldEmoji: world.emoji,
         worldNameTR: world.nameTR,

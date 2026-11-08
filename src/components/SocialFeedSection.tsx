@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   addDoc, 
@@ -38,61 +38,13 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-const SEED_FEED_POSTS: SocialFeedPost[] = [
-  {
-    id: 'seed_post_1',
-    userId: 'user_eren',
-    userName: 'KiraYukimura',
-    userAvatarSeed: 'Kira',
-    animeId: 52991,
-    animeTitle: 'Sousou no Frieren',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1015/138006l.webp',
-    episodeNote: '28. Bölüm (Final) İzlendi',
-    rating: 10,
-    reviewText: 'Zamanın akışını ve dostlukların paha biçilemez değerini bu kadar naif anlatan başka bir seri izlemedim. Evan Call müzikleri ve final savaşı saf başyapıttı.',
-    likes: 42,
-    likedBy: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString()
-  },
-  {
-    id: 'seed_post_2',
-    userId: 'user_levi',
-    userName: 'ZoroLostAgain',
-    userAvatarSeed: 'Zoro',
-    animeId: 40748,
-    animeTitle: 'Jujutsu Kaisen',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1171/109222l.webp',
-    episodeNote: 'Shibuya Arc Tamamlandı',
-    rating: 9,
-    reviewText: 'MAPPA stüdyosu çıtayı arşa çıkardı. Sukuna vs Mahoraga sahnesinde nefesimi tuttum. Aksiyon temposu bir an bile düşmedi!',
-    likes: 29,
-    likedBy: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString()
-  },
-  {
-    id: 'seed_post_3',
-    userId: 'user_armin',
-    userName: 'GojoSaturo',
-    userAvatarSeed: 'Gojo',
-    animeId: 51179,
-    animeTitle: 'Dandadan',
-    animeImage: 'https://cdn.myanimelist.net/images/anime/1103/144183l.webp',
-    episodeNote: '4. Bölüm İzlendi',
-    rating: 9.5,
-    reviewText: 'Science SARU yönetmenliği tek kelimeyle görsel delilik. Hem komedisi hem uzaylı-hayalet dinamiği sezonun en özgün işi.',
-    likes: 18,
-    likedBy: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 240).toISOString()
-  }
-];
-
 export const SocialFeedSection: React.FC = () => {
   const { currentUser, userProfile, watchlist } = useAppStore();
   const { addToast } = useToastStore();
   const { t } = useAppTranslation();
   const navigate = useNavigate();
 
-  const [posts, setPosts] = useState<SocialFeedPost[]>(SEED_FEED_POSTS);
+  const [posts, setPosts] = useState<SocialFeedPost[]>([]);
   const [loading, setLoading] = useState(false);
 
   // New post form state
@@ -124,12 +76,11 @@ export const SocialFeedSection: React.FC = () => {
         });
         setPosts(loaded);
       } else {
-        setPosts(SEED_FEED_POSTS);
+        setPosts([]);
       }
     }, (err) => {
       console.warn('Social feed listener warning:', err);
-      // Fallback to seed posts on connection/permission pause
-      setPosts(SEED_FEED_POSTS);
+      setPosts([]);
     });
 
     return () => unsubscribe();
@@ -172,6 +123,10 @@ export const SocialFeedSection: React.FC = () => {
   // Submit new review post
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      addToast(t('chat_login_required'), 'info');
+      return;
+    }
     if (!selectedAnime) {
       addToast(t('social_feed_select_anime'), 'error');
       return;
@@ -183,7 +138,7 @@ export const SocialFeedSection: React.FC = () => {
 
     setIsPosting(true);
     const postPayload = {
-      userId: currentUser?.uid || 'guest_' + Math.random().toString(36).substring(2, 8),
+      userId: currentUser.uid,
       userName: userProfile.name || userProfile.handle || t('social_feed_default_user'),
       userAvatarSeed: userProfile.avatarSeed || 'Me',
       userAvatar: currentUser?.photoURL || null,
@@ -223,10 +178,11 @@ export const SocialFeedSection: React.FC = () => {
     }
   };
 
-  // Toggle Like on Feed Post
+  // Toggle Like on Feed Post (yalnızca giriş yapmış kullanıcılar Firestore'a yazar; misafirler yerel)
   const handleToggleLike = async (post: SocialFeedPost) => {
-    const uid = currentUser?.uid || 'guest_user';
-    const isLiked = post.likedBy?.includes(uid);
+    const uid = currentUser?.uid;
+    const localUid = uid ?? 'guest_user';
+    const isLiked = post.likedBy?.includes(localUid);
 
     // Optimistic UI update
     setPosts(prev => prev.map(p => {
@@ -234,12 +190,13 @@ export const SocialFeedSection: React.FC = () => {
         return {
           ...p,
           likes: isLiked ? Math.max(0, p.likes - 1) : p.likes + 1,
-          likedBy: isLiked ? p.likedBy?.filter(id => id !== uid) : [...(p.likedBy || []), uid]
+          likedBy: isLiked ? p.likedBy?.filter(id => id !== localUid) : [...(p.likedBy || []), localUid]
         };
       }
       return p;
     }));
 
+    if (!uid) return; // Misafir beğenisi yalnızca yerel
     try {
       const postRef = doc(db, 'socialFeed', post.id);
       if (isLiked) {
@@ -471,6 +428,18 @@ export const SocialFeedSection: React.FC = () => {
             {t('social_feed_stream_newest')}
           </span>
         </div>
+
+        {posts.length === 0 && (
+          <div className="border-4 border-white/20 bg-black p-12 text-center">
+            <Compass size={48} className="text-neutral-700 mx-auto mb-4" />
+            <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">
+              {t('social_feed_empty_title')}
+            </h3>
+            <p className="text-neutral-400 font-bold uppercase text-xs">
+              {t('social_feed_empty_desc')}
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map((post) => {

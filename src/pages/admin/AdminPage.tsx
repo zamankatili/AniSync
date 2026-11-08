@@ -4,8 +4,9 @@ import { useAppStore } from '../../context/AppStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useRemoteConfig } from '../../hooks/useRemoteConfig';
 import { DEFAULT_REMOTE_CONFIG, type RemoteConfig } from '../../lib/adminConfig';
-import { collection, doc, getDocs, orderBy, query, limit, updateDoc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDocs, orderBy, query, limit, updateDoc, deleteDoc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { SEED_POLLS, generateMorePolls } from '../../data/polls';
 import { cn } from '../../lib/utils';
 import { Shield, Users, Flag, Settings, RefreshCw, Check } from 'lucide-react';
 
@@ -39,6 +40,7 @@ export const AdminPage: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [users, setUsers] = useState<FirestoreUserDoc[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
+  const [seedingPolls, setSeedingPolls] = useState(false);
   const [loading, setLoading] = useState(false);
   const { addToast } = useToastStore();
   const { currentUser } = useAppStore();
@@ -73,6 +75,26 @@ export const AdminPage: React.FC = () => {
       addToast(t('admin_reports_load_failed', { defaultValue: 'Şikayetler yüklenemedi' }), 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const seedPolls = async () => {
+    setSeedingPolls(true);
+    try {
+      const allPolls = [...SEED_POLLS, ...generateMorePolls(35)]; // toplam 50 anket
+      const batch = writeBatch(db);
+      allPolls.forEach((pollItem, index) => {
+        const ref = doc(collection(db, 'polls'), `poll_${index}`);
+        // votes haritasına dokunma (var olan oylar korunsun); arayüz votes||'yı halleder
+        batch.set(ref, { ...pollItem, pollIndex: index, createdAt: new Date().toISOString() }, { merge: true });
+      });
+      await batch.commit();
+      addToast(t('admin_polls_seeded', '50 anket yüklendi ✓'), 'success');
+    } catch (e) {
+      console.error('Poll seed failed:', e);
+      addToast(t('admin_polls_seed_failed', 'Anketler yüklenemedi (admin yetkisi gerekebilir)'), 'error');
+    } finally {
+      setSeedingPolls(false);
     }
   };
 
@@ -212,6 +234,15 @@ export const AdminPage: React.FC = () => {
                 <button onClick={() => setDraft(d => ({ ...d, announcement: null }))} className="px-3 py-1 bg-rose-700 hover:bg-rose-600 text-white text-xs font-black uppercase border border-white/30 cursor-pointer">{t('admin_announcement_clear', 'Kaldır')}</button>
               )}
             </div>
+          </div>
+          <div className="border-2 border-white/20 p-4 flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-xs font-black uppercase text-white">{t('admin_polls_title', 'Günün Anketi')}</h3>
+              <p className="text-[10px] text-neutral-500">{t('admin_polls_hint', '50 anketlik havuzu bir kez yükler (idempotent)')}</p>
+            </div>
+            <button onClick={seedPolls} disabled={seedingPolls} className="px-4 py-2 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-black text-xs font-black uppercase tracking-wider border-2 border-black cursor-pointer">
+              {seedingPolls ? '...' : t('admin_polls_seed', 'Anketleri Seed\'le (50)')}
+            </button>
           </div>
           <div className="space-y-2">
             {flagKeys.map((key) => {
