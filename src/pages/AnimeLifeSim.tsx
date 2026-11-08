@@ -1,18 +1,28 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
 import { ANIME_REGIONS, getRegionsByWorld } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
-import { generateLife, LifeResult, generateShareText, LIFE_FOCUSES } from '../lib/eventEngine';
+import {
+  generateLife,
+  LifeResult,
+  generateShareText,
+  LIFE_FOCUSES,
+  computeStatsAt,
+  computeAssetsAt,
+  getEducationTier,
+  getFamilyStatus,
+} from '../lib/eventEngine';
 import { cn } from '../lib/utils';
+import { useToastStore } from '../store/useToastStore';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type Phase = 'select' | 'playing' | 'memorial';
 
 export const AnimeLifeSim: React.FC = () => {
-  const { t } = useAppTranslation();
+  const { t, currentLang } = useAppTranslation();
   const [selectedWorld, setSelectedWorld] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [lifeDuration, setLifeDuration] = useState<'30min' | '1h' | '1.5h'>('1h');
@@ -27,10 +37,32 @@ export const AnimeLifeSim: React.FC = () => {
   const [focus, setFocus] = useState<'study' | 'combat' | 'social' | 'exploration' | 'survival'>('study');
   const eduMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edu') === '1';
   const [parallelLives, setParallelLives] = useState<LifeResult[]>([]);
+  const [savedLifeIndex, setSavedLifeIndex] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const addToast = useToastStore((s) => s.addToast);
 
   const world = selectedWorld ? getWorldById(selectedWorld) : null;
   const regions = selectedWorld ? getRegionsByWorld(selectedWorld) : [];
   const region = selectedRegion ? regions.find(r => r.id === selectedRegion) : null;
+
+  const isTr = currentLang === 'tr';
+  const worldName = (w: { nameTR: string; nameEN: string }) => (isTr ? w.nameTR : w.nameEN);
+  const worldDesc = (w: { descriptionTR: string; descriptionEN: string }) => (isTr ? w.descriptionTR : w.descriptionEN);
+  const regionName = (r: { nameTR: string; nameEN: string }) => (isTr ? r.nameTR : r.nameEN);
+  const regionDesc = (r: { descriptionTR: string; descriptionEN: string }) => (isTr ? r.descriptionTR : r.descriptionEN);
+
+  const familyLabel = (status: LifeResult['familyStatus']) =>
+    status === 'poor' ? t('als_family_poor') : status === 'noble' ? t('als_family_noble') : t('als_family_middle');
+  const educationLabel = (tier: LifeResult['education']) =>
+    tier === 'none' ? t('als_education_none') :
+    tier === 'basic' ? t('als_education_basic') :
+    tier === 'high' ? t('als_education_high') : t('als_education_university');
+
+  const savedWorldData = savedLife ? getWorldById(savedLife.worldId) : null;
+  const savedAge = savedLife
+    ? (savedLifeIndex > 0 ? savedLife.events[Math.min(savedLifeIndex, savedLife.events.length - 1)]?.age ?? 0 : 0)
+    : 0;
 
   const handleStartLife = () => {
     if (!world || !region) return;
@@ -52,15 +84,6 @@ export const AnimeLifeSim: React.FC = () => {
   const handleChoice = (eventId: string, choiceId: string) => {
     setChoicesMade(prev => ({ ...prev, [eventId]: choiceId }));
     playSound(660, 150, 'square');
-    setTimeout(() => {
-      if (life && currentEventIndex < life.events.length - 1) {
-        setCurrentEventIndex(prev => prev + 1);
-        playSound(550, 100, 'triangle');
-      } else {
-        setPhase('memorial');
-        playSound(330, 500, 'sine');
-      }
-    }, Math.round(800 / speed));
   };
 
   const handleNextEvent = () => {
@@ -84,10 +107,18 @@ export const AnimeLifeSim: React.FC = () => {
   };
 
   const currentEvent = life?.events[currentEventIndex];
+  const currentStats = life ? computeStatsAt(life, currentEventIndex, choicesMade) : null;
+  const currentAssets = life && currentStats ? computeAssetsAt(life, currentStats) : life?.assets ?? 0;
+  const finalLifeStats = life ? computeStatsAt(life, life.events.length - 1, choicesMade) : null;
 
   const playSound = (freq: number, duration: number, type: OscillatorType = 'square') => {
+    if (muted) return;
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = audioCtxRef.current ?? new AudioCtx();
+      audioCtxRef.current = ctx;
+      if (ctx.state === 'suspended') ctx.resume();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = type;
@@ -97,7 +128,6 @@ export const AnimeLifeSim: React.FC = () => {
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + duration / 1000);
-      setTimeout(() => ctx.close(), duration + 100);
     } catch {
       // ignore
     }
@@ -110,6 +140,7 @@ export const AnimeLifeSim: React.FC = () => {
       if (raw) {
         const parsed = JSON.parse(raw) as LifeResult;
         setSavedLife(parsed);
+        setSavedLifeIndex(Number(localStorage.getItem('als_saved_index') || '0'));
       }
     } catch {
       // ignore
@@ -123,6 +154,9 @@ export const AnimeLifeSim: React.FC = () => {
         localStorage.setItem('als_saved_life', JSON.stringify(life));
         localStorage.setItem('als_saved_index', String(currentEventIndex));
         localStorage.setItem('als_saved_phase', phase);
+        localStorage.setItem('als_saved_choices', JSON.stringify(choicesMade));
+        localStorage.setItem('als_saved_parallels', JSON.stringify(parallelLives));
+        localStorage.setItem('als_saved_schema', '2');
         if (world) localStorage.setItem('als_saved_world', world.id);
         if (region) localStorage.setItem('als_saved_region', region.id);
         localStorage.setItem('als_saved_duration', lifeDuration);
@@ -134,11 +168,14 @@ export const AnimeLifeSim: React.FC = () => {
       try {
         localStorage.setItem('als_saved_life', JSON.stringify(life));
         localStorage.setItem('als_saved_phase', 'memorial');
+        localStorage.setItem('als_saved_choices', JSON.stringify(choicesMade));
+        localStorage.setItem('als_saved_parallels', JSON.stringify(parallelLives));
+        localStorage.setItem('als_saved_schema', '2');
       } catch {
         // ignore
       }
     }
-  }, [life, phase, currentEventIndex, world, region, lifeDuration]);
+  }, [life, phase, currentEventIndex, world, region, lifeDuration, choicesMade, parallelLives]);
 
   const handleResume = () => {
     try {
@@ -150,11 +187,22 @@ export const AnimeLifeSim: React.FC = () => {
       const savedWorld = localStorage.getItem('als_saved_world');
       const savedRegion = localStorage.getItem('als_saved_region');
       const savedDuration = localStorage.getItem('als_saved_duration') as '30min' | '1h' | '1.5h' | null;
+      let savedChoices: Record<string, string> = {};
+      let savedParallels: LifeResult[] = [];
+      try {
+        savedChoices = JSON.parse(localStorage.getItem('als_saved_choices') || '{}');
+        savedParallels = JSON.parse(localStorage.getItem('als_saved_parallels') || '[]');
+      } catch {
+        // eski kayıt: seçim/paralel verisi yok
+      }
       if (savedWorld) setSelectedWorld(savedWorld);
       if (savedRegion) setSelectedRegion(savedRegion);
       if (savedDuration) setLifeDuration(savedDuration);
       setLife(parsed);
       setCurrentEventIndex(idx);
+      setSavedLifeIndex(idx);
+      setChoicesMade(savedChoices || {});
+      setParallelLives(Array.isArray(savedParallels) ? savedParallels : []);
       setPhase(savedPhase);
       setSavedLife(parsed);
     } catch {
@@ -170,6 +218,9 @@ export const AnimeLifeSim: React.FC = () => {
       localStorage.removeItem('als_saved_world');
       localStorage.removeItem('als_saved_region');
       localStorage.removeItem('als_saved_duration');
+      localStorage.removeItem('als_saved_choices');
+      localStorage.removeItem('als_saved_parallels');
+      localStorage.removeItem('als_saved_schema');
     } catch {
       // ignore
     }
@@ -207,6 +258,17 @@ export const AnimeLifeSim: React.FC = () => {
     return map[label] || label;
   };
 
+  const statDeltaLabel = (key: string) => {
+    const map: Record<string, string> = {
+      power: t('als_stat_power'),
+      intelligence: t('als_stat_intelligence'),
+      luck: t('als_stat_luck'),
+      socialClass: t('als_stat_social'),
+      health: t('als_stat_health'),
+    };
+    return map[key] || key;
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
       <Helmet>
@@ -219,7 +281,11 @@ export const AnimeLifeSim: React.FC = () => {
           {savedLife && (
             <div className="bg-amber-400/20 border-2 border-amber-400 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-amber-300 text-xs font-bold">
-                {t('als_resume_available', { age: savedLife.deathAge, world: savedLife.worldId })}
+                {t('als_resume_available_v2', {
+                  name: savedLife.characterName,
+                  age: savedAge,
+                  world: savedWorldData ? worldName(savedWorldData) : savedLife.worldId,
+                })}
               </div>
               <div className="flex gap-2">
                 <button
@@ -274,10 +340,10 @@ export const AnimeLifeSim: React.FC = () => {
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-2xl">{w.emoji}</span>
-                    <span className="font-black text-sm uppercase tracking-tight">{w.nameTR}</span>
+                    <span className="font-black text-sm uppercase tracking-tight">{worldName(w)}</span>
                   </div>
                   <p className="text-[11px] text-neutral-400 font-medium leading-snug line-clamp-2">
-                    {w.descriptionTR}
+                    {worldDesc(w)}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-[10px] font-mono font-bold">
                     <span className={cn(
@@ -305,19 +371,19 @@ export const AnimeLifeSim: React.FC = () => {
             return (
               <div className="bg-neutral-900 border-2 border-white/30 p-5 space-y-3">
                 <h3 className="text-sm font-black text-white uppercase tracking-wider">
-                  {world.emoji} {world.nameTR} — Lore
+                  {world.emoji} {worldName(world)} — {t('als_lore_suffix')}
                 </h3>
                 <p className="text-[11px] text-neutral-300 font-medium leading-snug">
                   {lore.summary}
                 </p>
                 <div className="text-[10px] text-neutral-400 font-mono">
-                  <span className="font-black text-neutral-300">Güç Sistemi:</span> {lore.powerSystem.name}
+                  <span className="font-black text-neutral-300">{t('als_lore_power_system')}:</span> {lore.powerSystem.name}
                 </div>
                 <div className="text-[10px] text-neutral-400 font-mono">
-                  <span className="font-black text-neutral-300">Temalar:</span> {lore.themes.join(', ')}
+                  <span className="font-black text-neutral-300">{t('als_lore_themes')}:</span> {lore.themes.join(', ')}
                 </div>
                 <div className="text-[10px] text-neutral-400 font-mono">
-                  <span className="font-black text-neutral-300">Kaynak Seriler:</span> {lore.sourceSeries.join(', ')}
+                  <span className="font-black text-neutral-300">{t('als_lore_source_series')}:</span> {lore.sourceSeries.join(', ')}
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {lore.factions.slice(0, 6).map((f, i) => (
@@ -355,11 +421,14 @@ export const AnimeLifeSim: React.FC = () => {
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xl">{r.emoji}</span>
-                      <span className="font-black text-xs uppercase tracking-tight">{r.nameTR}</span>
+                      <span className="font-black text-xs uppercase tracking-tight">{regionName(r)}</span>
                     </div>
                     <p className="text-[10px] text-neutral-400 font-medium leading-snug line-clamp-2">
-                      {r.descriptionTR}
+                      {regionDesc(r)}
                     </p>
+                    <div className="mt-1 text-[9px] font-mono text-neutral-500">
+                      {t('als_life_expectancy', { min: r.lifeExpectancy[0], max: r.lifeExpectancy[1] })}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -392,7 +461,7 @@ export const AnimeLifeSim: React.FC = () => {
           {/* Period Selection */}
           <div className="bg-neutral-900 border-2 border-white p-5">
             <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-4">
-              Doğacağın Dönem
+              {t('als_period_title')}
             </h2>
             <div className="flex flex-wrap gap-3">
               {(['today', 'past', 'future'] as const).map((p) => (
@@ -406,7 +475,7 @@ export const AnimeLifeSim: React.FC = () => {
                       : "bg-black text-neutral-300 border-white/20 hover:border-white"
                   )}
                 >
-                  {p === 'today' ? 'Bugün' : p === 'past' ? 'Geçmiş (1950-2025)' : 'Gelecek (2027-2050)'}
+                  {p === 'today' ? t('als_period_today') : p === 'past' ? t('als_period_past') : t('als_period_future')}
                 </button>
               ))}
             </div>
@@ -415,7 +484,7 @@ export const AnimeLifeSim: React.FC = () => {
           {/* Focus Selection */}
           <div className="bg-neutral-900 border-2 border-white p-5">
             <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-4">
-              Hayat Odakın
+              {t('als_focus_title')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {LIFE_FOCUSES.map((f) => (
@@ -429,8 +498,8 @@ export const AnimeLifeSim: React.FC = () => {
                       : "bg-black text-white border-white/20 hover:border-white"
                   )}
                 >
-                  <span className="font-black text-xs uppercase tracking-tight block">{f.label}</span>
-                  <span className="text-[10px] text-neutral-400 font-medium leading-snug">{f.description}</span>
+                  <span className="font-black text-xs uppercase tracking-tight block">{t(`als_focus_${f.id}`)}</span>
+                  <span className="text-[10px] text-neutral-400 font-medium leading-snug">{t(`als_focus_${f.id}_desc`)}</span>
                 </button>
               ))}
             </div>
@@ -439,9 +508,9 @@ export const AnimeLifeSim: React.FC = () => {
           {/* Ethical Mode Toggle */}
           <div className="bg-neutral-900 border-2 border-white/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-white uppercase tracking-wider">15+ / Etik Mod</span>
+              <span className="text-xs font-black text-white uppercase tracking-wider">{t('als_ethical_title')}</span>
               <span className="text-[10px] text-neutral-400 font-medium">
-                {eduMode ? 'Eğitim modu aktif: ağır temalar kapalı.' : 'Ağır konular (savaş/şiddet) filtrelenir.'}
+                {eduMode ? t('als_ethical_edu_active') : t('als_ethical_desc')}
               </span>
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -452,7 +521,7 @@ export const AnimeLifeSim: React.FC = () => {
                 disabled={eduMode}
                 className="w-4 h-4 cursor-pointer"
               />
-              <span className="text-xs font-bold text-neutral-300">Ağır konuları göster</span>
+              <span className="text-xs font-bold text-neutral-300">{t('als_show_heavy')}</span>
             </label>
           </div>
 
@@ -474,7 +543,7 @@ export const AnimeLifeSim: React.FC = () => {
           <div className="bg-black border-4 border-white neo-shadow-white p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-black text-white uppercase tracking-wider">
-                {t('als_progress_world_region', { world: world?.nameTR, region: region?.nameTR })} · {life?.gender === 'female' ? '♀' : '♂'} · {life?.period === 'past' ? 'Geçmiş' : life?.period === 'future' ? 'Gelecek' : 'Bugün'}
+                {t('als_progress_world_region', { world: world ? worldName(world) : '', region: region ? regionName(region) : '' })} · {life?.gender === 'female' ? '♀' : '♂'} · {life?.period === 'past' ? t('als_period_past') : life?.period === 'future' ? t('als_period_future') : t('als_period_today')}
               </span>
               <span className="text-xs font-mono font-bold text-neutral-400">
                 {t('als_progress_age', { age: currentEvent.age, deathAge: life.deathAge, unit: t('als_years_unit') })}
@@ -505,21 +574,28 @@ export const AnimeLifeSim: React.FC = () => {
                   {s}x
                 </button>
               ))}
+              <button
+                onClick={() => setMuted(m => !m)}
+                className="ml-auto px-2 py-1 text-[10px] font-black border cursor-pointer bg-black text-neutral-300 border-white/20 hover:border-white"
+                aria-label={muted ? t('als_unmute') : t('als_mute')}
+              >
+                {muted ? `🔇 ${t('als_unmute')}` : `🔊 ${t('als_mute')}`}
+              </button>
             </div>
           </div>
 
           {/* Character Profile */}
-          {life && (
+          {life && currentStats && (
             <div className="bg-neutral-900 border-2 border-white/30 p-4 flex flex-wrap items-center gap-3 text-[10px] font-mono">
               <span className="text-white font-black text-sm">{life.characterName}</span>
               <span className="text-neutral-400">|</span>
               <span className="text-neutral-300">{life.gender === 'female' ? '♀' : '♂'}</span>
               <span className="text-neutral-400">|</span>
-              <span className="text-neutral-300">{life.familyStatus === 'poor' ? 'Yoksul' : life.familyStatus === 'noble' ? 'Soylu' : 'Orta halli'} aile</span>
+              <span className="text-neutral-300">{familyLabel(getFamilyStatus(currentStats.socialClass))}</span>
               <span className="text-neutral-400">|</span>
-              <span className="text-neutral-300">Eğitim: {life.education === 'none' ? 'Yok' : life.education === 'basic' ? 'Temel' : life.education === 'high' ? 'Lise' : 'Üniversite'}</span>
+              <span className="text-neutral-300">{t('als_profile_education')}: {educationLabel(getEducationTier(currentStats.intelligence))}</span>
               <span className="text-neutral-400">|</span>
-              <span className="text-amber-400 font-bold">💰 {life.assets}</span>
+              <span className="text-amber-400 font-bold">💰 {currentAssets}</span>
             </div>
           )}
 
@@ -590,13 +666,45 @@ export const AnimeLifeSim: React.FC = () => {
               </div>
             )}
 
-            {choicesMade[currentEvent.id] && (
-              <div className="bg-emerald-950/40 border-2 border-emerald-500/50 p-3 text-emerald-300 text-xs font-bold">
-                {t('als_choice_made')}
-              </div>
-            )}
+            {choicesMade[currentEvent.id] && (() => {
+              const chosen = currentEvent.choices?.find(c => c.id === choicesMade[currentEvent.id]);
+              if (!chosen) return null;
+              const deltas = Object.entries(chosen.statChanges || {});
+              return (
+                <div className="bg-emerald-950/40 border-2 border-emerald-500/50 p-4 space-y-2">
+                  <div className="text-emerald-300 text-xs font-black uppercase tracking-wider">
+                    {t('als_choice_result')}: {chosen.label}
+                  </div>
+                  {chosen.consequences && chosen.consequences.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {chosen.consequences.map((c, i) => (
+                        <span key={i} className="text-[10px] font-bold px-2 py-0.5 border border-emerald-500/40 text-emerald-200">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {deltas.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {deltas.map(([key, val]) => {
+                        const num = Number(val) || 0;
+                        if (num === 0) return null;
+                        return (
+                          <span key={key} className={cn(
+                            "text-[10px] font-mono font-black px-2 py-0.5 border",
+                            num > 0 ? "border-emerald-500 text-emerald-300" : "border-rose-500 text-rose-300"
+                          )}>
+                            {statDeltaLabel(key)} {num > 0 ? '+' : ''}{num}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
-            {!currentEvent.choices && (
+            {(!currentEvent.choices || choicesMade[currentEvent.id]) && (
               <button
                 onClick={handleNextEvent}
                 className="w-full py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
@@ -609,11 +717,11 @@ export const AnimeLifeSim: React.FC = () => {
           {/* Stats Panel */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {[
-              { label: 'Guc', value: life.finalStats.power, color: 'text-rose-400' },
-              { label: 'Zeka', value: life.finalStats.intelligence, color: 'text-cyan-400' },
-              { label: 'Sans', value: life.finalStats.luck, color: 'text-amber-400' },
-              { label: 'Sosyal', value: life.finalStats.socialClass, color: 'text-emerald-400' },
-              { label: 'Saglik', value: life.finalStats.health, color: 'text-purple-400' }
+              { label: 'Guc', value: currentStats?.power ?? 0, color: 'text-rose-400' },
+              { label: 'Zeka', value: currentStats?.intelligence ?? 0, color: 'text-cyan-400' },
+              { label: 'Sans', value: currentStats?.luck ?? 0, color: 'text-amber-400' },
+              { label: 'Sosyal', value: currentStats?.socialClass ?? 0, color: 'text-emerald-400' },
+              { label: 'Saglik', value: currentStats?.health ?? 0, color: 'text-purple-400' }
             ].map((stat) => (
               <div key={stat.label} className="bg-neutral-900 border border-white/20 p-2 text-center">
                 <span className="text-[9px] font-black text-neutral-500 uppercase block">{statLabel(stat.label)}</span>
@@ -698,98 +806,125 @@ export const AnimeLifeSim: React.FC = () => {
 
             {/* Share */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={async () => {
-                  const text = generateShareText(life, world!, region!);
-                  if (navigator.share) {
-                    try {
-                      await navigator.share({ title: t('als_page_title'), text });
-                      return;
-                    } catch {
-                      // fall through
-                    }
-                  }
-                  navigator.clipboard.writeText(text);
-                }}
-                className="flex-1 py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
-              >
-                {t('als_copy_result')}
-              </button>
-              <button
-                onClick={() => {
-                  if (!life || !world || !region) return;
-                  const canvas = document.createElement('canvas');
-                  canvas.width = 600;
-                  canvas.height = 400;
-                  const ctx = canvas.getContext('2d');
-                  if (!ctx) return;
-                  ctx.fillStyle = '#000';
-                  ctx.fillRect(0, 0, 600, 400);
-                  ctx.strokeStyle = '#fff';
-                  ctx.lineWidth = 4;
-                  ctx.strokeRect(8, 8, 584, 384);
-                  ctx.fillStyle = '#e11d48';
-                  ctx.fillRect(8, 8, 584, 40);
-                  ctx.fillStyle = '#fff';
-                  ctx.font = 'bold 20px monospace';
-                  ctx.fillText('ANIME LIFE SIMULATION', 20, 34);
-                  ctx.fillStyle = '#fff';
-                  ctx.font = 'bold 14px monospace';
-                  ctx.fillText(`${world.emoji} ${world.nameTR} - ${region.nameTR}`, 20, 70);
-                  ctx.fillText(`Yas: ${life.deathAge} | Neden: ${life.deathCause}`, 20, 95);
-                  ctx.fillText(`Guc: ${life.finalStats.power}  Zeka: ${life.finalStats.intelligence}  Sans: ${life.finalStats.luck}`, 20, 120);
-                  ctx.fillText(`Sosyal: ${life.finalStats.socialClass}  Saglik: ${life.finalStats.health}`, 20, 145);
-                  if (life.achievements.length > 0) {
-                    ctx.fillText(`Basarilar: ${life.achievements.slice(0, 3).join(', ')}`, 20, 175);
-                  }
-                  if (life.isCanonEncountered) {
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.fillText(`Kanon: ${life.canonEncounters.join(', ')}`, 20, 200);
-                  }
-                  ctx.fillStyle = '#666';
-                  ctx.font = '10px monospace';
-                  ctx.fillText('AniSync 8 Milyar Evrende 1', 20, 380);
-                  canvas.toBlob((blob) => {
-                    if (!blob) return;
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'anime-life-sim.png';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  });
-                }}
-                className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
-              >
-                {t('als_download_card')}
-              </button>
-              <button
-                onClick={async () => {
-                  const user = auth.currentUser;
-                  if (!user || !life || !world || !region) return;
-                  try {
-                    await addDoc(collection(db, 'recentActivities'), {
-                      userId: user.uid,
-                      userName: user.displayName || 'AniSync User',
-                      userAvatar: user.photoURL || null,
-                      animeId: 'anime-life-sim',
-                      animeTitle: `Anime Life Sim: ${world.nameTR} - ${region.nameTR}`,
-                      animeImage: null,
-                      actionType: 'life_sim_completed',
-                      deathAge: life.deathAge,
-                      deathCause: life.deathCause,
-                      world: world.id,
-                      region: region.id,
-                      createdAt: serverTimestamp()
-                    });
-                  } catch (e) {
-                    console.warn('Could not share life sim result:', e);
-                  }
-                }}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
-              >
-                TOPLULUKTA PAYLAŞ
-              </button>
+              {eduMode && (
+                <div className="flex-1 py-3 px-4 bg-neutral-900 border-2 border-white/30 text-neutral-400 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center text-center">
+                  {t('als_edu_share_disabled')}
+                </div>
+              )}
+              {!eduMode && (
+                <>
+                  <button
+                    onClick={async () => {
+                      const shareLife = { ...life, finalStats: finalLifeStats ?? life.finalStats };
+                      const text = generateShareText(shareLife, world!, region!);
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({ title: t('als_page_title'), text });
+                          addToast(t('als_share_success'), 'success');
+                          return;
+                        } catch {
+                          // paylaşım iptal edildi → panoya kopyalamayı dene
+                        }
+                      }
+                      try {
+                        await navigator.clipboard.writeText(text);
+                        addToast(t('als_copied'), 'success');
+                      } catch {
+                        addToast(t('als_copy_failed'), 'error');
+                      }
+                    }}
+                    className="flex-1 py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
+                  >
+                    {t('als_copy_result')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!life || !world || !region) return;
+                      const stats = finalLifeStats ?? life.finalStats;
+                      const family = getFamilyStatus(stats.socialClass);
+                      const edu = getEducationTier(stats.intelligence);
+                      const canvas = document.createElement('canvas');
+                      canvas.width = 600;
+                      canvas.height = 400;
+                      const ctx = canvas.getContext('2d');
+                      if (!ctx) return;
+                      ctx.fillStyle = '#000';
+                      ctx.fillRect(0, 0, 600, 400);
+                      ctx.strokeStyle = '#fff';
+                      ctx.lineWidth = 4;
+                      ctx.strokeRect(8, 8, 584, 384);
+                      ctx.fillStyle = '#e11d48';
+                      ctx.fillRect(8, 8, 584, 40);
+                      ctx.fillStyle = '#fff';
+                      ctx.font = 'bold 20px monospace';
+                      ctx.fillText(t('als_hero_title'), 20, 34);
+                      ctx.fillStyle = '#fff';
+                      ctx.font = 'bold 14px monospace';
+                      ctx.fillText(`${life.characterName} · ${world.emoji} ${worldName(world)} - ${regionName(region)}`, 20, 70);
+                      ctx.fillText(`${t('als_event_age', { age: life.deathAge, year: life.deathYear })} | ${life.deathCause}`, 20, 95);
+                      ctx.fillText(`${t('als_family')}: ${familyLabel(family)}  ${t('als_profile_education')}: ${educationLabel(edu)}`, 20, 120);
+                      ctx.fillText(`${t('als_stat_power')}: ${stats.power}  ${t('als_stat_intelligence')}: ${stats.intelligence}  ${t('als_stat_luck')}: ${stats.luck}`, 20, 145);
+                      ctx.fillText(`${t('als_stat_social')}: ${stats.socialClass}  ${t('als_stat_health')}: ${stats.health}  ${t('als_assets')}: ${currentAssets}`, 20, 170);
+                      if (life.achievements.length > 0) {
+                        ctx.fillText(`${t('als_achievements_title')}: ${life.achievements.slice(0, 3).join(', ')}`, 20, 200);
+                      }
+                      if (life.isCanonEncountered) {
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.fillText(`${t('als_canon_encounters_title')}: ${life.canonEncounters.join(', ')}`, 20, 225);
+                      }
+                      ctx.fillStyle = '#666';
+                      ctx.font = '10px monospace';
+                      ctx.fillText('AniSync · 1 in 8 Billion Universes', 20, 380);
+                      canvas.toBlob((blob) => {
+                        if (!blob) return;
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'anime-life-sim.png';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        addToast(t('als_card_downloaded'), 'success');
+                      });
+                    }}
+                    className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
+                  >
+                    {t('als_download_card')}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const user = auth.currentUser;
+                      if (!user) {
+                        addToast(t('als_login_required'), 'info');
+                        return;
+                      }
+                      if (!life || !world || !region) return;
+                      try {
+                        await addDoc(collection(db, 'recentActivities'), {
+                          userId: user.uid,
+                          userName: user.displayName || 'AniSync User',
+                          userAvatar: user.photoURL || null,
+                          animeId: 'anime-life-sim',
+                          animeTitle: `Anime Life Sim: ${worldName(world)} - ${regionName(region)}`,
+                          animeImage: null,
+                          actionType: 'life_sim_completed',
+                          deathAge: life.deathAge,
+                          deathCause: life.deathCause,
+                          world: world.id,
+                          region: region.id,
+                          createdAt: serverTimestamp()
+                        });
+                        addToast(t('als_share_success'), 'success');
+                      } catch (e) {
+                        console.warn('Could not share life sim result:', e);
+                        addToast(t('als_share_failed'), 'error');
+                      }
+                    }}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
+                  >
+                    {t('als_share_community')}
+                  </button>
+                </>
+              )}
               <button
                 onClick={handleRestart}
                 className="flex-1 py-3 bg-black hover:bg-neutral-800 text-white font-black uppercase text-sm border-4 border-white/30 flex items-center justify-center gap-2 transition-all cursor-pointer"

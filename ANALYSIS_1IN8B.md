@@ -1,5 +1,7 @@
 # 8 Milyarda 1 (1in8b.life) — Analiz ve AniSync Karşılaştırması
 
+> ⚠️ **Güncel değil.** Bu doküman ilk analizdir. Güncel denetim, hata listesi ve yol haritası için `AUDIT_2026-11.md` dosyasına bakın. Buradaki bazı bulgular (stat motoru, ölüm sırası, bölge yaşam beklentisi, veri ID'leri) Kasım 2026 itibarıyla düzeltilmiştir.
+
 Kaynak: https://1in8b.life/tr/ (v0.9.59 beta), about sayfası, country sayfaları (TR, JPN), 172 ülke tablosu.
 
 ## 1. Oyunun Çekirdek Mekaniği

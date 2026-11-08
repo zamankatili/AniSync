@@ -64,12 +64,62 @@ export interface LifeResult {
   deathYear: number;
   deathAge: number;
   deathCause: string;
+  /** Doğumdaki statlar. Oyuncu seçimleri buna eklenerek güncel statlar hesaplanır. */
+  initialStats: LifeStats;
+  /** Seçimler hariç, olayların deterministik etkisiyle oluşan statlar. */
   finalStats: LifeStats;
   events: LifeEvent[];
   memorialText: string;
   achievements: string[];
   isCanonEncountered: boolean;
   canonEncounters: string[];
+}
+
+export function applyStatChanges(stats: LifeStats, changes?: Partial<LifeStats>): LifeStats {
+  if (!changes) return stats;
+  const result = { ...stats };
+  for (const [key, val] of Object.entries(changes)) {
+    const k = key as keyof LifeStats;
+    result[k] = clamp(result[k] + (val || 0), 0, 100);
+  }
+  return result;
+}
+
+export function getFamilyStatus(socialClass: number): LifeResult['familyStatus'] {
+  return socialClass < 30 ? 'poor' : socialClass > 70 ? 'noble' : 'middle';
+}
+
+export function getEducationTier(intelligence: number): LifeResult['education'] {
+  return intelligence < 25 ? 'none' : intelligence < 50 ? 'basic' : intelligence < 75 ? 'high' : 'university';
+}
+
+/**
+ * Oynanış sırasında gösterilecek güncel statları hesaplar.
+ * Doğum statları + o ana kadar yaşanan olaylar + yapılan seçimler.
+ */
+export function computeStatsAt(
+  life: LifeResult,
+  eventIndex: number,
+  choices: Record<string, string> = {}
+): LifeStats {
+  let stats: LifeStats = { ...(life.initialStats ?? life.finalStats) };
+  const last = Math.min(eventIndex, life.events.length - 1);
+  for (let i = 0; i <= last; i++) {
+    const event = life.events[i];
+    stats = applyStatChanges(stats, event.statChanges);
+    const choiceId = choices[event.id];
+    if (choiceId && event.choices) {
+      const choice = event.choices.find(c => c.id === choiceId);
+      if (choice) stats = applyStatChanges(stats, choice.statChanges);
+    }
+  }
+  return stats;
+}
+
+/** Sosyal sınıf değişimine göre güncel varlıkları hesaplar. */
+export function computeAssetsAt(life: LifeResult, stats: LifeStats): number {
+  const base = life.initialStats ?? life.finalStats;
+  return Math.max(0, Math.round(life.assets + (stats.socialClass - base.socialClass) * 100));
 }
 
 // ─── İstatistik Hesaplama ────────────────────────────────
@@ -261,7 +311,7 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
   const available = includeHeavy ? crisisTypes : crisisTypes.filter(c => !c.heavy);
   if (available.length === 0) return null;
   const crisis = available[Math.floor(Math.random() * available.length)];
-  const helpNote = '\\n\\n💡 Yardım: Bu tür krizlerde topluluk desteği, profesyonel yardım ve aile bağları hayatta kalma şansını artırır. AniSync topluluğunda benzer deneyimler paylaşılabilir.';
+  const helpNote = '\n\n💡 Yardım: Bu tür krizlerde topluluk desteği, profesyonel yardım ve aile bağları hayatta kalma şansını artırır. AniSync topluluğunda benzer deneyimler paylaşılabilir.';
   return {
     id: `crisis_${age}`,
     age,
@@ -301,7 +351,7 @@ function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: numbe
     jujutsu_high: [
       { minAge: 15, maxAge: 25, character: 'Gojo', description: 'Beyaz saçlı, körbandı takan bir adam seni geçip gidiyor. Çevresinde hava farklı hissediliyor.', probability: 0.10 },
       { minAge: 14, maxAge: 22, character: 'Yuji', description: 'Pembe saçlı bir genç, yumruk sallayarak antrenman yapıyor.', probability: 0.08 },
-      { minAge: 10, maxAge: 20, character: 'Tanjiro', description: 'Kırmızı gözlü bir genç, kılıç çantasıyla yolculuk ediyor. Yanında bir kutu taşıyor.', probability: 0.10 }
+      { minAge: 15, maxAge: 25, character: 'Nobara', description: 'Turuncu saçlı bir büyücü, çekiciyle lanetli ruhlara meydan okuyor.', probability: 0.07 }
     ],
     // Diğer dünyalar (tek havuz)
     dark_fantasy: [
@@ -532,9 +582,11 @@ export function generateLife(
   // Yaşam beklentisi ve çocuk ölümü döneme göre ayarlanır
   const periodMultiplier = period === 'past' ? 0.85 : period === 'future' ? 1.1 : 1.0;
   const genderMultiplier = gender === 'female' ? 1.04 : 0.97;
+  // Bölgenin kendi yaşam beklentisi varsa onu kullan (örn. Marley ≠ Konoha).
+  const sourceLE = region.lifeExpectancy ?? world.lifeExpectancy;
   const adjustedLE: [number, number] = [
-    Math.round(world.lifeExpectancy[0] * periodMultiplier * genderMultiplier),
-    Math.round(world.lifeExpectancy[1] * periodMultiplier * genderMultiplier)
+    Math.round(sourceLE[0] * periodMultiplier * genderMultiplier),
+    Math.round(sourceLE[1] * periodMultiplier * genderMultiplier)
   ];
   const baseStats = generateInitialStats(world, region);
   const stats = applyFocusBias(baseStats, focus);
@@ -564,10 +616,10 @@ export function generateLife(
   const characterName = pool[Math.floor(Math.random() * pool.length)];
 
   // Aile durumu (socialClass bazlı)
-  const familyStatus: 'poor' | 'middle' | 'noble' = stats.socialClass < 30 ? 'poor' : stats.socialClass > 70 ? 'noble' : 'middle';
+  const familyStatus = getFamilyStatus(stats.socialClass);
 
   // Eğitim (intelligence bazlı)
-  const education: 'none' | 'basic' | 'high' | 'university' = stats.intelligence < 25 ? 'none' : stats.intelligence < 50 ? 'basic' : stats.intelligence < 75 ? 'high' : 'university';
+  const education = getEducationTier(stats.intelligence);
 
   // Varlıklar (sembolik para)
   const assets = Math.round(stats.socialClass * 100 + Math.random() * 500);
@@ -581,27 +633,44 @@ export function generateLife(
   }
   const events: LifeEvent[] = [];
 
-  // Life duration mapping
-  const lifeYears = duration === '30min' ? rollDice(15, 35) :
-                    duration === '1h' ? rollDice(35, 65) :
-                    rollDice(65, 90);
-
-  // Clamp by world life expectancy
-  const clampedLife = clamp(lifeYears, adjustedLE[0], adjustedLE[1]);
+  // ── Ölüm yaşı: bölge yaşam tablosu + dönem/cinsiyet + çocuk ölümü ──
+  // Referanstaki gibi ortalama değil, olasılık dağılımından çekilir.
+  const childMortality = clamp(region.stats.diseaseRate * 0.35 + region.stats.povertyRate * 0.15, 0, 0.3);
+  let deathAge: number;
+  if (rollChance(childMortality)) {
+    deathAge = rollDice(0, 4);
+  } else {
+    const mean = (adjustedLE[0] + adjustedLE[1]) / 2;
+    const sd = Math.max(4, (adjustedLE[1] - adjustedLE[0]) / 2);
+    // Box-Muller normal approximation
+    const u1 = Math.max(0.0001, Math.random());
+    const u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    deathAge = Math.round(mean + z * sd);
+    deathAge = clamp(deathAge, 5, adjustedLE[1] + 8);
+  }
+  deathAge = clamp(deathAge, 0, 120);
 
   // Birth event
   events.push(createBirthEvent(world, region, birthYear));
 
-  // Childhood events (ages 5-12)
-  for (let age = 5; age <= 12; age += 3) {
-    events.push(createChildhoodEvent(world, region, age, birthYear + age, stats));
+  // Childhood events (ages 5-12) — sadece ölüm yaşından önce
+  if (deathAge > 5) {
+    for (let age = 5; age <= 12; age += 3) {
+      if (age < deathAge) {
+        events.push(createChildhoodEvent(world, region, age, birthYear + age, stats));
+      }
+    }
   }
 
-  // Faction choice (age 15)
-  events.push(createFactionEvent(world, region, 15, birthYear + 15, stats));
+  // Milestone at 5 (çocukluğun ilk dönüm noktası)
+  if (deathAge > 5) {
+    const m5 = createMilestoneEvent(world, region, 5, birthYear + 5, stats);
+    if (m5) events.push(m5);
+  }
 
   // Yearly focus events (her 5 yılda bir odak bazlı gelişim)
-  for (let age = 10; age <= Math.min(60, clampedLife - 3); age += 5) {
+  for (let age = 10; age <= Math.min(60, deathAge - 1); age += 5) {
     const focusOpt = LIFE_FOCUSES.find(f => f.id === focus);
     if (focusOpt) {
       events.push({
@@ -617,99 +686,88 @@ export function generateLife(
     }
   }
 
-  // Milestone events at key ages
-  const milestoneAges = [5, 15, 30, 50, 70];
-  for (const mAge of milestoneAges) {
-    if (mAge === 5 || mAge === 15) continue; // already covered by childhood/faction
-    if (mAge <= clampedLife - 2) {
+  // Faction choice (age 15)
+  if (deathAge > 15) {
+    events.push(createFactionEvent(world, region, 15, birthYear + 15, stats));
+  }
+
+  // Milestone events at key ages (15 fraksiyonla, 5 yukarıda kapsandı)
+  for (const mAge of [30, 50, 70]) {
+    if (mAge < deathAge) {
       const me = createMilestoneEvent(world, region, mAge, birthYear + mAge, stats);
       if (me) events.push(me);
     }
   }
-  // Milestone at 5 (extra, before childhood ends) and 15 already has faction; add 5
-  if (clampedLife >= 7) {
-    const m5 = createMilestoneEvent(world, region, 5, birthYear + 5, stats);
-    if (m5) events.push(m5);
-  }
 
   // Tournament event (age 18, chance)
-  if (rollChance(0.6)) {
+  if (deathAge > 18 && rollChance(0.6)) {
     events.push(createTournamentEvent(world, region, 18, birthYear + 18, stats));
   }
 
   // Clan event (age 20)
-  if (clampedLife >= 22) {
+  if (deathAge > 20) {
     events.push(createClanEvent(world, region, 20, birthYear + 20, stats));
   }
 
   // Evolution event (age 22, if stats qualify)
-  if (clampedLife >= 25) {
+  if (deathAge > 22) {
     const evo = createEvolutionEvent(world, region, 22, birthYear + 22, stats);
     if (evo) events.push(evo);
   }
 
   // Time loop events (rare, ages 12-30)
-  for (let age = 12; age <= Math.min(30, clampedLife - 5); age += rollDice(6, 10)) {
+  for (let age = 12; age <= Math.min(30, deathAge - 1); age += rollDice(6, 10)) {
     const tl = createTimeLoopEvent(world, region, age, birthYear + age, stats);
     if (tl) events.push(tl);
   }
 
   // Canon encounter check (age 10-25)
   for (let age = 10; age <= 25; age += 5) {
-    const encounter = createCanonEncounter(world, region, age, birthYear + age);
-    if (encounter) events.push(encounter);
+    if (age < deathAge) {
+      const encounter = createCanonEncounter(world, region, age, birthYear + age);
+      if (encounter) events.push(encounter);
+    }
   }
 
   // Crisis events (ages 18-40, random)
-  for (let age = 18; age <= Math.min(40, clampedLife - 5); age += rollDice(5, 8)) {
+  for (let age = 18; age <= Math.min(40, deathAge - 1); age += rollDice(5, 8)) {
     if (rollChance(0.4)) {
       const ce = createCrisisEvent(world, region, age, birthYear + age, stats, includeHeavy);
       if (ce) events.push(ce);
     }
   }
 
-  // Death — yaşam tablosu (life table) tabanlı
-  // Bebeklik ölümü olasılığı + yaşa göre artan ölüm riski (Gompertz benzeri)
-  const childMortality = Math.min(0.3, region.stats.diseaseRate * 0.4 + region.stats.povertyRate * 0.2);
-  let deathAge: number;
-  if (Math.random() < childMortality) {
-    deathAge = rollDice(0, 4);
-  } else {
-    const mean = (adjustedLE[0] + adjustedLE[1]) / 2;
-    const sd = (adjustedLE[1] - adjustedLE[0]) / 4;
-    // Box-Muller normal approximation
-    const u1 = Math.max(0.0001, Math.random());
-    const u2 = Math.random();
-    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    deathAge = Math.round(mean + z * sd);
-    deathAge = clamp(deathAge, 5, adjustedLE[1] + 8);
-  }
-  deathAge = clamp(deathAge, 0, 120);
-
-  // Ölüm nedeni yaşa göre (DSÖ GHE bölgesel/yaşa göre kalıplar basitleştirilmiş)
+  // Ölüm nedeni: bölge istatistiklerine göre ağırlıklı (WHO GHE benzeri)
   let deathCause: string;
   if (deathAge < 1) {
     deathCause = 'Bebeklik hastalığı';
   } else if (deathAge < 5) {
     deathCause = 'Çocukluk hastalığı';
   } else if (deathAge < 15) {
-    deathCause = Math.random() < 0.5 ? 'Hastalık' : 'Kaza';
-  } else if (deathAge < 40) {
-    const r = Math.random();
-    if (r < 0.35) deathCause = 'Hastalık';
-    else if (r < 0.55) deathCause = 'Kaza';
-    else if (r < 0.7) deathCause = 'Şiddet/Savaş';
-    else deathCause = 'Doğa felaketi';
-  } else if (deathAge < 65) {
-    const r = Math.random();
-    if (r < 0.6) deathCause = 'Hastalık';
-    else if (r < 0.8) deathCause = 'Kaza';
-    else deathCause = 'Yaşlılık';
+    deathCause = Math.random() < 0.6 ? 'Hastalık' : 'Kaza';
   } else {
-    const r = Math.random();
-    if (r < 0.75) deathCause = 'Yaşlılık';
-    else deathCause = 'Hastalık';
+    const entries: [string, number][] = [
+      ['Hastalık', 1 + (100 - stats.health) / 100 + region.stats.diseaseRate * 3],
+      ['Kaza', 0.5 + region.stats.accidentRate * 3],
+      ['Şiddet/Savaş', region.stats.violenceRate * 3 + region.stats.warRate * 3],
+      ['Doğa felaketi', 0.2 + region.stats.deathRate * 0.5],
+      ['Madde bağımlılığı', region.stats.substanceRate * 3],
+      ['İntihar', region.stats.suicideRate * 3],
+    ];
+    if (deathAge >= 65) entries.push(['Yaşlılık', 4]);
+    else if (deathAge >= 50) entries.push(['Yaşlılık', 1.5]);
+
+    const total = entries.reduce((sum, [, weight]) => sum + Math.max(0, weight), 0);
+    let r = Math.random() * total;
+    deathCause = entries[0][0];
+    for (const [cause, weight] of entries) {
+      r -= Math.max(0, weight);
+      if (r <= 0) { deathCause = cause; break; }
+    }
   }
+
+  // Sort events by age; death is appended last so nothing can happen after it.
+  events.sort((a, b) => a.age - b.age);
 
   const deathEvent: LifeEvent = {
     id: 'death',
@@ -723,14 +781,18 @@ export function generateLife(
   };
   events.push(deathEvent);
 
-  // Sort events by age
-  events.sort((a, b) => a.age - b.age);
+  // Olayların deterministik etkisiyle hayat sonundaki statlar
+  // (oyuncu seçimleri UI tarafında computeStatsAt ile eklenir).
+  let finalStats: LifeStats = { ...stats };
+  for (const event of events) {
+    finalStats = applyStatChanges(finalStats, event.statChanges);
+  }
 
   // Generate memorial text
-  const memorialText = generateMemorialText(world, region, birthYear, deathAge, deathCause, stats, events, gender, period, characterName, familyStatus, education, assets);
+  const memorialText = generateMemorialText(world, region, birthYear, deathAge, deathCause, finalStats, events, gender, period, characterName, familyStatus, education, assets);
 
   // Generate achievements
-  const achievements = generateAchievements(world, region, stats, events, deathAge);
+  const achievements = generateAchievements(world, region, finalStats, events, deathAge);
 
   // Check canon encounters
   const canonEncounters = events.filter(e => e.isCanonEncounter).map(e => e.canonCharacter || '');
@@ -750,7 +812,8 @@ export function generateLife(
     deathYear: birthYear + deathAge,
     deathAge,
     deathCause,
-    finalStats: stats,
+    initialStats: stats,
+    finalStats,
     events,
     memorialText,
     achievements,
@@ -777,6 +840,7 @@ function generateMemorialText(
   assets: number = 0
 ): string {
   const canonEncounters = events.filter(e => e.isCanonEncounter).map(e => e.canonCharacter);
+  const finalEducation = getEducationTier(stats.intelligence);
 
   let text = `═══════════════════════════════════════\n`;
   text += `         ANMA SAYFASI — HATIRLANAN HAYAT\n`;
@@ -786,12 +850,12 @@ function generateMemorialText(
   text += `👤 İsim: ${characterName}\n`;
   text += `👤 Cinsiyet: ${gender === 'male' ? 'Erkek' : 'Kadın'}\n`;
   text += `👨‍👩‍👧 Aile: ${familyStatus === 'poor' ? 'Yoksul' : familyStatus === 'noble' ? 'Soylu' : 'Orta halli'}\n`;
-  text += `🎓 Eğitim: ${education === 'none' ? 'Yok' : education === 'basic' ? 'Temel' : education === 'high' ? 'Lise' : 'Üniversite'}\n`;
+  text += `🎓 Eğitim: ${finalEducation === 'none' ? 'Yok' : finalEducation === 'basic' ? 'Temel' : finalEducation === 'high' ? 'Lise' : 'Üniversite'}\n`;
   text += `💰 Varlıklar: ${assets}\n`;
   text += `⏳ Dönem: ${period === 'past' ? 'Geçmiş' : period === 'future' ? 'Gelecek' : 'Bugün'}\n`;
   text += `📅 Doğum: ${birthYear}\n`;
   text += `💀 Ölüm: ${birthYear + deathAge} (${deathAge} yaşında)\n`;
-  text += `Cause: ${deathCause}\n\n`;
+  text += `Ölüm nedeni: ${deathCause}\n\n`;
   text += `📊 İstatistikler:\n`;
   text += `   Güç: ${stats.power}/100\n`;
   text += `   Zeka: ${stats.intelligence}/100\n`;
@@ -830,7 +894,7 @@ function generateMemorialText(
   }
 
   text += `\n═══════════════════════════════════════\n`;
-  text += `İsmin hatırlanmadı. Ama bir hayat yaşandı.\n`;
+  text += `${characterName} hatırlanacak. Bir hayat yaşandı.\n`;
   text += `═══════════════════════════════════════`;
 
   return text;
@@ -881,7 +945,8 @@ export function getEventTimeline(life: LifeResult): { age: number; event: LifeEv
 
 export function generateShareText(life: LifeResult, world: AnimeWorld, region: AnimeRegion): string {
   return `🌍 ${world.nameTR} evreninde ${region.nameTR} bölgesinde ${life.deathAge} yıl yaşadım.\n` +
-    `Cause of death: ${life.deathCause}\n` +
+    `👤 ${life.characterName}\n` +
+    `Ölüm nedeni: ${life.deathCause}\n` +
     `Güç: ${life.finalStats.power} | Zeka: ${life.finalStats.intelligence} | Şans: ${life.finalStats.luck}\n` +
     (life.isCanonEncountered ? `✨ Kanon karakterlerle karşılaştım: ${life.canonEncounters.join(', ')}\n` : '') +
     `AniSync 8 Milyar Evrende 1`;

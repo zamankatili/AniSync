@@ -44,7 +44,7 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     dangerLevel: 'high',
     powerSystem: 'Chakra / Haki / Nen / Lanetli Enerji',
     sourceAnime: ['Naruto', 'One Piece', 'Bleach', 'Jujutsu Kaisen', 'Demon Slayer'],
-    regionIds: ['konoha', 'kanton', 'soul_society', 'marley', 'jujutsu_high'],
+    regionIds: ['konoha', 'kanton', 'soul_society', 'jujutsu_high'],
     stats: {
       warRate: 0.35,
       diseaseRate: 0.08,
@@ -70,7 +70,7 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     dangerLevel: 'low',
     powerSystem: 'Yok (Günlük yaşam)',
     sourceAnime: ['Yuru Camp', 'Non Non Biyori', 'Laid-Back Camp', 'K-On!', 'Nichijou'],
-    regionIds: ['rural_japan', 'countryside', 'school_town', 'coastal_village'],
+    regionIds: ['rural_japan', 'school_town', 'coastal_village'],
     stats: {
       warRate: 0.01,
       diseaseRate: 0.05,
@@ -96,7 +96,7 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     dangerLevel: 'extreme',
     powerSystem: 'Büyü / Lanet / İblis Gücü',
     sourceAnime: ['Berserk', 'Attack on Titan', 'Made in Abyss', 'Vinland Saga'],
-    regionIds: ['midland', 'paradis', 'the_abyss', 'vinland'],
+    regionIds: ['midland', 'paradis', 'the_abyss', 'marley'],
     stats: {
       warRate: 0.55,
       diseaseRate: 0.12,
@@ -122,7 +122,7 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     dangerLevel: 'medium',
     powerSystem: 'Büyü / Oyun Sistemi / Yetenek Ağacı',
     sourceAnime: ['Re:Zero', 'Konosuba', 'Mushoku Tensei', 'That Time I Got Reincarnated as a Slime'],
-    regionIds: ['lugunica', 'axel', 'asura_kingdom', 'tempest'],
+    regionIds: ['lugunica', 'axel', 'asura_kingdom'],
     stats: {
       warRate: 0.20,
       diseaseRate: 0.06,
@@ -148,7 +148,7 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     dangerLevel: 'medium',
     powerSystem: 'Sibernetik / Psişik / Teknolojik',
     sourceAnime: ['Cyberpunk: Edgerunners', 'Psycho-Pass', 'Ghost in the Shell', 'Akira'],
-    regionIds: ['night_city', 'sibyl_city', 'neo_tokyo', 'section_9'],
+    regionIds: ['night_city', 'sibyl_city', 'neo_tokyo'],
     stats: {
       warRate: 0.10,
       diseaseRate: 0.07,
@@ -174,7 +174,7 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     dangerLevel: 'medium',
     powerSystem: 'Zeka / Strateji / Psikoloji',
     sourceAnime: ['Death Note', 'Monster', 'Code Geass', 'Steins;Gate'],
-    regionIds: ['tokyo_modern', 'dusseldorf', 'britannia', 'akihabara'],
+    regionIds: ['tokyo_modern', 'dusseldorf', 'akihabara'],
     stats: {
       warRate: 0.05,
       diseaseRate: 0.04,
@@ -200,7 +200,7 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     dangerLevel: 'low',
     powerSystem: 'Yok (Duygusal)',
     sourceAnime: ['Clannad', 'Your Lie in April', 'Toradora', 'Violet Evergarden'],
-    regionIds: ['hikarizaka', 'shigatsu_town', 'school_district', 'leiden'],
+    regionIds: ['hikarizaka', 'shigatsu_town', 'leiden'],
     stats: {
       warRate: 0.01,
       diseaseRate: 0.06,
