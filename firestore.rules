@@ -44,6 +44,15 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
+    // KVKK/GDPR veri talepleri: kullanıcı yalnız kendi adına oluşturabilir; işleme admin
+    match /dataRequests/{doc} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.type in ['export', 'delete']
+        && request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
 
     // ─── Kullanıcı profili ────────────────────────────────────
     // ÖNEMLİ: hiçbir kullanıcı kendi `role`/`banUntil`/`banReason` alanını yazamaz.

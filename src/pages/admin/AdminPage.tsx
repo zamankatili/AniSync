@@ -8,9 +8,9 @@ import { collection, doc, getDocs, orderBy, query, limit, updateDoc, deleteDoc, 
 import { db } from '../../firebase';
 import { SEED_POLLS, generateMorePolls } from '../../data/polls';
 import { cn } from '../../lib/utils';
-import { Shield, Users, Flag, Settings, RefreshCw, Check } from 'lucide-react';
+import { Shield, Users, Flag, Settings, RefreshCw, Check, Inbox } from 'lucide-react';
 
-type Tab = 'flags' | 'users' | 'reports';
+type Tab = 'flags' | 'users' | 'reports' | 'data';
 
 interface FirestoreUserDoc extends Record<string, unknown> {
   id: string;
@@ -32,6 +32,16 @@ interface ReportRow {
   createdAt?: any;
 }
 
+interface DataRequestRow {
+  id: string;
+  userId?: string;
+  userName?: string;
+  contact?: string;
+  type?: 'export' | 'delete';
+  status?: 'pending' | 'done';
+  createdAt?: any;
+}
+
 export const AdminPage: React.FC = () => {
   const { t, currentLang } = useAppTranslation();
   const [tab, setTab] = useState<Tab>('flags');
@@ -40,6 +50,7 @@ export const AdminPage: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [users, setUsers] = useState<FirestoreUserDoc[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
+  const [dataRequests, setDataRequests] = useState<DataRequestRow[]>([]);
   const [seedingPolls, setSeedingPolls] = useState(false);
   const [loading, setLoading] = useState(false);
   const { addToast } = useToastStore();
@@ -78,6 +89,28 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const loadDataRequests = async () => {
+    setLoading(true);
+    try {
+      const snap = await getDocs(query(collection(db, 'dataRequests'), orderBy('createdAt', 'desc'), limit(50)));
+      setDataRequests(snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })));
+    } catch {
+      addToast(t('admin_data_load_failed', { defaultValue: 'Veri talepleri yüklenemedi' }), 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markDataRequestDone = async (row: DataRequestRow) => {
+    try {
+      await updateDoc(doc(db, 'dataRequests', row.id), { status: 'done' });
+      setDataRequests(prev => prev.map(x => (x.id === row.id ? { ...x, status: 'done' } : x)));
+      addToast(t('admin_data_done', { defaultValue: 'Talep tamamlandı olarak işaretlendi' }), 'success');
+    } catch {
+      addToast(t('admin_action_failed', { defaultValue: 'İşlem başarısız' }), 'error');
+    }
+  };
+
   const seedPolls = async () => {
     setSeedingPolls(true);
     try {
@@ -101,6 +134,7 @@ export const AdminPage: React.FC = () => {
   useEffect(() => {
     if (tab === 'users') loadUsers();
     if (tab === 'reports') loadReports();
+    if (tab === 'data') loadDataRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -122,7 +156,6 @@ export const AdminPage: React.FC = () => {
       await updateDoc(doc(db, 'users', u.id), {
         banUntil: banning ? Date.now() + 1000 * 60 * 60 * 24 * 7 : 0, // 7 gün
         banReason: banning ? 'Admin action' : '',
-        role: target.role ?? 'user',
       });
       addToast(banning ? t('admin_user_banned', { defaultValue: 'Kullanıcı banlandı (7 gün)' }) : t('admin_user_unbanned', { defaultValue: 'Ban kaldırıldı' }), 'success');
       loadUsers();
@@ -141,8 +174,16 @@ export const AdminPage: React.FC = () => {
     } catch { addToast(t('admin_action_failed', { defaultValue: 'Silinemedi' }), 'error'); } finally { setBusy(false); }
   };
 
+  const ALLOWED_REPORT_TARGETS = new Set(['socialFeed', 'globalChat', 'animeComments', 'forumPosts', 'recentActivities', 'sharedLives', 'customLists']);
+
   const deleteTarget = async (row: ReportRow) => {
     if (!row.targetPath) return;
+    // Raporu gönderen keyfi bir doküman yolu işaretleyemez (ör. users/... engellenir)
+    const col = row.targetPath.split('/')[0];
+    if (!ALLOWED_REPORT_TARGETS.has(col)) {
+      addToast(t('admin_target_invalid', { defaultValue: 'Geçersiz hedef yolu' }), 'error');
+      return;
+    }
     setBusy(true);
     try {
       await deleteDoc(doc(db, row.targetPath));
@@ -174,6 +215,7 @@ export const AdminPage: React.FC = () => {
           { id: 'flags', icon: Settings, label: t('admin_tab_flags', 'Ayarlar') },
           { id: 'users', icon: Users, label: t('admin_tab_users', 'Kullanıcılar') },
           { id: 'reports', icon: Flag, label: t('admin_tab_reports', 'Şikayetler') },
+          { id: 'data', icon: Inbox, label: t('admin_tab_data', 'Veri Talepleri') },
         ] as const).map((tabItem) => {
           const Icon = tabItem.icon;
           const active = tab === tabItem.id;
@@ -338,6 +380,42 @@ export const AdminPage: React.FC = () => {
               </div>
             ))}
             {reports.length === 0 && !loading && <p className="text-xs text-neutral-600 font-bold uppercase text-center py-6">{t('admin_no_reports', 'Şikayet yok')}</p>}
+          </div>
+        </section>
+      )}
+
+      {tab === 'data' && (
+        <section className="bg-neutral-900 border-2 border-white/20 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black uppercase text-white">{t('admin_section_data', 'KVKK/GDPR Veri Talepleri')}</h2>
+            <button onClick={loadDataRequests} className="p-2 text-neutral-400 hover:text-white" title={t('refresh')}><RefreshCw size={16} /></button>
+          </div>
+          <p className="text-[10px] text-neutral-500 uppercase font-bold">{t('admin_data_hint', 'Kullanıcılar profil sayfasından gönderir; 30 gün içinde işleyip "Tamamlandı" ile işaretleyin. Silme talebinde kullanıcı dokümanlarını + kimlik bilgisini elle kaldırın.')}</p>
+          {loading && <p className="text-xs text-neutral-500 font-bold uppercase">{t('loading')}</p>}
+          <div className="space-y-2">
+            {dataRequests.map(r => (
+              <div key={r.id} className="border-2 border-white/10 p-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className={cn('text-[10px] font-black uppercase px-2 py-0.5 border', r.type === 'delete' ? 'border-rose-500 text-rose-400' : 'border-emerald-500 text-emerald-400')}>{r.type ?? '?'}</span>
+                    <span className={cn('text-[10px] font-black uppercase px-2 py-0.5 border', r.status === 'done' ? 'border-white/30 text-neutral-400' : 'border-amber-400 text-amber-400')}>{r.status ?? 'pending'}</span>
+                  </div>
+                  <div className="text-xs text-white font-bold mt-1">{r.userName || '—'} {r.contact && <span className="text-neutral-400 font-mono">· {r.contact}</span>}</div>
+                  <div className="text-[10px] text-neutral-500 font-mono break-all mt-0.5">uid: {r.userId}</div>
+                </div>
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  <button onClick={() => navigator.clipboard?.writeText(r.contact ?? '')} className="px-3 py-2 bg-black hover:bg-neutral-800 text-neutral-300 font-black uppercase text-[10px] border border-white/30 cursor-pointer">
+                    {t('admin_copy_contact', 'E-postayı Kopyala')}
+                  </button>
+                  {r.status !== 'done' && (
+                    <button onClick={() => markDataRequestDone(r)} className="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white font-black uppercase text-[10px] border border-white/30 cursor-pointer">
+                      {t('admin_mark_done', 'Tamamlandı')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {dataRequests.length === 0 && !loading && <p className="text-xs text-neutral-600 font-bold uppercase text-center py-6">{t('admin_no_data_requests', 'Talep yok')}</p>}
           </div>
         </section>
       )}

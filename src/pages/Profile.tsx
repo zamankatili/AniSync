@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
-import { Settings, Play, CheckCircle, Heart, Clock, BarChart3, Navigation as NavigationIcon, ChevronRight, LogOut, PieChart as PieChartIcon, UserPlus, Grid3X3, FileUp, Compass } from 'lucide-react';
+import { Settings, Play, CheckCircle, Heart, Clock, BarChart3, Navigation as NavigationIcon, ChevronRight, LogOut, PieChart as PieChartIcon, UserPlus, Grid3X3, FileUp, Compass, Download, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
 import { AnimeCard } from '../components/AnimeCard';
@@ -12,7 +12,7 @@ import { ImportExportModal } from '../components/ImportExportModal';
 import { TasteProfileSurveyModal } from '../components/TasteProfileSurveyModal';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { WatchlistItem, UserProfile } from '../types';
 import { useAppTranslation } from '../hooks/useAppTranslation';
@@ -22,7 +22,7 @@ import { useQuizStore } from '../store/useQuizStore';
 
 export const Profile = () => {
   const { t } = useAppTranslation();
-  const { watchlist: myWatchlist, userProfile: myProfile, currentUser, logout } = useAppStore();
+  const { watchlist: myWatchlist, userProfile: myProfile, currentUser, logout, userNamedLists } = useAppStore();
   const { addToast } = useToastStore();
   const navigate = useNavigate();
   const { uid } = useParams();
@@ -42,6 +42,46 @@ export const Profile = () => {
   const handleSelectFeaturedBadge = (badgeId: string) => {
     setFeaturedBadgeId(badgeId);
     localStorage.setItem('user_featured_badge', badgeId);
+  };
+
+  // KVKK/GDPR: kullanıcının tüm yerel + senkron verisini JSON olarak indirme
+  const handleExportData = () => {
+    if (!currentUser) return;
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      user: { uid: currentUser.uid, email: currentUser.email ?? null, name: myProfile.name ?? null, handle: myProfile.handle ?? null },
+      profile: myProfile,
+      watchlist: myWatchlist,
+      namedLists: userNamedLists,
+      quiz: { arcadeHighScore, dailyStreak },
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `anisync-export-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    addToast(t('account_export_ready'), 'success');
+  };
+
+  // KVKK/GDPR: hesap silme talebi → dataRequests koleksiyonu (admin 30 gün içinde işler)
+  const handleDeleteRequest = async () => {
+    if (!currentUser) return;
+    try {
+      await addDoc(collection(db, 'dataRequests'), {
+        userId: currentUser.uid,
+        userName: myProfile.name || '',
+        contact: currentUser.email || '',
+        type: 'delete',
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      addToast(t('account_delete_sent'), 'success');
+    } catch (e) {
+      console.warn('Data request failed:', e);
+      addToast(t('account_delete_failed'), 'error');
+    }
   };
 
   const isOwnProfile = !uid || Boolean(currentUser && uid === currentUser.uid);
@@ -202,17 +242,37 @@ export const Profile = () => {
                   </>
                 )}
                 {isOwnProfile && currentUser && (
-                  <button 
+                  <button
                     onClick={async () => {
                       await logout();
                       navigate('/');
                       addToast(t('logout_toast'), 'info');
-                    }} 
+                    }}
                     className="flex items-center gap-2 bg-rose-600 hover:bg-black text-white hover:text-rose-500 transition-colors px-5 py-3 text-xs font-black w-fit border-2 border-black uppercase tracking-widest neo-shadow"
                   >
                     <LogOut size={16} strokeWidth={2.5} />
                     {t('logout')}
                   </button>
+                )}
+                {isOwnProfile && currentUser && (
+                  <>
+                    <button
+                      onClick={handleExportData}
+                      className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-black transition-colors px-5 py-3 text-xs font-black w-fit uppercase tracking-widest neo-shadow"
+                      title={t('account_export_data')}
+                    >
+                      <Download size={16} strokeWidth={2.5} />
+                      {t('account_export_data')}
+                    </button>
+                    <button
+                      onClick={handleDeleteRequest}
+                      className="flex items-center gap-2 bg-transparent hover:bg-rose-950 text-rose-400 border-2 border-rose-800 transition-colors px-5 py-3 text-xs font-black w-fit uppercase tracking-widest"
+                      title={t('account_delete_request')}
+                    >
+                      <Trash2 size={16} strokeWidth={2.5} />
+                      {t('account_delete_request')}
+                    </button>
+                  </>
                 )}
                 {!isOwnProfile && (
                   <button 
