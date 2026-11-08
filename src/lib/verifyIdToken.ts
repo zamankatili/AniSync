@@ -60,10 +60,15 @@ export async function verifyFirebaseIdToken(token: string): Promise<VerifiedToke
     const certs = await getCerts();
     const cert = certs[header.kid];
     if (!cert) return null;
+    // Google securetoken sertifikaları X509 PEM'dir; Node'un X509Certificate'ı
+    // onlardan doğrudan açık anahtar çıkarır. Ham PUBLIC KEY PEM de kabul edilir.
+    const key = cert.includes('BEGIN CERTIFICATE')
+      ? new crypto.X509Certificate(cert).publicKey
+      : crypto.createPublicKey(cert);
 
     const verifier = crypto.createVerify('RSA-SHA256');
     verifier.update(`${h}.${p}`);
-    if (!verifier.verify(cert, s, 'base64url')) return null;
+    if (!verifier.verify(key, s, 'base64url')) return null;
 
     return { uid: payload.sub };
   } catch {
