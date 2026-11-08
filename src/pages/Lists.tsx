@@ -5,6 +5,7 @@ import { useAnimeData } from '../hooks/useAnimeData';
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, getDocs, updateDoc, doc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
 import { CustomList, Anime } from '../types';
+import { getAnimeSeason } from '../lib/season';
 import { useAppStore } from '../context/AppStore';
 import { getSafeImageUrl, handleImageError } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
@@ -186,7 +187,7 @@ export const ListsPage = () => {
             <MiniAnimeList title="YAKLAŞAN EFSANELER" icon={Calendar} path="/top/anime?filter=upcoming&limit=10" />
             <MiniAnimeList title="TÜM ZAMANLAR POPÜLER" icon={Trophy} path="/top/anime?filter=bypopularity&limit=10" />
             
-            <MiniAnimeList title="SONBAHAR 2026" icon={TrendingUp} path="/seasons/now?limit=10" />
+            <MiniAnimeList title={getAnimeSeason().labelTR.toUpperCase()} icon={TrendingUp} path="/seasons/now?limit=10" />
             <MiniAnimeList title="FİLM BAŞYAPITLARI" icon={Clapperboard} path="/top/anime?type=movie&limit=10" />
             <MiniAnimeList title="AKSİYON DOLU" icon={Compass} path="/top/anime?type=tv&limit=10" />
           </motion.div>

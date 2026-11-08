@@ -19,6 +19,8 @@ import {
 } from '../lib/eventEngine';
 import { cn } from '../lib/utils';
 import { useToastStore } from '../store/useToastStore';
+import { MemorialBoardModal } from '../components/MemorialBoardModal';
+import { exportLifeCode, importLifeCode, collectSavedLifePayload, applyLifePayload } from '../lib/lifeTransfer';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -74,6 +76,10 @@ export const AnimeLifeSim: React.FC = () => {
     try { return localStorage.getItem('als_auto_decide') === '1'; } catch { return false; }
   });
   const [autoSecondsLeft, setAutoSecondsLeft] = useState<number | null>(null);
+  const [showBoard, setShowBoard] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferInput, setTransferInput] = useState('');
+  const [transferBusy, setTransferBusy] = useState(false);
   const [pastLives, setPastLives] = useState<PastLife[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const recordedLifeRef = useRef<string | null>(null);
@@ -480,6 +486,80 @@ export const AnimeLifeSim: React.FC = () => {
     setSavedLife(null);
   };
 
+  const handleTransferExport = async () => {
+    setTransferBusy(true);
+    try {
+      const payload = collectSavedLifePayload();
+      if (!payload) {
+        addToast(t('als_transfer_empty'), 'info');
+        return;
+      }
+      const code = await exportLifeCode(payload);
+      try {
+        await navigator.clipboard.writeText(code);
+        addToast(t('als_transfer_exported'), 'success');
+      } catch {
+        // Pano izni yok → kodu içe aktarma kutusuna koy, kullanıcı elle kopyalasın
+        setTransferInput(code);
+        setShowTransfer(true);
+        addToast(t('als_transfer_exported'), 'success');
+      }
+    } catch (err) {
+      console.warn('Transfer export failed:', err);
+      addToast(t('als_transfer_invalid'), 'error');
+    } finally {
+      setTransferBusy(false);
+    }
+  };
+
+  const handleTransferImport = async () => {
+    const code = transferInput.trim();
+    if (!code) return;
+    setTransferBusy(true);
+    try {
+      const payload = await importLifeCode(code);
+      applyLifePayload(payload);
+      setTransferInput('');
+      handleResume();
+      addToast(t('als_transfer_imported'), 'success');
+    } catch (err) {
+      console.warn('Transfer import failed:', err);
+      addToast(t('als_transfer_invalid'), 'error');
+    } finally {
+      setTransferBusy(false);
+    }
+  };
+
+  const handleAddToBoard = async () => {
+    if (!life || !world || !region) return;
+    const finalStats = computeStatsAt(life, life.events.length - 1, choicesMade);
+    try {
+      await addDoc(collection(db, 'sharedLives'), {
+        characterName: displayName,
+        worldEmoji: world.emoji,
+        worldNameTR: world.nameTR,
+        worldNameEN: world.nameEN,
+        regionNameTR: region.nameTR,
+        regionNameEN: region.nameEN,
+        deathAge: life.deathAge,
+        birthYear: life.birthYear,
+        deathCause: life.deathCause,
+        power: finalStats.power,
+        intelligence: finalStats.intelligence,
+        luck: finalStats.luck,
+        socialClass: finalStats.socialClass,
+        health: finalStats.health,
+        eventsCount: life.events.length,
+        candles: 0,
+        createdAt: serverTimestamp(),
+      });
+      addToast(t('als_board_added'), 'success');
+    } catch (err) {
+      console.warn('Board add failed:', err);
+      addToast(t('als_board_failed'), 'error');
+    }
+  };
+
   const dangerLabel = (level: string) => {
     switch (level) {
       case 'low': return t('als_danger_low');
@@ -592,6 +672,53 @@ export const AnimeLifeSim: React.FC = () => {
               </div>
             </div>
           )}
+          {/* Anma Defteri + Kayıt Taşıma */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowBoard(true)}
+              className="px-4 py-2.5 bg-black hover:bg-neutral-800 text-amber-400 font-black uppercase text-xs border-2 border-amber-400/60 hover:border-amber-400 cursor-pointer flex items-center gap-2"
+            >
+              🕯️ {t('als_board_title')}
+            </button>
+            <button
+              onClick={() => setShowTransfer(v => !v)}
+              className="px-4 py-2.5 bg-black hover:bg-neutral-800 text-white font-black uppercase text-xs border-2 border-white/20 hover:border-white cursor-pointer flex items-center gap-2"
+              aria-expanded={showTransfer}
+            >
+              🎒 {t('als_transfer_title')}
+            </button>
+          </div>
+
+          {showTransfer && (
+            <div className="bg-neutral-900 border-2 border-white/20 p-4 space-y-3">
+              <p className="text-[11px] text-neutral-400 font-bold">{t('als_transfer_desc')}</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleTransferExport}
+                  disabled={transferBusy}
+                  className="px-4 py-2 bg-white hover:bg-amber-400 text-black font-black uppercase text-xs border-2 border-white cursor-pointer disabled:opacity-50"
+                >
+                  {t('als_transfer_export')}
+                </button>
+              </div>
+              <textarea
+                value={transferInput}
+                onChange={(e) => setTransferInput(e.target.value)}
+                placeholder={t('als_transfer_placeholder')}
+                rows={2}
+                className="w-full bg-black border-2 border-white/20 focus:border-amber-400 text-white text-[10px] font-mono p-2 outline-none resize-none"
+                spellCheck={false}
+              />
+              <button
+                onClick={handleTransferImport}
+                disabled={transferBusy || !transferInput.trim()}
+                className="px-4 py-2 bg-black hover:bg-neutral-800 text-white font-black uppercase text-xs border-2 border-white/30 hover:border-white cursor-pointer disabled:opacity-50"
+              >
+                {t('als_transfer_import')}
+              </button>
+            </div>
+          )}
+
           {/* Hero */}
           <div className="bg-black border-4 border-white neo-shadow-white p-6 md:p-8 relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
@@ -1379,6 +1506,14 @@ export const AnimeLifeSim: React.FC = () => {
                   </button>
                 </>
               )}
+              {!eduMode && (
+                <button
+                  onClick={handleAddToBoard}
+                  className="flex-1 py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
+                >
+                  🕯️ {t('als_board_add')}
+                </button>
+              )}
               <button
                 onClick={handleRestart}
                 className="flex-1 py-3 bg-black hover:bg-neutral-800 text-white font-black uppercase text-sm border-4 border-white/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
@@ -1389,6 +1524,9 @@ export const AnimeLifeSim: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── Anma Defteri Modalı ── */}
+      <MemorialBoardModal open={showBoard} onClose={() => setShowBoard(false)} />
 
       {/* ── Doğum Özeti Modalı ── */}
       {showBirthSummary && life && world && region && (

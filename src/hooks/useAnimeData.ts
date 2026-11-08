@@ -120,17 +120,19 @@ const jikanFetch = async (url: string) => {
   }
 };
 
+// Çevrimdışı fallback: "airing/now/seasons" gibi CANLI yollar boş döner
+// (klasikler sezon listesi gibi sunulmasın), diğerleri evergreen listelerine düşer.
 const getFallbackByPath = (path: string): Anime[] => {
-  if (path.includes('airing') || path.includes('now')) {
-    return FALLBACK_LISTS['top_airing'];
+  if (path.includes('airing') || path.includes('now') || path.includes('season')) {
+    return [];
   }
   if (path.includes('upcoming')) {
-    return FALLBACK_LISTS['top_upcoming'];
+    return FALLBACK_LISTS['evergreen_upcoming'];
   }
   if (path.includes('movie')) {
-    return FALLBACK_LISTS['top_movies'];
+    return FALLBACK_LISTS['evergreen_movies'];
   }
-  return FALLBACK_LISTS['top_popular'];
+  return FALLBACK_LISTS['evergreen_popular'];
 };
 
 // Track shown anime IDs across random calls to prevent repeating
@@ -138,10 +140,10 @@ const shownRandomIds = new Set<number>();
 
 const localAnimeSearch = (q: string): Anime[] => {
   const allLocal = [
-    ...(FALLBACK_LISTS['top_airing'] || []),
-    ...(FALLBACK_LISTS['top_popular'] || []),
-    ...(FALLBACK_LISTS['top_upcoming'] || []),
-    ...(FALLBACK_LISTS['top_movies'] || []),
+    ...(FALLBACK_LISTS['evergreen_picks'] || []),
+    ...(FALLBACK_LISTS['evergreen_popular'] || []),
+    ...(FALLBACK_LISTS['evergreen_upcoming'] || []),
+    ...(FALLBACK_LISTS['evergreen_movies'] || []),
   ];
   const matches = allLocal.filter(
     (a) =>
@@ -314,7 +316,7 @@ export const useAnimeData = (): UseAnimeResult => {
       const matches = EXTENDED_RANDOM_CATALOG.filter(a => 
         a.genres?.some(g => genres.includes(g.mal_id))
       );
-      return matches.length > 0 ? matches : FALLBACK_LISTS['top_popular'];
+      return matches.length > 0 ? matches : FALLBACK_LISTS['evergreen_popular'];
     } finally {
       setLoading(false);
     }

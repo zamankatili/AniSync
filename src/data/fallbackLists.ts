@@ -1,7 +1,10 @@
 import { Anime } from '../types';
 
+// NOT: Bu listeler EVERGREEN ("hiç eskimiyor") klasiklerdir — canlı/sezon verisi DEĞİLDİR.
+// "Top airing / güncel sezon" yollarında servis edilmemelidir; yalnızca
+// film/popüler/yaklaşan tahminleri ve çevrimdışı arama için kullanılırlar.
 export const FALLBACK_LISTS: Record<string, Anime[]> = {
-  'top_airing': [
+  'evergreen_picks': [
     {
       mal_id: 52991,
       title: 'Sousou no Frieren',
@@ -63,7 +66,7 @@ export const FALLBACK_LISTS: Record<string, Anime[]> = {
       year: 2024
     }
   ],
-  'top_upcoming': [
+  'evergreen_upcoming': [
     {
       mal_id: 5114,
       title: 'Chainsaw Man Movie: Reze-hen',
@@ -89,7 +92,7 @@ export const FALLBACK_LISTS: Record<string, Anime[]> = {
       year: 2025
     }
   ],
-  'top_popular': [
+  'evergreen_popular': [
     {
       mal_id: 5114,
       title: 'Fullmetal Alchemist: Brotherhood',
@@ -127,7 +130,7 @@ export const FALLBACK_LISTS: Record<string, Anime[]> = {
       year: 2013
     }
   ],
-  'top_movies': [
+  'evergreen_movies': [
     {
       mal_id: 32281,
       title: 'Kimi no Na wa.',
