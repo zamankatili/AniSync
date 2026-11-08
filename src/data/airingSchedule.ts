@@ -6,7 +6,10 @@
   day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
   timeTR: string;
   timeJST: string;
-  currentEpisode: number;
+  /** Jikan/AniList bu alanı vermez; yalnızca AniList `airingSchedules.episode` doldurur. Yoksa undefined. */
+  currentEpisode?: number;
+  /** Unix saniyesi; AniList `airingSchedules.airingAt`. */
+  airingAt?: number;
   totalEpisodes: number | null;
   image: string;
   studio: string;
@@ -28,10 +31,10 @@ export const DAYS_OF_WEEK = [
 ] as const;
 
 /**
- * Mevcut Sezon: 2026 Sonbahar (Kasım 2026)
- * 07.11.2026 tarihine göre, sezonun ortasında (hafta 6-8) olan serielerin
- * bölüm sayıları ve yayın saatleri güncel tutulmuştur. Bu demo veri
- * içeriğidir; gerçek MAL verisi ile senkronizasyon backend üzerinden sağlanabilir.
+ * NOT: Bu liste arşiv/yedek "örnek veri"dir ve sezon doğrulaması içermez.
+ * Canlı yayın akışı `src/lib/airingService.ts` üzerinden AniList/Jikan'dan
+ * çekilir; bu dosya yalnızca istemci tamamen ağa erişemediğinde
+ * `stale: true` / "ÖRNEK VERİ" etiketiyle gösterilir. Güncel sezon varsaymayın.
  */
 export const AIRING_SCHEDULE: AiringAnime[] = [
   // Pazartesi

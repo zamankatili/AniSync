@@ -332,12 +332,12 @@ export const useReminderStore = create<ReminderState>((set, get) => {
       const details = encodeURIComponent(
         `AniSync Yayın Akışı Hatırlatıcısı:\n` +
         `Anime: ${title}\n` +
-        `Bölüm: ${anime.currentEpisode || 1}\n` +
+        (anime.currentEpisode ? `Bölüm: ${anime.currentEpisode}\n` : '') +
         `Yayın Saati: ${anime.timeTR} (TR)\n` +
-        `Platformlar: ${(anime.streamingOn || []).join(', ') || 'Crunchyroll / Netflix'}\n\n` +
-        `AniSync uygulamasından oluşturuldu.`
+        (anime.streamingOn && anime.streamingOn.length > 0 ? `Platformlar: ${anime.streamingOn.join(', ')}\n` : '') +
+        `\nAniSync uygulamasından oluşturuldu.`
       );
-      const summary = encodeURIComponent(`📺 [Anime] ${title} - Yeni Bölüm (#${anime.currentEpisode || 1})`);
+      const summary = encodeURIComponent(`📺 [Anime] ${title} - Yeni Bölüm${anime.currentEpisode ? ` (#${anime.currentEpisode})` : ''}`);
       const recur = encodeURIComponent(`RRULE:FREQ=WEEKLY;BYDAY=${ICS_BY_DAY[anime.day]}`);
 
       return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${summary}&dates=${dates}&details=${details}&recur=${recur}`;
@@ -365,8 +365,8 @@ export const useReminderStore = create<ReminderState>((set, get) => {
         `DTSTART:${formatIcsDate(targetDate)}`,
         `DTEND:${formatIcsDate(endDate)}`,
         `RRULE:FREQ=WEEKLY;BYDAY=${ICS_BY_DAY[anime.day]}`,
-        `SUMMARY:📺 ${title} - Bölüm ${anime.currentEpisode}`,
-        `DESCRIPTION:AniSync Anime Yayını: ${title} yeni bölümü yayınlandı! Platformlar: ${(anime.streamingOn || []).join(', ')}`,
+        `SUMMARY:📺 ${title}${anime.currentEpisode ? ` - Bölüm ${anime.currentEpisode}` : ''}`,
+        `DESCRIPTION:AniSync Anime Yayını: ${title} yeni bölümü yayınlandı!${anime.streamingOn && anime.streamingOn.length > 0 ? ` Platformlar: ${anime.streamingOn.join(', ')}` : ''}`,
         'STATUS:CONFIRMED',
         'BEGIN:VALARM',
         'TRIGGER:-PT15M',

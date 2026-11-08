@@ -396,9 +396,11 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
                           {/* Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                              <span className="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 border border-white uppercase tracking-wider">
-                                {t('airing_episode', { episode: anime.currentEpisode })}
-                              </span>
+                              {typeof anime.currentEpisode === 'number' && (
+                                <span className="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 border border-white uppercase tracking-wider">
+                                  {t('airing_episode', { episode: anime.currentEpisode })}
+                                </span>
+                              )}
                               <span className="text-[11px] font-black text-amber-400 flex items-center gap-1">
                                 <Clock size={11} /> {anime.timeTR} {t('airing_timezone_suffix')}
                               </span>
@@ -606,9 +608,11 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
                               <span className="bg-amber-400 text-black text-[10px] font-black px-2 py-0.2 border border-black uppercase">
                                 {t(`day_${rem.day}`)} • {rem.timeTR} {t('airing_timezone_suffix')}
                               </span>
-                              <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 uppercase">
-                                {t('airing_episode', { episode: rem.currentEpisode })}
-                              </span>
+                              {typeof rem.currentEpisode === 'number' && (
+                                <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 uppercase">
+                                  {t('airing_episode', { episode: rem.currentEpisode })}
+                                </span>
+                              )}
                             </div>
 
                             <h4

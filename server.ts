@@ -75,52 +75,146 @@ async function startServer() {
     }
   });
 
-  // Auto-refresh anime news (called by Vercel Cron every 12 hours)
-  app.get("/api/refresh-news", async (req, res) => {
+  // Canlı anime haber hattı — gerçek RSS kaynakları (API anahtarı gerektirmez).
+  // Eski sürümdeki hardcoded "küratörlü 2026 haberleri" kaldırıldı (uydurma tarihler).
+  type ServerNewsItem = {
+    id: string; title: string; summary: string; source: string;
+    category: 'DUYURU' | 'FRAGMAN' | 'FİLM' | 'MANGA' | 'SEZON';
+    date: string; publishedAt: string; imageUrl: string; linkUrl?: string; isHot?: boolean;
+  };
+
+  let animeNewsCache: { items: ServerNewsItem[]; fetchedAt: string; timestamp: number } | null = null;
+  const NEWS_CACHE_TTL = 15 * 60 * 1000; // 15 dk
+  const LOCAL_NEWS_IMAGE = '/icons/icon-192.png';
+
+  const decodeEntities = (s: string) =>
+    String(s)
+      .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+      .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+      .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(parseInt(d, 10)))
+      .replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'").replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
+
+  // Önce entity'leri çöz (&lt;cite&gt; → <cite>), sonra etiketleri temizle.
+  const stripHtmlServer = (s: string) =>
+    decodeEntities(s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const extractTag = (block: string, tag: string): string => {
+    const m = block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+    return m ? m[1].trim() : '';
+  };
+
+  const extractLink = (block: string): string => {
+    const atom = block.match(/<link[^>]*href="([^"]+)"[^>]*\/?\s*>/i);
+    if (atom) return atom[1];
+    return extractTag(block, 'link');
+  };
+
+  const classifyNewsCategory = (rawTitle: string): ServerNewsItem['category'] => {
+    const t = rawTitle.toLowerCase();
+    if (/(fragman|trailer|teaser)/i.test(t)) return 'FRAGMAN';
+    if (/(film|movie|sinema)/i.test(t)) return 'FİLM';
+    if (/(manga|manhwa|cilt)/i.test(t)) return 'MANGA';
+    if (/(sezon|season|episode|bölüm|premiere|airing)/i.test(t)) return 'SEZON';
+    return 'DUYURU';
+  };
+
+  async function fetchRssItems(feedUrl: string, sourceName: string, timeoutMs = 5000): Promise<ServerNewsItem[]> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const jikanRes = await fetch('https://api.jikan.moe/v4/seasons/now?limit=12');
-      if (!jikanRes.ok) {
-        return res.status(502).json({ error: "Jikan API failed", status: jikanRes.status });
-      }
-      const json = await jikanRes.json();
-      if (!json || !Array.isArray(json.data)) {
-        return res.status(502).json({ error: "Invalid Jikan response" });
-      }
-
-      const liveItems = json.data.map((anime: any, idx: number) => {
-        const catOptions = ['SEZON', 'DUYURU', 'FRAGMAN'];
-        const category = catOptions[idx % catOptions.length];
-        const title = anime.title_english || anime.title;
-        const score = anime.score ? `★ ${anime.score}` : '';
-        const ep = anime.episodes ? `${anime.episodes} Bölüm` : 'Devam Ediyor';
-
-        return {
-          id: `live_jikan_${anime.mal_id || idx}`,
-          title: `${title} - 2026 Sezonu Yayın ve Bölüm Gelişmeleri`,
-          summary: anime.synopsis
-            ? `${anime.synopsis.slice(0, 160)}... (${ep} ${score})`
-            : `${title} serisinin güncel sezon yayınları devam ediyor.`,
-          source: 'MyAnimeList Live Data',
-          category,
-          date: 'Canlı Güncellendi',
-          imageUrl: anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
-          linkUrl: anime.url || `https://myanimelist.net/anime/${anime.mal_id}`,
-          isHot: idx < 3
-        };
+      const res = await fetch(feedUrl, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'AniSync/1.0 (anime news aggregator)' },
       });
-
-      const response = {
-        news: liveItems,
-        source: 'Jikan v4 + AniSync Canlı Haber Motoru',
-        isGrounded: true,
-        refreshedAt: new Date().toISOString()
-      };
-
-      res.json(response);
-    } catch (err: any) {
-      console.error('Refresh news error:', err);
-      res.status(500).json({ error: "Failed to refresh news", message: err?.message });
+      clearTimeout(timeout);
+      if (!res.ok) return [];
+      const xml = await res.text();
+      const blocks = xml.match(/<item[\s>][\s\S]*?<\/item>|<entry[\s>][\s\S]*?<\/entry>/g) || [];
+      return blocks.slice(0, 12).map((block, idx) => {
+        const title = stripHtmlServer(extractTag(block, 'title'));
+        if (!title) return null as unknown as ServerNewsItem;
+        const link = extractLink(block);
+        const pub = extractTag(block, 'pubDate') || extractTag(block, 'published') || extractTag(block, 'updated') || extractTag(block, 'dc:date');
+        const dateIso = pub && !Number.isNaN(Date.parse(pub)) ? new Date(pub).toISOString() : new Date().toISOString();
+        const desc = stripHtmlServer(extractTag(block, 'description') || extractTag(block, 'summary') || extractTag(block, 'content'));
+        const item: ServerNewsItem = {
+          id: `rss_${sourceName.replace(/\W+/g, '_')}_${idx}_${Date.parse(dateIso) || idx}`,
+          title,
+          summary: (desc || title).slice(0, 240),
+          source: sourceName,
+          category: classifyNewsCategory(title),
+          date: dateIso,
+          publishedAt: dateIso,
+          imageUrl: LOCAL_NEWS_IMAGE,
+          linkUrl: link || undefined,
+        };
+        return item;
+      }).filter(Boolean);
+    } catch (_err) {
+      clearTimeout(timeout);
+      return [];
     }
+  }
+
+  async function ingestAnimeNews(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && animeNewsCache && (now - animeNewsCache.timestamp < NEWS_CACHE_TTL)) {
+      return { items: animeNewsCache.items, fetchedAt: animeNewsCache.fetchedAt, stale: false, cached: true };
+    }
+
+    const feeds: Array<[string, string]> = [
+      ['https://www.animenewsnetwork.com/all/rss.xml', 'Anime News Network'],
+      ['https://news.google.com/rss/search?q=anime&hl=tr&gl=TR&ceid=TR:tr&when=7d', 'Google News'],
+    ];
+    const results = await Promise.all(feeds.map(([url, name]) => fetchRssItems(url, name).catch(() => [] as ServerNewsItem[])));
+
+    const seen = new Set<string>();
+    const merged = results.flat()
+      .filter((item) => {
+        const published = new Date(item.publishedAt).getTime();
+        if (Number.isNaN(published)) return false;
+        return Date.now() - published <= 30 * 24 * 60 * 60 * 1000; // 30 günden eski haberler gösterilmez
+      })
+      .filter((item) => {
+        const key = item.title.toLowerCase().slice(0, 60);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+      .slice(0, 12)
+      .map((item, idx) => ({ ...item, isHot: idx < 3 }));
+
+    const fetchedAt = new Date().toISOString();
+    if (merged.length > 0) {
+      animeNewsCache = { items: merged, fetchedAt, timestamp: Date.now() };
+      return { items: merged, fetchedAt, stale: false, cached: false };
+    }
+    if (animeNewsCache) {
+      return { items: animeNewsCache.items, fetchedAt: animeNewsCache.fetchedAt, stale: true, cached: true };
+    }
+    return { items: [] as ServerNewsItem[], fetchedAt, stale: true, cached: false };
+  }
+
+  const seasonLabelServer = () => {
+    const d = new Date();
+    const m = d.getMonth();
+    const season = m <= 1 || m === 11 ? 'Kış' : m <= 4 ? 'İlkbahar' : m <= 7 ? 'Yaz' : 'Sonbahar';
+    return `${d.getFullYear()} ${season}`;
+  };
+
+  // Cron çağırır; canlı RSS'i çekip önbelleği tazeler (12 saatte bir).
+  app.get("/api/refresh-news", async (_req, res) => {
+    const result = await ingestAnimeNews(true);
+    res.json({
+      news: result.items,
+      source: result.stale ? 'Önbellek (bayat)' : 'Canlı RSS (ANN / Google News)',
+      isGrounded: !result.stale,
+      stale: result.stale,
+      fetchedAt: result.fetchedAt,
+      refreshedAt: result.fetchedAt,
+    });
   });
 
   // iTunes Audio Preview Search Proxy
@@ -149,141 +243,22 @@ async function startServer() {
     }
   });
 
-  // In-memory cache for anime news to prevent rate limits (15 minute TTL)
-  let animeNewsCache: { news: any[]; isGrounded: boolean; timestamp: number } | null = null;
-  const NEWS_CACHE_TTL = 15 * 60 * 1000;
+  // (Eski in-memory cache ve "BACKEND_2026_CURATED_NEWS" kaldırıldı —
+  //  canlı RSS ingestion yukarıdaki `ingestAnimeNews()` içinde.)
 
-  const BACKEND_2026_CURATED_NEWS = [
-    {
-      id: "news-2026-1",
-      title: "Chainsaw Man: Reze Arc Sinema Filmi Dünya Prömiyeri ve Vizyon Tarihi Duyuruldu",
-      summary: "MAPPA stüdyosu, Bomba Şeytanı Reze'nin heyecanla beklenen sinema uyarlaması için yeni görsel ve resmi vizyon takvimini paylaştı.",
-      source: "Anime News Network",
-      category: "FİLM",
-      date: "1 saat önce",
-      imageUrl: "https://cdn.myanimelist.net/images/anime/1806/126216l.jpg",
-      linkUrl: "https://www.animenewsnetwork.com",
-      isHot: true
-    },
-    {
-      id: "news-2026-2",
-      title: "Solo Leveling 2. Sezon 'Arise from the Shadow' Bölümleri Reyting Rekorları Kırıyor",
-      summary: "Sung Jin-Woo ve Gölge Ordusu'nun Jeju Adası seferi Crunchyroll ve küresel platformlarda en çok izlenen anime olmayı başardı.",
-      source: "Crunchyroll News",
-      category: "SEZON",
-      date: "3 saat önce",
-      imageUrl: "https://cdn.myanimelist.net/images/anime/1210/141049l.webp",
-      linkUrl: "https://www.crunchyroll.com/news",
-      isHot: true
-    },
-    {
-      id: "news-2026-3",
-      title: "Sakamoto Days Anime Uyarlaması Netflix'te Zirveye Yerleşti",
-      summary: "TMS Entertainment yapımı Sakamoto Days, efsanevi emekli suikastçı Taro Sakamoto'nun aksiyon dolu maceralarıyla dünya çapında trend oldu.",
-      source: "Natalie.mu",
-      category: "DUYURU",
-      date: "4 saat önce",
-      imageUrl: "https://cdn.myanimelist.net/images/anime/1169/143761l.webp",
-      linkUrl: "https://natalie.mu/comic",
-      isHot: true
-    },
-    {
-      id: "news-2026-4",
-      title: "Dan Da Dan 2. Sezon İçin Science SARU'dan İlk Teaser Fragmanı Geldi",
-      summary: "Momo ve Okarun'un uzaylılar ve lanetlerle dolu serüveni Science SARU stüdyosunun büyüleyici animasyonlarıyla devam ediyor.",
-      source: "Anime Trending",
-      category: "FRAGMAN",
-      date: "Bugün",
-      imageUrl: "https://cdn.myanimelist.net/images/anime/1487/142079l.webp",
-      linkUrl: "https://anitrendz.com"
-    },
-    {
-      id: "news-2026-5",
-      title: "Bleach: Thousand-Year Blood War Final Bölümleri Öncesi Özel Röportaj",
-      summary: "Tite Kubo ve Pierrot Films ekibi, Ruh Kralı Sarayı ve Yhwach ile yapılacak nihai yüzleşmenin sinematik kalitesini anlattı.",
-      source: "Comic Natalie",
-      category: "DUYURU",
-      date: "Bugün",
-      imageUrl: "https://cdn.myanimelist.net/images/anime/1912/143527l.webp",
-      linkUrl: "https://natalie.mu/comic"
-    },
-    {
-      id: "news-2026-6",
-      title: "One Piece: Egghead Doruk Noktası Sonrası Elbaf Devler Diyarı Arkı Başlıyor",
-      summary: "Eiichiro Oda'nın efsanevi başyapıtında Hasır Şapka Korsanları kadim devlerin vatanı Elbaf'a ayak basarak yeni dönemi açtı.",
-      source: "Shonen Jump News",
-      category: "MANGA",
-      date: "Dün",
-      imageUrl: "https://cdn.myanimelist.net/images/anime/6/73245l.webp",
-      linkUrl: "https://www.shonenjump.com"
-    }
-  ];
-
-  // Google Search Grounded Anime News Endpoint
+  // Canlı anime haberleri — gerçek RSS (ANN + Google News TR), ISO `publishedAt`,
+  // 15 dk cache; bayat önbellek daima `stale: true` ile döner. Sahte içerik yok.
   app.get("/api/anime-news", async (req, res) => {
-    const now = Date.now();
-    try {
-      const forceRefresh = req.query.refresh === 'true';
-
-      // Serve from cache if available and not expired
-      if (!forceRefresh && animeNewsCache && (now - animeNewsCache.timestamp < NEWS_CACHE_TTL)) {
-        return res.json({ news: animeNewsCache.news, isGrounded: animeNewsCache.isGrounded, cached: true });
-      }
-
-      if (!ai) {
-        return res.json({ news: BACKEND_2026_CURATED_NEWS, isGrounded: false, fallback: true });
-      }
-
-      const todayStr = new Date().toLocaleDateString("tr-TR");
-      const prompt = `Bugün (${todayStr}) dünya ve Türkiye anime dünyasındaki en güncel 5-6 adet kırılma (breaking) anime, manga, yeni sezon ve sinema haberini ara (yeni fragmanlar, vizyon tarihleri, 2026 sezonu).
-Lütfen cevabını SADECE geçerli bir JSON dizisi formatında ver:
-[
-  {
-    "id": "gnews-1",
-    "title": "Haber Başlığı (Türkçe)",
-    "summary": "1-2 cümlelik kısa özet (Türkçe)",
-    "source": "Haber Kaynağı (örn: Anime News Network, Crunchyroll News, Natalie.mu, Shonen Jump)",
-    "category": "DUYURU",
-    "date": "1 saat önce",
-    "imageUrl": "https://cdn.myanimelist.net/images/anime/1806/126216l.jpg",
-    "linkUrl": "https://www.animenewsnetwork.com",
-    "isHot": true
-  }
-]
-Kategori alanı yalnızca 'DUYURU', 'FRAGMAN', 'FİLM', 'SEZON' veya 'MANGA' değerlerinden biri olmalıdır. Açıklama veya markdown metni YAZMA, doğrudan geçerli JSON dizisini döndür.`;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }]
-        }
-      });
-
-      let rawText = response.text || "";
-      rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
-
-      const startIdx = rawText.indexOf("[");
-      const endIdx = rawText.lastIndexOf("]");
-      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-        const jsonStr = rawText.substring(startIdx, endIdx + 1);
-        const parsedNews = JSON.parse(jsonStr);
-        if (Array.isArray(parsedNews) && parsedNews.length > 0) {
-          animeNewsCache = { news: parsedNews, isGrounded: true, timestamp: now };
-          return res.json({ news: parsedNews, isGrounded: true });
-        }
-      }
-
-      // If parsing didn't find array, serve verified 2026 news
-      return res.json({ news: BACKEND_2026_CURATED_NEWS, isGrounded: false, fallback: true });
-    } catch (_err) {
-      // Quietly handle rate limit/quota or network errors by serving cached or verified 2026 news
-      if (animeNewsCache) {
-        return res.json({ news: animeNewsCache.news, isGrounded: animeNewsCache.isGrounded, cached: true });
-      }
-
-      return res.json({ news: BACKEND_2026_CURATED_NEWS, isGrounded: false, fallback: true });
-    }
+    const forceRefresh = req.query.refresh === 'true';
+    const result = await ingestAnimeNews(forceRefresh);
+    res.json({
+      news: result.items,
+      source: result.stale ? 'Önbellek (bayat)' : 'Canlı RSS (ANN / Google News)',
+      isGrounded: !result.stale,
+      stale: result.stale,
+      cached: result.cached,
+      fetchedAt: result.fetchedAt,
+    });
   });
 
   // Gemini AI Personalized Recommendations Endpoint
@@ -340,6 +315,9 @@ Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
   let airingScheduleCache: { data: any; timestamp: number } | null = null;
   const AIRING_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
+  // NOT: SCHEDULE_2026 arşiv/ÖRNEK bir listidir; sezon doğrulaması YOKTUR.
+  // Jikan'dan canlı veri çekilemezse yalnızca `stale: true` + "örnek veri"
+  // etiketiyle döndürülür; istemci bunu asla "Canlı" olarak göstermez.
   const SCHEDULE_2026: Record<string, any[]> = {
     monday: [
       { mal_id: 58941, title: "Sakamoto Days", title_english: "SAKAMOTO DAYS", image: "https://cdn.myanimelist.net/images/anime/1169/143761l.webp", score: 8.65, broadcastTime: "18:00", broadcastDay: "monday", genres: ["Aksiyon", "Komedi"], synopsis: "Eski efsanevi suikastçı Taro Sakamoto'nun aksiyon dolu maceraları.", episodes: 24, studio: "TMS Entertainment" },
@@ -379,13 +357,23 @@ Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
     ]
   };
 
-  // 1. Automated Live Airing Schedule Sync (Jikan API v4 + Verified 2026 Season fallback)
+  // 1. Automated Live Airing Schedule Sync (Jikan API v4 + arşiv/örnek fallback)
   app.get("/api/sync/airing-schedule", async (req, res) => {
     const now = Date.now();
     const day = ((req.query.day as string) || "monday").toLowerCase();
-    
+    const season = seasonLabelServer();
+
     if (airingScheduleCache && (now - airingScheduleCache.timestamp < AIRING_CACHE_TTL) && airingScheduleCache.data[day]) {
-      return res.json({ schedule: airingScheduleCache.data[day], cached: true, season: "2026 Güncel" });
+      const cached = airingScheduleCache.data[day];
+      return res.json({
+        schedule: cached.items,
+        source: cached.source,
+        liveSync: cached.liveSync === true,
+        stale: cached.stale !== false,
+        cached: true,
+        fetchedAt: cached.fetchedAt,
+        season,
+      });
     }
 
     try {
@@ -406,6 +394,7 @@ Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
           image: anime.images?.webp?.image_url || anime.images?.jpg?.image_url,
           score: anime.score || 0,
           broadcastTime: anime.broadcast?.time || "18:00",
+          broadcastJST: anime.broadcast?.time || undefined,
           broadcastDay: anime.broadcast?.day || day,
           genres: (anime.genres || []).map((g: any) => g.name),
           synopsis: anime.synopsis ? anime.synopsis.substring(0, 140) + "..." : "",
@@ -413,27 +402,35 @@ Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
         }));
 
         if (transformed.length > 0) {
+          const fetchedAt = new Date().toISOString();
           if (!airingScheduleCache) {
             airingScheduleCache = { data: {}, timestamp: now };
           }
-          airingScheduleCache.data[day] = transformed;
+          airingScheduleCache.data[day] = { items: transformed, source: "Jikan API v4", liveSync: true, stale: false, fetchedAt };
           airingScheduleCache.timestamp = now;
 
-          return res.json({ schedule: transformed, source: "Jikan API v4", liveSync: true, season: "2026 Güncel" });
+          return res.json({ schedule: transformed, source: "Jikan API v4", liveSync: true, stale: false, fetchedAt, season });
         }
       }
     } catch (_err) {
       // Fall through to 2026 verified schedule
     }
 
-    // High quality 2026 verified broadcast schedule fallback
+    // Son çare: arşiv/ÖRNEK liste — AÇIKÇA bayat olarak işaretlenir
     const dayList = SCHEDULE_2026[day] || SCHEDULE_2026.monday;
+    const fetchedAt = new Date().toISOString();
     if (!airingScheduleCache) {
       airingScheduleCache = { data: {}, timestamp: now };
     }
-    airingScheduleCache.data[day] = dayList;
+    airingScheduleCache.data[day] = {
+      items: dayList,
+      source: "Örnek veri (çevrimdışı — güncel sezon değil)",
+      liveSync: false,
+      stale: true,
+      fetchedAt,
+    };
 
-    return res.json({ schedule: dayList, source: "2026 Canlı Yayın Takvimi", liveSync: true, season: "2026 Güncel" });
+    return res.json({ schedule: dayList, source: "Örnek veri (çevrimdışı — güncel sezon değil)", liveSync: false, stale: true, fetchedAt, season });
   });
 
   // 2. Automated Trending & Seasonal Anime Sync

@@ -164,7 +164,7 @@ export interface AnimeReminder {
   day: DayOfWeek;
   timeTR: string; // e.g. "18:30"
   timeJST?: string; // e.g. "23:30"
-  currentEpisode: number;
+  currentEpisode?: number;
   totalEpisodes?: number | null;
   studio?: string;
   notifyBeforeMinutes: number; // 0 (at broadcast), 5, 15, 30, 60

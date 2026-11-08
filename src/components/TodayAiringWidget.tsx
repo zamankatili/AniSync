@@ -29,12 +29,16 @@ export const TodayAiringWidget: React.FC = () => {
   }, []);
 
   const [liveTodayAnime, setLiveTodayAnime] = useState<AiringAnime[]>([]);
+  const [scheduleStale, setScheduleStale] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     fetchLiveScheduleForDay(todayKey).then(res => {
-      if (isMounted && res.list && res.list.length > 0) {
-        setLiveTodayAnime(res.list.slice(0, 3));
+      if (isMounted) {
+        setScheduleStale(res.stale);
+        if (res.list && res.list.length > 0) {
+          setLiveTodayAnime(res.list.slice(0, 3));
+        }
       }
     }).catch(() => {});
     return () => { isMounted = false; };
@@ -75,6 +79,11 @@ export const TodayAiringWidget: React.FC = () => {
           <span className="bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.2 border border-black uppercase">
             {t('season_2026_badge')}
           </span>
+          {scheduleStale && (
+            <span className="bg-neutral-800 text-neutral-300 text-[9px] font-black px-1.5 py-0.2 border border-white/30 uppercase">
+              {t('data_stale_badge')}
+            </span>
+          )}
         </div>
         <button
           onClick={() => openScheduleModal('schedule')}
@@ -105,7 +114,10 @@ export const TodayAiringWidget: React.FC = () => {
               />
               <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <span className="text-[10px] font-black uppercase text-amber-400 flex items-center gap-1">
-                  <Clock size={10} /> {anime.timeTR} {t('airing_timezone_suffix')} • {t('airing_ep_watched', { count: anime.currentEpisode })}
+                  <Clock size={10} /> {anime.timeTR} {t('airing_timezone_suffix')}
+                  {typeof anime.currentEpisode === 'number' && (
+                    <> • {t('airing_ep_watched', { count: anime.currentEpisode })}</>
+                  )}
                 </span>
                 <h4 className="text-xs font-black uppercase text-white truncate group-hover:text-amber-400 transition-colors mt-0.5">
                   {anime.title_english || anime.title}

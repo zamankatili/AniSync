@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { Anime, DayOfWeek } from '../types';
 
 import { fetchLiveScheduleForDay } from '../lib/airingService';
+import { getAnimeSeason } from '../lib/season';
 
 export const AiringCalendar: React.FC = () => {
   const { t } = useAppTranslation();
@@ -65,6 +66,7 @@ export const AiringCalendar: React.FC = () => {
   const [liveAnimeMap, setLiveAnimeMap] = useState<Partial<Record<DayOfWeek, AiringAnime[]>>>({});
   const [isSyncing, setIsSyncing] = useState(false);
   const [sourceLabel, setSourceLabel] = useState<string>(t('cal_live_source'));
+  const [scheduleStale, setScheduleStale] = useState(true);
 
   // Live schedule fetch per day
   useEffect(() => {
@@ -76,6 +78,7 @@ export const AiringCalendar: React.FC = () => {
         if (result.list && result.list.length > 0 && isMounted) {
           setLiveAnimeMap((prev) => ({ ...prev, [selectedDay]: result.list }));
           setSourceLabel(result.source);
+          setScheduleStale(result.stale);
         }
       } catch (_err) {
         // Fall back seamlessly to static verified 2026 list
@@ -156,7 +159,7 @@ export const AiringCalendar: React.FC = () => {
       episodes: animeItem.totalEpisodes,
       status: 'Airing',
       genres: animeItem.genres.map((g, i) => ({ mal_id: i, name: g })),
-      year: 2026
+      year: Number(animeItem.seasonYear) || getAnimeSeason().seasonYear
     };
 
     addToWatchlist(animeObj, 'watching');
@@ -187,6 +190,11 @@ export const AiringCalendar: React.FC = () => {
             <span className="bg-rose-600 text-white font-black text-[10px] px-2 py-0.5 border border-white uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#fff]">
               <Sparkles size={11} /> {sourceLabel}
             </span>
+            {scheduleStale && (
+              <span className="bg-neutral-800 text-neutral-300 font-black text-[10px] px-2 py-0.5 border border-white/30 uppercase">
+                {t('data_stale_badge')}
+              </span>
+            )}
           </div>
           <p className="text-sm font-black text-neutral-400 uppercase tracking-widest">
             {t('cal_subtitle')}
@@ -417,9 +425,11 @@ export const AiringCalendar: React.FC = () => {
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 border border-white uppercase tracking-wider">
-                              {t('airing_episode', { episode: anime.currentEpisode })}
-                            </span>
+                            {typeof anime.currentEpisode === 'number' && (
+                              <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 border border-white uppercase tracking-wider">
+                                {t('airing_episode', { episode: anime.currentEpisode })}
+                              </span>
+                            )}
                             <span className="text-[11px] font-black text-amber-400 flex items-center gap-1">
                               <Clock size={12} /> {anime.timeTR} ({t('airing_timezone_suffix')})
                             </span>
@@ -610,7 +620,9 @@ export const AiringCalendar: React.FC = () => {
                             <div>
                               <div className="flex items-center justify-between text-[10px] font-black uppercase text-amber-400 mb-0.5">
                                 <span>{anime.timeTR} {t('airing_timezone_suffix')}</span>
-                                <span>{t('airing_episode', { episode: anime.currentEpisode })}</span>
+                                {typeof anime.currentEpisode === 'number' && (
+                                  <span>{t('airing_episode', { episode: anime.currentEpisode })}</span>
+                                )}
                               </div>
                               <h4 className="font-black text-xs text-white uppercase line-clamp-2 leading-tight group-hover:text-amber-400 transition-colors">
                                 {anime.title_english || anime.title}

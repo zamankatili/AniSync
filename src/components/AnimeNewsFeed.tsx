@@ -6,18 +6,19 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToastStore } from '../store/useToastStore';
 import { cn, getSafeImageUrl } from '../lib/utils';
-import { fetchLiveNews, AnimeNewsItem, CURATED_2026_NEWS } from '../lib/newsService';
+import { fetchLiveNews, AnimeNewsItem } from '../lib/newsService';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { formatRelativeTime } from '../lib/relativeTime';
 
 export const AnimeNewsFeed: React.FC = () => {
-  const { t } = useAppTranslation();
-  const [news, setNews] = useState<AnimeNewsItem[]>(CURATED_2026_NEWS);
+  const { t, currentLang } = useAppTranslation();
+  const [news, setNews] = useState<AnimeNewsItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [searchFilter, setSearchFilter] = useState<string>('');
-  const [lastUpdated, setLastUpdated] = useState<string>(t('live_badge'));
+  const [lastUpdated, setLastUpdated] = useState<string>('');
   const [sourceLabel, setSourceLabel] = useState<string>(t('live_news_source'));
-  const [isGrounded, setIsGrounded] = useState<boolean>(true);
+  const [isStale, setIsStale] = useState<boolean>(true);
   const [savedNewsIds, setSavedNewsIds] = useState<Set<string | number>>(new Set());
   const { addToast } = useToastStore();
 
@@ -25,20 +26,19 @@ export const AnimeNewsFeed: React.FC = () => {
     setLoading(true);
     try {
       const result = await fetchLiveNews(isManualRefresh);
-      if (result.news && Array.isArray(result.news) && result.news.length > 0) {
-        setNews(result.news);
-        setIsGrounded(result.isGrounded);
-        setSourceLabel(result.source);
-        setLastUpdated(new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
-        if (isManualRefresh) {
-          addToast(t('news_updated_toast', { source: result.source }), 'success');
-        }
-      } else {
-        setNews(CURATED_2026_NEWS);
+      setNews(result.news);
+      setIsStale(result.stale);
+      setSourceLabel(result.source);
+      setLastUpdated(new Intl.DateTimeFormat(currentLang.slice(0, 2) || 'tr', {
+        hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short',
+      }).format(new Date(result.fetchedAt)));
+      if (isManualRefresh) {
+        addToast(t('news_updated_toast', { source: result.source }), 'success');
       }
     } catch (err) {
-      console.warn('Anime news fetch notice, using curated feed:', err);
-      setNews(CURATED_2026_NEWS);
+      console.warn('Anime news fetch failed:', err);
+      setNews([]);
+      setIsStale(true);
     } finally {
       setLoading(false);
     }
@@ -98,9 +98,14 @@ export const AnimeNewsFeed: React.FC = () => {
               <span className="bg-cyan-500 text-black font-black text-[10px] px-2 py-0.5 border border-white uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#fff]">
                 <Globe size={11} /> {sourceLabel}
               </span>
+              {isStale && (
+                <span className="bg-neutral-800 text-neutral-300 font-black text-[10px] px-2 py-0.5 border border-white/30 uppercase">
+                  {t('data_stale_badge')}
+                </span>
+              )}
             </div>
             <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider">
-              {t('live_news_desc')} • {t('updated_at_label')} {lastUpdated}
+              {t('live_news_desc')}{lastUpdated ? ` • ${t('updated_at_label')} ${lastUpdated}` : ''}
             </p>
           </div>
         </div>
@@ -196,7 +201,7 @@ export const AnimeNewsFeed: React.FC = () => {
                       </span>
                       <span className="text-neutral-500">•</span>
                       <span className="text-neutral-400 flex items-center gap-1 font-mono">
-                        <Clock size={10} /> {item.date}
+                        <Clock size={10} /> {formatRelativeTime(item.publishedAt ?? item.date, currentLang)}
                       </span>
                     </div>
 

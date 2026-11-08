@@ -1,98 +1,277 @@
 import { DayOfWeek } from '../types';
 import { AiringAnime, AIRING_SCHEDULE } from '../data/airingSchedule';
 import { apiUrl } from './apiBase';
+import { getAnimeSeason } from './season';
 
-const CACHE_PREFIX = 'anisync_schedule_cache_';
-const CACHE_TTL_MS = 45 * 60 * 1000; // 45 minutes
-
-// Convert JST (UTC+9) time string like "23:30" or "23:30 (JST)" to Turkey time (TRT / UTC+3: -6 hours)
-function convertJstToTrt(jstTimeStr?: string): { trt: string; jst: string } {
-  if (!jstTimeStr) return { trt: '18:00', jst: '24:00' };
-  
-  const clean = jstTimeStr.replace(/[^\d:]/g, '').trim();
-  const parts = clean.split(':');
-  if (parts.length >= 2) {
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-    if (!isNaN(hours) && !isNaN(minutes)) {
-      // JST is UTC+9, TRT is UTC+3 -> TRT is JST - 6 hours
-      let trtHour = (hours - 6 + 24) % 24;
-      const trtFormatted = `${String(trtHour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-      return { trt: trtFormatted, jst: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}` };
-    }
-  }
-  return { trt: '18:00', jst: jstTimeStr };
+export interface ScheduleFetchResult {
+  list: AiringAnime[];
+  source: string;
+  /** Canlı kaynaktan mı geldi? */
+  isLive: boolean;
+  /** Önbellek/örnek veri ise true; UI rozetle gösterir. */
+  stale: boolean;
+  fetchedAt: string;
+  seasonLabel: string;
 }
 
-export async function fetchLiveScheduleForDay(day: DayOfWeek): Promise<{ list: AiringAnime[]; source: string; isLive: boolean }> {
+const CACHE_PREFIX = 'anisync_schedule_cache_v2_';
+const WEEK_CACHE_KEY = 'anisync_schedule_anilist_week_v2';
+const CACHE_TTL_MS = 45 * 60 * 1000; // 45 dakika
+
+const TR_TZ = 'Europe/Istanbul';
+const JST_TZ = 'Asia/Tokyo';
+
+function hhmmInTimeZone(timestampSeconds: number, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone,
+  }).format(new Date(timestampSeconds * 1000));
+}
+
+function dayOfWeekInTimeZone(timestampSeconds: number, timeZone: string): DayOfWeek {
+  const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone })
+    .format(new Date(timestampSeconds * 1000))
+    .toLowerCase();
+  const map: Record<string, DayOfWeek> = {
+    monday: 'monday',
+    tuesday: 'tuesday',
+    wednesday: 'wednesday',
+    thursday: 'thursday',
+    friday: 'friday',
+    saturday: 'saturday',
+    sunday: 'sunday',
+  };
+  return map[weekday] ?? 'monday';
+}
+
+function stripHtml(input: string): string {
+  return input
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#039;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** AniList GraphQL — önümüzdeki 7 günün gerçek yayın saati ve bölüm numarası. */
+const ANILIST_AIRING_QUERY = `
+query ($now: Int!, $later: Int!) {
+  Page(page: 1, perPage: 50) {
+    airingSchedules(airingAt_greater: $now, airingAt_lesser: $later, sort: TIME) {
+      airingAt
+      episode
+      media {
+        id
+        idMal
+        title { romaji english }
+        coverImage { large }
+        genres
+        averageScore
+        episodes
+        description(asHtml: false)
+        status
+        studios(isMain: true) { nodes { name } }
+        season
+        seasonYear
+      }
+    }
+  }
+}`;
+
+function mapAniListEntry(entry: any): AiringAnime | null {
+  const media = entry?.media;
+  if (!media) return null;
+  if (media.status && media.status !== 'RELEASING') return null;
+
+  const idMal = typeof media.idMal === 'number' ? media.idMal : Number(media.id) || 0;
+  if (!idMal) return null;
+
+  const airingAt: number = entry.airingAt;
+  const synopsis = media.description ? stripHtml(media.description).slice(0, 220) : '';
+  const studio = media.studios?.nodes?.[0]?.name || undefined;
+
+  return {
+    id: `anilist_${media.id}_${entry.episode ?? 'x'}`,
+    mal_id: idMal,
+    title: media.title?.romaji || media.title?.english || 'Bilinmeyen Anime',
+    title_english: media.title?.english || media.title?.romaji || 'Bilinmeyen Anime',
+    day: dayOfWeekInTimeZone(airingAt, TR_TZ),
+    timeTR: hhmmInTimeZone(airingAt, TR_TZ),
+    timeJST: hhmmInTimeZone(airingAt, JST_TZ),
+    currentEpisode: typeof entry.episode === 'number' ? entry.episode : undefined,
+    airingAt,
+    totalEpisodes: typeof media.episodes === 'number' ? media.episodes : null,
+    image: media.coverImage?.large || 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
+    studio: studio || '—',
+    score: media.averageScore ? Math.round((media.averageScore / 10) * 100) / 100 : 0,
+    genres: Array.isArray(media.genres) ? media.genres.slice(0, 4) : [],
+    synopsis,
+    streamingOn: [],
+    seasonYear: media.seasonYear ? String(media.seasonYear) : String(getAnimeSeason().seasonYear),
+  };
+}
+
+async function fetchAniListWeek(): Promise<Map<DayOfWeek, AiringAnime[]> | null> {
+  // Haftalık önbellek — tek GraphQL çağrısını 7 güne yayarız.
+  try {
+    const cached = localStorage.getItem(WEEK_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Date.now() - parsed.timestamp < CACHE_TTL_MS && parsed.week) {
+        return new Map(Object.entries(parsed.week) as [DayOfWeek, AiringAnime[]][]);
+      }
+    }
+  } catch (_e) {
+    // önbellek okunamadı → canlı dene
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const later = now + 7 * 24 * 60 * 60;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7000);
+  try {
+    const res = await fetch('https://graphql.anilist.co', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ query: ANILIST_AIRING_QUERY, variables: { now, later } }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const entries: any[] = json?.data?.Page?.airingSchedules ?? [];
+    if (entries.length === 0) return null;
+
+    const week = new Map<DayOfWeek, AiringAnime[]>();
+    for (const entry of entries) {
+      const mapped = mapAniListEntry(entry);
+      if (!mapped) continue;
+      const bucket = week.get(mapped.day) ?? [];
+      bucket.push(mapped);
+      week.set(mapped.day, bucket);
+    }
+    for (const bucket of week.values()) {
+      bucket.sort((a, b) => (a.airingAt ?? 0) - (b.airingAt ?? 0));
+    }
+
+    try {
+      localStorage.setItem(WEEK_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), week: Object.fromEntries(week) }));
+    } catch (_e) {
+      // localStorage dolu olabilir — kritik değil
+    }
+    return week;
+  } catch (_err) {
+    clearTimeout(timeout);
+    return null;
+  }
+}
+
+const freshResult = (
+  list: AiringAnime[],
+  source: string,
+  isLive: boolean,
+  stale: boolean,
+): ScheduleFetchResult => ({
+  list,
+  source,
+  isLive,
+  stale,
+  fetchedAt: new Date().toISOString(),
+  seasonLabel: getAnimeSeason().labelTR,
+});
+
+export async function fetchLiveScheduleForDay(day: DayOfWeek): Promise<ScheduleFetchResult> {
   const cacheKey = `${CACHE_PREFIX}${day}`;
 
-  // 1. Check client-side localStorage cache
+  // 1. Kısa ömürlü istemci önbelleği (taze kabul edilir)
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Date.now() - parsed.timestamp < CACHE_TTL_MS && Array.isArray(parsed.list) && parsed.list.length > 0) {
-        return { list: parsed.list, source: 'Önbellek (Canlı Takvim)', isLive: true };
+        return { ...freshResult(parsed.list, 'AniList (önbellek)', true, false), fetchedAt: new Date(parsed.timestamp).toISOString() };
       }
     }
   } catch (_e) {
-    // Ignore cache parse error
+    // önbellek yoksay
   }
 
-  // 2. Try backend API proxy if available (local development / full-stack deployment)
+  // 2. AniList canlı (client-side, CORS açık) — gerçek airingAt + bölüm
+  const week = await fetchAniListWeek();
+  const anilistList = week?.get(day);
+  if (anilistList && anilistList.length > 0) {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ list: anilistList, timestamp: Date.now() }));
+    } catch (_e) { /* yoksay */ }
+    return freshResult(anilistList, 'AniList (canlı)', true, false);
+  }
+
+  // 3. Backend proxy (dev / tam-stack dağıtımında) — endpoint artık dürüst bayrak döndürür
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500);
+    const timeout = setTimeout(() => controller.abort(), 3000);
     const res = await fetch(apiUrl(`/api/sync/airing-schedule?day=${day}`), { signal: controller.signal });
     clearTimeout(timeout);
 
     if (res.ok) {
       const json = await res.json();
-      if (json.schedule && Array.isArray(json.schedule) && json.schedule.length > 0) {
+      const serverLive = Boolean(json?.liveSync) && !json?.stale;
+      if (Array.isArray(json?.schedule) && json.schedule.length > 0) {
         const mapped: AiringAnime[] = json.schedule.map((item: any, idx: number) => ({
-          id: `live_${day}_${item.mal_id || idx}`,
+          id: `sync_${day}_${item.mal_id || idx}`,
           mal_id: item.mal_id,
           title: item.title,
           title_english: item.title_english || item.title,
           day,
-          timeTR: item.broadcastTime || '18:00',
-          timeJST: '23:00',
-          currentEpisode: item.episodes ? Math.min(12, item.episodes) : 6,
-          totalEpisodes: item.episodes || 12,
+          timeTR: item.broadcastTime || '—',
+          timeJST: item.broadcastJST || undefined,
+          currentEpisode: typeof item.episode === 'number' ? item.episode : undefined,
+          airingAt: typeof item.airingAt === 'number' ? item.airingAt : undefined,
+          totalEpisodes: typeof item.episodes === 'number' ? item.episodes : null,
           image: item.image || 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
-          studio: item.studio || 'Studio',
-          score: item.score || 8.0,
-          genres: item.genres || ['Aksiyon'],
+          studio: item.studio || '—',
+          score: typeof item.score === 'number' ? item.score : 0,
+          genres: Array.isArray(item.genres) ? item.genres : [],
           synopsis: item.synopsis || '',
-          streamingOn: ['Crunchyroll', 'Netflix'],
-          seasonYear: '2026 Güncel'
+          streamingOn: [],
+          seasonYear: getAnimeSeason().labelTR,
         }));
-
-        localStorage.setItem(cacheKey, JSON.stringify({ list: mapped, timestamp: Date.now() }));
-        return { list: mapped, source: 'AniSync Canlı Senkronizasyon', isLive: true };
+        return {
+          ...freshResult(mapped, json?.source || 'AniSync Senkronizasyon', serverLive, !serverLive),
+          fetchedAt: json?.fetchedAt || new Date().toISOString(),
+        };
       }
     }
   } catch (_err) {
-    // Continue to direct Jikan client fetch
+    // backend yok → Jikan'a geç
   }
 
-  // 3. Direct Jikan API v4 fetch on client (works seamlessly on Vercel without a backend!)
+  // 4. Doğrudan Jikan v4 (vercel client-side)
   try {
     const jikanController = new AbortController();
-    const jikanTimeout = setTimeout(() => jikanController.abort(), 4000);
+    const jikanTimeout = setTimeout(() => jikanController.abort(), 5000);
     const jikanRes = await fetch(`https://api.jikan.moe/v4/schedules?filter=${day}&limit=25`, {
-      signal: jikanController.signal
+      signal: jikanController.signal,
     });
     clearTimeout(jikanTimeout);
 
     if (jikanRes.ok) {
       const json = await jikanRes.json();
-      if (json && Array.isArray(json.data) && json.data.length > 0) {
+      if (Array.isArray(json?.data) && json.data.length > 0) {
+        const season = getAnimeSeason();
         const mapped: AiringAnime[] = json.data.map((anime: any, idx: number) => {
-          const times = convertJstToTrt(anime.broadcast?.time);
-          const genres = (anime.genres || []).map((g: any) => g.name);
-          const studio = anime.studios?.[0]?.name || 'Stüdyo Bilgisi Yok';
+          const jst = typeof anime?.broadcast?.time === 'string' ? anime.broadcast.time : undefined;
+          const [hours, minutes] = (jst || '').split(':').map((n: string) => parseInt(n, 10));
+          const timeTR = Number.isFinite(hours) && Number.isFinite(minutes)
+            ? `${String((hours - 6 + 24) % 24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+            : '—';
+          const genres = (anime.genres || []).map((g: any) => g?.name).filter(Boolean);
 
           return {
             id: `jikan_${day}_${anime.mal_id || idx}`,
@@ -100,29 +279,31 @@ export async function fetchLiveScheduleForDay(day: DayOfWeek): Promise<{ list: A
             title: anime.title,
             title_english: anime.title_english || anime.title,
             day,
-            timeTR: times.trt,
-            timeJST: times.jst,
-            currentEpisode: anime.episodes ? Math.min(10, anime.episodes) : 1,
-            totalEpisodes: anime.episodes || null,
+            timeTR,
+            timeJST: jst,
+            // Jikan bölüm numarası VERMEZ — uydurmayız.
+            currentEpisode: undefined,
+            totalEpisodes: typeof anime.episodes === 'number' ? anime.episodes : null,
             image: anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp',
-            studio,
-            score: anime.score || 7.8,
-            genres: genres.length > 0 ? genres : ['Aksiyon', 'Macera'],
-            synopsis: anime.synopsis ? anime.synopsis.slice(0, 180) + '...' : 'Konu detayı yakında eklenecektir.',
-            streamingOn: ['Crunchyroll', 'Netflix', 'Disney+'],
-            seasonYear: '2026 Canlı Yayın'
+            studio: anime.studios?.[0]?.name || '—',
+            score: anime.score || 0,
+            genres,
+            synopsis: anime.synopsis ? `${anime.synopsis.slice(0, 180)}…` : '',
+            streamingOn: [],
+            seasonYear: season.labelTR,
           };
         });
-
-        localStorage.setItem(cacheKey, JSON.stringify({ list: mapped, timestamp: Date.now() }));
-        return { list: mapped, source: 'Jikan API v4 (Canlı)', isLive: true };
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({ list: mapped, timestamp: Date.now() }));
+        } catch (_e) { /* yoksay */ }
+        return freshResult(mapped, 'Jikan API v4 (canlı)', true, false);
       }
     }
   } catch (_jikanErr) {
-    // If rate limited or network failure, proceed to fallback
+    // çevrimdışı → örnek veri
   }
 
-  // 4. Fallback to curated 2026 Airing Schedule
-  const fallbackList = AIRING_SCHEDULE.filter(a => a.day === day);
-  return { list: fallbackList, source: 'Doğrulanmış 2026 Sezon Verisi', isLive: false };
+  // 5. Son çare: arşiv/örnek veri — AÇIKÇA bayat ve örnek olarak işaretlenir
+  const fallbackList = AIRING_SCHEDULE.filter(a => a.day === day).map(a => ({ ...a, currentEpisode: undefined, airingAt: undefined }));
+  return freshResult(fallbackList, 'Örnek veri (çevrimdışı — güncel sezon değil)', false, true);
 }

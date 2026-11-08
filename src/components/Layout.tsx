@@ -110,7 +110,9 @@ export const Layout = () => {
             addToast(`⏰ "${rem.title_english || rem.title}" yeni bölümü birazdan yayında! (${rem.timeTR} TR)`, 'info');
             if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && rem.browserNotify) {
               new Notification(`📺 ${rem.title_english || rem.title} Yayınlanıyor!`, {
-                body: `Bölüm ${rem.currentEpisode} saat ${rem.timeTR}'de yayında.`,
+                body: rem.currentEpisode
+                  ? `Bölüm ${rem.currentEpisode} saat ${rem.timeTR}'de yayında.`
+                  : `Saat ${rem.timeTR}'de yayında.`,
                 icon: rem.image,
               });
             }
