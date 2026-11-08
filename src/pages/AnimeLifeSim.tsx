@@ -100,6 +100,7 @@ export const AnimeLifeSim: React.FC = () => {
   const savedAge = savedLife
     ? (savedLifeIndex > 0 ? savedLife.events[Math.min(savedLifeIndex, savedLife.events.length - 1)]?.age ?? 0 : 0)
     : 0;
+  const displayName = life?.characterName?.trim() || t('als_unnamed');
 
   const startLifeWith = (w: NonNullable<typeof world>, r: NonNullable<typeof region>) => {
     const includeHeavy = heavyContent && !eduMode;
@@ -202,12 +203,12 @@ export const AnimeLifeSim: React.FC = () => {
       life.events,
       life.gender,
       life.period,
-      life.characterName,
+      displayName,
       getFamilyStatus(finalLifeStats.socialClass),
       getEducationTier(finalLifeStats.intelligence),
       computeAssetsAt(life, finalLifeStats)
     );
-  }, [life, world, region, finalLifeStats]);
+  }, [life, world, region, finalLifeStats, displayName]);
 
   const playSound = (freq: number, duration: number, type: OscillatorType = 'square') => {
     if (muted) return;
@@ -517,7 +518,7 @@ export const AnimeLifeSim: React.FC = () => {
             <div className="bg-amber-400/20 border-2 border-amber-400 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-amber-300 text-xs font-bold">
                 {t('als_resume_available_v2', {
-                  name: savedLife.characterName,
+                  name: savedLife.characterName?.trim() || t('als_unnamed'),
                   age: savedAge,
                   world: savedWorldData ? worldName(savedWorldData) : savedLife.worldId,
                 })}
@@ -891,7 +892,7 @@ export const AnimeLifeSim: React.FC = () => {
           {/* Character Profile */}
           {life && currentStats && (
             <div className="bg-neutral-900 border-2 border-white/30 p-4 flex flex-wrap items-center gap-3 text-[10px] font-mono">
-              <span className="text-white font-black text-sm">{life.characterName}</span>
+              <span className="text-white font-black text-sm">{displayName}</span>
               <span className="text-neutral-400">|</span>
               <span className="text-neutral-300">{life.gender === 'female' ? '♀' : '♂'}</span>
               <span className="text-neutral-400">|</span>
@@ -1210,7 +1211,7 @@ export const AnimeLifeSim: React.FC = () => {
                       ctx.fillText(t('als_hero_title'), 20, 34);
                       ctx.fillStyle = '#fff';
                       ctx.font = 'bold 14px monospace';
-                      ctx.fillText(`${life.characterName} · ${world.emoji} ${worldName(world)} - ${regionName(region)}`, 20, 70);
+                      ctx.fillText(`${displayName} · ${world.emoji} ${worldName(world)} - ${regionName(region)}`, 20, 70);
                       ctx.fillText(`${t('als_event_age', { age: life.deathAge, year: life.deathYear })} | ${life.deathCause}`, 20, 95);
                       ctx.fillText(`${t('als_family')}: ${familyLabel(family)}  ${t('als_profile_education')}: ${educationLabel(edu)}`, 20, 120);
                       ctx.fillText(`${t('als_stat_power')}: ${stats.power}  ${t('als_stat_intelligence')}: ${stats.intelligence}  ${t('als_stat_luck')}: ${stats.luck}`, 20, 145);

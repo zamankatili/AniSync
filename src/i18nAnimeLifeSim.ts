@@ -119,6 +119,7 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_age_gate_confirm": "15 yaşından büyüğüm",
     "als_age_gate_leave": "Vazgeç",
     "als_break_reminder": "2 saatten uzun süredir oynuyorsun. Gözlerini dinlendir, biraz su iç ve ara ver.",
+    "als_unnamed": "İsimsiz",
   },
   en: {
     "als_page_title": "Anime Life Simulation (1 in 8 Billion) | AniSync",
@@ -235,6 +236,7 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_age_gate_confirm": "I am over 15",
     "als_age_gate_leave": "Leave",
     "als_break_reminder": "You have been playing for over 2 hours. Rest your eyes, drink some water and take a break.",
+    "als_unnamed": "Unnamed",
   },
   ja: {
     "als_page_title": "アニメライフシミュレーション (80億の世界に1つ) | AniSync",
@@ -351,6 +353,7 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_age_gate_confirm": "15歳以上です",
     "als_age_gate_leave": "やめる",
     "als_break_reminder": "2時間以上プレイしています。目を休めて、水分をとって休憩しましょう。",
+    "als_unnamed": "名前なし",
   },
   fr: {
     "als_page_title": "Simulation de Vie Anime (1 parmi 8 milliards) | AniSync",
@@ -467,5 +470,6 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_age_gate_confirm": "J'ai plus de 15 ans",
     "als_age_gate_leave": "Quitter",
     "als_break_reminder": "Tu joues depuis plus de 2 heures. Repose tes yeux, bois un peu d'eau et fais une pause.",
+    "als_unnamed": "Sans nom",
   },
 };
