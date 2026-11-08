@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2 } from 'lucide-react';
+import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight } from 'lucide-react';
 import { cn, getSafeImageUrl, handleImageError } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ToastContainer } from './Toast';
@@ -20,26 +20,52 @@ import { GlobalSearchModal } from './GlobalSearchModal';
 import { ErrorConsoleModal } from './ErrorConsoleModal';
 import { AnimeErrorBoundary } from './AnimeErrorBoundary';
 
-const NAV_ITEMS = [
-  { path: '/', labelKey: 'home', icon: Home },
-  { path: '/challenge', labelKey: 'weekly_challenge', icon: Flame },
-  { path: '/dle', labelKey: 'dle', icon: Sparkles },
-  { path: '/watch-party', labelKey: 'watch_party', icon: Tv2 },
-  { path: '/music-quiz', labelKey: 'music_quiz', icon: Music2 },
-  { path: '/arcade', labelKey: 'arcade', icon: Gamepad2 },
-  { path: '/calendar', labelKey: 'calendar', icon: Calendar },
-  { path: '/discover', labelKey: 'discover', icon: Compass },
-  { path: '/grid-maker', labelKey: 'grid_maker', icon: Grid3X3 },
-  { path: '/lists', labelKey: 'top_lists', icon: LayoutList },
-  { path: '/list', labelKey: 'my_list', icon: List },
-  { path: '/profile', labelKey: 'profile', icon: User },
-  { path: '/anime-life-sim', labelKey: 'anime_life_sim', icon: Compass },
+// Sol kenarlık menüsü — gruplu ve ölçeklenebilir yapı.
+// Her grup bir bölüm başlığı (i18n) ve maddelerden oluşur; sıra mobil alt menüyle tutarlıdır.
+const NAV_GROUPS: { sectionKey: string; items: { path: string; labelKey: string; icon: any }[] }[] = [
+  {
+    sectionKey: 'nav_section_browse',
+    items: [
+      { path: '/', labelKey: 'home', icon: Home },
+      { path: '/calendar', labelKey: 'calendar', icon: Calendar },
+      { path: '/list', labelKey: 'my_list', icon: List },
+      { path: '/lists', labelKey: 'top_lists', icon: LayoutList },
+    ],
+  },
+  {
+    sectionKey: 'nav_section_social',
+    items: [
+      { path: '/watch-party', labelKey: 'watch_party', icon: Tv2 },
+      { path: '/music-quiz', labelKey: 'music_quiz', icon: Music2 },
+      { path: '/arcade', labelKey: 'arcade', icon: Gamepad2 },
+      { path: '/dle', labelKey: 'dle', icon: Sparkles },
+      { path: '/challenge', labelKey: 'weekly_challenge', icon: Flame },
+    ],
+  },
+  {
+    sectionKey: 'nav_section_explore',
+    items: [
+      { path: '/discover', labelKey: 'discover', icon: Compass },
+      { path: '/grid-maker', labelKey: 'grid_maker', icon: Grid3X3 },
+      { path: '/anime-life-sim', labelKey: 'anime_life_sim', icon: Dices },
+    ],
+  },
+  {
+    sectionKey: 'nav_section_account',
+    items: [
+      { path: '/profile', labelKey: 'profile', icon: User },
+    ],
+  },
 ];
+
+const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 
 // Mobil alt menüde en fazla 5 birincil sekme gösterilir (taşmayı önler).
 const PRIMARY_NAV_PATHS = ['/', '/discover', '/list', '/calendar', '/profile'];
 const PRIMARY_NAV_ITEMS = NAV_ITEMS.filter((item) => PRIMARY_NAV_PATHS.includes(item.path));
-const MORE_NAV_ITEMS = NAV_ITEMS.filter((item) => !PRIMARY_NAV_PATHS.includes(item.path));
+const MORE_GROUPS = NAV_GROUPS
+  .map((group) => ({ ...group, items: group.items.filter((item) => !PRIMARY_NAV_PATHS.includes(item.path)) }))
+  .filter((group) => group.items.length > 0);
 
 const LANGUAGES = [
   { code: 'tr', short: 'TR', label: 'Türkçe' },
@@ -198,44 +224,83 @@ export const Layout = () => {
       />
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 border-r-2 border-white/20 bg-black/85 backdrop-blur-md p-6 safe-area-top">
-        <div className="flex items-center gap-3 mb-10">
-          <div 
-            className="w-10 h-10 border-2 border-white flex items-center justify-center text-white font-black text-xl neo-shadow-white transition-colors duration-500"
+      <aside className="hidden md:flex flex-col w-64 xl:w-72 border-r-2 border-white/20 bg-black/85 backdrop-blur-md p-5 safe-area-top overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent]">
+        <div className="flex items-center gap-3 mb-6 px-1">
+          <div
+            className="w-10 h-10 border-2 border-white flex items-center justify-center text-white font-black text-xl neo-shadow-white transition-colors duration-500 shrink-0"
             style={{ backgroundColor: activeConfig.accentColor }}
           >
             A
           </div>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-2xl font-black tracking-tighter uppercase text-white leading-none">AniSync</h1>
-            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400">
+            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400 block truncate">
               {activeConfig.nameTR.split(' ')[0]}
             </span>
           </div>
         </div>
-        
-        <nav className="flex-1 space-y-3">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              style={({ isActive }) => isActive ? {
-                backgroundColor: activeConfig.accentColor,
-                borderColor: activeConfig.accentColor,
-                boxShadow: `4px 4px 0px 0px ${activeConfig.secondaryColor}`
-              } : undefined}
-              className={({ isActive }) => cn(
-                "flex items-center gap-4 px-4 py-3 border-2 transition-all font-bold uppercase tracking-wide",
-                isActive 
-                  ? "text-white" 
-                  : "border-transparent text-neutral-400 hover:text-white hover:border-white/20"
-              )}
-            >
-              <item.icon size={20} />
-              {t(item.labelKey)}
-            </NavLink>
+
+        <nav className="flex-1 flex flex-col">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.sectionKey} className="mb-2 last:mb-0">
+              <div className="flex items-center gap-2 px-3 pt-3 pb-1.5">
+                <span
+                  className="w-1.5 h-1.5 shrink-0"
+                  style={{ backgroundColor: activeConfig.accentColor }}
+                  aria-hidden="true"
+                />
+                <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
+                  {t(group.sectionKey)}
+                </h2>
+                <div className="flex-1 h-px bg-white/10" aria-hidden="true" />
+              </div>
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    style={({ isActive }) => isActive ? {
+                      backgroundColor: activeConfig.accentColor,
+                      borderColor: activeConfig.accentColor,
+                      boxShadow: `4px 4px 0px 0px ${activeConfig.secondaryColor}`
+                    } : undefined}
+                    className={({ isActive }) => cn(
+                      "flex items-center gap-3 px-3 py-2.5 border-2 transition-all font-bold uppercase tracking-wide text-[13px] whitespace-nowrap min-h-[44px]",
+                      isActive
+                        ? "text-white"
+                        : "border-transparent text-neutral-400 hover:text-white hover:border-white/20 hover:bg-white/5"
+                    )}
+                  >
+                    <item.icon size={19} strokeWidth={2.25} className="shrink-0" />
+                    <span className="truncate">{t(item.labelKey)}</span>
+                    {item.path === '/anime-life-sim' && (
+                      <span className="ml-auto text-[8px] font-black uppercase px-1.5 py-0.5 bg-rose-600 text-white border border-white shrink-0">
+                        {t('new_badge')}
+                      </span>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
+
+        {/* Sidebar alt bilgisi — tema + telif */}
+        <div className="mt-4 pt-4 border-t-2 border-white/10 px-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-600">
+              AniSync LOGOS
+            </span>
+            <a
+              href="https://anisync-tau.vercel.app/"
+              className="text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-white transition-colors flex items-center gap-1"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t('about')} <ChevronRight size={10} strokeWidth={3} />
+            </a>
+          </div>
+        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -582,17 +647,30 @@ export const Layout = () => {
                   <CloseIcon size={20} />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-2 p-4 pb-6">
-                {MORE_NAV_ITEMS.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsMoreNavOpen(false)}
-                    className="flex items-center gap-3 border-2 border-white/15 px-3 py-3 min-h-[56px] font-black uppercase text-xs tracking-wide hover:border-white hover:bg-white hover:text-black transition-colors"
-                  >
-                    <item.icon size={20} strokeWidth={2.5} />
-                    {t(item.labelKey)}
-                  </NavLink>
+              <div className="p-4 pb-6 space-y-4 max-h-[70dvh] overflow-y-auto [scrollbar-width:thin]">
+                {MORE_GROUPS.map((group) => (
+                  <div key={group.sectionKey}>
+                    <div className="flex items-center gap-2 px-1 pb-1.5">
+                      <span className="w-1.5 h-1.5 shrink-0" style={{ backgroundColor: activeConfig.accentColor }} aria-hidden="true" />
+                      <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
+                        {t(group.sectionKey)}
+                      </h2>
+                      <div className="flex-1 h-px bg-white/10" aria-hidden="true" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {group.items.map((item) => (
+                        <NavLink
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setIsMoreNavOpen(false)}
+                          className="flex items-center gap-3 border-2 border-white/15 px-3 py-3 min-h-[56px] font-black uppercase text-xs tracking-wide hover:border-white hover:bg-white hover:text-black transition-colors"
+                        >
+                          <item.icon size={20} strokeWidth={2.5} className="shrink-0" />
+                          <span className="leading-tight">{t(item.labelKey)}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </motion.div>

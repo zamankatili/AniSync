@@ -3,7 +3,7 @@ import { Anime } from '../types';
 import { FALLBACK_LISTS, EXTENDED_RANDOM_CATALOG } from '../data/fallbackLists';
 import { CURATED_SIMILAR_DATA, SimilarRecommendation } from '../data/animeRecommendations';
 import { fetchAnimeFallback, toLegacyAnime } from '../lib/api/animeBridge';
-import { searchAniList } from '../lib/api/anilist';
+import { searchAniList, fetchSeasonalTrendingAnime } from '../lib/api/anilist';
 
 const BASE_URL = 'https://api.jikan.moe/v4';
 const CACHE_KEY_PREFIX = 'ety_jikan_cache_';
@@ -172,7 +172,8 @@ export const useAnimeData = (): UseAnimeResult => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Trending / Top Airing
+  // Trending — önce Jikan (top airing), sonra AniList GÜNCEL SEZON trendleri;
+  // ikisi de başarısızsa boş liste + hata (klasikler "güncel" gibi sunulmaz).
   const fetchTop = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -180,15 +181,33 @@ export const useAnimeData = (): UseAnimeResult => {
       const json = await jikanFetch(`${BASE_URL}/top/anime?filter=airing&limit=10`);
       if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
         setData(json.data as Anime[]);
-      } else {
-        const fromAniList = await fetchAniListAsLegacy({ perPage: 10 });
-        setData(fromAniList.length > 0 ? fromAniList : FALLBACK_LISTS['top_airing']);
+        setError(null);
+        return;
       }
+      const seasonal = await fetchSeasonalTrendingAnime(12);
+      const items = seasonal.items.map((item) => toLegacyAnime(item));
+      if (items.length > 0) {
+        setData(items);
+        setError(null);
+        return;
+      }
+      setData([]);
+      setError('Güncel sezon listesi alınamadı. Bağlantınızı kontrol edip tekrar deneyin.');
     } catch (err: any) {
       console.warn('fetchTop fallback triggered:', err);
-      // Jikan erişilemedi: AniList dene, o da olmazsa yerel listeye dön.
-      const fromAniList = await fetchAniListAsLegacy({ perPage: 10 });
-      setData(fromAniList.length > 0 ? fromAniList : FALLBACK_LISTS['top_airing']);
+      try {
+        const seasonal = await fetchSeasonalTrendingAnime(12);
+        const items = seasonal.items.map((item) => toLegacyAnime(item));
+        if (items.length > 0) {
+          setData(items);
+          setError(null);
+          return;
+        }
+      } catch (_inner) {
+        // hem Jikan hem AniList başarısız
+      }
+      setData([]);
+      setError('Güncel sezon listesi alınamadı. Bağlantınızı kontrol edip tekrar deneyin.');
     } finally {
       setLoading(false);
     }

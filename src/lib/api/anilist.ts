@@ -12,6 +12,7 @@ import { fetchJson, createRateLimiter } from './http';
 import { createTtlCache, dedupe } from './cache';
 import type { MediaKind, MediaSearchResult, UnifiedMedia } from '../../types/unified';
 import { stripHtml } from '../../types/unified';
+import { getAnimeSeason } from '../season';
 
 const ANILIST_ENDPOINT = 'https://graphql.anilist.co';
 const limiter = createRateLimiter(700);
@@ -359,4 +360,45 @@ export async function getAniListTrending(
   perPage = 20
 ): Promise<MediaSearchResult> {
   return searchAniList({ kind, page, perPage });
+}
+
+/**
+ * GÜNCEL SEZONUN trend animeleri (AniList `season + seasonYear`, TRENDING_DESC).
+ * Keşfet sayfasındaki "TRENDING NOW" bölümü budur — klasikler değildir.
+ * Sezon, çağrıldığı tarihe göre dinamik hesaplanır.
+ */
+export async function fetchSeasonalTrendingAnime(perPage = 12): Promise<MediaSearchResult> {
+  const season = getAnimeSeason();
+  const cacheKey = `season-trending:${season.season}:${season.seasonYear}:${perPage}`;
+
+  return dedupe(cacheKey, async () => {
+    const cached = cache.get(cacheKey) as MediaSearchResult | null;
+    if (cached) return cached;
+
+    const queryDoc = `
+      query ($season: MediaSeason, $year: Int, $perPage: Int) {
+        Page(page: 1, perPage: $perPage) {
+          pageInfo { total currentPage lastPage hasNextPage }
+          media(type: ANIME, season: $season, seasonYear: $year, sort: TRENDING_DESC, isAdult: false) {
+            ...MediaCore
+          }
+        }
+      }
+    `;
+
+    const variables = { season: season.season, year: season.seasonYear, perPage };
+    const payload = await graphql<AniListPageResponse>(queryDoc, variables, `sezon-trendleri (${season.labelEN})`);
+
+    const media = payload.data?.Page?.media ?? [];
+    const result: MediaSearchResult = {
+      items: media.map(mapAniListMedia),
+      page: 1,
+      hasNextPage: Boolean(payload.data?.Page?.pageInfo?.hasNextPage),
+      kind: 'anime',
+      source: 'anilist',
+    };
+
+    cache.set(cacheKey, result);
+    return result;
+  });
 }
