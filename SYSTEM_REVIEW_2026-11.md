@@ -1,6 +1,43 @@
-# AniSync — Sistem Gözden Geçirme (9 Kasım 2026)
-*Kapsam: `app/` — tüm katmanlar (mimari, güvenlik, dağıtım, performans, veri, i18n/SEO, erişilebilirlik, test, teknik borç, yasal)*
+# AniSync - Sistem Gözden Geçirme (9 Kasım 2026)
+*Kapsam: `app/` - tüm katmanlar (mimari, güvenlik, dağıtım, performans, veri, i18n/SEO, erişilebilirlik, test, teknik borç, yasal)*
 *Yöntem: dosya sayımı, kod okuma (server.ts, rules, vite/tsconfig, capacitor, vercel), dependency taraması, git yapılandırması, canlı tarayıcı doğrulaması*
+
+## ⭐ GÜNCELLEME — Aynı gün (9 Kasım 2026) — "hepsini yap" oturumu
+Bu raporun yazıldığı gün içinde uygulanan ve doğrulananlar (her biri build+29 test yeşil):
+
+**Güvenlik/kurallar (commit `c413e42`, `c3f0451`)**
+- 🔴 P0 **Kurallar şema-uyumlu hale getirildi** ve **privilege-escalation açığı kapatıldı**: `users/{uid}` artık kendi `role/ban` alanını yazamaz (owner OR admin idi); sahip/ moderatör/ admin yetkileri ayrıştırıldı (moderatör yalnız ban alanları).
+- `customLists.creatorId`, `forumPosts.author.uid`, `globalChat.uid`, `recentActivities.userId`, `socialFeed.userId`, `sharedLives.userId`, `watchPartyRooms(hostId/uid)` alan-uyuma kurallarda düzeltildi ve **sıkılaştırıldı** (misafir/toplu yazma yok; guest yazımları kod tarafında da engellendi).
+- `polls`: içerik admin-only; `votes` alt-kolejsiyonu (oy = +1/diff-only); anket tohumlama **admin paneline taşındı** ("Anketleri Seed'le (50)" butonu).
+- `sharedLives`: mum (+1) dışında güncelleme yok; `animeReviews`: like-only diff; `animeNews` admin-only.
+- **Gemini uçları kimlik kapısında**: `/api/translate` ve `/api/ai-recommendations` artık Firebase ID token doğrular (üretimde zorunlu) — sıfır bağımlılıkla Google securetoken doğrulaması (`src/lib/verifyIdToken.ts`) + istemci Bearer gönderiyor + imzasız 2026/sahte yok. `/api/refresh-news` → CRON_SECRET guard (Vercel + Express).
+- `SCHEDULE_2026` hardcoded sahte yayın takvimi **tamamen silindi** (çevrimdışıysa boş+stale).
+
+**Sahte canlı içerik temizliği (commit `c413e42`, `19b4058`)**
+- "Topluluk aktivitesi" feed'i: sahte 6 üyeli seed + "simülasyon üret" butonu → kaldırıldı, dürüst boş durum.
+- Sosyal akış: sahte 3 inceleme + sahte "match %96" AI rozeti → gerçek durum + "AI POWERED only when aiGenerated" (Curated/Editor rozeti).
+- Anime yorumları: sahte Frieren/SoloLeveling incelemeleri + sahte "4.8★" → kaldırıldı; beğeniler kalıcı (likes/likedBy).
+- WatchParty: sahte 5 "canlı oda" (126 katılımcı!) + join'de DB'ye seed yazma → kaldırıldı; katılımcılar gerçek türetim (host+sen+sohbet edenler); sahte "Simulated Active Members" listesi → gerçek türetim.
+- Home: sahte "GÜNÜN ANKETİ KAZANANI: NARUTO!" ve sahte trendler ("#SOLOLEVELING 12.4K") + sahte "kimi takip etmeli" → kaldırıldı/dürüst durum.
+- `mockFriends`/`mockForumPosts` → silindi; `poll` senkronizasyonu `useDailyPoll` hook'una çıkarıldı; forum listener her zaman güncel listeyi uygular.
+
+**Platform/kalite**
+- 🔴 P0 ESLint 9 (flat config, `react-hooks` error, a11y warn) + `.github/workflows/ci.yml` (npm ci → tsc → eslint → vitest → build) + `.github/workflows/deploy-rules.yml` (rules'ı FIREBASE_TOKEN ile deploy; `rules` path'ine tetiklenir) — **CI artık hazır; repo'da tek lockfile (bun.lock silindi)**.
+- 🔴 P0 `index.html` İngilizce varsayılan + `og:locale=en_US` + alternate `hreflang` + dinamik JSON-LD `inLanguage` (TR/EN/JA/FR); `fallbackLng: 'tr'` → `'en'`; `syncHtmlLang` EN varsayılan.
+- Testler: 15 → **29** (RSS ingest: birleştirme/sıralama/dedupe/30g filtre/TTL/kategori; ID token doğrulama: imza/exp/iss/aud/kid/cache — RSA üretilerek).
+- `prefers-reduced-motion` + global `:focus-visible` (theme-accent outline).
+- **KVKK/GDPR**: profilde "VERİLERİMİ İNDİR" (client-side JSON export) ve "HESAP SİLME TALEBİ" (`dataRequests` kuyruğu; admin panelinde **Veri Talepleri** sekmesi; 30 gün işleme SLA'sı); kurallar: create yalnız kendi talebin + `pending`.
+- Report-delete yolu beyaz-listesi: rapor → "İçeriği Sil" artık yalnız `socialFeed/globalChat/animeComments/forumPosts/recentActivities/sharedLives/customLists` (users/-veya başka path silinemez).
+- `npm audit fix`: 2 kritik (proxy-addr, websocket-driver) çözüldü; 31 → 19 (mod/yük: tamamı dev zinciri).
+
+**Kalan işler (bilinçli ertelendi / sende)**
+- i18n split (index 254 KB gzip; route-level i18n) — t() çağrılarını her yerde kırmamak için ayrı oturum.
+- `eventEngine.ts` break-out (generateLife/memorial ayrımı) + AppStore'da kalan slice'lar (forum/watchlist) — hook test altyapısı ile birlikte yapılacak.
+- Firestore kuralları yayınlandı mı? **Hayır — senin Firebase Console'dan yayınlaman gerekiyor** (bu oturumdan `firestore.rules` güncel). `role:'admin'` ataması da senin. `deploy-rules.yml` çalışması için `FIREBASE_TOKEN` repo secret gerekir.
+- Vercel env: `GEMINI_API_KEY`, `CRON_SECRET`, `FIREBASE_PROJECT_ID` set edilmeli (aksi halde prod'da translate/AI 401 döner — fail-closed).
+- "1 in 8 Billion" ismi → ticari lansmanda değiştir (öneri: "AniSync: One Life, Many Worlds").
+- Rules birim testleri (@firebase/rules-unit-testing + emulator) — P1.
+- console.error gürültüsü üretimde süzülmüyor (P1); i18n eksik-anahtar CI raporu (P2); `notableCharacters.role` romaji karma (P2).
 
 ## 0. Yönetici özeti — sistem tek cümlede
 **Yeni nesil görünür, eskimiş çekirdek:** güzel bir neo-brutalist mobil UX + gerçek canlı veri akışları (AniList takvimi, RSS haberleri) + 4 dilli içerik, AMA halen MVP kalitesinde mühendislik disiplini: test coverage düşük, güvenlik kural deposu yeni, dağıtım uyarısı (Vercel) sahte cron'a sahip; yasal/telif jakarında "dokunma" hassasiyeti; tek geliştiriciye dayalı.
