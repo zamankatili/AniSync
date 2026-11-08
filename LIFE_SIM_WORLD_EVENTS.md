@@ -112,9 +112,9 @@ Motor `generateLife()` içinde `WORLD_EVENT_PACKS[world.id]` okunur; yoksa fallb
 Uygulama: `generateLife()` zaten `rollDice(5..8)` adımlarıyla kriz üretir; `crisisWeight` / `heavyWeight` dünya başına eklenir (table above).
 
 ## 5. Uygulama fazları
-- **Faz 1 (bu oturumda uygulandı):** `createWorldUniqueEvent` + 8 evren için 2'şer olay; `faction` olayı worldMap'ten okunur ve non-faction evrenlerde gösterilmez; `createFactionEvent` cyberpunk & seinen_psych için kendi seçenekleriyle genişletilir; ağır olay ağırlığı dünya başına (`hasHeavyEvents`, `heavyWeight`).
-- **Faz 2:** Olay yüzdelerinin 8 evren için ince ayarı (şu an %40 crisis — her evren için farklı), `romance_grief` zincirleme; `sports_injury` → maç akışını etkiler; `isekai_levelup` seviye sistemi.
-- **Faz 3:** JA/FR çevirileri tüm yeni olaylar için (uygulamak zorunda değil), JA/FR lore metni (data/lore/*).
+- **Faz 1 (uygulandı, `1b5fe2e`):** `createWorldUniqueEvent` + 8 evren için 2'şer olay; `faction` olayı worldMap'ten okunur ve non-faction evrenlerde gösterilmez; `createFactionEvent` cyberpunk & seinen_psych için kendi seçenekleriyle genişletilir; ağır olay ağırlığı dünya başına (`hasHeavyEvents`, `heavyWeight`).
+- **Faz 2 (uygulandı, 9 Kas 2026):** `WORLD_CRISIS_WEIGHT` — dünya başına kriz olasılığı (slice_of_life **0**, romance 0.5, sports 0.6, isekai 0.8, shonen 0.9, cyberpunk 1.1, dark_fantasy **1.5**); ağır kriz havuzu romance için kısmen filtrelendi; yeni olaylar: `romance_grief_40` (type `crisis`), `sports_injury_23` (type `crisis`), `isekai_party_12`; testler 11/11 ✓.
+- **Faz 3:** Olay yüzdelerinin 8 evren için ince ayarı (şu an %40 crisis — her evren için farklı), `romance_grief` zincirleme; `sports_injury` → maç akışını etkiler; `isekai_levelup` seviye sistemi.
 - **Faz 4:** "Evrenlerarası sadakat skoru" (sonuç ekranında evrene sadık kalma yüzdesi) — sosyal paylaşım tarafı.
 
 ## 6. Hızlı kararlar (Phase 1 kapsamında)

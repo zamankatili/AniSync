@@ -121,6 +121,54 @@ describe('eventEngine — generateLife', () => {
     expect(shonenSeenSportsEvent).toBe(false);
   });
 
+  it('evrene özgü yeni olaylar üretilir (sports_injury_23, isekai_party_12, romance_grief_40)', () => {
+    const sports = getWorldById('sports')!;
+    const isekai = getWorldById('isekai')!;
+    const romance = getWorldById('romance_drama')!;
+
+    let injury = false;
+    let party = false;
+    let grief = false;
+    for (let seed = 1; seed <= 200 && !(injury && party && grief); seed += 1) {
+      randomSpy.mockImplementation(mulberry32(seed));
+      const s = generateLife(sports, getRegionById('karasuno')!, '1h', { focus: 'combat' });
+      if (s.events.some(e => e.id === 'sports_injury_23')) injury = true;
+
+      randomSpy.mockImplementation(mulberry32(seed));
+      const i = generateLife(isekai, getRegionById('lugunica')!, '1h', { focus: 'study' });
+      if (i.events.some(e => e.id === 'isekai_party_12')) party = true;
+
+      randomSpy.mockImplementation(mulberry32(seed));
+      const r = generateLife(romance, getRegionById('hikarizaka')!, '1h', { focus: 'social' });
+      if (r.events.some(e => e.id === 'romance_grief_40')) grief = true;
+    }
+
+    expect(injury).toBe(true);
+    expect(party).toBe(true);
+    expect(grief).toBe(true);
+  });
+
+  it('dünya bazında kriz ağırlığı çalışır (slice_of_life krizsiz)', () => {
+    const sol = getWorldById('slice_of_life')!;
+    const marley = getRegionById('marley')!;
+    const darkFantasy = getWorldById('dark_fantasy')!;
+
+    let solCrises = 0;
+    let dfCrises = 0;
+    for (let seed = 1; seed <= 60; seed += 1) {
+      randomSpy.mockImplementation(mulberry32(seed));
+      const s = generateLife(sol, getRegionById('rural_japan')!, '1h', { focus: 'study' });
+      solCrises += s.events.filter(e => e.type === 'crisis').length;
+
+      randomSpy.mockImplementation(mulberry32(seed));
+      const d = generateLife(darkFantasy, marley, '1h', { focus: 'survival' });
+      dfCrises += d.events.filter(e => e.type === 'crisis').length;
+    }
+
+    expect(solCrises).toBe(0);
+    expect(dfCrises).toBeGreaterThan(0);
+  });
+
   it('bölge yaşam beklentisi ve ağır bölgelerde erken ölüm olasılığı bozulmaz', () => {
     randomSpy.mockImplementation(mulberry32(31415));
     const marley = getRegionById('marley')!;

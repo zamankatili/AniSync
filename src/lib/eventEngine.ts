@@ -950,6 +950,39 @@ function createWorldUniqueEvent(world: AnimeWorld, region: AnimeRegion, age: num
           isCanonEncounter: false
         };
       }
+      if (age === 23) {
+        return {
+          id: 'sports_injury_23',
+          age,
+          year,
+          title: en4('Sakatlık', 'Injury', '怪我', 'Blessure'),
+          description: en4(
+            `${age} yaşındasın. Antrenman sırasında sakatlandın. Bir daha oynayabilir misin?`,
+            `You are ${age} years old. You got injured during practice. Can you ever play again?`,
+            `${age}歳。練習中に怪我をした。再びプレーできるのか？`,
+            `Tu as ${age} ans. Tu t'es blessé pendant l'entraînement. Pourras-tu jamais rejouer ?`
+          ),
+          type: 'crisis',
+          choices: l === 'ja' ? [
+            { id: 'surgery', label: '手術を受ける', description: '長い治療', statChanges: { health: 10, power: -5 }, consequences: ['回復', '諦め'], risk: 'medium' },
+            { id: 'play_through', label: 'プレーを続ける', description: '痛みに耐える', statChanges: { power: -8, socialClass: 5 }, consequences: ['挑戦', '限界'], risk: 'high' },
+            { id: 'retire', label: '引退する', description: '別の道を探す', statChanges: { health: 5, socialClass: -8 }, consequences: ['終わり', '新しい始まり'], risk: 'medium' }
+          ] : l === 'fr' ? [
+            { id: 'surgery', label: 'Se faire opérer', description: 'Un long traitement', statChanges: { health: 10, power: -5 }, consequences: ['Récupération', 'Résignation'], risk: 'medium' },
+            { id: 'play_through', label: 'Continuer à jouer', description: 'Supporter la douleur', statChanges: { power: -8, socialClass: 5 }, consequences: ['Défi', 'Limite'], risk: 'high' },
+            { id: 'retire', label: 'Prendre sa retraite', description: 'Chercher une autre voie', statChanges: { health: 5, socialClass: -8 }, consequences: ['Fin', 'Nouveau départ'], risk: 'medium' }
+          ] : l === 'en' ? [
+            { id: 'surgery', label: 'Have Surgery', description: 'A long recovery', statChanges: { health: 10, power: -5 }, consequences: ['Recovery', 'Resignation'], risk: 'medium' },
+            { id: 'play_through', label: 'Play Through It', description: 'Endure the pain', statChanges: { power: -8, socialClass: 5 }, consequences: ['Challenge', 'Limit'], risk: 'high' },
+            { id: 'retire', label: 'Retire', description: 'Find another path', statChanges: { health: 5, socialClass: -8 }, consequences: ['End', 'New Beginning'], risk: 'medium' }
+          ] : [
+            { id: 'surgery', label: 'Ameliyat Ol', description: 'Uzun bir iyileşme', statChanges: { health: 10, power: -5 }, consequences: ['İyileşme', 'Vazgeçiş'], risk: 'medium' },
+            { id: 'play_through', label: 'Oynamaya Devam Et', description: 'Acıya katlan', statChanges: { power: -8, socialClass: 5 }, consequences: ['Meydan Okuma', 'Sınır'], risk: 'high' },
+            { id: 'retire', label: 'Emekli Ol', description: 'Başka bir yol ara', statChanges: { health: 5, socialClass: -8 }, consequences: ['Son', 'Yeni Başlangıç'], risk: 'medium' }
+          ],
+          isCanonEncounter: false
+        };
+      }
       if (age === 17) {
         return {
           id: 'sports_championship_17',
@@ -1049,6 +1082,39 @@ function createWorldUniqueEvent(world: AnimeWorld, region: AnimeRegion, age: num
             { id: 'restart', label: 'Yeniden Başla', description: 'Şimdi zamanı', statChanges: { socialClass: 15, luck: 10 }, consequences: ['Yeni Başlangıç', 'Umut'], risk: 'medium' },
             { id: 'friends', label: 'Dost Kal', description: 'İyi anılar', statChanges: { socialClass: 8, luck: 0 }, consequences: ['Dostluk', 'Anı'], risk: 'low' },
             { id: 'accept', label: 'Kabullen', description: 'Geçmiş geçmiştir', statChanges: { health: 8, luck: 0 }, consequences: ['Kabullenme', 'Huzur'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 40) {
+        return {
+          id: 'romance_grief_40',
+          age,
+          year,
+          title: en4('Kayıp', 'Loss', '喪失', 'La perte'),
+          description: en4(
+            `${age} yaşındasın. Sevdiğin biri vefat etti. Hayatın bir daha asla aynı olmayacak.`,
+            `You are ${age} years old. Someone you loved has passed away. Your life will never be the same.`,
+            `${age}歳。愛する人がこの世を去った。あなたの人生はもう二度と元には戻らない。`,
+            `Tu as ${age} ans. Quelqu'un que tu aimais est décédé. Ta vie ne sera plus jamais la même.`
+          ),
+          type: 'crisis',
+          choices: l === 'ja' ? [
+            { id: 'mourn', label: '喪に服す', description: '悲しみに暮れる時間', statChanges: { health: -5, socialClass: 3 }, consequences: ['悲しみ', '癒し'], risk: 'medium' },
+            { id: 'resist', label: '立ち向かう', description: '逃げずに生きる', statChanges: { power: 5, luck: -3 }, consequences: ['強さ', '傷跡'], risk: 'medium' },
+            { id: 'face', label: '過去と向き合う', description: '思い出を大切に', statChanges: { intelligence: 8, socialClass: 3 }, consequences: ['知恵', '受容'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'mourn', label: 'Faire ton deuil', description: 'Prendre le temps de pleurer', statChanges: { health: -5, socialClass: 3 }, consequences: ['Chagrin', 'Guérison'], risk: 'medium' },
+            { id: 'resist', label: 'Affronter', description: 'Vivre sans fuir', statChanges: { power: 5, luck: -3 }, consequences: ['Force', 'Cicatrice'], risk: 'medium' },
+            { id: 'face', label: 'Faire face au passé', description: 'Chérir les souvenirs', statChanges: { intelligence: 8, socialClass: 3 }, consequences: ['Sagesse', 'Acceptation'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'mourn', label: 'Mourn', description: 'Take time to grieve', statChanges: { health: -5, socialClass: 3 }, consequences: ['Grief', 'Healing'], risk: 'medium' },
+            { id: 'resist', label: 'Resist', description: 'Live without running', statChanges: { power: 5, luck: -3 }, consequences: ['Strength', 'Scar'], risk: 'medium' },
+            { id: 'face', label: 'Face the Past', description: 'Treasure the memories', statChanges: { intelligence: 8, socialClass: 3 }, consequences: ['Wisdom', 'Acceptance'], risk: 'low' }
+          ] : [
+            { id: 'mourn', label: 'Yas Tut', description: 'Yası yaşa', statChanges: { health: -5, socialClass: 3 }, consequences: ['Keder', 'İyileşme'], risk: 'medium' },
+            { id: 'resist', label: 'Diren', description: 'Kaçmadan yaşamaya devam et', statChanges: { power: 5, luck: -3 }, consequences: ['Güç', 'Yara İzi'], risk: 'medium' },
+            { id: 'face', label: 'Geçmişle Yüzleş', description: 'Anıları yaşat', statChanges: { intelligence: 8, socialClass: 3 }, consequences: ['Bilgelik', 'Kabul'], risk: 'low' }
           ],
           isCanonEncounter: false
         };
@@ -1296,6 +1362,39 @@ function createWorldUniqueEvent(world: AnimeWorld, region: AnimeRegion, age: num
             { id: 'accept', label: 'Görevi Kabul Et', description: 'Maceranın başı', statChanges: { power: 5, intelligence: 5 }, consequences: ['Macera', 'Gelişim'], risk: 'medium' },
             { id: 'decline', label: 'Reddet', description: 'Başka sefere', statChanges: { health: 5, socialClass: -3 }, consequences: ['Huzur', 'Gecikme'], risk: 'low' },
             { id: 'register', label: 'Loncaya Kayıt Ol', description: 'Resmi maceracı ol', statChanges: { socialClass: 8, intelligence: 3 }, consequences: ['Tanınma', 'Kayıt'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 12) {
+        return {
+          id: 'isekai_party_12',
+          age,
+          year,
+          title: en4('Yoldaşlık', 'Party', '仲間', 'Équipe'),
+          description: en4(
+            `${age} yaşındasın. Aynı görevi paylaşan bir grup maceracı seni aralarına almak istiyor.`,
+            `You are ${age} years old. A group of adventurers sharing the same quest wants to take you in.`,
+            `${age}歳。同じ依頼を分け合う冒険者たちが君を仲間にしたがっている。`,
+            `Tu as ${age} ans. Un groupe d'aventuriers partageant la même quête veut t'accueillir.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'join', label: '仲間になる', description: 'チームの一員', statChanges: { power: 5, socialClass: 8 }, consequences: ['絆', '仲間'], risk: 'low' },
+            { id: 'solo', label: '一人で行く', description: '自分だけの冒険', statChanges: { intelligence: 8, luck: 3 }, consequences: ['自由', '孤独'], risk: 'medium' },
+            { id: 'merchant', label: '商人として', description: '冒険の裏に商売', statChanges: { socialClass: 10, luck: 5 }, consequences: ['富', '商売'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'join', label: 'Rejoindre le groupe', description: 'Faire partie de l\'équipe', statChanges: { power: 5, socialClass: 8 }, consequences: ['Lien', 'Compagnie'], risk: 'low' },
+            { id: 'solo', label: 'Partir seul', description: 'Ta propre aventure', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Liberté', 'Solitude'], risk: 'medium' },
+            { id: 'merchant', label: 'En tant que marchand', description: 'Le commerce en coulisse', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Richesse', 'Commerce'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'join', label: 'Join the Party', description: 'Be part of the team', statChanges: { power: 5, socialClass: 8 }, consequences: ['Bond', 'Companionship'], risk: 'low' },
+            { id: 'solo', label: 'Go Solo', description: 'Your own adventure', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Freedom', 'Solitude'], risk: 'medium' },
+            { id: 'merchant', label: 'As a Merchant', description: 'Trade behind the scenes', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Wealth', 'Trade'], risk: 'low' }
+          ] : [
+            { id: 'join', label: 'Yoldaşlarına Katıl', description: 'Takımın parçası', statChanges: { power: 5, socialClass: 8 }, consequences: ['Bağ', 'Yoldaşlık'], risk: 'low' },
+            { id: 'solo', label: 'Solo Git', description: 'Kendi maceran', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Özgürlük', 'Yalnızlık'], risk: 'medium' },
+            { id: 'merchant', label: 'Tüccar Olarak', description: 'Maceranın arkasında ticaret', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Zenginlik', 'Ticaret'], risk: 'low' }
           ],
           isCanonEncounter: false
         };
@@ -1843,7 +1942,7 @@ export function generateLife(
   }
 
   // Evrene özgü olaylar (Faz 1) — shonen/dark_fantasy/isekai/sports/romance/slice_of_life/cyberpunk/seinen_psych
-  const uniqueEventAges = [7, 9, 12, 13, 16, 17, 20, 22, 25, 30];
+  const uniqueEventAges = [7, 9, 12, 13, 16, 17, 20, 22, 23, 25, 30, 40];
   for (const uniqueAge of uniqueEventAges) {
     if (uniqueAge < deathAge) {
       const uniqueEvent = createWorldUniqueEvent(world, region, uniqueAge, birthYear + uniqueAge, stats);
@@ -1889,11 +1988,25 @@ export function generateLife(
     }
   }
 
-  // Crisis events (ages 18-40, random)
-  for (let age = 18; age <= Math.min(40, deathAge - 1); age += rollDice(5, 8)) {
-    if (rollChance(0.4)) {
-      const ce = createCrisisEvent(world, region, age, birthYear + age, stats, includeHeavy);
-      if (ce) events.push(ce);
+  // Crisis events (ages 18-40) — dünya başına ağırlık (Faz 2)
+  // slice_of_life → 0 (kriz yok), romance/sports → düşük, cyberpunk/dark_fantasy → yüksek
+  const WORLD_CRISIS_WEIGHT: Record<string, number> = {
+    slice_of_life: 0,
+    romance_drama: 0.5,
+    sports: 0.6,
+    isekai: 0.8,
+    seinen_psych: 1.0,
+    cyberpunk: 1.1,
+    shonen_battle: 0.9,
+    dark_fantasy: 1.5,
+  };
+  const crisisWeight = WORLD_CRISIS_WEIGHT[world.id] ?? 1;
+  if (crisisWeight > 0) {
+    for (let age = 18; age <= Math.min(40, deathAge - 1); age += rollDice(5, 8)) {
+      if (rollChance(0.4 * crisisWeight)) {
+        const ce = createCrisisEvent(world, region, age, birthYear + age, stats, includeHeavy);
+        if (ce) events.push(ce);
+      }
     }
   }
 
