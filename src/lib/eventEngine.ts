@@ -133,15 +133,13 @@ function generateInitialStats(world: AnimeWorld, region: AnimeRegion): LifeStats
 function createBirthEvent(world: AnimeWorld, region: AnimeRegion, birthYear: number): LifeEvent {
   const hasPowerPotential = rollChance(region.stats.powerAwakeningRate);
   const hasAdventurePotential = rollChance(region.stats.adventureRate);
-  const lore = getWorldLore(world.id);
-  const birthLoc = lore ? lore.locations[Math.floor(Math.random() * lore.locations.length)].name : region.nameTR;
 
   return {
     id: 'birth',
     age: 0,
     year: birthYear,
     title: 'Doğum',
-    description: `${birthLoc} bölgesinde, ${world.nameTR} evreninde doğdun. ${hasPowerPotential ? 'Gizli bir güç potansiyelin var.' : 'Sıradan bir ailenin çocuğusun.'} ${hasAdventurePotential ? 'Macera dolu bir hayat seni bekliyor olabilir.' : 'Huzurlu bir yaşam sürmen olası.'}`,
+    description: `${region.nameTR} bölgesinde, ${world.nameTR} evreninde doğdun. ${hasPowerPotential ? 'Gizli bir güç potansiyelin var.' : 'Sıradan bir ailenin çocuğusun.'} ${hasAdventurePotential ? 'Macera dolu bir hayat seni bekliyor olabilir.' : 'Huzurlu bir yaşam sürmen olası.'}`,
     type: 'birth',
     statChanges: hasPowerPotential ? { power: 5, luck: 5 } : {},
     isCanonEncounter: false
@@ -209,14 +207,13 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
   const options = factionOptions[world.id] || factionOptions.shonen_battle;
   const lore = getWorldLore(world.id);
   const factionNames = lore ? lore.factions.slice(0, 4).map(f => f.name).join(', ') : '';
-  const locationNames = lore ? lore.locations.slice(0, 3).map(l => l.name).join(', ') : region.nameTR;
 
   return {
     id: `faction_${age}`,
     age,
     year,
     title: 'Fraksiyon Seçimi',
-    description: `${age} yaşındasın. ${locationNames} bölgesinde ${world.nameTR} evreninde bir fraksiyon seçmen gerekiyor (örn. ${factionNames}). Bu seçim hayatının yönünü belirleyecek.`,
+    description: `${age} yaşındasın. ${region.nameTR} bölgesinde ${world.nameTR} evreninde bir fraksiyon seçmen gerekiyor (örn. ${factionNames}). Bu seçim hayatının yönünü belirleyecek.`,
     type: 'faction',
     choices: options,
     isCanonEncounter: false
@@ -260,16 +257,13 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
   const available = includeHeavy ? crisisTypes : crisisTypes.filter(c => !c.heavy);
   if (available.length === 0) return null;
   const crisis = available[Math.floor(Math.random() * available.length)];
-  const lore = getWorldLore(world.id);
-  const locName = lore ? lore.locations[Math.floor(Math.random() * lore.locations.length)].name : region.nameTR;
   const helpNote = '\\n\\n💡 Yardım: Bu tür krizlerde topluluk desteği, profesyonel yardım ve aile bağları hayatta kalma şansını artırır. AniSync topluluğunda benzer deneyimler paylaşılabilir.';
-  const enrichedDesc = crisis.description.replace(region.nameTR, locName);
   return {
     id: `crisis_${age}`,
     age,
     year,
     title: crisis.title,
-    description: enrichedDesc + helpNote,
+    description: crisis.description + helpNote,
     type: 'crisis',
     choices: crisis.choices,
     isCanonEncounter: false
