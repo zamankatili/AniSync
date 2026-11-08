@@ -185,6 +185,34 @@ export const AdminPage: React.FC = () => {
             <span className="text-sm font-black uppercase text-white">{t('admin_maintenance_mode', 'Bakım modu')}</span>
             <span className="text-[10px] text-neutral-500 ml-auto">{t('admin_maintenance_hint', 'Açıkken salt-okuma, yazma kapalı')}</span>
           </label>
+          <div className="border-2 border-white/20 p-4 space-y-2">
+            <h3 className="text-xs font-black uppercase text-white">{t('admin_announcement_title', 'Duyuru Banner')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <label className="text-[10px] font-black text-neutral-400 uppercase">TR
+                <textarea rows={2} value={draft.announcement?.tr || ''} onChange={(e) => setDraft(d => ({ ...d, announcement: { ...(d.announcement || { tr: '', en: '', type: 'info' }), tr: e.target.value } }))} className="w-full mt-1 bg-black border-2 border-white/20 text-white text-xs p-2" />
+              </label>
+              <label className="text-[10px] font-black text-neutral-400 uppercase">EN
+                <textarea rows={2} value={draft.announcement?.en || ''} onChange={(e) => setDraft(d => ({ ...d, announcement: { ...(d.announcement || { tr: '', en: '', type: 'info' }), en: e.target.value } }))} className="w-full mt-1 bg-black border-2 border-white/20 text-white text-xs p-2" />
+              </label>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <select value={draft.announcement?.type || 'info'} onChange={(e) => setDraft(d => ({ ...d, announcement: { ...(d.announcement || { tr: '', en: '', type: 'info' }), type: e.target.value as any } }))} className="bg-black text-white border-2 border-white/20 px-2 py-1 text-xs font-black uppercase">
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="success">Success</option>
+                <option value="critical">Critical</option>
+              </select>
+              <label className="text-[10px] font-black text-neutral-400 uppercase flex items-center gap-2">Starts
+                <input type="datetime-local" value={draft.announcement?.startsAt?.slice(0,16) || ''} onChange={(e) => setDraft(d => ({ ...d, announcement: { ...(d.announcement || { tr: '', en: '', type: 'info' }), startsAt: e.target.value ? new Date(e.target.value).toISOString() : undefined } }))} className="bg-black text-white border-2 border-white/20 px-2 py-1 text-xs" />
+              </label>
+              <label className="text-[10px] font-black text-neutral-400 uppercase flex items-center gap-2">Ends
+                <input type="datetime-local" value={draft.announcement?.endsAt?.slice(0,16) || ''} onChange={(e) => setDraft(d => ({ ...d, announcement: { ...(d.announcement || { tr: '', en: '', type: 'info' }), endsAt: e.target.value ? new Date(e.target.value).toISOString() : undefined } }))} className="bg-black text-white border-2 border-white/20 px-2 py-1 text-xs" />
+              </label>
+              {(draft.announcement?.tr || draft.announcement?.en) && (
+                <button onClick={() => setDraft(d => ({ ...d, announcement: null }))} className="px-3 py-1 bg-rose-700 hover:bg-rose-600 text-white text-xs font-black uppercase border border-white/30 cursor-pointer">{t('admin_announcement_clear', 'Kaldır')}</button>
+              )}
+            </div>
+          </div>
           <div className="space-y-2">
             {flagKeys.map((key) => {
               const raw = (draft.featureFlags as any)[key];
