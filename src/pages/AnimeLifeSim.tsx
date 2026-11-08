@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
 import { ANIME_REGIONS, getRegionsByWorld, getRegionById } from '../data/animeRegions';
+import type { AnimeRegion } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
 import {
   generateLife,
@@ -64,6 +65,9 @@ export const AnimeLifeSim: React.FC = () => {
   const [savedLifeIndex, setSavedLifeIndex] = useState(0);
   const [muted, setMuted] = useState(false);
   const [showEvent, setShowEvent] = useState(true);
+  const [showBirthSummary, setShowBirthSummary] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [regionDetail, setRegionDetail] = useState<AnimeRegion | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [lifeAge, setLifeAge] = useState(0);
   const [pastLives, setPastLives] = useState<PastLife[]>([]);
@@ -118,6 +122,8 @@ export const AnimeLifeSim: React.FC = () => {
     setLifeAge(0);
     setShowEvent(true);
     setIsPaused(false);
+    setShowBirthSummary(true);
+    setShowTimeline(false);
     recordedLifeRef.current = null;
     handleClearSave();
   };
@@ -183,6 +189,8 @@ export const AnimeLifeSim: React.FC = () => {
     setLifeAge(0);
     setShowEvent(true);
     setIsPaused(false);
+    setShowBirthSummary(false);
+    setShowTimeline(false);
   };
 
   const currentEvent = life?.events[currentEventIndex];
@@ -402,6 +410,8 @@ export const AnimeLifeSim: React.FC = () => {
       setIsPaused(localStorage.getItem('als_saved_paused') === '1');
       setPhase(savedPhase);
       setSavedLife(parsed);
+      setShowBirthSummary(false);
+      setShowTimeline(false);
       if (savedPhase === 'memorial') {
         recordedLifeRef.current = `${parsed.birthYear}-${parsed.deathAge}-${parsed.characterName}`;
       }
@@ -705,16 +715,27 @@ export const AnimeLifeSim: React.FC = () => {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {regions.map((r) => (
-                  <button
+                  <div
                     key={r.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedRegion(r.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedRegion(r.id); }}
                     className={cn(
-                      "p-3 border-2 text-left transition-all cursor-pointer",
+                      "p-3 border-2 text-left transition-all cursor-pointer relative",
                       selectedRegion === r.id
                         ? "bg-white text-black border-white shadow-[2px_2px_0px_0px_#e11d48]"
                         : "bg-black text-white border-white/20 hover:border-white"
                     )}
                   >
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setRegionDetail(r); }}
+                      className="absolute top-2 right-2 text-[9px] font-black uppercase border border-white/20 text-neutral-400 hover:text-white hover:border-white px-1.5 py-0.5 cursor-pointer"
+                      aria-label={t('als_region_details')}
+                    >
+                      {t('als_region_detail_btn')}
+                    </button>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xl">{r.emoji}</span>
                       <span className="font-black text-xs uppercase tracking-tight">{regionName(r)}</span>
@@ -725,7 +746,7 @@ export const AnimeLifeSim: React.FC = () => {
                     <div className="mt-1 text-[9px] font-mono text-neutral-500">
                       {t('als_life_expectancy', { min: r.lifeExpectancy[0], max: r.lifeExpectancy[1] })}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -878,6 +899,16 @@ export const AnimeLifeSim: React.FC = () => {
                 )}
               >
                 {isPaused ? `▶ ${t('als_resume_clock')}` : `⏸ ${t('als_pause')}`}
+              </button>
+              <button
+                onClick={() => setShowTimeline(v => !v)}
+                className={cn(
+                  "px-2 py-1 text-[10px] font-black border cursor-pointer",
+                  showTimeline ? "bg-white text-black border-white" : "bg-black text-neutral-300 border-white/20 hover:border-white"
+                )}
+                aria-expanded={showTimeline}
+              >
+                📜 {t('als_timeline')}
               </button>
               <button
                 onClick={() => setMuted(m => !m)}
@@ -1285,6 +1316,196 @@ export const AnimeLifeSim: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Doğum Özeti Modalı ── */}
+      {showBirthSummary && life && world && region && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('als_birth_title')}
+        >
+          <div className="max-w-lg w-full bg-neutral-950 border-4 border-amber-400 neo-shadow-white p-6 space-y-5 my-8">
+            <div className="text-center space-y-2">
+              <span className="inline-block bg-amber-400 text-black font-black text-[9px] px-2 py-1 border border-white uppercase tracking-widest">
+                {worldName(world)} · {regionName(region)}
+              </span>
+              <h2 className="text-xl md:text-2xl font-black text-neutral-400 uppercase tracking-[0.25em]">
+                {t('als_birth_title')}
+              </h2>
+              <p className="text-3xl md:text-4xl font-black text-white tracking-tight leading-none">
+                {displayName}
+              </p>
+              <p className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
+                {life.gender === 'female' ? '♀' : '♂'} · {life.birthYear}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+              {[
+                { label: t('als_birth_gender'), value: life.gender === 'female' ? t('als_birth_gender_female') : t('als_birth_gender_male') },
+                { label: t('als_birth_era'), value: life.period === 'past' ? t('als_period_past') : life.period === 'future' ? t('als_period_future') : t('als_period_today') },
+                { label: t('als_birth_family'), value: familyLabel(life.familyStatus) },
+                { label: t('als_birth_education'), value: educationLabel(life.education) },
+                { label: t('als_birth_assets'), value: `💰 ${life.assets}` },
+                { label: t('als_birth_le'), value: t('als_birth_years', { min: region.lifeExpectancy[0], max: region.lifeExpectancy[1] }) },
+                { label: t('als_birth_danger'), value: dangerLabel(world.dangerLevel) },
+                { label: t('als_birth_year'), value: String(life.birthYear) },
+              ].map((row) => (
+                <div key={row.label} className="bg-neutral-900 border border-white/15 p-2">
+                  <span className="text-[9px] font-black text-neutral-500 uppercase block">{row.label}</span>
+                  <span className="text-white font-bold leading-snug">{row.value}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                setShowBirthSummary(false);
+                playSound(440, 200, 'sine');
+              }}
+              className="w-full py-4 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm tracking-widest border-4 border-white cursor-pointer neo-shadow-white transition-all"
+            >
+              {t('als_birth_start')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bölge Detay Modalı ── */}
+      {regionDetail && (() => {
+        const detailWorld = getWorldById(regionDetail.worldId);
+        const statBars = [
+          { label: t('als_region_war'), v: regionDetail.stats.warRate },
+          { label: t('als_region_disease'), v: regionDetail.stats.diseaseRate },
+          { label: t('als_region_poverty'), v: regionDetail.stats.povertyRate },
+          { label: t('als_region_adventure'), v: regionDetail.stats.adventureRate },
+        ];
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('als_region_details')}
+            onClick={() => setRegionDetail(null)}
+          >
+            <div className="max-w-md w-full bg-neutral-950 border-4 border-white p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl">{regionDetail.emoji}</span>
+                  <div>
+                    <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">{regionName(regionDetail)}</h3>
+                    {detailWorld && (
+                      <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">{worldName(detailWorld)}</span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setRegionDetail(null)}
+                  className="p-2 text-white border-2 border-white/20 hover:border-white cursor-pointer"
+                  aria-label={t('als_detail_close')}
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-xs text-neutral-300 font-medium leading-relaxed">{regionDesc(regionDetail)}</p>
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                <div>
+                  <span className="text-[9px] font-black text-neutral-500 uppercase block">{t('als_birth_le')}</span>
+                  <span className="text-white font-bold">{regionDetail.lifeExpectancy[0]}-{regionDetail.lifeExpectancy[1]}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-black text-neutral-500 uppercase block">{t('als_region_population')}</span>
+                  <span className="text-white font-bold">{regionDetail.population.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-black text-neutral-500 uppercase block">{t('als_region_birth_rate')}</span>
+                  <span className="text-white font-bold">{Math.round(regionDetail.birthRate * 1000) / 10}%</span>
+                </div>
+                {detailWorld && (
+                  <div>
+                    <span className="text-[9px] font-black text-neutral-500 uppercase block">{t('als_birth_danger')}</span>
+                    <span className="text-white font-bold">{dangerLabel(detailWorld.dangerLevel)}</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                {statBars.map((s) => (
+                  <div key={s.label}>
+                    <div className="flex items-center justify-between text-[10px] font-bold uppercase mb-0.5">
+                      <span className="text-neutral-400">{s.label}</span>
+                      <span className="text-white font-mono">{Math.round(s.v * 100)}%</span>
+                    </div>
+                    <div className="h-2 bg-neutral-800 border border-white/10 overflow-hidden">
+                      <div className="h-full bg-rose-600" style={{ width: `${Math.min(100, s.v * 100)}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setRegionDetail(null)}
+                className="w-full py-2 bg-black hover:bg-neutral-800 text-white font-black uppercase text-xs border-2 border-white/30 cursor-pointer"
+              >
+                {t('als_detail_close')}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Zaman Çizelgesi ── */}
+      {showTimeline && life && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/70" onClick={() => setShowTimeline(false)} aria-hidden="true" />
+          <aside
+            className="fixed top-0 right-0 h-full w-full max-w-md z-50 bg-neutral-950 border-l-4 border-white flex flex-col"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('als_timeline')}
+          >
+            <div className="flex items-center justify-between p-4 border-b-2 border-white/10">
+              <h3 className="text-lg font-black text-white uppercase tracking-widest">📜 {t('als_timeline')}</h3>
+              <button
+                onClick={() => setShowTimeline(false)}
+                className="p-2 text-white border-2 border-white/20 hover:border-white cursor-pointer"
+                aria-label={t('als_detail_close')}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 [scrollbar-width:thin]">
+              {life.events.slice(0, currentEventIndex + 1).map((e) => {
+                const chosen = e.choices?.find((c) => c.id === choicesMade[e.id]);
+                const icon = e.type === 'birth' ? '👶' :
+                  e.type === 'childhood' ? '🧒' :
+                  e.type === 'faction' ? '⚔️' :
+                  e.type === 'crisis' ? '⚠️' :
+                  e.type === 'special' ? '✨' :
+                  e.type === 'death' ? '💀' : '📖';
+                return (
+                  <div key={e.id} className="flex gap-3 border-2 border-white/10 bg-neutral-900/60 p-3">
+                    <div className="text-xl w-8 shrink-0 pt-0.5">{icon}</div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-baseline gap-2">
+                        <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">
+                          {t('als_event_age', { age: e.age, year: e.year })}
+                        </span>
+                        <span className="text-[11px] font-black text-white uppercase tracking-tight">{e.title}</span>
+                      </div>
+                      {chosen && (
+                        <p className="text-[10px] text-amber-400/90 font-bold mt-1 leading-snug">
+                          {t('als_timeline_you_chose', { choice: chosen.label })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {life.events.length === 0 && (
+                <p className="text-xs text-neutral-500 font-bold uppercase text-center py-8">{t('als_timeline_empty')}</p>
+              )}
+            </div>
+          </aside>
+        </>
       )}
     </div>
   );
