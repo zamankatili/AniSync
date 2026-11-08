@@ -1,115 +1,86 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions for security validation
+    // ─── Admin bootstrap: ilk adminın e-postası (kuralları düzenleyerek veya
+    //     `users/{uid}` rolüyle yönetin; sonradan bu listeyi daraltın/silin) ───
+    function isBootstrapAdminEmail() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email in ['zamankatilii@gmail.com'];
+    }
     function isSignedIn() {
       return request.auth != null;
     }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function isAdmin() {
+      return isBootstrapAdminEmail()
+        || (isSignedIn()
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'moderator'));
+    }
+    // Moderatör: sadece report içeriğini silme/banlama yetkisi; config/flag değiştirme sadece admin
+    function isAdminOnly() {
+      return isBootstrapAdminEmail()
+        || (isSignedIn()
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    // ─── Admin & sistem ─────────────────────────────────────
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if isAdminOnly();
+    }
+    match /adminActions/{doc} {
+      allow read: if isAdminOnly();
+      allow write: if isAdminOnly();
+    }
+    match /reports/{doc} {
+      allow read: if isAdminOnly();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdminOnly();
     }
 
-    // Default Deny Security Net
+    // ─── Yer tutucu tanımlar (uygulama şeması) ─────────────────
+    match /users/{uid} {
+      allow read: if true;
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if isAdminOnly();
+      // `role` alanı yalnız admin tarafından değiştirilebilir
+      allow update: if isAdminOnly()
+        && request.resource.data.keys().hasOnly(['name', 'handle', 'photoURL', 'banUntil', 'banReason', 'role', 'namedLists', 'joinedAt']);
+
+      match /watchlist/{mal_id} {
+        allow read: if true;
+        allow write: if isSignedIn() && request.auth.uid == uid;
+      }
+      match /reminders/{id} {
+        allow read: if isSignedIn() && request.auth.uid == uid;
+        allow write: if isSignedIn() && request.auth.uid == uid;
+      }
+      match /customData/{id} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // ─── Topluluk içeriği (herkes okur, giriş yapmış yazar, admin siler) ──────
+    match /polls/{id}          { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
+    match /suggestedPolls/{id} { allow read: if isAdminOnly(); allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
+    match /forumPosts/{id}     { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid || isAdminOnly(); }
+    match /recentActivities/{id} { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
+    match /animeComments/{id}  { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid || isAdminOnly(); }
+    match /animeReviews/{animeId}/userReviews/{uid} { allow read: if true; allow write: if isSignedIn() && request.auth.uid == uid; }
+    match /customLists/{id}    { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid || isAdminOnly(); }
+    match /socialFeed/{id}     { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid || isAdminOnly(); }
+    match /globalChat/{id}     { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
+    match /watchPartyRooms/{id} { allow read: if true; allow create, update: if isSignedIn(); allow delete: if isAdminOnly(); }
+    match /watchPartyRooms/{id}/messages/{mid} { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly() || (isSignedIn() && request.resource.data.userId == request.auth.uid); }
+    match /sharedLives/{id}    { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
+    match /animeNews/{id}      { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
+
+    // Varsayılan: kapalı (geri kalan her şey reddedilir)
     match /{document=**} {
       allow read, write: if false;
-    }
-
-    // Connection Health Check Probe
-    match /test/{docId} {
-      allow read, write: if true;
-    }
-
-    // User Profiles & Watchlist
-    match /users/{userId} {
-      allow read: if true;
-      allow write: if isOwner(userId);
-
-      match /watchlist/{animeId} {
-        allow read: if true;
-        allow write: if isOwner(userId);
-      }
-
-      match /{allSubcollections=**} {
-        allow read: if true;
-        allow write: if isOwner(userId);
-      }
-    }
-
-    // Community Forum Posts & Comments
-    match /forumPosts/{postId} {
-      allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.author.uid == request.auth.uid;
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn() && (resource.data.author.uid == request.auth.uid || resource.data.author.name == request.auth.token.name);
-
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if isSignedIn();
-      }
-    }
-
-    // Live Recent Community Activities
-    match /recentActivities/{activityId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if false;
-    }
-
-    // Watch Party Rooms, Messages & Reactions
-    match /watchPartyRooms/{roomId} {
-      allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.hostId == request.auth.uid;
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn() && resource.data.hostId == request.auth.uid;
-
-      match /messages/{messageId} {
-        allow read: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if false;
-      }
-
-      match /reactions/{reactionId} {
-        allow read: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if false;
-      }
-    }
-
-    // Daily Polls & Community Votes
-    match /polls/{pollId} {
-      allow read: if true;
-      allow write: if isSignedIn();
-
-      match /votes/{voteId} {
-        allow read: if true;
-        allow write: if isSignedIn();
-      }
-    }
-
-    // Anime Detail Page Comments
-    match /animeComments/{commentId} {
-      allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
-    }
-
-    // Live Anime News Feed
-    match /animeNews/{newsId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // AniSyncDle Daily Characters Pool
-    match /dailyCharacters/{charId} {
-      allow read: if true;
-      allow write: if isSignedIn();
     }
   }
 }

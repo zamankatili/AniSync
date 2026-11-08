@@ -19,6 +19,7 @@ import { SocialFeedPost, Anime } from '../types';
 import { useToastStore } from '../store/useToastStore';
 import { getSafeImageUrl, formatRelativeTime } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { ReportButton } from './ReportButton';
 import { 
   MessageSquare, 
   Heart, 
@@ -560,6 +561,11 @@ export const SocialFeedSection: React.FC = () => {
                   >
                     <MessageSquare size={12} /> {t('social_feed_discuss')}
                   </button>
+
+                  <ReportButton
+                    target={{ targetPath: `socialFeed/${post.id}`, targetLabel: post.animeTitle }}
+                    compact
+                  />
                 </div>
               </motion.div>
             );

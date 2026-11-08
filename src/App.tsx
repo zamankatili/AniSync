@@ -5,6 +5,8 @@ import { Layout } from './components/Layout';
 import { PageLoadingSkeleton } from './components/PageLoadingSkeleton';
 import { SEOManager } from './components/SEOManager';
 import { PrivateRoute } from './components/PrivateRoute';
+import { AdminRoute } from './components/AdminRoute';
+import { MaintenanceGate } from './components/MaintenanceGate';
 
 // Route-level code splitting using React.lazy for optimized bundle loading
 const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
@@ -22,15 +24,17 @@ const WeeklyChallengePage = lazy(() => import('./pages/WeeklyChallengePage').the
 const AniSyncDle = lazy(() => import('./pages/AniSyncDle').then(m => ({ default: m.AniSyncDle })));
 const Arcade = lazy(() => import('./pages/Arcade').then(m => ({ default: m.Arcade })));
 const AnimeLifeSim = lazy(() => import('./pages/AnimeLifeSim').then(m => ({ default: m.AnimeLifeSim })));
+const AdminPage = lazy(() => import('./pages/admin/AdminPage').then(m => ({ default: m.AdminPage })));
 
 export default function App() {
   return (
     <AppProvider>
       <BrowserRouter>
         <SEOManager />
-        <Suspense fallback={<PageLoadingSkeleton />}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
+        <MaintenanceGate>
+          <Suspense fallback={<PageLoadingSkeleton />}>
+            <Routes>
+              <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="challenge" element={<WeeklyChallengePage />} />
               <Route path="polls" element={<WeeklyChallengePage />} />
@@ -53,10 +57,14 @@ export default function App() {
               <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
               <Route path="profile/:uid" element={<Profile />} />
 
+              {/* Admin Panel — sadece yetkililere */}
+              <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
         </Suspense>
+        </MaintenanceGate>
       </BrowserRouter>
     </AppProvider>
   );

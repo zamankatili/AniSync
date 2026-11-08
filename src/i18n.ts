@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { animeLifeSimTranslations } from './i18nAnimeLifeSim';
+import { adminTranslations } from './i18nAdmin';
 
 const resources = {
   tr: {
@@ -5656,6 +5657,7 @@ const resources = {
 (['tr', 'en', 'ja', 'fr'] as const).forEach((lng) => {
   if (resources[lng] && resources[lng].translation) {
     Object.assign(resources[lng].translation, animeLifeSimTranslations[lng]);
+    Object.assign(resources[lng].translation, adminTranslations[lng]);
   }
 });
 

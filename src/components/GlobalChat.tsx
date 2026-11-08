@@ -9,6 +9,7 @@ import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp,
 import { db } from '../firebase';
 import { cn, formatRelativeTime } from '../lib/utils';
 import { useToastStore } from '../store/useToastStore';
+import { ReportButton } from './ReportButton';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
 interface ChatMessage {
@@ -347,10 +348,17 @@ export const GlobalChat = () => {
                             )}
                           </div>
                           <span className={cn(
-                            "text-[8px] font-bold text-neutral-500 uppercase tracking-widest px-1",
+                            "text-[8px] font-bold text-neutral-500 uppercase tracking-widest px-1 flex items-center gap-2",
                             isMe ? "text-right" : "text-left"
                           )}>
                             {msg.createdAt ? formatRelativeTime(msg.createdAt.toDate()) : t('chat_now')}
+                            {!isMe && (
+                              <ReportButton
+                                target={{ targetPath: `globalChat/${msg.id}`, targetLabel: msg.text?.slice(0, 60) }}
+                                compact
+                                className="ml-1"
+                              />
+                            )}
                           </span>
                         </div>
                       </div>
