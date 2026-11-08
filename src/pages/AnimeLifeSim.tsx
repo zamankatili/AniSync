@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { ANIME_WORLDS, getWorldById, getWorldsByDangerLevel } from '../data/animeWorlds';
+import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
 import { ANIME_REGIONS, getRegionsByWorld } from '../data/animeRegions';
 import { generateLife, LifeResult, generateShareText } from '../lib/eventEngine';
 import { cn } from '../lib/utils';
@@ -61,11 +61,42 @@ export const AnimeLifeSim: React.FC = () => {
 
   const currentEvent = life?.events[currentEventIndex];
 
+  const dangerLabel = (level: string) => {
+    switch (level) {
+      case 'low': return t('als_danger_low');
+      case 'medium': return t('als_danger_medium');
+      case 'high': return t('als_danger_high');
+      case 'extreme': return t('als_danger_extreme');
+      default: return level;
+    }
+  };
+
+  const riskLabel = (risk: string) => {
+    switch (risk) {
+      case 'low': return t('als_risk_low');
+      case 'medium': return t('als_risk_medium');
+      case 'high': return t('als_risk_high');
+      case 'extreme': return t('als_risk_extreme');
+      default: return risk;
+    }
+  };
+
+  const statLabel = (label: string) => {
+    const map: Record<string, string> = {
+      'Guc': t('als_stat_power'),
+      'Zeka': t('als_stat_intelligence'),
+      'Sans': t('als_stat_luck'),
+      'Sosyal': t('als_stat_social'),
+      'Saglik': t('als_stat_health'),
+    };
+    return map[label] || label;
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
       <Helmet>
-        <title>Anime Yaşam Simülasyonu (8 Milyar Evrende 1) | AniSync</title>
-        <meta name="description" content="Anime ve manga evrenlerinde rastgele doğ, bir hayatı sonuna kadar yaşa." />
+        <title>{t('als_page_title')}</title>
+        <meta name="description" content={t('als_page_desc')} />
       </Helmet>
 
       {phase === 'select' && (
@@ -77,14 +108,13 @@ export const AnimeLifeSim: React.FC = () => {
             </div>
             <div className="relative z-10 max-w-3xl">
               <span className="bg-rose-600 text-white font-black text-xs px-2.5 py-1 border border-white uppercase tracking-wider">
-                BETA — 8 MİLYAR EVRENDE 1
+                {t('als_hero_badge')}
               </span>
               <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-3 mt-3">
-                ANİME YAŞAM SİMÜLASYONU
+                {t('als_hero_title')}
               </h1>
               <p className="text-sm md:text-base text-neutral-300 font-medium leading-relaxed mb-6">
-                Tam bu anda bile her saniye dört bebek doğuyor. Onlardan biri olup tek bir hayatı sonuna kadar yaşarsın.
-                Nerede, kimin çocuğu olarak doğacağını seçemezsin. Ama bu sefer anime/manga evrenlerinde!
+                {t('als_hero_desc')}
               </p>
             </div>
           </div>
@@ -92,7 +122,7 @@ export const AnimeLifeSim: React.FC = () => {
           {/* World Selection */}
           <div className="bg-neutral-900 border-2 border-white p-5">
             <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-4">
-              🌍 Doğacağın Evren
+              🌍 {t('als_world_select_title')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {ANIME_WORLDS.map((w) => (
@@ -121,12 +151,10 @@ export const AnimeLifeSim: React.FC = () => {
                       w.dangerLevel === 'high' ? "border-rose-500 text-rose-400" :
                       "border-red-600 text-red-400"
                     )}>
-                      {w.dangerLevel === 'low' ? 'Düşük Tehlike' :
-                       w.dangerLevel === 'medium' ? 'Orta Tehlike' :
-                       w.dangerLevel === 'high' ? 'Yüksek Tehlike' : 'Aşırı Tehlike'}
+                      {dangerLabel(w.dangerLevel)}
                     </span>
                     <span className="text-neutral-500">
-                      Yaşam: {w.lifeExpectancy[0]}-{w.lifeExpectancy[1]} yıl
+                      {t('als_life_expectancy', { min: w.lifeExpectancy[0], max: w.lifeExpectancy[1] })}
                     </span>
                   </div>
                 </button>
@@ -138,7 +166,7 @@ export const AnimeLifeSim: React.FC = () => {
           {world && (
             <div className="bg-neutral-900 border-2 border-white p-5">
               <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-4">
-                Doğacağın Bölge
+                {t('als_region_select_title')}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {regions.map((r) => (
@@ -168,7 +196,7 @@ export const AnimeLifeSim: React.FC = () => {
           {/* Life Duration */}
           <div className="bg-neutral-900 border-2 border-white p-5">
             <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-4">
-              Bir Hayatın Uzunluğu
+              {t('als_duration_title')}
             </h2>
             <div className="flex flex-wrap gap-3">
               {(['30min', '1h', '1.5h'] as const).map((dur) => (
@@ -182,7 +210,7 @@ export const AnimeLifeSim: React.FC = () => {
                       : "bg-black text-neutral-300 border-white/20 hover:border-white"
                   )}
                 >
-                  {dur === '30min' ? 'Yaklaşık 30 dk' : dur === '1h' ? 'Yaklaşık 1 saat' : 'Yaklaşık 1.5 saat'}
+                  {dur === '30min' ? t('als_duration_30min') : dur === '1h' ? t('als_duration_1h') : t('als_duration_1_5h')}
                 </button>
               ))}
             </div>
@@ -194,7 +222,7 @@ export const AnimeLifeSim: React.FC = () => {
               onClick={handleStartLife}
               className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white font-black uppercase text-sm tracking-widest border-4 border-white neo-shadow-white flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
-              DOG VE YASA
+              {t('als_start_button')}
             </button>
           )}
         </div>
@@ -206,10 +234,10 @@ export const AnimeLifeSim: React.FC = () => {
           <div className="bg-black border-4 border-white neo-shadow-white p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-black text-white uppercase tracking-wider">
-                {world?.nameTR} - {region?.nameTR}
+                {t('als_progress_world_region', { world: world?.nameTR, region: region?.nameTR })}
               </span>
               <span className="text-xs font-mono font-bold text-neutral-400">
-                {currentEvent.age} / {life.deathAge} yil
+                {t('als_progress_age', { age: currentEvent.age, deathAge: life.deathAge, unit: t('als_years_unit') })}
               </span>
             </div>
             <div className="w-full h-3 bg-neutral-900 border-2 border-white overflow-hidden">
@@ -219,7 +247,7 @@ export const AnimeLifeSim: React.FC = () => {
               />
             </div>
             <div className="mt-2 text-[10px] text-neutral-500 font-mono">
-              Olay {currentEventIndex + 1} / {life.events.length}
+              {t('als_progress_events', { current: currentEventIndex + 1, total: life.events.length })}
             </div>
           </div>
 
@@ -239,7 +267,7 @@ export const AnimeLifeSim: React.FC = () => {
                   {currentEvent.title}
                 </h3>
                 <span className="text-[10px] text-neutral-400 font-mono font-bold">
-                  {currentEvent.age} yasinda - {currentEvent.year}
+                  {t('als_event_age', { age: currentEvent.age, year: currentEvent.year })}
                 </span>
               </div>
             </div>
@@ -250,14 +278,14 @@ export const AnimeLifeSim: React.FC = () => {
 
             {currentEvent.isCanonEncounter && (
               <div className="bg-amber-400/20 border-2 border-amber-400 p-3 text-amber-300 text-xs font-bold">
-                Kanon Karakter Karsilasmasi: {currentEvent.canonCharacter}
+                {t('als_canon_encounter', { char: currentEvent.canonCharacter })}
               </div>
             )}
 
             {currentEvent.choices && currentEvent.choices.length > 0 && !choicesMade[currentEvent.id] && (
               <div className="space-y-3 mt-4">
                 <p className="text-xs text-neutral-400 font-black uppercase tracking-wider">
-                  Seciminizi yapin:
+                  {t('als_choice_prompt')}
                 </p>
                 <div className="grid grid-cols-1 gap-2">
                   {currentEvent.choices.map((choice) => (
@@ -278,9 +306,7 @@ export const AnimeLifeSim: React.FC = () => {
                           choice.risk === 'high' ? "border-rose-500 text-rose-400" :
                           "border-red-600 text-red-400"
                         )}>
-                          {choice.risk === 'low' ? 'Dusuk Risk' :
-                           choice.risk === 'medium' ? 'Orta Risk' :
-                           choice.risk === 'high' ? 'Yuksek Risk' : 'Asiri Risk'}
+                          {riskLabel(choice.risk)}
                         </span>
                       </div>
                       <p className="text-[11px] text-neutral-400 font-medium leading-snug">
@@ -294,7 +320,7 @@ export const AnimeLifeSim: React.FC = () => {
 
             {choicesMade[currentEvent.id] && (
               <div className="bg-emerald-950/40 border-2 border-emerald-500/50 p-3 text-emerald-300 text-xs font-bold">
-                Secim yapildi. Sonraki olaya geciliyor...
+                {t('als_choice_made')}
               </div>
             )}
 
@@ -303,7 +329,7 @@ export const AnimeLifeSim: React.FC = () => {
                 onClick={handleNextEvent}
                 className="w-full py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
               >
-                Devam Et
+                {t('als_continue')}
               </button>
             )}
           </div>
@@ -318,7 +344,7 @@ export const AnimeLifeSim: React.FC = () => {
               { label: 'Saglik', value: life.finalStats.health, color: 'text-purple-400' }
             ].map((stat) => (
               <div key={stat.label} className="bg-neutral-900 border border-white/20 p-2 text-center">
-                <span className="text-[9px] font-black text-neutral-500 uppercase block">{stat.label}</span>
+                <span className="text-[9px] font-black text-neutral-500 uppercase block">{statLabel(stat.label)}</span>
                 <span className={`text-sm font-black font-mono ${stat.color}`}>{stat.value}</span>
               </div>
             ))}
@@ -333,10 +359,10 @@ export const AnimeLifeSim: React.FC = () => {
             <div className="text-center mb-6">
               <span className="text-6xl mb-4 block">{world?.emoji}</span>
               <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-2">
-                ANMA SAYFASI
+                {t('als_memorial_title')}
               </h2>
               <p className="text-neutral-400 font-bold text-sm">
-                Hatirlanmayan bir hayat. Ama bir hayat yasandi.
+                {t('als_memorial_desc')}
               </p>
             </div>
 
@@ -348,7 +374,7 @@ export const AnimeLifeSim: React.FC = () => {
             {life.achievements.length > 0 && (
               <div className="mt-6">
                 <h3 className="text-lg font-black text-white uppercase tracking-wider mb-3">
-                  BASARILAR
+                  {t('als_achievements_title')}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {life.achievements.map((ach, idx) => (
@@ -364,10 +390,10 @@ export const AnimeLifeSim: React.FC = () => {
             {life.isCanonEncountered && (
               <div className="mt-6 bg-amber-400/20 border-2 border-amber-400 p-4">
                 <h3 className="text-lg font-black text-amber-400 uppercase tracking-wider mb-2">
-                  KANON KARAKTER KARSILASMALARI
+                  {t('als_canon_encounters_title')}
                 </h3>
                 <p className="text-xs text-neutral-300 font-bold">
-                  Bu hayatta su kanon karakterlerle karsilastin: {life.canonEncounters.join(', ')}
+                  {t('als_canon_encounters_desc', { list: life.canonEncounters.join(', ') })}
                 </p>
               </div>
             )}
@@ -381,13 +407,13 @@ export const AnimeLifeSim: React.FC = () => {
                 }}
                 className="flex-1 py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
               >
-                SONUCU KOPYALA
+                {t('als_copy_result')}
               </button>
               <button
                 onClick={handleRestart}
                 className="flex-1 py-3 bg-black hover:bg-neutral-800 text-white font-black uppercase text-sm border-4 border-white/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                YENI HAYAT
+                {t('als_new_life')}
               </button>
             </div>
           </div>

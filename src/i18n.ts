@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { animeLifeSimTranslations } from './i18nAnimeLifeSim';
 
 const resources = {
   tr: {
@@ -5618,6 +5619,13 @@ const resources = {
     }
   }
 };
+
+// Merge Anime Life Sim page translations into the main resources
+(['tr', 'en', 'ja', 'fr'] as const).forEach((lng) => {
+  if (resources[lng] && resources[lng].translation) {
+    Object.assign(resources[lng].translation, animeLifeSimTranslations[lng]);
+  }
+});
 
 const HTML_LANG: Record<string, string> = { tr: 'tr', en: 'en', ja: 'ja', fr: 'fr' };
 const syncHtmlLang = (lng?: string) => {
