@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
 import { ANIME_REGIONS, getRegionsByWorld } from '../data/animeRegions';
+import { getWorldLore } from '../data/lore';
 import { generateLife, LifeResult, generateShareText } from '../lib/eventEngine';
 import { cn } from '../lib/utils';
 import { db, auth } from '../firebase';
@@ -271,6 +272,43 @@ export const AnimeLifeSim: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* World Lore Panel */}
+          {world && (() => {
+            const lore = getWorldLore(world.id);
+            if (!lore) return null;
+            return (
+              <div className="bg-neutral-900 border-2 border-white/30 p-5 space-y-3">
+                <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                  {world.emoji} {world.nameTR} — Lore
+                </h3>
+                <p className="text-[11px] text-neutral-300 font-medium leading-snug">
+                  {lore.summary}
+                </p>
+                <div className="text-[10px] text-neutral-400 font-mono">
+                  <span className="font-black text-neutral-300">Güç Sistemi:</span> {lore.powerSystem.name}
+                </div>
+                <div className="text-[10px] text-neutral-400 font-mono">
+                  <span className="font-black text-neutral-300">Temalar:</span> {lore.themes.join(', ')}
+                </div>
+                <div className="text-[10px] text-neutral-400 font-mono">
+                  <span className="font-black text-neutral-300">Kaynak Seriler:</span> {lore.sourceSeries.join(', ')}
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {lore.factions.slice(0, 6).map((f, i) => (
+                    <span key={i} className={cn(
+                      "text-[9px] font-bold px-1.5 py-0.5 border",
+                      f.alignment === 'good' ? "border-emerald-500 text-emerald-400" :
+                      f.alignment === 'evil' ? "border-rose-500 text-rose-400" :
+                      "border-neutral-500 text-neutral-400"
+                    )}>
+                      {f.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Region Selection */}
           {world && (
