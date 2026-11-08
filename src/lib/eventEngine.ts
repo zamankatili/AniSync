@@ -184,10 +184,11 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
   };
 }
 
-function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
-  const crisisTypes: { title: string; description: string; choices: LifeChoice[] }[] = [
+function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats, includeHeavy: boolean = true): LifeEvent | null {
+  const crisisTypes: { title: string; description: string; choices: LifeChoice[]; heavy: boolean }[] = [
     {
       title: 'Hastalık ve Kayıp',
+      heavy: false,
       description: `${age} yaşındasın. ${region.nameTR} bölgesinde bir salgın veya hastalık yayılıyor. Sevdiklerinden biri etkilenmiş olabilir.`,
       choices: [
         { id: 'heal', label: 'Tedavi Ara', description: 'Tıp veya büyü ile çare bul', statChanges: { health: 10, intelligence: 5 }, consequences: ['Sağlık', 'Bilgi'], risk: 'medium' },
@@ -197,6 +198,7 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
     },
     {
       title: 'Savaş ve Çatışma',
+      heavy: true,
       description: `${age} yaşındasın. ${world.nameTR} evreninde bir çatışma patlak verdi. ${region.nameTR} bölgesi de etkileniyor.`,
       choices: [
         { id: 'fight', label: 'Savaş', description: 'Cepheye git', statChanges: { power: 10, health: -15 }, consequences: ['Deneyim', 'Travma'], risk: 'extreme' },
@@ -206,6 +208,7 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
     },
     {
       title: 'Güç Uyanışı',
+      heavy: false,
       description: `${age} yaşındasın. ${world.powerSystem} sisteminde bir uyanış belirtisi hissediyorsun. Bu güç seni değiştirebilir.`,
       choices: [
         { id: 'embrace', label: 'Gücü Kabul Et', description: 'Gücü kabul et ve eğit', statChanges: { power: 15, health: -5 }, consequences: ['Güç', 'Risk'], risk: 'high' },
@@ -215,7 +218,9 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
     }
   ];
 
-  const crisis = crisisTypes[Math.floor(Math.random() * crisisTypes.length)];
+  const available = includeHeavy ? crisisTypes : crisisTypes.filter(c => !c.heavy);
+  if (available.length === 0) return null;
+  const crisis = available[Math.floor(Math.random() * available.length)];
   const helpNote = '\\n\\n💡 Yardım: Bu tür krizlerde topluluk desteği, profesyonel yardım ve aile bağları hayatta kalma şansını artırır. AniSync topluluğunda benzer deneyimler paylaşılabilir.';
   return {
     id: `crisis_${age}`,
@@ -440,11 +445,17 @@ function createMilestoneEvent(world: AnimeWorld, region: AnimeRegion, age: numbe
 
 // ─── Ana Yaşam Üretici ───────────────────────────────────
 
+export interface GenerateLifeOptions {
+  includeHeavy?: boolean;
+}
+
 export function generateLife(
   world: AnimeWorld,
   region: AnimeRegion,
-  duration: '30min' | '1h' | '1.5h'
+  duration: '30min' | '1h' | '1.5h',
+  options: GenerateLifeOptions = {}
 ): LifeResult {
+  const includeHeavy = options.includeHeavy !== false;
   const stats = generateInitialStats(world, region);
   const birthYear = 2026 - Math.floor(Math.random() * 20); // Random birth year in last 20 years
   const events: LifeEvent[] = [];
@@ -514,7 +525,8 @@ export function generateLife(
   // Crisis events (ages 18-40, random)
   for (let age = 18; age <= Math.min(40, clampedLife - 5); age += rollDice(5, 8)) {
     if (rollChance(0.4)) {
-      events.push(createCrisisEvent(world, region, age, birthYear + age, stats));
+      const ce = createCrisisEvent(world, region, age, birthYear + age, stats, includeHeavy);
+      if (ce) events.push(ce);
     }
   }
 

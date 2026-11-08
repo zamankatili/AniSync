@@ -19,6 +19,8 @@ export const AnimeLifeSim: React.FC = () => {
   const [choicesMade, setChoicesMade] = useState<Record<string, string>>({});
   const [speed, setSpeed] = useState<number>(1);
   const [savedLife, setSavedLife] = useState<LifeResult | null>(null);
+  const [heavyContent, setHeavyContent] = useState<boolean>(true);
+  const eduMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edu') === '1';
 
   const world = selectedWorld ? getWorldById(selectedWorld) : null;
   const regions = selectedWorld ? getRegionsByWorld(selectedWorld) : [];
@@ -26,7 +28,7 @@ export const AnimeLifeSim: React.FC = () => {
 
   const handleStartLife = () => {
     if (!world || !region) return;
-    const result = generateLife(world, region, lifeDuration);
+    const result = generateLife(world, region, lifeDuration, { includeHeavy: heavyContent && !eduMode });
     setLife(result);
     setPhase('playing');
     setCurrentEventIndex(0);
@@ -313,6 +315,26 @@ export const AnimeLifeSim: React.FC = () => {
             </div>
           </div>
 
+          {/* Ethical Mode Toggle */}
+          <div className="bg-neutral-900 border-2 border-white/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-white uppercase tracking-wider">15+ / Etik Mod</span>
+              <span className="text-[10px] text-neutral-400 font-medium">
+                {eduMode ? 'Eğitim modu aktif: ağır temalar kapalı.' : 'Ağır konular (savaş/şiddet) filtrelenir.'}
+              </span>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={heavyContent && !eduMode}
+                onChange={(e) => setHeavyContent(e.target.checked)}
+                disabled={eduMode}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span className="text-xs font-bold text-neutral-300">Ağır konuları göster</span>
+            </label>
+          </div>
+
           {/* Start Button */}
           {selectedWorld && selectedRegion && (
             <button
@@ -515,8 +537,16 @@ export const AnimeLifeSim: React.FC = () => {
             {/* Share */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button
-                onClick={() => {
+                onClick={async () => {
                   const text = generateShareText(life, world!, region!);
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({ title: t('als_page_title'), text });
+                      return;
+                    } catch {
+                      // fall through
+                    }
+                  }
                   navigator.clipboard.writeText(text);
                 }}
                 className="flex-1 py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
