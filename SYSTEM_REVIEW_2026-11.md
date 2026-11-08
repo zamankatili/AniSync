@@ -33,11 +33,12 @@ Bu raporun yazıldığı gün içinde uygulanan ve doğrulananlar (her biri buil
 **Kalan işler (bilinçli ertelendi / sende)**
 - i18n split (index 254 KB gzip; route-level i18n) — t() çağrılarını her yerde kırmamak için ayrı oturum.
 - `eventEngine.ts` break-out (generateLife/memorial ayrımı) + AppStore'da kalan slice'lar (forum/watchlist) — hook test altyapısı ile birlikte yapılacak.
-- Firestore kuralları yayınlandı mı? **Hayır — senin Firebase Console'dan yayınlaman gerekiyor** (bu oturumdan `firestore.rules` güncel). `role:'admin'` ataması da senin. `deploy-rules.yml` çalışması için `FIREBASE_TOKEN` repo secret gerekir.
+- Firestore kuralları yayınlandı mı? **Hayır — senin Firebase Console'dan yayınlaman gerekiyor** (bu oturumdan `firestore.rules` + **`firestore.indexes.json`** güncel; globalChat kompozit indeksini de yükle). `role:'admin'` ataması da senin. `deploy-rules.yml` çalışması için `FIREBASE_TOKEN` repo secret gerekir.
 - Vercel env: `GEMINI_API_KEY`, `CRON_SECRET`, `FIREBASE_PROJECT_ID` set edilmeli (aksi halde prod'da translate/AI 401 döner — fail-closed).
 - "1 in 8 Billion" ismi → ticari lansmanda değiştir (öneri: "AniSync: One Life, Many Worlds").
 - Rules birim testleri (@firebase/rules-unit-testing + emulator) — P1.
 - console.error gürültüsü üretimde süzülmüyor (P1); i18n eksik-anahtar CI raporu (P2); `notableCharacters.role` romaji karma (P2).
+- ~~FeedPost çift listesi~~, ~~sidebar lg:hidden~~, ~~MemeZone fallback~~, ~~challenge oy sayıları~~, ~~chat "48 katılımcı"~~ — **tamamlandı (commit `575c17b`, `7341ddf`).**
 
 ## 0. Yönetici özeti — sistem tek cümlede
 **Yeni nesil görünür, eskimiş çekirdek:** güzel bir neo-brutalist mobil UX + gerçek canlı veri akışları (AniList takvimi, RSS haberleri) + 4 dilli içerik, AMA halen MVP kalitesinde mühendislik disiplini: test coverage düşük, güvenlik kural deposu yeni, dağıtım uyarısı (Vercel) sahte cron'a sahip; yasal/telif jakarında "dokunma" hassasiyeti; tek geliştiriciye dayalı.
