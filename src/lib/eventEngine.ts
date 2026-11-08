@@ -216,12 +216,13 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
   ];
 
   const crisis = crisisTypes[Math.floor(Math.random() * crisisTypes.length)];
+  const helpNote = '\\n\\n💡 Yardım: Bu tür krizlerde topluluk desteği, profesyonel yardım ve aile bağları hayatta kalma şansını artırır. AniSync topluluğunda benzer deneyimler paylaşılabilir.';
   return {
     id: `crisis_${age}`,
     age,
     year,
     title: crisis.title,
-    description: crisis.description,
+    description: crisis.description + helpNote,
     type: 'crisis',
     choices: crisis.choices,
     isCanonEncounter: false
@@ -435,17 +436,48 @@ export function generateLife(
     }
   }
 
-  // Death
-  const deathAge = clampedLife;
-  const deathCauses = [
-    'Yaşlılık',
-    'Hastalık',
-    'Savaş yarası',
-    'Kaza',
-    'Doğa felaketi',
-    'Bilinmeyen neden'
-  ];
-  const deathCause = deathCauses[Math.floor(Math.random() * deathCauses.length)];
+  // Death — yaşam tablosu (life table) tabanlı
+  // Bebeklik ölümü olasılığı + yaşa göre artan ölüm riski (Gompertz benzeri)
+  const childMortality = Math.min(0.3, region.stats.diseaseRate * 0.4 + region.stats.povertyRate * 0.2);
+  let deathAge: number;
+  if (Math.random() < childMortality) {
+    deathAge = rollDice(0, 4);
+  } else {
+    const mean = (world.lifeExpectancy[0] + world.lifeExpectancy[1]) / 2;
+    const sd = (world.lifeExpectancy[1] - world.lifeExpectancy[0]) / 4;
+    // Box-Muller normal approximation
+    const u1 = Math.max(0.0001, Math.random());
+    const u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    deathAge = Math.round(mean + z * sd);
+    deathAge = clamp(deathAge, 5, world.lifeExpectancy[1] + 8);
+  }
+  deathAge = clamp(deathAge, 0, 120);
+
+  // Ölüm nedeni yaşa göre (DSÖ GHE bölgesel/yaşa göre kalıplar basitleştirilmiş)
+  let deathCause: string;
+  if (deathAge < 1) {
+    deathCause = 'Bebeklik hastalığı';
+  } else if (deathAge < 5) {
+    deathCause = 'Çocukluk hastalığı';
+  } else if (deathAge < 15) {
+    deathCause = Math.random() < 0.5 ? 'Hastalık' : 'Kaza';
+  } else if (deathAge < 40) {
+    const r = Math.random();
+    if (r < 0.35) deathCause = 'Hastalık';
+    else if (r < 0.55) deathCause = 'Kaza';
+    else if (r < 0.7) deathCause = 'Şiddet/Savaş';
+    else deathCause = 'Doğa felaketi';
+  } else if (deathAge < 65) {
+    const r = Math.random();
+    if (r < 0.6) deathCause = 'Hastalık';
+    else if (r < 0.8) deathCause = 'Kaza';
+    else deathCause = 'Yaşlılık';
+  } else {
+    const r = Math.random();
+    if (r < 0.75) deathCause = 'Yaşlılık';
+    else deathCause = 'Hastalık';
+  }
 
   const deathEvent: LifeEvent = {
     id: 'death',

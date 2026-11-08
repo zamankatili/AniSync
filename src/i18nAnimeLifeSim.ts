@@ -48,6 +48,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_canon_encounters_desc": "Bu hayatta şu kanon karakterlerle karşılaştın: {{list}}",
     "als_copy_result": "SONUCU KOPYALA",
     "als_new_life": "YENİ HAYAT",
+    "als_resume_available": "Kayıtlı bir hayat var ({{age}} yıl, {{world}}). Devam etmek ister misin?",
+    "als_resume": "DEVAM ET",
+    "als_clear_save": "SİL",
+    "als_speed": "HIZ",
   },
   en: {
     "als_page_title": "Anime Life Simulation (1 in 8 Billion) | AniSync",
@@ -93,6 +97,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_canon_encounters_desc": "In this life, you encountered these canon characters: {{list}}",
     "als_copy_result": "COPY RESULT",
     "als_new_life": "NEW LIFE",
+    "als_resume_available": "A saved life exists ({{age}} years, {{world}}). Resume?",
+    "als_resume": "RESUME",
+    "als_clear_save": "CLEAR",
+    "als_speed": "SPEED",
   },
   ja: {
     "als_page_title": "アニメライフシミュレーション (80億の世界に1つ) | AniSync",
@@ -138,6 +146,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_canon_encounters_desc": "この人生で以下のカノンキャラクターと出会った: {{list}}",
     "als_copy_result": "結果をコピー",
     "als_new_life": "新しい人生",
+    "als_resume_available": "保存された人生があります ({{age}} 年, {{world}})。再開しますか?",
+    "als_resume": "再開",
+    "als_clear_save": "削除",
+    "als_speed": "速度",
   },
   fr: {
     "als_page_title": "Simulation de Vie Anime (1 parmi 8 milliards) | AniSync",
@@ -183,5 +195,9 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_canon_encounters_desc": "Dans cette vie, tu as rencontré ces personnages canon: {{list}}",
     "als_copy_result": "COPIER LE RÉSULTAT",
     "als_new_life": "NOUVELLE VIE",
+    "als_resume_available": "Une vie sauvegardée existe ({{age}} ans, {{world}}). Reprendre?",
+    "als_resume": "REPRENDRE",
+    "als_clear_save": "EFFACER",
+    "als_speed": "VITESSE",
   },
 };

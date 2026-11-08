@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
@@ -17,6 +17,8 @@ export const AnimeLifeSim: React.FC = () => {
   const [life, setLife] = useState<LifeResult | null>(null);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const [choicesMade, setChoicesMade] = useState<Record<string, string>>({});
+  const [speed, setSpeed] = useState<number>(1);
+  const [savedLife, setSavedLife] = useState<LifeResult | null>(null);
 
   const world = selectedWorld ? getWorldById(selectedWorld) : null;
   const regions = selectedWorld ? getRegionsByWorld(selectedWorld) : [];
@@ -29,6 +31,7 @@ export const AnimeLifeSim: React.FC = () => {
     setPhase('playing');
     setCurrentEventIndex(0);
     setChoicesMade({});
+    handleClearSave();
   };
 
   const handleChoice = (eventId: string, choiceId: string) => {
@@ -39,7 +42,7 @@ export const AnimeLifeSim: React.FC = () => {
       } else {
         setPhase('memorial');
       }
-    }, 800);
+    }, Math.round(800 / speed));
   };
 
   const handleNextEvent = () => {
@@ -60,6 +63,79 @@ export const AnimeLifeSim: React.FC = () => {
   };
 
   const currentEvent = life?.events[currentEventIndex];
+
+  // Load saved life from localStorage on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('als_saved_life');
+      if (raw) {
+        const parsed = JSON.parse(raw) as LifeResult;
+        setSavedLife(parsed);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Persist life to localStorage whenever it changes
+  useEffect(() => {
+    if (life && phase === 'playing') {
+      try {
+        localStorage.setItem('als_saved_life', JSON.stringify(life));
+        localStorage.setItem('als_saved_index', String(currentEventIndex));
+        localStorage.setItem('als_saved_phase', phase);
+        if (world) localStorage.setItem('als_saved_world', world.id);
+        if (region) localStorage.setItem('als_saved_region', region.id);
+        localStorage.setItem('als_saved_duration', lifeDuration);
+      } catch {
+        // ignore
+      }
+    }
+    if (phase === 'memorial' && life) {
+      try {
+        localStorage.setItem('als_saved_life', JSON.stringify(life));
+        localStorage.setItem('als_saved_phase', 'memorial');
+      } catch {
+        // ignore
+      }
+    }
+  }, [life, phase, currentEventIndex, world, region, lifeDuration]);
+
+  const handleResume = () => {
+    try {
+      const raw = localStorage.getItem('als_saved_life');
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as LifeResult;
+      const idx = Number(localStorage.getItem('als_saved_index') || '0');
+      const savedPhase = (localStorage.getItem('als_saved_phase') as Phase) || 'playing';
+      const savedWorld = localStorage.getItem('als_saved_world');
+      const savedRegion = localStorage.getItem('als_saved_region');
+      const savedDuration = localStorage.getItem('als_saved_duration') as '30min' | '1h' | '1.5h' | null;
+      if (savedWorld) setSelectedWorld(savedWorld);
+      if (savedRegion) setSelectedRegion(savedRegion);
+      if (savedDuration) setLifeDuration(savedDuration);
+      setLife(parsed);
+      setCurrentEventIndex(idx);
+      setPhase(savedPhase);
+      setSavedLife(parsed);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleClearSave = () => {
+    try {
+      localStorage.removeItem('als_saved_life');
+      localStorage.removeItem('als_saved_index');
+      localStorage.removeItem('als_saved_phase');
+      localStorage.removeItem('als_saved_world');
+      localStorage.removeItem('als_saved_region');
+      localStorage.removeItem('als_saved_duration');
+    } catch {
+      // ignore
+    }
+    setSavedLife(null);
+  };
 
   const dangerLabel = (level: string) => {
     switch (level) {
@@ -101,6 +177,27 @@ export const AnimeLifeSim: React.FC = () => {
 
       {phase === 'select' && (
         <div className="space-y-6">
+          {savedLife && (
+            <div className="bg-amber-400/20 border-2 border-amber-400 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-amber-300 text-xs font-bold">
+                {t('als_resume_available', { age: savedLife.deathAge, world: savedLife.worldId })}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleResume}
+                  className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-black font-black text-xs uppercase border-2 border-white cursor-pointer"
+                >
+                  {t('als_resume')}
+                </button>
+                <button
+                  onClick={handleClearSave}
+                  className="px-4 py-2 bg-black hover:bg-neutral-800 text-white font-black text-xs uppercase border-2 border-white/30 cursor-pointer"
+                >
+                  {t('als_clear_save')}
+                </button>
+              </div>
+            </div>
+          )}
           {/* Hero */}
           <div className="bg-black border-4 border-white neo-shadow-white p-6 md:p-8 relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
@@ -248,6 +345,23 @@ export const AnimeLifeSim: React.FC = () => {
             </div>
             <div className="mt-2 text-[10px] text-neutral-500 font-mono">
               {t('als_progress_events', { current: currentEventIndex + 1, total: life.events.length })}
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-[10px] text-neutral-400 font-black uppercase">{t('als_speed')}</span>
+              {[1, 2, 4, 8, 16].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSpeed(s)}
+                  className={cn(
+                    "px-2 py-1 text-[10px] font-black border cursor-pointer",
+                    speed === s
+                      ? "bg-amber-400 text-black border-amber-400"
+                      : "bg-black text-neutral-300 border-white/20 hover:border-white"
+                  )}
+                >
+                  {s}x
+                </button>
+              ))}
             </div>
           </div>
 
