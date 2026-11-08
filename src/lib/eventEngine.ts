@@ -271,21 +271,41 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
 }
 
 function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: number, year: number): LifeEvent | null {
-  // Canon character encounters based on world and age
+  // Canon character encounters — bölge (region) bazlı, böylece seçilen seriye uygun karakterler çıkar
   const encounters: Record<string, { minAge: number; maxAge: number; character: string; description: string; probability: number }[]> = {
-    shonen_battle: [
+    // Shounen Battle World — bölgeye göre seri
+    konoha: [
+      { minAge: 8, maxAge: 15, character: 'Naruto', description: 'Turuncu kıyafetli bir ninja köyden geçiyor. "Dattebayo!" diye bağırıyor.', probability: 0.15 },
+      { minAge: 12, maxAge: 20, character: 'Sasuke', description: 'Karanlık yüzlü bir genç, Sharingan gözüyle seni süzüyor.', probability: 0.10 },
+      { minAge: 15, maxAge: 25, character: 'Kakashi', description: 'Gümüş saçlı, maske takan bir jonin kitabı okuyarak geçiyor.', probability: 0.08 }
+    ],
+    kanton: [
       { minAge: 8, maxAge: 15, character: 'Luffy', description: 'Uzakta, deniz kenarında bir çocuk koşuyor. "Korsanlar Kralı olacağım!" diye bağırıyor.', probability: 0.15 },
       { minAge: 12, maxAge: 20, character: 'Zoro', description: 'Bir kılıç ustası, antrenman yaparken görürsün. Üç kılıç kullanıyor.', probability: 0.10 },
-      { minAge: 15, maxAge: 25, character: 'Naruto', description: 'Turuncu kıyafetli bir ninja köyden geçiyor. "Dattebayo!" diye bağırıyor.', probability: 0.12 },
-      { minAge: 18, maxAge: 30, character: 'Gojo', description: 'Beyaz saçlı, körbandı takan bir adam seni geçip gidiyor. Çevresinde hava farklı hissediliyor.', probability: 0.08 },
+      { minAge: 15, maxAge: 25, character: 'Nami', description: 'Turuncu saçlı bir kız, harita çizerek geçiyor.', probability: 0.08 }
+    ],
+    soul_society: [
+      { minAge: 10, maxAge: 20, character: 'Ichigo', description: 'Turuncu saçlı bir genç, dev kılıç taşıyor. Hollow avında.', probability: 0.12 },
+      { minAge: 12, maxAge: 22, character: 'Rukia', description: 'Küçük boylu bir shinigami, kılıç dansı yapıyor.', probability: 0.08 },
+      { minAge: 15, maxAge: 25, character: 'Byakuya', description: 'Sakin ve soğuk bir kaptan, sakura yaprakları savuruyor.', probability: 0.06 }
+    ],
+    marley: [
+      { minAge: 12, maxAge: 20, character: 'Eren', description: 'Yeşil gözlü bir genç, özgürlükten bahsediyor.', probability: 0.12 },
+      { minAge: 15, maxAge: 25, character: 'Levi', description: 'Kısa boylu, temizlik takıntılı bir asker komutan geçiyor.', probability: 0.08 },
+      { minAge: 10, maxAge: 18, character: 'Mikasa', description: 'Siyah saçlı bir kız, kırmızı eşarp takıyor.', probability: 0.07 }
+    ],
+    jujutsu_high: [
+      { minAge: 15, maxAge: 25, character: 'Gojo', description: 'Beyaz saçlı, körbandı takan bir adam seni geçip gidiyor. Çevresinde hava farklı hissediliyor.', probability: 0.10 },
+      { minAge: 14, maxAge: 22, character: 'Yuji', description: 'Pembe saçlı bir genç, yumruk sallayarak antrenman yapıyor.', probability: 0.08 },
       { minAge: 10, maxAge: 20, character: 'Tanjiro', description: 'Kırmızı gözlü bir genç, kılıç çantasıyla yolculuk ediyor. Yanında bir kutu taşıyor.', probability: 0.10 }
     ],
+    // Diğer dünyalar (tek havuz)
     dark_fantasy: [
       { minAge: 10, maxAge: 20, character: 'Guts', description: 'Dev kılıç taşıyan bir adam gece yarısı geçip gidiyor. Gözlerinde derin bir hüzün var.', probability: 0.08 },
-      { minAge: 15, maxAge: 25, character: 'Levi', description: 'Kısa boylu, temizlik takıntılı bir asker komutan geçiyor. Hiç kimse ona laf etmiyor.', probability: 0.07 }
+      { minAge: 15, maxAge: 25, character: 'Levi', description: 'Kısa boylu, temizlik takıntılı bir asker komutan geçiyor.', probability: 0.07 }
     ],
     isekai: [
-      { minAge: 12, maxAge: 25, character: 'Subaru', description: 'Bir genç, "Emilia-tan!" diye bağırarak koşuyor. Yanında mavi saçlı bir kız var.', probability: 0.10 },
+      { minAge: 12, maxAge: 25, character: 'Subaru', description: 'Bir genç, "Emilia-tan!" diye bağırarak koşuyor.', probability: 0.10 },
       { minAge: 10, maxAge: 20, character: 'Kazuma', description: 'Yeşil saçlı bir maceracı, "Chunchunmaru!" diye bağırarak geçiyor.', probability: 0.08 }
     ],
     cyberpunk: [
@@ -295,11 +315,17 @@ function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: numbe
     seinen_psych: [
       { minAge: 18, maxAge: 40, character: 'L', description: 'Beyaz gömlekli, çömelmiş oturan bir dedektif görürsün. Tatlı yiyor.', probability: 0.06 },
       { minAge: 20, maxAge: 45, character: 'Johan', description: 'Sarı saçlı, masum yüzlü bir adam. Gözlerinde korkunç bir boşluk var.', probability: 0.04 }
-    ]
+    ],
+    romance_drama: [],
+    slice_of_life: [],
+    sports: []
   };
 
+  // Önce region bazlı havuz, yoksa world bazlı havuz
+  const regionEncounters = encounters[region.id];
   const worldEncounters = encounters[world.id] || [];
-  const validEncounters = worldEncounters.filter(e => age >= e.minAge && age <= e.maxAge);
+  const pool = (regionEncounters && regionEncounters.length > 0) ? regionEncounters : worldEncounters;
+  const validEncounters = pool.filter(e => age >= e.minAge && age <= e.maxAge);
   if (validEncounters.length === 0) return null;
 
   const encounter = validEncounters[Math.floor(Math.random() * validEncounters.length)];
