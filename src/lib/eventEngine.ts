@@ -56,6 +56,10 @@ export interface LifeResult {
   period: 'today' | 'past' | 'future';
   gender: 'male' | 'female';
   focus: LifeFocus;
+  characterName: string;
+  familyStatus: 'poor' | 'middle' | 'noble';
+  education: 'none' | 'basic' | 'high' | 'university';
+  assets: number; // sembolik para birimi
   birthYear: number;
   deathYear: number;
   deathAge: number;
@@ -534,6 +538,39 @@ export function generateLife(
   ];
   const baseStats = generateInitialStats(world, region);
   const stats = applyFocusBias(baseStats, focus);
+
+  // Karakter adı üretimi
+  const maleNames: Record<string, string[]> = {
+    shonen_battle: ['Ren', 'Kaito', 'Haruto', 'Sora', 'Yuki', 'Ryu', 'Kenji', 'Daichi'],
+    slice_of_life: ['Yuki', 'Haru', 'Sota', 'Kota', 'Ren', 'Yuto', 'Koki', 'Shota'],
+    dark_fantasy: ['Gareth', 'Aldric', 'Kael', 'Doran', 'Viktor', 'Magnus', 'Roland', 'Bran'],
+    isekai: ['Hiro', 'Kazuma', 'Ren', 'Shin', 'Yuu', 'Takumi', 'Kou', 'Riku'],
+    cyberpunk: ['V', 'David', 'Johnny', 'K', 'Neo', 'Axel', 'Rex', 'Zero'],
+    seinen_psych: ['Light', 'L', 'Ken', 'Shin', 'Ren', 'Yuki', 'Akira', 'Takumi'],
+    romance_drama: ['Haru', 'Yuki', 'Kousei', 'Ryuji', 'Miyuki', 'Ren', 'Sota', 'Kaito'],
+    sports: ['Shoyo', 'Tobio', 'Tetsuya', 'Seijuro', 'Yoichi', 'Hanamichi', 'Ryota', 'Kenji']
+  };
+  const femaleNames: Record<string, string[]> = {
+    shonen_battle: ['Sakura', 'Hinata', 'Rukia', 'Mikasa', 'Nami', 'Asuna', 'Yoruichi', 'Nobara'],
+    slice_of_life: ['Yui', 'Hana', 'Sakura', 'Mio', 'Ritsu', 'Azusa', 'Nadeshiko', 'Rin'],
+    dark_fantasy: ['Elsa', 'Freya', 'Lyra', 'Mira', 'Vera', 'Astrid', 'Helga', 'Sigrid'],
+    isekai: ['Emilia', 'Rem', 'Raphtalia', 'Asuna', 'Shiro', 'Stephanie', 'Aqua', 'Megumin'],
+    cyberpunk: ['Motoko', 'Akane', 'Lucy', 'Judy', 'Panam', 'Kiwi', 'Rebecca', 'Gloria'],
+    seinen_psych: ['Misa', 'Risa', 'Yuki', 'Aya', 'Rin', 'Mai', 'Saya', 'Nana'],
+    romance_drama: ['Kaori', 'Nagisa', 'Taiga', 'Kaguya', 'Miyuki', 'Hana', 'Yui', 'Sakura'],
+    sports: ['Kiyoko', 'Yachi', 'Riko', 'Aoba', 'Minori', 'Yuki', 'Hana', 'Sakura']
+  };
+  const pool = gender === 'male' ? (maleNames[world.id] || maleNames.shonen_battle) : (femaleNames[world.id] || femaleNames.shonen_battle);
+  const characterName = pool[Math.floor(Math.random() * pool.length)];
+
+  // Aile durumu (socialClass bazlı)
+  const familyStatus: 'poor' | 'middle' | 'noble' = stats.socialClass < 30 ? 'poor' : stats.socialClass > 70 ? 'noble' : 'middle';
+
+  // Eğitim (intelligence bazlı)
+  const education: 'none' | 'basic' | 'high' | 'university' = stats.intelligence < 25 ? 'none' : stats.intelligence < 50 ? 'basic' : stats.intelligence < 75 ? 'high' : 'university';
+
+  // Varlıklar (sembolik para)
+  const assets = Math.round(stats.socialClass * 100 + Math.random() * 500);
   let birthYear: number;
   if (period === 'past') {
     birthYear = 1950 + Math.floor(Math.random() * 76); // 1950-2025
@@ -690,7 +727,7 @@ export function generateLife(
   events.sort((a, b) => a.age - b.age);
 
   // Generate memorial text
-  const memorialText = generateMemorialText(world, region, birthYear, deathAge, deathCause, stats, events, gender, period);
+  const memorialText = generateMemorialText(world, region, birthYear, deathAge, deathCause, stats, events, gender, period, characterName, familyStatus, education, assets);
 
   // Generate achievements
   const achievements = generateAchievements(world, region, stats, events, deathAge);
@@ -705,6 +742,10 @@ export function generateLife(
     period,
     gender,
     focus,
+    characterName,
+    familyStatus,
+    education,
+    assets,
     birthYear,
     deathYear: birthYear + deathAge,
     deathAge,
@@ -729,7 +770,11 @@ function generateMemorialText(
   stats: LifeStats,
   events: LifeEvent[],
   gender: 'male' | 'female' = 'male',
-  period: 'today' | 'past' | 'future' = 'today'
+  period: 'today' | 'past' | 'future' = 'today',
+  characterName: string = 'İsimsiz',
+  familyStatus: 'poor' | 'middle' | 'noble' = 'middle',
+  education: 'none' | 'basic' | 'high' | 'university' = 'basic',
+  assets: number = 0
 ): string {
   const canonEncounters = events.filter(e => e.isCanonEncounter).map(e => e.canonCharacter);
 
@@ -738,7 +783,11 @@ function generateMemorialText(
   text += `═══════════════════════════════════════\n\n`;
   text += `🌍 Evren: ${world.nameTR}\n`;
   text += `📍 Bölge: ${region.nameTR}\n`;
+  text += `👤 İsim: ${characterName}\n`;
   text += `👤 Cinsiyet: ${gender === 'male' ? 'Erkek' : 'Kadın'}\n`;
+  text += `👨‍👩‍👧 Aile: ${familyStatus === 'poor' ? 'Yoksul' : familyStatus === 'noble' ? 'Soylu' : 'Orta halli'}\n`;
+  text += `🎓 Eğitim: ${education === 'none' ? 'Yok' : education === 'basic' ? 'Temel' : education === 'high' ? 'Lise' : 'Üniversite'}\n`;
+  text += `💰 Varlıklar: ${assets}\n`;
   text += `⏳ Dönem: ${period === 'past' ? 'Geçmiş' : period === 'future' ? 'Gelecek' : 'Bugün'}\n`;
   text += `📅 Doğum: ${birthYear}\n`;
   text += `💀 Ölüm: ${birthYear + deathAge} (${deathAge} yaşında)\n`;

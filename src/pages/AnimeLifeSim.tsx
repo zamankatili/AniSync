@@ -43,6 +43,7 @@ export const AnimeLifeSim: React.FC = () => {
     setLife(main);
     setParallelLives([main, ...parallels]);
     setPhase('playing');
+    playSound(440, 200, 'sine');
     setCurrentEventIndex(0);
     setChoicesMade({});
     handleClearSave();
@@ -50,11 +51,14 @@ export const AnimeLifeSim: React.FC = () => {
 
   const handleChoice = (eventId: string, choiceId: string) => {
     setChoicesMade(prev => ({ ...prev, [eventId]: choiceId }));
+    playSound(660, 150, 'square');
     setTimeout(() => {
       if (life && currentEventIndex < life.events.length - 1) {
         setCurrentEventIndex(prev => prev + 1);
+        playSound(550, 100, 'triangle');
       } else {
         setPhase('memorial');
+        playSound(330, 500, 'sine');
       }
     }, Math.round(800 / speed));
   };
@@ -62,8 +66,10 @@ export const AnimeLifeSim: React.FC = () => {
   const handleNextEvent = () => {
     if (life && currentEventIndex < life.events.length - 1) {
       setCurrentEventIndex(prev => prev + 1);
+      playSound(550, 100, 'triangle');
     } else {
       setPhase('memorial');
+      playSound(330, 500, 'sine');
     }
   };
 
@@ -78,6 +84,24 @@ export const AnimeLifeSim: React.FC = () => {
   };
 
   const currentEvent = life?.events[currentEventIndex];
+
+  const playSound = (freq: number, duration: number, type: OscillatorType = 'square') => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.value = 0.1;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration / 1000);
+      setTimeout(() => ctx.close(), duration + 100);
+    } catch {
+      // ignore
+    }
+  };
 
   // Load saved life from localStorage on mount
   useEffect(() => {
@@ -445,7 +469,7 @@ export const AnimeLifeSim: React.FC = () => {
       )}
 
       {phase === 'playing' && life && currentEvent && (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
           {/* Progress Bar */}
           <div className="bg-black border-4 border-white neo-shadow-white p-4">
             <div className="flex items-center justify-between mb-2">
@@ -483,6 +507,21 @@ export const AnimeLifeSim: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* Character Profile */}
+          {life && (
+            <div className="bg-neutral-900 border-2 border-white/30 p-4 flex flex-wrap items-center gap-3 text-[10px] font-mono">
+              <span className="text-white font-black text-sm">{life.characterName}</span>
+              <span className="text-neutral-400">|</span>
+              <span className="text-neutral-300">{life.gender === 'female' ? '♀' : '♂'}</span>
+              <span className="text-neutral-400">|</span>
+              <span className="text-neutral-300">{life.familyStatus === 'poor' ? 'Yoksul' : life.familyStatus === 'noble' ? 'Soylu' : 'Orta halli'} aile</span>
+              <span className="text-neutral-400">|</span>
+              <span className="text-neutral-300">Eğitim: {life.education === 'none' ? 'Yok' : life.education === 'basic' ? 'Temel' : life.education === 'high' ? 'Lise' : 'Üniversite'}</span>
+              <span className="text-neutral-400">|</span>
+              <span className="text-amber-400 font-bold">💰 {life.assets}</span>
+            </div>
+          )}
 
           {/* Event Card */}
           <div className="bg-neutral-900 border-4 border-white p-6 md:p-8 neo-shadow-white space-y-4">
