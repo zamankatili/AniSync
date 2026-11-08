@@ -24,9 +24,13 @@ export const useDailyPoll = () => {
           const pollsList: any[] = [];
           snapshot.forEach((doc) => pollsList.push({ id: doc.id, ...doc.data() }));
 
-          const minuteOfHour = Math.floor(new Date().getTime() / 1000 / 60);
-          const current = pollsList.find((p) => p.pollIndex === minuteOfHour % pollsList.length);
-          setActivePoll(current ?? pollsList[0]);
+          // GÜNLÜK rotasyon: aynı gün içinde anket DEĞİŞMEZ (önceki dakika-bazlı
+          // rotasyon "Her dakika başka anket" hatasına yol açıyordu)
+          const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+          const current =
+            pollsList.find((p) => p.pollIndex === daysSinceEpoch % pollsList.length) ??
+            pollsList[0];
+          setActivePoll(current);
         } catch (err) {
           console.warn('Polls sync warning:', err);
         }

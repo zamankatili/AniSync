@@ -9,6 +9,7 @@ import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { AuthModal } from './AuthModal';
 import { AiringScheduleModal } from './AiringScheduleModal';
+import { DailyModalManager } from './DailyModalManager';
 import { AnimeRadioPlayer } from './AnimeRadioPlayer';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { GlobalChat } from './GlobalChat';
@@ -566,6 +567,7 @@ export const Layout = () => {
       </main>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <DailyModalManager />
       <AiringScheduleModal 
         isOpen={isScheduleModalOpen} 
         onClose={closeScheduleModal} 
