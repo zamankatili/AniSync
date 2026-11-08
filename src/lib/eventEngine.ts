@@ -342,7 +342,7 @@ function createChildhoodEvent(world: AnimeWorld, region: AnimeRegion, age: numbe
   };
 }
 
-function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
+function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent | null {
   const l = lifeLang();
   // Faction options depend on the world
   const factionOptions: Record<string, LifeChoice[]> = {
@@ -408,10 +408,50 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
       { id: 'merchant', label: 'Tüccar Ol', description: 'Ticaret ve ekonomi', statChanges: { intelligence: 10, socialClass: 10 }, consequences: ['Para', 'Sosyal statü'], risk: 'low' },
       { id: 'scholar', label: 'Bilgin Ol', description: 'Büyü ve araştırma', statChanges: { intelligence: 15, power: -3 }, consequences: ['Bilgi', 'Güçsüzlük'], risk: 'medium' },
       { id: 'hermit', label: 'Münzevi Ol', description: 'Yalnız yaşam ve meditasyon', statChanges: { power: 5, intelligence: 8, socialClass: -10 }, consequences: ['Gizem', 'İzolasyon'], risk: 'low' }
+    ],
+    cyberpunk: l === 'ja' ? [
+      { id: 'corp', label: '企業に加わる', description: 'サラリーマンとして安定した道', statChanges: { socialClass: 12, intelligence: 5 }, consequences: ['安定', '従属'], risk: 'low' },
+      { id: 'gang', label: 'ギャングに加わる', description: 'ストリートの仲間と生きる', statChanges: { power: 10, socialClass: -10, luck: 5 }, consequences: ['居場所', '危険'], risk: 'high' },
+      { id: 'solo', label: 'ソロになる', description: '一匹狼として自由に生きる', statChanges: { power: 8, luck: 5, socialClass: -5 }, consequences: ['自由', '孤独'], risk: 'medium' },
+      { id: 'netrunner', label: 'ネットランナーになる', description: 'データの海を泳ぐハッカー', statChanges: { intelligence: 12, power: -3 }, consequences: ['知識', '追われる身'], risk: 'medium' }
+    ] : l === 'fr' ? [
+      { id: 'corp', label: 'Rejoindre une corporation', description: 'Le chemin stable du salarié', statChanges: { socialClass: 12, intelligence: 5 }, consequences: ['Stabilité', 'Sujétion'], risk: 'low' },
+      { id: 'gang', label: 'Rejoindre un gang', description: 'Vivre avec les gens de la rue', statChanges: { power: 10, socialClass: -10, luck: 5 }, consequences: ['Une place', 'Danger'], risk: 'high' },
+      { id: 'solo', label: 'Devenir un solo', description: 'Vivre libre en solitaire', statChanges: { power: 8, luck: 5, socialClass: -5 }, consequences: ['Liberté', 'Solitude'], risk: 'medium' },
+      { id: 'netrunner', label: 'Devenir un netrunner', description: 'Un hacker qui nage dans l\'océan des données', statChanges: { intelligence: 12, power: -3 }, consequences: ['Connaissance', 'Poursuivi'], risk: 'medium' }
+    ] : l === 'en' ? [
+      { id: 'corp', label: 'Join a Corporation', description: 'The stable corporate path', statChanges: { socialClass: 12, intelligence: 5 }, consequences: ['Stability', 'Subservience'], risk: 'low' },
+      { id: 'gang', label: 'Join a Gang', description: 'Run with the street', statChanges: { power: 10, socialClass: -10, luck: 5 }, consequences: ['A place', 'Danger'], risk: 'high' },
+      { id: 'solo', label: 'Be a Solo', description: 'Live free as a lone wolf', statChanges: { power: 8, luck: 5, socialClass: -5 }, consequences: ['Freedom', 'Solitude'], risk: 'medium' },
+      { id: 'netrunner', label: 'Become a Netrunner', description: 'A hacker who swims the data ocean', statChanges: { intelligence: 12, power: -3 }, consequences: ['Knowledge', 'Hunted'], risk: 'medium' }
+    ] : [
+      { id: 'corp', label: 'Kurumsal Ol', description: 'Maaşlı ve istikrarlı yol', statChanges: { socialClass: 12, intelligence: 5 }, consequences: ['İstikrar', 'Boyun Eğme'], risk: 'low' },
+      { id: 'gang', label: 'Çeteye Katıl', description: 'Sokakla ve çetelerle yaşa', statChanges: { power: 10, socialClass: -10, luck: 5 }, consequences: ['Bir Yer', 'Tehlike'], risk: 'high' },
+      { id: 'solo', label: 'Solo Ol', description: 'Bağımsız kurt gibi özgür yaşa', statChanges: { power: 8, luck: 5, socialClass: -5 }, consequences: ['Özgürlük', 'Yalnızlık'], risk: 'medium' },
+      { id: 'netrunner', label: 'Netrunner Ol', description: 'Veri denizinde yüzen hacker', statChanges: { intelligence: 12, power: -3 }, consequences: ['Bilgi', 'Kovalanan'], risk: 'medium' }
+    ],
+    seinen_psych: l === 'ja' ? [
+      { id: 'detective', label: '探偵になる', description: '真実を追う頭脳の道', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['真実', '孤独'], risk: 'medium' },
+      { id: 'ordinary', label: '平凡なままでいる', description: '静かで規則正しい生活', statChanges: { health: 10, socialClass: 5 }, consequences: ['平穏', '平凡'], risk: 'low' },
+      { id: 'shadow', label: '影のブローカーになる', description: '情報を売買する冷徹な道', statChanges: { intelligence: 8, luck: 8, socialClass: -10 }, consequences: ['力', '追放'], risk: 'extreme' }
+    ] : l === 'fr' ? [
+      { id: 'detective', label: 'Devenir détective', description: 'Le chemin de la vérité', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Vérités', 'Solitude'], risk: 'medium' },
+      { id: 'ordinary', label: 'Rester ordinaire', description: 'Une vie calme et ordonnée', statChanges: { health: 10, socialClass: 5 }, consequences: ['Tranquillité', 'Ordinarité'], risk: 'low' },
+      { id: 'shadow', label: 'Devenir courtier de l\'ombre', description: 'Vendre et acheter des informations', statChanges: { intelligence: 8, luck: 8, socialClass: -10 }, consequences: ['Pouvoir', 'Exil'], risk: 'extreme' }
+    ] : l === 'en' ? [
+      { id: 'detective', label: 'Become a Detective', description: 'The path of truth', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Truths', 'Solitude'], risk: 'medium' },
+      { id: 'ordinary', label: 'Stay Ordinary', description: 'A calm and ordered life', statChanges: { health: 10, socialClass: 5 }, consequences: ['Tranquility', 'Ordinariness'], risk: 'low' },
+      { id: 'shadow', label: 'Become a Shadow Broker', description: 'Buy and sell information', statChanges: { intelligence: 8, luck: 8, socialClass: -10 }, consequences: ['Power', 'Exile'], risk: 'extreme' }
+    ] : [
+      { id: 'detective', label: 'Dedektif Ol', description: 'Gerçeğin peşinde bir kafa yolu', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Gerçek', 'Yalnızlık'], risk: 'medium' },
+      { id: 'ordinary', label: 'Sıradan Kal', description: 'Sakin ve düzenli bir hayat', statChanges: { health: 10, socialClass: 5 }, consequences: ['Huzur', 'Sıradanlık'], risk: 'low' },
+      { id: 'shadow', label: 'Gölge Komisyoncusu Ol', description: 'Bilgi alıp satan soğuk bir yol', statChanges: { intelligence: 8, luck: 8, socialClass: -10 }, consequences: ['Güç', 'Sürgün'], risk: 'extreme' }
     ]
   };
 
-  const options = factionOptions[world.id] || factionOptions.shonen_battle;
+  // Bazı evrenlerde fraksiyon yoktur (slice_of_life, romance_drama, sports)
+  const options = factionOptions[world.id];
+  if (!options) return null;
   const lore = getWorldLore(world.id);
   const factionNames = lore ? lore.factions.slice(0, 4).map(f => f.name).join(', ') : '';
 
@@ -866,6 +906,580 @@ function createTimeLoopEvent(world: AnimeWorld, region: AnimeRegion, age: number
   };
 }
 
+// ─── Evrene Özgü Olaylar (WorldEventPack — Faz 1) ───────
+// Her evrenin kendine ait 2 olay şablonu; yaş pencereleri dünya lore'una göre seçilir.
+// Stat kalıpları ve verilen stat güçleri ise evren bazlı.
+
+function createWorldUniqueEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent | null {
+  const l = lifeLang();
+  const en4 = (tr: string, en: string, ja: string, fr: string) => (l === 'tr' ? tr : l === 'ja' ? ja : l === 'fr' ? fr : en);
+
+  switch (world.id) {
+    // ─── SPORTS: takım segasyonları ───
+    case 'sports':
+      if (age === 13) {
+        return {
+          id: 'sports_tryout_13',
+          age,
+          year,
+          title: en4('Takım Seçmeleri', 'Team Tryouts', 'チーム入部試験', 'Essais d\'équipe'),
+          description: en4(
+            `${age} yaşındasın. Okul spor takımına seçmeler var. Herkes çok hevesli.`,
+            `You are ${age} years old. Team tryouts are being held for your school's sports team. Everyone is super keen.`,
+            `${age}歳。学校のスポーツチームの入部試験が行われている。みんなとても熱心だ。`,
+            `Tu as ${age} ans. Les essais de l'équipe sportive de l'école ont lieu. Tout le monde est très enthousiaste.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'tryout', label: '試験に出る', description: '挑戦する', statChanges: { power: 8, luck: 3 }, consequences: ['挑戦', '成長'], risk: 'medium' },
+            { id: 'prepare', label: '準備してから出る', description: 'まず体を仕上げる', statChanges: { power: 5, intelligence: 5 }, consequences: ['準備', '自信'], risk: 'low' },
+            { id: 'quit', label: 'やめておく', description: '別の道を探す', statChanges: { health: 5, socialClass: -3 }, consequences: ['別の道', '安定'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'tryout', label: 'Essayer', description: 'Tenter ta chance', statChanges: { power: 8, luck: 3 }, consequences: ['Défi', 'Croissance'], risk: 'medium' },
+            { id: 'prepare', label: 'Se préparer d\'abord', description: 'Se mettre en forme avant', statChanges: { power: 5, intelligence: 5 }, consequences: ['Préparation', 'Confiance'], risk: 'low' },
+            { id: 'quit', label: 'Ne pas essayer', description: 'Chercher une autre voie', statChanges: { health: 5, socialClass: -3 }, consequences: ['Autre voie', 'Stabilité'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'tryout', label: 'Try Out', description: 'Take the leap', statChanges: { power: 8, luck: 3 }, consequences: ['Challenge', 'Growth'], risk: 'medium' },
+            { id: 'prepare', label: 'Prepare First', description: 'Build up first', statChanges: { power: 5, intelligence: 5 }, consequences: ['Preparation', 'Confidence'], risk: 'low' },
+            { id: 'quit', label: 'Don\'t Try Out', description: 'Look for another path', statChanges: { health: 5, socialClass: -3 }, consequences: ['Different path', 'Stability'], risk: 'low' }
+          ] : [
+            { id: 'tryout', label: 'Denemeye Gir', description: 'Atıl ve şartları gör', statChanges: { power: 8, luck: 3 }, consequences: ['Meydan Okuma', 'Gelişim'], risk: 'medium' },
+            { id: 'prepare', label: 'Hazırlan, Sonra Gir', description: 'Önce bedenini hazırla', statChanges: { power: 5, intelligence: 5 }, consequences: ['Hazırlık', 'Özgüven'], risk: 'low' },
+            { id: 'quit', label: 'Girme', description: 'Başka bir yol ara', statChanges: { health: 5, socialClass: -3 }, consequences: ['Başka Yol', 'İstikrar'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 17) {
+        return {
+          id: 'sports_championship_17',
+          age,
+          year,
+          title: en4('Bölge Turnuvası', 'Regional Tournament', '地区大会', 'Tournoi régional'),
+          description: en4(
+            `${age} yaşındasın. Bölgesel turnuva başlıyor. Okulun kazanmayı hedefliyor.`,
+            `You are ${age} years old. The regional tournament starts. Your school aims to win.`,
+            `${age}歳。地区大会が始まる。学校は優勝を目指している。`,
+            `Tu as ${age} ans. Le tournoi régional commence. Ton école vise la victoire.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'all_in', label: '全力で行く', description: '全てを出し切る', statChanges: { power: 12, health: -8 }, consequences: ['挑戦', '怪我'], risk: 'high' },
+            { id: 'safe', label: '堅実に行く', description: '無理せず確実に', statChanges: { intelligence: 8, luck: 5 }, consequences: ['確実', '安定'], risk: 'low' },
+            { id: 'team', label: 'チームを優先', description: '個人よりチーム', statChanges: { socialClass: 10, luck: 5 }, consequences: ['絆', '信頼'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'all_in', label: 'Tout donner', description: 'Donner tout ce que tu as', statChanges: { power: 12, health: -8 }, consequences: ['Tout ou rien', 'Blessure'], risk: 'high' },
+            { id: 'safe', label: 'Jouer la sécurité', description: 'Ne pas se surestimer', statChanges: { intelligence: 8, luck: 5 }, consequences: ['Sûr', 'Stable'], risk: 'low' },
+            { id: 'team', label: 'Privilégier l\'équipe', description: 'L\'équipe avant tout', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Lien', 'Confiance'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'all_in', label: 'Go All In', description: 'Give it everything', statChanges: { power: 12, health: -8 }, consequences: ['All or nothing', 'Injury'], risk: 'high' },
+            { id: 'safe', label: 'Play It Safe', description: 'Don\'t overreach', statChanges: { intelligence: 8, luck: 5 }, consequences: ['Safe', 'Stable'], risk: 'low' },
+            { id: 'team', label: 'Prioritize the Team', description: 'Team over self', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Bond', 'Trust'], risk: 'low' }
+          ] : [
+            { id: 'all_in', label: 'Her Şeyini Ver', description: 'Kazanmak için her şeyi feda et', statChanges: { power: 12, health: -8 }, consequences: ['Kazan ya da Kaybet', 'Sakatlık'], risk: 'high' },
+            { id: 'safe', label: 'Güvenli Oyna', description: 'Oyna ama riske girme', statChanges: { intelligence: 8, luck: 5 }, consequences: ['Güvenli', 'İstikrar'], risk: 'low' },
+            { id: 'team', label: 'Takımı Önce Koy', description: 'Bireyden önce takım', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Bağ', 'Güven'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
+    // ─── ROMANCE: itiraf ve yıllar sonra ───
+    case 'romance_drama':
+      if (age === 16) {
+        return {
+          id: 'romance_confession_16',
+          age,
+          year,
+          title: en4('İtiraf', 'Confession', '告白', 'Confession'),
+          description: en4(
+            `${age} yaşındasın. Okulda birini fark ettin. Ona ne hissettiğini söylemek istiyorsun ama korkuyorsun.`,
+            `You are ${age} years old. You noticed someone at school. You want to tell them how you feel, but you're scared.`,
+            `${age}歳。学校で誰かに気づいた。その人に気持ちを伝えたいが、怖くて言えない。`,
+            `Tu as ${age} ans. Tu as remarqué quelqu'un à l'école. Tu veux lui dire ce que tu ressens, mais tu as peur.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'confess', label: '告白する', description: '思い切って', statChanges: { socialClass: 12, luck: 5 }, consequences: ['告白', '宝物'], risk: 'high' },
+            { id: 'wait', label: '待つ', description: 'タイミングを見計らう', statChanges: { socialClass: 5, luck: 3 }, consequences: ['忍耐', '機会'], risk: 'medium' },
+            { id: 'give_up', label: '諦める', description: 'その気持ちを胸に', statChanges: { health: 5, socialClass: -5 }, consequences: ['あきらめ', '平穏'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'confess', label: 'Avouer', description: 'Oser le dire', statChanges: { socialClass: 12, luck: 5 }, consequences: ['Aveu', 'Trésor'], risk: 'high' },
+            { id: 'wait', label: 'Attendre', description: 'Attendre le bon moment', statChanges: { socialClass: 5, luck: 3 }, consequences: ['Patience', 'Opportunité'], risk: 'medium' },
+            { id: 'give_up', label: 'Abandonner', description: 'Garder ça pour toi', statChanges: { health: 5, socialClass: -5 }, consequences: ['Résignation', 'Tranquillité'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'confess', label: 'Confess', description: 'Take the leap', statChanges: { socialClass: 12, luck: 5 }, consequences: ['Confession', 'Treasure'], risk: 'high' },
+            { id: 'wait', label: 'Wait', description: 'Wait for the right moment', statChanges: { socialClass: 5, luck: 3 }, consequences: ['Patience', 'Opportunity'], risk: 'medium' },
+            { id: 'give_up', label: 'Give Up', description: 'Keep it to yourself', statChanges: { health: 5, socialClass: -5 }, consequences: ['Resignation', 'Peace'], risk: 'low' }
+          ] : [
+            { id: 'confess', label: 'İtiraf Et', description: 'Cesurca', statChanges: { socialClass: 12, luck: 5 }, consequences: ['İtiraf', 'Hazine'], risk: 'high' },
+            { id: 'wait', label: 'Bekle', description: 'Doğru zamanı bekle', statChanges: { socialClass: 5, luck: 3 }, consequences: ['Sabır', 'Fırsat'], risk: 'medium' },
+            { id: 'give_up', label: 'Vazgeç', description: 'İçine göm', statChanges: { health: 5, socialClass: -5 }, consequences: ['Vazgeçme', 'Huzur'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 30) {
+        return {
+          id: 'romance_reunion_30',
+          age,
+          year,
+          title: en4('Yıllar Sonra', 'Years Later', '何年も経った後', 'Des années plus tard'),
+          description: en4(
+            `${age} yaşındasın. Yıllar sonra o okul arkadaşınıza festivalde rastladın...`,
+            `You are ${age} years old. You run into that school friend again at the festival...`,
+            `${age}歳。何年も経って、あの学校の友達に祭りで再会した…`,
+            `Tu as ${age} ans. Tu recroises cet ami d'école au festival...`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'restart', label: 'もう一度始める', description: '今こそ', statChanges: { socialClass: 15, luck: 10 }, consequences: ['再出発', '希望'], risk: 'medium' },
+            { id: 'friends', label: '友達でいる', description: 'いい思い出', statChanges: { socialClass: 8, luck: 0 }, consequences: ['友情', '思い出'], risk: 'low' },
+            { id: 'accept', label: '受け入れる', description: '過去は過去', statChanges: { health: 8, luck: 0 }, consequences: ['受容', '平穏'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'restart', label: 'Recommencer', description: 'Maintenant', statChanges: { socialClass: 15, luck: 10 }, consequences: ['Nouveau départ', 'Espoir'], risk: 'medium' },
+            { id: 'friends', label: 'Rester amis', description: 'De bons souvenirs', statChanges: { socialClass: 8, luck: 0 }, consequences: ['Amitié', 'Souvenir'], risk: 'low' },
+            { id: 'accept', label: 'Accepter', description: 'Le passé est le passé', statChanges: { health: 8, luck: 0 }, consequences: ['Acceptation', 'Tranquillité'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'restart', label: 'Start Over', description: 'Now is the time', statChanges: { socialClass: 15, luck: 10 }, consequences: ['Fresh Start', 'Hope'], risk: 'medium' },
+            { id: 'friends', label: 'Stay Friends', description: 'Good memories', statChanges: { socialClass: 8, luck: 0 }, consequences: ['Friendship', 'Memory'], risk: 'low' },
+            { id: 'accept', label: 'Accept', description: 'The past is the past', statChanges: { health: 8, luck: 0 }, consequences: ['Acceptance', 'Peace'], risk: 'low' }
+          ] : [
+            { id: 'restart', label: 'Yeniden Başla', description: 'Şimdi zamanı', statChanges: { socialClass: 15, luck: 10 }, consequences: ['Yeni Başlangıç', 'Umut'], risk: 'medium' },
+            { id: 'friends', label: 'Dost Kal', description: 'İyi anılar', statChanges: { socialClass: 8, luck: 0 }, consequences: ['Dostluk', 'Anı'], risk: 'low' },
+            { id: 'accept', label: 'Kabullen', description: 'Geçmiş geçmiştir', statChanges: { health: 8, luck: 0 }, consequences: ['Kabullenme', 'Huzur'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
+    // ─── SLICE_OF_LIFE: yaz festivali + müzik kulübü ───
+    case 'slice_of_life':
+      if (age === 12) {
+        return {
+          id: 'sol_summer_festival_12',
+          age,
+          year,
+          title: en4('Yaz Festivali', 'Summer Festival', '夏祭り', 'Festival d\'été'),
+          description: en4(
+            `${age} yaşındasın. Köydeki yaz festivali yakında. Herkes hazırlanıyor.`,
+            `You are ${age} years old. The village summer festival is coming soon. Everyone is preparing.`,
+            `${age}歳。町の夏祭りがもうすぐ。みんな準備している。`,
+            `Tu as ${age} ans. Le festival d'été du village approche. Tout le monde prépare.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'help', label: '準備を手伝う', description: '町の役に立つ', statChanges: { socialClass: 10, luck: 5 }, consequences: ['貢献', '繋がり'], risk: 'low' },
+            { id: 'friends', label: '友達と行く', description: '楽しい一日', statChanges: { luck: 8, health: 3 }, consequences: ['友情', '思い出'], risk: 'low' },
+            { id: 'stay', label: '家にいる', description: '静かな時間', statChanges: { intelligence: 8, health: 3 }, consequences: ['平和', '読書'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'help', label: 'Aider aux préparatifs', description: 'Être utile au village', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Contribution', 'Lien'], risk: 'low' },
+            { id: 'friends', label: 'Y aller avec des amis', description: 'Une journée amusante', statChanges: { luck: 8, health: 3 }, consequences: ['Amitié', 'Souvenir'], risk: 'low' },
+            { id: 'stay', label: 'Rester à la maison', description: 'Un moment tranquille', statChanges: { intelligence: 8, health: 3 }, consequences: ['Tranquillité', 'Lecture'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'help', label: 'Help Prepare', description: 'Help the village', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Contribution', 'Belonging'], risk: 'low' },
+            { id: 'friends', label: 'Go With Friends', description: 'A fun day', statChanges: { luck: 8, health: 3 }, consequences: ['Friendship', 'Memory'], risk: 'low' },
+            { id: 'stay', label: 'Stay Home', description: 'Quiet time', statChanges: { intelligence: 8, health: 3 }, consequences: ['Peace', 'Reading'], risk: 'low' }
+          ] : [
+            { id: 'help', label: 'Hazırlıklara Yardım Et', description: 'Köye faydalı ol', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Katkı', 'Ait Olma'], risk: 'low' },
+            { id: 'friends', label: 'Arkadaşlarla Git', description: 'Eğlenceli bir gün', statChanges: { luck: 8, health: 3 }, consequences: ['Dostluk', 'Anı'], risk: 'low' },
+            { id: 'stay', label: 'Evde Kal', description: 'Sakin zaman', statChanges: { intelligence: 8, health: 3 }, consequences: ['Huzur', 'Okuma'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 17) {
+        return {
+          id: 'sol_music_club_17',
+          age,
+          year,
+          title: en4('Müzik Kulübü', 'Music Club', '音楽部', 'Club de musique'),
+          description: en4(
+            `${age} yaşındasın. Okuldaki müzik kulübünün performansı yakında. Katılmak ister misin?`,
+            `You are ${age} years old. The school music club's performance is coming up. Want to join?`,
+            `${age}歳。学校の音楽部の公演がもうすぐ。参加したい？`,
+            `Tu as ${age} ans. La performance du club de musique de l'école approche. Tu veux participer ?`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'join', label: '参加する', description: '音楽に触れる', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['音楽', '友情'], risk: 'low' },
+            { id: 'watch', label: '観るだけ', description: '応援する', statChanges: { luck: 5, health: 3 }, consequences: ['応援', '楽しみ'], risk: 'low' },
+            { id: 'deny', label: '断る', description: '不得意だ', statChanges: { power: 3, luck: 0 }, consequences: ['素直さ', '別の道'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'join', label: 'Participer', description: 'Découvrir la musique', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Musique', 'Amitié'], risk: 'low' },
+            { id: 'watch', label: 'Juste regarder', description: 'Encourager', statChanges: { luck: 5, health: 3 }, consequences: ['Encouragement', 'Plaisir'], risk: 'low' },
+            { id: 'deny', label: 'Refuser', description: 'Tu n\'es pas doué', statChanges: { power: 3, luck: 0 }, consequences: ['Honnêteté', 'Autre voie'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'join', label: 'Join', description: 'Experience music', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Music', 'Belonging'], risk: 'low' },
+            { id: 'watch', label: 'Just Watch', description: 'Cheer them on', statChanges: { luck: 5, health: 3 }, consequences: ['Support', 'Fun'], risk: 'low' },
+            { id: 'deny', label: 'Decline', description: 'Not your thing', statChanges: { power: 3, luck: 0 }, consequences: ['Honesty', 'Another path'], risk: 'low' }
+          ] : [
+            { id: 'join', label: 'Katıl', description: 'Müziği deneyimle', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Müzik', 'Aidiyet'], risk: 'low' },
+            { id: 'watch', label: 'Sadece İzle', description: 'Takımları destekle', statChanges: { luck: 5, health: 3 }, consequences: ['Destek', 'Keyif'], risk: 'low' },
+            { id: 'deny', label: 'Katılma', description: 'Bu sana göre değil', statChanges: { power: 3, luck: 0 }, consequences: ['Dürüstlük', 'Başka Yol'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
+    // ─── CYBERPUNK: iş ve implant ───
+    case 'cyberpunk':
+      if (age === 22) {
+        return {
+          id: 'cyber_gig_22',
+          age,
+          year,
+          title: en4('Bir İş', 'A Gig', '仕事', 'Un boulot'),
+          description: en4(
+            `${age} yaşındasın. Bir megacorp seni işe almak istiyor. Ya da kara pazara çıkarsın.`,
+            `You are ${age} years old. A megacorp wants to hire you. Or you take it to the black market.`,
+            `${age}歳。メガコーポが君を雇いたがっている。あるいは闇市場へ出るか。`,
+            `Tu as ${age} ans. Un mégacorre veut t'embaucher. Ou tu prends le marché noir.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'corp', label: 'メガコーポの仕事', description: '安定と引き換えに', statChanges: { socialClass: 12, intelligence: 5 }, consequences: ['安定', '従属'], risk: 'low' },
+            { id: 'black', label: '闇市場', description: '危険だが報酬は高い', statChanges: { power: 8, luck: 8 }, consequences: ['危険', '報酬'], risk: 'high' },
+            { id: 'solo', label: 'ソロでいく', description: '誰の下にもつかない', statChanges: { health: 5, socialClass: -5 }, consequences: ['自由', '孤独'], risk: 'medium' }
+          ] : l === 'fr' ? [
+            { id: 'corp', label: 'Le méga-corporatif', description: 'La stabilité en échange', statChanges: { socialClass: 12, intelligence: 5 }, consequences: ['Stabilité', 'Sujétion'], risk: 'low' },
+            { id: 'black', label: 'Le marché noir', description: 'Dangereux mais payant', statChanges: { power: 8, luck: 8 }, consequences: ['Danger', 'Gains'], risk: 'high' },
+            { id: 'solo', label: 'En solo', description: 'Dépendre de personne', statChanges: { health: 5, socialClass: -5 }, consequences: ['Liberté', 'Solitude'], risk: 'medium' }
+          ] : l === 'en' ? [
+            { id: 'corp', label: 'Megacorp Gig', description: 'Stability in exchange', statChanges: { socialClass: 12, intelligence: 5 }, consequences: ['Stability', 'Subservience'], risk: 'low' },
+            { id: 'black', label: 'Black Market', description: 'Dangerous but lucrative', statChanges: { power: 8, luck: 8 }, consequences: ['Danger', 'Gains'], risk: 'high' },
+            { id: 'solo', label: 'Go Solo', description: 'Depend on no one', statChanges: { health: 5, socialClass: -5 }, consequences: ['Freedom', 'Solitude'], risk: 'medium' }
+          ] : [
+            { id: 'corp', label: 'Megacorp İş', description: 'İstikrar karşılığı', statChanges: { socialClass: 12, intelligence: 5 }, consequences: ['İstikrar', 'Boyun Eğme'], risk: 'low' },
+            { id: 'black', label: 'Kara Pazar', description: 'Tehlikeli ama kazançlı', statChanges: { power: 8, luck: 8 }, consequences: ['Tehlike', 'Kazanç'], risk: 'high' },
+            { id: 'solo', label: 'Solo', description: 'Kimseye bağlı kalma', statChanges: { health: 5, socialClass: -5 }, consequences: ['Özgürlük', 'Yalnızlık'], risk: 'medium' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 25) {
+        return {
+          id: 'cyber_augment_25',
+          age,
+          year,
+          title: en4('İmplant', 'Augmentation', 'インプラント', 'Implant'),
+          description: en4(
+            `${age} yaşındasın. Sokak doktoru bir implant öneriyor. Ama riski var.`,
+            `You are ${age} years old. A street doc offers you an implant. But there's a risk.`,
+            `${age}歳。ストリートドクターがインプラントを勧めている。だが危険もある。`,
+            `Tu as ${age} ans. Un médecin de rue te propose un implant. Mais il y a un risque.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'cheap', label: '安いインプラント', description: '手頃だがリスク高', statChanges: { power: 12, health: -12 }, consequences: ['強化', 'サイバネ詐病'], risk: 'high' },
+            { id: 'military', label: '軍用インプラント', description: '最高品質だが高価', statChanges: { power: 18, health: -5, socialClass: -10 }, consequences: ['最強', 'コスト'], risk: 'medium' },
+            { id: 'none', label: '拒否する', description: '人間でいたい', statChanges: { health: 10, socialClass: 5 }, consequences: ['人間性', '強化しない'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'cheap', label: 'Un implant bon marché', description: 'Abordable mais risqué', statChanges: { power: 12, health: -12 }, consequences: ['Renforcement', 'Cyberpsychose'], risk: 'high' },
+            { id: 'military', label: 'Un implant militaire', description: 'Le meilleur, mais cher', statChanges: { power: 18, health: -5, socialClass: -10 }, consequences: ['Le plus puissant', 'Coût'], risk: 'medium' },
+            { id: 'none', label: 'Refuser', description: 'Rester humain', statChanges: { health: 10, socialClass: 5 }, consequences: ['Humanité', 'Pas de boost'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'cheap', label: 'Cheap Implant', description: 'Affordable but risky', statChanges: { power: 12, health: -12 }, consequences: ['Boost', 'Cyberpsychosis'], risk: 'high' },
+            { id: 'military', label: 'Military Implant', description: 'Top quality but pricey', statChanges: { power: 18, health: -5, socialClass: -10 }, consequences: ['Strongest', 'Costly'], risk: 'medium' },
+            { id: 'none', label: 'Refuse', description: 'Stay human', statChanges: { health: 10, socialClass: 5 }, consequences: ['Humanity', 'No boost'], risk: 'low' }
+          ] : [
+            { id: 'cheap', label: 'Ucuz İmplant', description: 'Uygun ama riskli', statChanges: { power: 12, health: -12 }, consequences: ['Güçlenme', 'Siberpsikoz'], risk: 'high' },
+            { id: 'military', label: 'Askerî İmplant', description: 'En iyisi ama pahalı', statChanges: { power: 18, health: -5, socialClass: -10 }, consequences: ['En Güçlü', 'Bedel'], risk: 'medium' },
+            { id: 'none', label: 'Reddet', description: 'İnsan kal', statChanges: { health: 10, socialClass: 5 }, consequences: ['İnsanlık', 'Güçlenmeme'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
+    // ─── SEINEN_PSYCH: vaka ve müttefik ───
+    case 'seinen_psych':
+      if (age === 25) {
+        return {
+          id: 'seinen_case_25',
+          age,
+          year,
+          title: en4('Vaka', 'A Case', '事件', 'Une affaire'),
+          description: en4(
+            `${age} yaşındasın. Yeni bir olay masanda bekliyor. Büyük bir sır barındırıyor.`,
+            `You are ${age} years old. A new case awaits you. It holds a dark secret.`,
+            `${age}歳。新しい事件が机の上にある。これは深い秘密を秘めている。`,
+            `Tu as ${age} ans. Une nouvelle affaire t'attend. Elle cache un secret sombre.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'investigate', label: '調査する', description: '真相を追う', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['真実', '危険'], risk: 'medium' },
+            { id: 'withdraw', label: '引き下がる', description: '深入りしない', statChanges: { health: 5, socialClass: -3 }, consequences: ['安全', '沈黙'], risk: 'low' },
+            { id: 'accuse', label: '誰かを非難する', description: 'もう分かる', statChanges: { luck: 8, socialClass: -8 }, consequences: ['判断', '間違い'], risk: 'high' }
+          ] : l === 'fr' ? [
+            { id: 'investigate', label: 'Enquêter', description: 'Poursuivre la vérité', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Vérité', 'Danger'], risk: 'medium' },
+            { id: 'withdraw', label: 'Se retirer', description: 'Ne pas trop creuser', statChanges: { health: 5, socialClass: -3 }, consequences: ['Sécurité', 'Silence'], risk: 'low' },
+            { id: 'accuse', label: 'Accuser quelqu\'un', description: 'Tu crois savoir', statChanges: { luck: 8, socialClass: -8 }, consequences: ['Jugement', 'Erreur'], risk: 'high' }
+          ] : l === 'en' ? [
+            { id: 'investigate', label: 'Investigate', description: 'Chase the truth', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Truth', 'Danger'], risk: 'medium' },
+            { id: 'withdraw', label: 'Withdraw', description: 'Don\'t dig too deep', statChanges: { health: 5, socialClass: -3 }, consequences: ['Safety', 'Silence'], risk: 'low' },
+            { id: 'accuse', label: 'Accuse Someone', description: 'You think you know', statChanges: { luck: 8, socialClass: -8 }, consequences: ['Judgment', 'Error'], risk: 'high' }
+          ] : [
+            { id: 'investigate', label: 'Araştır', description: 'Gerçeğin peşinde', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Gerçek', 'Tehlike'], risk: 'medium' },
+            { id: 'withdraw', label: 'Geri Çekil', description: 'Çok derine inme', statChanges: { health: 5, socialClass: -3 }, consequences: ['Güven', 'Sessizlik'], risk: 'low' },
+            { id: 'accuse', label: 'Birini Suçla', description: 'Sanırım biliyorum', statChanges: { luck: 8, socialClass: -8 }, consequences: ['Karar', 'Hata'], risk: 'high' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 30) {
+        return {
+          id: 'seinen_ally_30',
+          age,
+          year,
+          title: en4('Müttefik mi, Düşman mı?', 'Ally or Enemy?', '味方か、敵か？', 'Allié ou ennemi ?'),
+          description: en4(
+            `${age} yaşındasın. Güvendiğin biri seni satabilir. Peki kim o?`,
+            `You are ${age} years old. Someone you trusted might betray you. But who?`,
+            `${age}歳。信頼していた誰かが君を裏切るかもしれない。誰だ？`,
+            `Tu as ${age} ans. Quelqu'un en qui tu avais confiance pourrait te trahir. Mais qui ?`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'trust', label: '信じる', description: '人を信じる', statChanges: { socialClass: 12, luck: 5 }, consequences: ['信頼', '試練'], risk: 'high' },
+            { id: 'question', label: '問いただす', description: '疑問をぶつける', statChanges: { intelligence: 10, socialClass: -5 }, consequences: ['確認', '距離'], risk: 'medium' },
+            { id: 'use', label: '利用する', description: '彼らを利用する', statChanges: { power: 5, socialClass: -10, luck: 8 }, consequences: ['利益', '最後'], risk: 'high' }
+          ] : l === 'fr' ? [
+            { id: 'trust', label: 'Faire confiance', description: 'Faire confiance aux gens', statChanges: { socialClass: 12, luck: 5 }, consequences: ['Confiance', 'Épreuve'], risk: 'high' },
+            { id: 'question', label: 'Questionner', description: 'Poser les questions', statChanges: { intelligence: 10, socialClass: -5 }, consequences: ['Vérification', 'Distance'], risk: 'medium' },
+            { id: 'use', label: 'Les utiliser', description: 'Les utiliser à ton avantage', statChanges: { power: 5, socialClass: -10, luck: 8 }, consequences: ['Gain', 'Fin'], risk: 'high' }
+          ] : l === 'en' ? [
+            { id: 'trust', label: 'Trust Them', description: 'Trust people', statChanges: { socialClass: 12, luck: 5 }, consequences: ['Trust', 'Test'], risk: 'high' },
+            { id: 'question', label: 'Question Them', description: 'Ask the hard questions', statChanges: { intelligence: 10, socialClass: -5 }, consequences: ['Verification', 'Distance'], risk: 'medium' },
+            { id: 'use', label: 'Use Them', description: 'Use them to your advantage', statChanges: { power: 5, socialClass: -10, luck: 8 }, consequences: ['Gain', 'End'], risk: 'high' }
+          ] : [
+            { id: 'trust', label: 'Güven', description: 'İnsanlara güven', statChanges: { socialClass: 12, luck: 5 }, consequences: ['Güven', 'Sınav'], risk: 'high' },
+            { id: 'question', label: 'Sorgula', description: 'Zor sorular sor', statChanges: { intelligence: 10, socialClass: -5 }, consequences: ['Doğrulama', 'Mesafe'], risk: 'medium' },
+            { id: 'use', label: 'Kullan', description: 'Onları lehine kullan', statChanges: { power: 5, socialClass: -10, luck: 8 }, consequences: ['Kazanç', 'Son'], risk: 'high' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
+    // ─── ISEKAI: ilk görev ve şeytan lord ───
+    case 'isekai':
+      if (age === 7) {
+        return {
+          id: 'isekai_tutorial_7',
+          age,
+          year,
+          title: en4('İlk Görev', 'First Quest', '初めての依頼', 'Première quête'),
+          description: en4(
+            `${age} yaşındasın. Maceracılar loncası sana ilk görevini veriyor.`,
+            `You are ${age} years old. The Adventurers Guild gives you your first quest.`,
+            `${age}歳。冒険者ギルドが初めての依頼をくれた。`,
+            `Tu as ${age} ans. La guilde des aventuriers te donne ta première quête.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'accept', label: '依頼を受ける', description: '冒険の始まり', statChanges: { power: 5, intelligence: 5 }, consequences: ['冒険', '成長'], risk: 'medium' },
+            { id: 'decline', label: '断る', description: 'また今度でいい', statChanges: { health: 5, socialClass: -3 }, consequences: ['平穏', '遅れ'], risk: 'low' },
+            { id: 'register', label: 'ギルドに登録する', description: '正式な冒険者になる', statChanges: { socialClass: 8, intelligence: 3 }, consequences: ['認知', '登録'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'accept', label: 'Accepter la quête', description: 'Le début de l\'aventure', statChanges: { power: 5, intelligence: 5 }, consequences: ['Aventure', 'Croissance'], risk: 'medium' },
+            { id: 'decline', label: 'Décliner', description: 'Une autre fois', statChanges: { health: 5, socialClass: -3 }, consequences: ['Tranquillité', 'Retard'], risk: 'low' },
+            { id: 'register', label: 'S\'inscrire à la guilde', description: 'Devenir un aventurier officiel', statChanges: { socialClass: 8, intelligence: 3 }, consequences: ['Reconnaissance', 'Inscription'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'accept', label: 'Accept the Quest', description: 'The beginning of adventure', statChanges: { power: 5, intelligence: 5 }, consequences: ['Adventure', 'Growth'], risk: 'medium' },
+            { id: 'decline', label: 'Decline', description: 'Maybe another time', statChanges: { health: 5, socialClass: -3 }, consequences: ['Peace', 'Delay'], risk: 'low' },
+            { id: 'register', label: 'Register with the Guild', description: 'Become an official adventurer', statChanges: { socialClass: 8, intelligence: 3 }, consequences: ['Recognition', 'Registration'], risk: 'low' }
+          ] : [
+            { id: 'accept', label: 'Görevi Kabul Et', description: 'Maceranın başı', statChanges: { power: 5, intelligence: 5 }, consequences: ['Macera', 'Gelişim'], risk: 'medium' },
+            { id: 'decline', label: 'Reddet', description: 'Başka sefere', statChanges: { health: 5, socialClass: -3 }, consequences: ['Huzur', 'Gecikme'], risk: 'low' },
+            { id: 'register', label: 'Loncaya Kayıt Ol', description: 'Resmi maceracı ol', statChanges: { socialClass: 8, intelligence: 3 }, consequences: ['Tanınma', 'Kayıt'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 30) {
+        return {
+          id: 'isekai_demon_lord_30',
+          age,
+          year,
+          title: en4('Şeytan Lord', 'Demon Lord', '魔王', 'Le Seigneur Démon'),
+          description: en4(
+            `${age} yaşındasın. Şeytan Lord'un kaleye ulaşması an meselesi. Onunla yüzleşecek misin?`,
+            `You are ${age} years old. The Demon Lord is about to reach the castle. Will you face him?`,
+            `${age}歳。魔王が城に迫っている。彼と向き合うのか？`,
+            `Tu as ${age} ans. Le Seigneur Démon est sur le point d'atteindre le château. Vas-tu l'affronter ?`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'challenge', label: '挑む', description: '全てかける', statChanges: { power: 15, luck: 5 }, consequences: ['決闘', '伝承'], risk: 'extreme' },
+            { id: 'diplomacy', label: '外交的解決', description: '言葉で止める', statChanges: { intelligence: 12, socialClass: 8 }, consequences: ['平和', '知恵'], risk: 'high' },
+            { id: 'flee', label: '逃げる', description: '生き延びる', statChanges: { health: 10, socialClass: -10 }, consequences: ['生存', '逃亡'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'challenge', label: 'Le défier', description: 'Tout risquer', statChanges: { power: 15, luck: 5 }, consequences: ['Duel', 'Légende'], risk: 'extreme' },
+            { id: 'diplomacy', label: 'La diplomatie', description: 'L\'arrêter par les mots', statChanges: { intelligence: 12, socialClass: 8 }, consequences: ['Paix', 'Sagesse'], risk: 'high' },
+            { id: 'flee', label: 'Fuir', description: 'Survivre', statChanges: { health: 10, socialClass: -10 }, consequences: ['Survie', 'Fuite'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'challenge', label: 'Challenge Him', description: 'Bet everything', statChanges: { power: 15, luck: 5 }, consequences: ['Duel', 'Legend'], risk: 'extreme' },
+            { id: 'diplomacy', label: 'Diplomacy', description: 'Stop him with words', statChanges: { intelligence: 12, socialClass: 8 }, consequences: ['Peace', 'Wisdom'], risk: 'high' },
+            { id: 'flee', label: 'Flee', description: 'Survive', statChanges: { health: 10, socialClass: -10 }, consequences: ['Survival', 'Flight'], risk: 'low' }
+          ] : [
+            { id: 'challenge', label: 'Meydan Oku', description: 'Her şeyi riske at', statChanges: { power: 15, luck: 5 }, consequences: ['Düello', 'Efsane'], risk: 'extreme' },
+            { id: 'diplomacy', label: 'Diplomasiyi Dene', description: 'Kelimelerle durdur', statChanges: { intelligence: 12, socialClass: 8 }, consequences: ['Barış', 'Bilgelik'], risk: 'high' },
+            { id: 'flee', label: 'Kaç', description: 'Hayatta kal', statChanges: { health: 10, socialClass: -10 }, consequences: ['Hayatta Kalma', 'Kaçış'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
+    // ─── SHONEN: antrenman ve rakip ───
+    case 'shonen_battle':
+      if (age === 9) {
+        return {
+          id: 'shonen_training_9',
+          age,
+          year,
+          title: en4('Yoğun Antrenman', 'Intensive Training', '猛特訓', 'Entraînement intensif'),
+          description: en4(
+            `${age} yaşındasın. Ninja köyüne kayıt oldun. Her gün antrenman yapman gerek.`,
+            `You are ${age} years old. You enrolled at the ninja village. You must train every day.`,
+            `${age}歳。忍の里に入門した。毎日特訓しなければならない。`,
+            `Tu as ${age} ans. Tu t'es inscrit au village ninja. Tu dois t'entraîner chaque jour.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'hard', label: '毎日特訓する', description: '限界を超える', statChanges: { power: 10, health: -3 }, consequences: ['成長', '疲労'], risk: 'medium' },
+            { id: 'balanced', label: 'バランスよく鍛える', description: '体と頭', statChanges: { power: 5, intelligence: 5 }, consequences: ['均衡', '安定'], risk: 'low' },
+            { id: 'play', label: '遊ぶ', description: '子供時代を楽しむ', statChanges: { luck: 8, socialClass: 3 }, consequences: ['友情', '楽しみ'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'hard', label: 'S\'entraîner tous les jours', description: 'Dépasser tes limites', statChanges: { power: 10, health: -3 }, consequences: ['Croissance', 'Fatigue'], risk: 'medium' },
+            { id: 'balanced', label: 'S\'entraîner équilibré', description: 'Corps et esprit', statChanges: { power: 5, intelligence: 5 }, consequences: ['Équilibre', 'Stabilité'], risk: 'low' },
+            { id: 'play', label: 'Jouer', description: 'Profiter de l\'enfance', statChanges: { luck: 8, socialClass: 3 }, consequences: ['Amitié', 'Plaisir'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'hard', label: 'Train Every Day', description: 'Break your limits', statChanges: { power: 10, health: -3 }, consequences: ['Growth', 'Fatigue'], risk: 'medium' },
+            { id: 'balanced', label: 'Train Balanced', description: 'Body and mind', statChanges: { power: 5, intelligence: 5 }, consequences: ['Equilibrium', 'Stability'], risk: 'low' },
+            { id: 'play', label: 'Play', description: 'Enjoy being a kid', statChanges: { luck: 8, socialClass: 3 }, consequences: ['Friendship', 'Fun'], risk: 'low' }
+          ] : [
+            { id: 'hard', label: 'Her Gün Antrenman', description: 'Sınırlarını zorla', statChanges: { power: 10, health: -3 }, consequences: ['Gelişim', 'Yorgunluk'], risk: 'medium' },
+            { id: 'balanced', label: 'Dengeli Çalış', description: 'Beden ve zihin', statChanges: { power: 5, intelligence: 5 }, consequences: ['Denge', 'İstikrar'], risk: 'low' },
+            { id: 'play', label: 'Oyna', description: 'Çocukluğunu yaşa', statChanges: { luck: 8, socialClass: 3 }, consequences: ['Dostluk', 'Eğlence'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 12) {
+        return {
+          id: 'shonen_rival_12',
+          age,
+          year,
+          title: en4('Rakip', 'Rival', 'ライバル', 'Rival'),
+          description: en4(
+            `${age} yaşındasın. Aynı yaşta, seninle aynı hedefte biri var. Onunla rekabet edeceksin.`,
+            `You are ${age} years old. Someone your age shares your goal. You will compete with them.`,
+            `${age}歳。同い年で、同じ目標を持つ誰かがいる。彼と競い合うことになる。`,
+            `Tu as ${age} ans. Quelqu'un de ton âge partage ton objectif. Tu vas rivaliser avec lui.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'challenge', label: '挑む', description: '正面から勝負', statChanges: { power: 10, socialClass: 5 }, consequences: ['挑戦', '成長'], risk: 'medium' },
+            { id: 'observe', label: '観察する', description: '強さを学ぶ', statChanges: { intelligence: 8, luck: 3 }, consequences: ['学び', '忍耐'], risk: 'low' },
+            { id: 'retreat', label: '退く', description: '今は戦わない', statChanges: { health: 5, socialClass: -5 }, consequences: ['待機', '安全'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'challenge', label: 'Le défier', description: 'Affronter de face', statChanges: { power: 10, socialClass: 5 }, consequences: ['Défi', 'Croissance'], risk: 'medium' },
+            { id: 'observe', label: 'Observer', description: 'Apprendre sa force', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Apprentissage', 'Patience'], risk: 'low' },
+            { id: 'retreat', label: 'Reculer', description: 'Pas maintenant', statChanges: { health: 5, socialClass: -5 }, consequences: ['Attente', 'Sécurité'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'challenge', label: 'Challenge Him', description: 'Face him head-on', statChanges: { power: 10, socialClass: 5 }, consequences: ['Challenge', 'Growth'], risk: 'medium' },
+            { id: 'observe', label: 'Observe', description: 'Learn from his strength', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Learning', 'Patience'], risk: 'low' },
+            { id: 'retreat', label: 'Back Off', description: 'Not now', statChanges: { health: 5, socialClass: -5 }, consequences: ['Waiting', 'Safety'], risk: 'low' }
+          ] : [
+            { id: 'challenge', label: 'Meydan Oku', description: 'Karşısına geç', statChanges: { power: 10, socialClass: 5 }, consequences: ['Rekabet', 'Gelişim'], risk: 'medium' },
+            { id: 'observe', label: 'Gözlemle', description: 'Onun gücünü öğren', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Öğrenme', 'Sabır'], risk: 'low' },
+            { id: 'retreat', label: 'Geri Çekil', description: 'Şimdi değil', statChanges: { health: 5, socialClass: -5 }, consequences: ['Bekleme', 'Güven'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
+    // ─── DARK_FANTASY: lanet ve av ───
+    case 'dark_fantasy':
+      if (age === 20) {
+        return {
+          id: 'df_curse_20',
+          age,
+          year,
+          title: en4('Lanet', 'Curse', '呪い', 'Malédiction'),
+          description: en4(
+            `${age} yaşındasın. Bir lanet sana bulaştı. Bir cadı seni kurtarmadan önce köpeklere gider.`,
+            `You are ${age} years old. A curse has infected you. A witch must cure you before it's too late.`,
+            `${age}歳。呪いが君に降りかかった。魔女に治してもらわなければならない。`,
+            `Tu as ${age} ans. Une malédiction t'a frappé. Une sorcière doit te guérir avant qu'il ne soit trop tard.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'ritual', label: '儀式に参加する', description: '呪いを払う', statChanges: { intelligence: 8, health: -8 }, consequences: ['浄化', '代償'], risk: 'medium' },
+            { id: 'hide', label: '隠れる', description: '村を守る', statChanges: { health: 5, socialClass: -5 }, consequences: ['孤独', '安全'], risk: 'low' },
+            { id: 'fight', label: '戦う', description: '呪いに打ち勝つ', statChanges: { power: 12, luck: -5 }, consequences: ['戦い', '負担'], risk: 'high' }
+          ] : l === 'fr' ? [
+            { id: 'ritual', label: 'Participer au rituel', description: 'Lever la malédiction', statChanges: { intelligence: 8, health: -8 }, consequences: ['Purification', 'Coût'], risk: 'medium' },
+            { id: 'hide', label: 'Se cacher', description: 'Protéger le village', statChanges: { health: 5, socialClass: -5 }, consequences: ['Solitude', 'Sécurité'], risk: 'low' },
+            { id: 'fight', label: 'Combattre', description: 'Vaincre la malédiction', statChanges: { power: 12, luck: -5 }, consequences: ['Combat', 'Poids'], risk: 'high' }
+          ] : l === 'en' ? [
+            { id: 'ritual', label: 'Join the Ritual', description: 'Lift the curse', statChanges: { intelligence: 8, health: -8 }, consequences: ['Purification', 'Cost'], risk: 'medium' },
+            { id: 'hide', label: 'Hide', description: 'Protect the village', statChanges: { health: 5, socialClass: -5 }, consequences: ['Solitude', 'Safety'], risk: 'low' },
+            { id: 'fight', label: 'Fight', description: 'Beat the curse', statChanges: { power: 12, luck: -5 }, consequences: ['Battle', 'Burden'], risk: 'high' }
+          ] : [
+            { id: 'ritual', label: 'Ritüele Katıl', description: 'Laneti kaldır', statChanges: { intelligence: 8, health: -8 }, consequences: ['Arınma', 'Bedel'], risk: 'medium' },
+            { id: 'hide', label: 'Saklan', description: 'Köyü koru', statChanges: { health: 5, socialClass: -5 }, consequences: ['Yalnızlık', 'Güven'], risk: 'low' },
+            { id: 'fight', label: 'Savaş', description: 'Laneti yen', statChanges: { power: 12, luck: -5 }, consequences: ['Savaş', 'Yük'], risk: 'high' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 25) {
+        return {
+          id: 'df_hunt_25',
+          age,
+          year,
+          title: en4('Mahlukat Avı', 'Monster Hunt', '魔物狩り', 'Chasse aux monstres'),
+          description: en4(
+            `${age} yaşındasın. Köyün yakınında bir canavar belirdi. Onu avlamak zorundasın.`,
+            `You are ${age} years old. A monster appeared near the village. You must hunt it down.`,
+            `${age}歳。村の近くに魔物が現れた。狩らなければならない。`,
+            `Tu as ${age} ans. Un monstre est apparu près du village. Tu dois le chasser.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'hunt', label: '狩る', description: '村を守る', statChanges: { power: 15, health: -10 }, consequences: ['戦い', '勝利'], risk: 'high' },
+            { id: 'observe', label: '観察する', description: '弱点を探る', statChanges: { intelligence: 10, luck: 3 }, consequences: ['学び', '忍耐'], risk: 'low' },
+            { id: 'flee', label: '逃げる', description: '自分を守る', statChanges: { health: 10, socialClass: -8 }, consequences: ['生存', '逃亡'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'hunt', label: 'Chasser', description: 'Protéger le village', statChanges: { power: 15, health: -10 }, consequences: ['Combat', 'Victoire'], risk: 'high' },
+            { id: 'observe', label: 'Observer', description: 'Trouver le point faible', statChanges: { intelligence: 10, luck: 3 }, consequences: ['Apprentissage', 'Patience'], risk: 'low' },
+            { id: 'flee', label: 'Fuir', description: 'Te protéger', statChanges: { health: 10, socialClass: -8 }, consequences: ['Survie', 'Fuite'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'hunt', label: 'Hunt It', description: 'Protect the village', statChanges: { power: 15, health: -10 }, consequences: ['Battle', 'Victory'], risk: 'high' },
+            { id: 'observe', label: 'Observe', description: 'Find the weak point', statChanges: { intelligence: 10, luck: 3 }, consequences: ['Learning', 'Patience'], risk: 'low' },
+            { id: 'flee', label: 'Flee', description: 'Protect yourself', statChanges: { health: 10, socialClass: -8 }, consequences: ['Survival', 'Flight'], risk: 'low' }
+          ] : [
+            { id: 'hunt', label: 'Avla', description: 'Köyü koru', statChanges: { power: 15, health: -10 }, consequences: ['Savaş', 'Zafer'], risk: 'high' },
+            { id: 'observe', label: 'Gözlemle', description: 'Zayıf noktasını bul', statChanges: { intelligence: 10, luck: 3 }, consequences: ['Öğrenme', 'Sabır'], risk: 'low' },
+            { id: 'flee', label: 'Kaç', description: 'Kendini koru', statChanges: { health: 10, socialClass: -8 }, consequences: ['Hayatta Kalma', 'Kaçış'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
+    default:
+      return null;
+  }
+}
+
 // ─── Dönüm Noktası Olayı (Milestone: 5/15/30/50/70) ────
 function createMilestoneEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
   const l = lifeLang();
@@ -1222,9 +1836,19 @@ export function generateLife(
     });
   }
 
-  // Faction choice (age 15)
+  // Faction choice (age 15) — fraksiyonu olmayan evrenlerde atlanır
   if (deathAge > 15) {
-    events.push(createFactionEvent(world, region, 15, birthYear + 15, stats));
+    const factionEvent = createFactionEvent(world, region, 15, birthYear + 15, stats);
+    if (factionEvent) events.push(factionEvent);
+  }
+
+  // Evrene özgü olaylar (Faz 1) — shonen/dark_fantasy/isekai/sports/romance/slice_of_life/cyberpunk/seinen_psych
+  const uniqueEventAges = [7, 9, 12, 13, 16, 17, 20, 22, 25, 30];
+  for (const uniqueAge of uniqueEventAges) {
+    if (uniqueAge < deathAge) {
+      const uniqueEvent = createWorldUniqueEvent(world, region, uniqueAge, birthYear + uniqueAge, stats);
+      if (uniqueEvent) events.push(uniqueEvent);
+    }
   }
 
   // Milestone events at key ages (15 fraksiyonla, 5 yukarıda kapsandı)

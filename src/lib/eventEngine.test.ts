@@ -92,6 +92,35 @@ describe('eventEngine — generateLife', () => {
     }
   });
 
+  it('evrene özgü olaylar yalnızca kendi evreninde üretilir', () => {
+    const sports = getWorldById('sports')!;
+    const sol = getWorldById('slice_of_life')!;
+    const shonen = getWorldById('shonen_battle')!;
+    const konoha = getRegionById('konoha')!;
+    let sportsSeenTryout = false;
+    let solSeenFaction = false;
+    let shonenSeenFaction = false;
+    let shonenSeenSportsEvent = false;
+
+    for (let seed = 1; seed <= 80 && !(sportsSeenTryout && shonenSeenFaction); seed += 1) {
+      randomSpy.mockImplementation(mulberry32(seed));
+      const sSports = generateLife(sports, konoha, '1h', { focus: 'combat' });
+      if (sSports.events.some(e => e.id === 'sports_tryout_13')) sportsSeenTryout = true;
+
+      const sSol = generateLife(sol, getRegionById('rural_japan')!, '1h', { focus: 'study' });
+      if (sSol.events.some(e => e.id.startsWith('faction_'))) solSeenFaction = true;
+
+      const sShonen = generateLife(shonen, konoha, '1h', { focus: 'combat' });
+      if (sShonen.events.some(e => e.id === 'faction_15')) shonenSeenFaction = true;
+      if (sShonen.events.some(e => e.id.startsWith('sports_'))) shonenSeenSportsEvent = true;
+    }
+
+    expect(sportsSeenTryout).toBe(true);
+    expect(solSeenFaction).toBe(false);
+    expect(shonenSeenFaction).toBe(true);
+    expect(shonenSeenSportsEvent).toBe(false);
+  });
+
   it('bölge yaşam beklentisi ve ağır bölgelerde erken ölüm olasılığı bozulmaz', () => {
     randomSpy.mockImplementation(mulberry32(31415));
     const marley = getRegionById('marley')!;
