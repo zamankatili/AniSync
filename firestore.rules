@@ -76,7 +76,7 @@ service cloud.firestore {
     match /watchPartyRooms/{id} { allow read: if true; allow create, update: if isSignedIn(); allow delete: if isAdminOnly(); }
     match /watchPartyRooms/{id}/messages/{mid} { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly() || (isSignedIn() && request.resource.data.userId == request.auth.uid); }
     match /sharedLives/{id}    { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
-    match /animeNews/{id}      { allow read: if true; allow create: if isSignedIn(); allow update, delete: if isAdminOnly(); }
+    match /animeNews/{id}      { allow read: if true; allow create, update, delete: if isAdminOnly(); }
 
     // Varsayılan: kapalı (geri kalan her şey reddedilir)
     match /{document=**} {
