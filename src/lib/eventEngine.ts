@@ -343,10 +343,20 @@ function createChildhoodEvent(world: AnimeWorld, region: AnimeRegion, age: numbe
 }
 
 function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
-  const en = isEn();
+  const l = lifeLang();
   // Faction options depend on the world
   const factionOptions: Record<string, LifeChoice[]> = {
-    shonen_battle: en ? [
+    shonen_battle: l === 'ja' ? [
+      { id: 'marine', label: '海軍になる', description: '正義と規律の道', statChanges: { socialClass: 10, power: 5 }, consequences: ['規律', '安全'], risk: 'low' },
+      { id: 'pirate', label: '海賊になる', description: '自由と冒険の道', statChanges: { power: 10, luck: 5, socialClass: -10 }, consequences: ['冒険', '危険'], risk: 'high' },
+      { id: 'civilian', label: '市民のままでいる', description: '穏やかで安全な人生', statChanges: { health: 10, socialClass: 5 }, consequences: ['安全', '平凡'], risk: 'low' },
+      { id: 'revolutionary', label: '革命軍に加わる', description: '世界を変えるために戦う', statChanges: { power: 8, intelligence: 5, socialClass: -15 }, consequences: ['理想主義', '危険'], risk: 'extreme' }
+    ] : l === 'fr' ? [
+      { id: 'marine', label: 'Devenir Marine', description: 'Le chemin de la justice et de la discipline', statChanges: { socialClass: 10, power: 5 }, consequences: ['Discipline', 'Sécurité'], risk: 'low' },
+      { id: 'pirate', label: 'Devenir Pirate', description: 'Le chemin de la liberté et de l\'aventure', statChanges: { power: 10, luck: 5, socialClass: -10 }, consequences: ['Aventure', 'Risque'], risk: 'high' },
+      { id: 'civilian', label: 'Rester civil', description: 'Une vie paisible et sûre', statChanges: { health: 10, socialClass: 5 }, consequences: ['Sécurité', 'Ordinarité'], risk: 'low' },
+      { id: 'revolutionary', label: 'Rejoindre la Révolution', description: 'Se battre pour changer le monde', statChanges: { power: 8, intelligence: 5, socialClass: -15 }, consequences: ['Idéalisme', 'Danger'], risk: 'extreme' }
+    ] : l === 'en' ? [
       { id: 'marine', label: 'Become a Marine', description: 'The path of justice and discipline', statChanges: { socialClass: 10, power: 5 }, consequences: ['Discipline', 'Security'], risk: 'low' },
       { id: 'pirate', label: 'Become a Pirate', description: 'The path of freedom and adventure', statChanges: { power: 10, luck: 5, socialClass: -10 }, consequences: ['Adventure', 'Risk'], risk: 'high' },
       { id: 'civilian', label: 'Stay a Civilian', description: 'A peaceful and safe life', statChanges: { health: 10, socialClass: 5 }, consequences: ['Security', 'Ordinariness'], risk: 'low' },
@@ -357,7 +367,17 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
       { id: 'civilian', label: 'Sivil Kal', description: 'Huzurlu ve güvenli yaşam', statChanges: { health: 10, socialClass: 5 }, consequences: ['Güvenlik', 'Sıradanlık'], risk: 'low' },
       { id: 'revolutionary', label: 'Devrimci Katıl', description: 'Dünyayı değiştirmek için savaş', statChanges: { power: 8, intelligence: 5, socialClass: -15 }, consequences: ['İdealizm', 'Tehlike'], risk: 'extreme' }
     ],
-    dark_fantasy: en ? [
+    dark_fantasy: l === 'ja' ? [
+      { id: 'soldier', label: '兵士になる', description: '戦い、そして生き延びる', statChanges: { power: 10, health: -5 }, consequences: ['戦闘経験', 'トラウマ'], risk: 'high' },
+      { id: 'hunter', label: '狩人になる', description: '魔物を狩り、探索する', statChanges: { power: 8, luck: 5 }, consequences: ['発見', '危険'], risk: 'medium' },
+      { id: 'civilian', label: '市民のままでいる', description: '生き延びようと試みる', statChanges: { health: 10, socialClass: -5 }, consequences: ['安全', '貧困'], risk: 'low' },
+      { id: 'cultist', label: 'カルトに加わる', description: '闇の力と取引する', statChanges: { power: 15, health: -10, luck: -5 }, consequences: ['力', '呪い'], risk: 'extreme' }
+    ] : l === 'fr' ? [
+      { id: 'soldier', label: 'Devenir Soldat', description: 'Se battre et survivre', statChanges: { power: 10, health: -5 }, consequences: ['Expérience de combat', 'Traumatisme'], risk: 'high' },
+      { id: 'hunter', label: 'Devenir Chasseur', description: 'Chasser les monstres et explorer', statChanges: { power: 8, luck: 5 }, consequences: ['Découverte', 'Risque'], risk: 'medium' },
+      { id: 'civilian', label: 'Rester civil', description: 'Essayer de survivre', statChanges: { health: 10, socialClass: -5 }, consequences: ['Sécurité', 'Pauvreté'], risk: 'low' },
+      { id: 'cultist', label: 'Rejoindre le Culte', description: 'Faire un pacte avec les forces obscures', statChanges: { power: 15, health: -10, luck: -5 }, consequences: ['Pouvoir', 'Malédiction'], risk: 'extreme' }
+    ] : l === 'en' ? [
       { id: 'soldier', label: 'Become a Soldier', description: 'Fight and survive', statChanges: { power: 10, health: -5 }, consequences: ['Battle experience', 'Trauma'], risk: 'high' },
       { id: 'hunter', label: 'Become a Hunter', description: 'Hunt monsters and explore', statChanges: { power: 8, luck: 5 }, consequences: ['Discovery', 'Risk'], risk: 'medium' },
       { id: 'civilian', label: 'Stay a Civilian', description: 'Try to survive', statChanges: { health: 10, socialClass: -5 }, consequences: ['Security', 'Poverty'], risk: 'low' },
@@ -368,7 +388,17 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
       { id: 'civilian', label: 'Sivil Kal', description: 'Hayatta kalmaya çalış', statChanges: { health: 10, socialClass: -5 }, consequences: ['Güvenlik', 'Yoksulluk'], risk: 'low' },
       { id: 'cultist', label: 'Kült Katıl', description: 'Karanlık güçlerle anlaşma yap', statChanges: { power: 15, health: -10, luck: -5 }, consequences: ['Güç', 'Lanet'], risk: 'extreme' }
     ],
-    isekai: en ? [
+    isekai: l === 'ja' ? [
+      { id: 'adventurer', label: '冒険者になる', description: 'クエストと冒険', statChanges: { power: 8, intelligence: 5, luck: 5 }, consequences: ['冒険', '経験値'], risk: 'medium' },
+      { id: 'merchant', label: '商人になる', description: '商売と経済', statChanges: { intelligence: 10, socialClass: 10 }, consequences: ['金', '社会的地位'], risk: 'low' },
+      { id: 'scholar', label: '学者になる', description: '魔法と研究', statChanges: { intelligence: 15, power: -3 }, consequences: ['知識', '非力さ'], risk: 'medium' },
+      { id: 'hermit', label: '隠者になる', description: '孤独な暮らしと瞑想', statChanges: { power: 5, intelligence: 8, socialClass: -10 }, consequences: ['神秘', '孤立'], risk: 'low' }
+    ] : l === 'fr' ? [
+      { id: 'adventurer', label: 'Devenir aventurier', description: 'Quêtes et aventures', statChanges: { power: 8, intelligence: 5, luck: 5 }, consequences: ['Aventure', 'Expérience'], risk: 'medium' },
+      { id: 'merchant', label: 'Devenir marchand', description: 'Commerce et économie', statChanges: { intelligence: 10, socialClass: 10 }, consequences: ['Argent', 'Statut social'], risk: 'low' },
+      { id: 'scholar', label: 'Devenir érudit', description: 'Magie et recherche', statChanges: { intelligence: 15, power: -3 }, consequences: ['Connaissance', 'Faiblesse'], risk: 'medium' },
+      { id: 'hermit', label: 'Devenir ermite', description: 'Solitude et méditation', statChanges: { power: 5, intelligence: 8, socialClass: -10 }, consequences: ['Mystère', 'Isolement'], risk: 'low' }
+    ] : l === 'en' ? [
       { id: 'adventurer', label: 'Become an Adventurer', description: 'Quests and adventures', statChanges: { power: 8, intelligence: 5, luck: 5 }, consequences: ['Adventure', 'XP'], risk: 'medium' },
       { id: 'merchant', label: 'Become a Merchant', description: 'Trade and economy', statChanges: { intelligence: 10, socialClass: 10 }, consequences: ['Money', 'Social status'], risk: 'low' },
       { id: 'scholar', label: 'Become a Scholar', description: 'Magic and research', statChanges: { intelligence: 15, power: -3 }, consequences: ['Knowledge', 'Weakness'], risk: 'medium' },
@@ -389,10 +419,13 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
     id: `faction_${age}`,
     age,
     year,
-    title: en ? 'Faction Choice' : 'Fraksiyon Seçimi',
-    description: en
-      ? `You are ${age} years old. In the ${regionNameL(region)} region of the ${worldNameL(world)} world, you must choose a faction (e.g. ${factionNames}). This choice will set the course of your life.`
-      : `${age} yaşındasın. ${region.nameTR} bölgesinde ${world.nameTR} evreninde bir fraksiyon seçmen gerekiyor (örn. ${factionNames}). Bu seçim hayatının yönünü belirleyecek.`,
+    title: L('Fraksiyon Seçimi', 'Faction Choice', '勢力選び', 'Choix de faction'),
+    description: L(
+      `${age} yaşındasın. ${region.nameTR} bölgesinde ${world.nameTR} evreninde bir fraksiyon seçmen gerekiyor (örn. ${factionNames}). Bu seçim hayatının yönünü belirleyecek.`,
+      `You are ${age} years old. In the ${regionNameL(region)} region of the ${worldNameL(world)} world, you must choose a faction (e.g. ${factionNames}). This choice will set the course of your life.`,
+      `${age}歳。${region.nameEN}地方、${world.nameEN}の世界で、勢力を選ばなければならない（例: ${factionNames}）。この選択があなたの人生の方向を決める。`,
+      `Tu as ${age} ans. Dans la région de ${region.nameEN} du monde ${world.nameEN}, tu dois choisir une faction (ex. ${factionNames}). Ce choix déterminera le cours de ta vie.`
+    ),
     type: 'faction',
     choices: options,
     isCanonEncounter: false
@@ -400,8 +433,70 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
 }
 
 function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats, includeHeavy: boolean = true): LifeEvent | null {
-  const en = isEn();
-  const crisisTypes: { title: string; description: string; choices: LifeChoice[]; heavy: boolean }[] = en ? [
+  const l = lifeLang();
+  const crisisTypes: { title: string; description: string; choices: LifeChoice[]; heavy: boolean }[] = l === 'ja' ? [
+    {
+      title: '病と死別',
+      heavy: false,
+      description: `${age}歳。${region.nameEN}地方で、疫病や病が広がっている。愛する者が影響を受けているかもしれない。`,
+      choices: [
+        { id: 'heal', label: '治療を受ける', description: '薬や魔法で治療法を探す', statChanges: { health: 10, intelligence: 5 }, consequences: ['健康', '知識'], risk: 'medium' },
+        { id: 'protect', label: '愛する人を守る', description: '自分の健康を危険にさらす', statChanges: { health: -10, socialClass: 5 }, consequences: ['犠牲', '絆'], risk: 'high' },
+        { id: 'flee', label: '逃げる', description: '生き延び、後で戻る', statChanges: { health: 5, socialClass: -5, luck: -3 }, consequences: ['生存', '罪悪感'], risk: 'low' }
+      ]
+    },
+    {
+      title: '戦争と紛争',
+      heavy: true,
+      description: `${age}歳。${world.nameEN}の世界で紛争が勃発した。${region.nameEN}地方も巻き込まれている。`,
+      choices: [
+        { id: 'fight', label: '戦う', description: '前線へ向かう', statChanges: { power: 10, health: -15 }, consequences: ['経験', 'トラウマ'], risk: 'extreme' },
+        { id: 'hide', label: '隠れる', description: '安全な場所を見つける', statChanges: { health: 5, socialClass: -5 }, consequences: ['安全', '罪悪感'], risk: 'low' },
+        { id: 'medic', label: '衛生兵になる', description: '負傷者を治療する', statChanges: { intelligence: 10, health: -5 }, consequences: ['知識', '尊敬'], risk: 'medium' }
+      ]
+    },
+    {
+      title: '力の覚醒',
+      heavy: false,
+      description: `${age}歳。${world.powerSystem}のシステムの中で覚醒の兆しを感じている。この力はあなたを変えるかもしれない。`,
+      choices: [
+        { id: 'embrace', label: '力を受け入れる', description: '力を受け入れ、鍛える', statChanges: { power: 15, health: -5 }, consequences: ['力', '危険'], risk: 'high' },
+        { id: 'reject', label: '力を拒む', description: '平凡のまま、安全に', statChanges: { health: 10, socialClass: 5 }, consequences: ['安全', '平凡'], risk: 'low' },
+        { id: 'study', label: '力を研究する', description: '科学的に調べる', statChanges: { intelligence: 15, power: 5 }, consequences: ['知識', '力'], risk: 'medium' }
+      ]
+    }
+  ] : l === 'fr' ? [
+    {
+      title: 'Maladie et perte',
+      heavy: false,
+      description: `Tu as ${age} ans. Une épidémie ou une maladie se répand dans la région de ${region.nameEN}. Quelqu'un que tu aimes peut être touché.`,
+      choices: [
+        { id: 'heal', label: 'Chercher un traitement', description: 'Trouver un remède par la médecine ou la magie', statChanges: { health: 10, intelligence: 5 }, consequences: ['Santé', 'Connaissance'], risk: 'medium' },
+        { id: 'protect', label: 'Protéger tes proches', description: 'Risquer ta propre santé', statChanges: { health: -10, socialClass: 5 }, consequences: ['Sacrifice', 'Lien'], risk: 'high' },
+        { id: 'flee', label: 'Fuir', description: 'Survivre et revenir plus tard', statChanges: { health: 5, socialClass: -5, luck: -3 }, consequences: ['Survie', 'Culpabilité'], risk: 'low' }
+      ]
+    },
+    {
+      title: 'Guerre et conflit',
+      heavy: true,
+      description: `Tu as ${age} ans. Un conflit a éclaté dans le monde ${world.nameEN}. La région de ${region.nameEN} est également touchée.`,
+      choices: [
+        { id: 'fight', label: 'Combattre', description: 'Aller au front', statChanges: { power: 10, health: -15 }, consequences: ['Expérience', 'Traumatisme'], risk: 'extreme' },
+        { id: 'hide', label: 'Se cacher', description: 'Trouver un endroit sûr', statChanges: { health: 5, socialClass: -5 }, consequences: ['Sécurité', 'Culpabilité'], risk: 'low' },
+        { id: 'medic', label: 'Devenir médecin', description: 'Soigner les blessés', statChanges: { intelligence: 10, health: -5 }, consequences: ['Connaissance', 'Respect'], risk: 'medium' }
+      ]
+    },
+    {
+      title: 'Éveil du pouvoir',
+      heavy: false,
+      description: `Tu as ${age} ans. Tu ressens des signes d'éveil au sein du système ${world.powerSystem}. Ce pouvoir pourrait te transformer.`,
+      choices: [
+        { id: 'embrace', label: 'Accepter le pouvoir', description: 'Accepter le pouvoir et t\'entraîner', statChanges: { power: 15, health: -5 }, consequences: ['Pouvoir', 'Risque'], risk: 'high' },
+        { id: 'reject', label: 'Rejeter le pouvoir', description: 'Rester ordinaire et en sécurité', statChanges: { health: 10, socialClass: 5 }, consequences: ['Sécurité', 'Ordinarité'], risk: 'low' },
+        { id: 'study', label: 'Étudier le pouvoir', description: 'L\'examiner scientifiquement', statChanges: { intelligence: 15, power: 5 }, consequences: ['Connaissance', 'Pouvoir'], risk: 'medium' }
+      ]
+    }
+  ] : l === 'en' ? [
     {
       title: 'Disease and Loss',
       heavy: false,
@@ -468,9 +563,12 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
   const available = includeHeavy ? crisisTypes : crisisTypes.filter(c => !c.heavy);
   if (available.length === 0) return null;
   const crisis = available[Math.floor(Math.random() * available.length)];
-  const helpNote = isEn()
-    ? '\n\n💡 Help: In crises like these, community support, professional help and strong family bonds greatly improve your chances of survival. You can share similar experiences in the AniSync community.'
-    : '\n\n💡 Yardım: Bu tür krizlerde topluluk desteği, profesyonel yardım ve aile bağları hayatta kalma şansını artırır. AniSync topluluğunda benzer deneyimler paylaşılabilir.';
+  const helpNote = L(
+    '\n\n💡 Yardım: Bu tür krizlerde topluluk desteği, profesyonel yardım ve aile bağları hayatta kalma şansını artırır. AniSync topluluğunda benzer deneyimler paylaşılabilir.',
+    '\n\n💡 Help: In crises like these, community support, professional help and strong family bonds greatly improve your chances of survival. You can share similar experiences in the AniSync community.',
+    '\n\n💡 助け: このような危機では、コミュニティの支援、専門家の助言、家族の絆が生存の可能性を大きく高めます。AniSyncコミュニティでも、似た経験を分かち合えます。',
+    '\n\n💡 Aide: Dans ce type de crise, le soutien communautaire, l\'aide professionnelle et les liens familiaux augmentent considérablement vos chances de survie. Vous pouvez partager des expériences similaires sur la communauté AniSync.'
+  );
   return {
     id: `crisis_${age}`,
     age,
@@ -484,51 +582,49 @@ function createCrisisEvent(world: AnimeWorld, region: AnimeRegion, age: number, 
 }
 
 function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: number, year: number): LifeEvent | null {
-  const en = isEn();
-  // Canon character encounters — bölge (region) bazlı, böylece seçilen seriye uygun karakterler çıkar
-  const encounters: Record<string, { minAge: number; maxAge: number; character: string; description: string; descriptionEN: string; probability: number }[]> = {
+  const encounters: Record<string, { minAge: number; maxAge: number; character: string; description: string; descriptionEN: string; descriptionJA: string; descriptionFR: string; probability: number }[]> = {
     // Shounen Battle World — bölgeye göre seri
     konoha: [
-      { minAge: 8, maxAge: 15, character: 'Naruto', description: 'Turuncu kıyafetli bir ninja köyden geçiyor. "Dattebayo!" diye bağırıyor.', descriptionEN: 'An orange-clad ninja walks through the village. "Dattebayo!" he shouts.', probability: 0.15 },
-      { minAge: 12, maxAge: 20, character: 'Sasuke', description: 'Karanlık yüzlü bir genç, Sharingan gözüyle seni süzüyor.', descriptionEN: 'A dark-faced young man gazes at you with his Sharingan eye.', probability: 0.10 },
-      { minAge: 15, maxAge: 25, character: 'Kakashi', description: 'Gümüş saçlı, maske takan bir jonin kitabı okuyarak geçiyor.', descriptionEN: 'A silver-haired, masked jonin walks past while reading a book.', probability: 0.08 }
+      { minAge: 8, maxAge: 15, character: 'Naruto', description: 'Turuncu kıyafetli bir ninja köyden geçiyor. "Dattebayo!" diye bağırıyor.', descriptionEN: 'An orange-clad ninja walks through the village. "Dattebayo!" he shouts.', descriptionJA: 'オレンジの服を着た忍者が村を歩いて行く。「だってばよ！」と叫んでいる。', descriptionFR: 'Un ninja vêtu d\'orange traverse le village. « Dattebayo ! » crie-t-il.', probability: 0.15 },
+      { minAge: 12, maxAge: 20, character: 'Sasuke', description: 'Karanlık yüzlü bir genç, Sharingan gözüyle seni süzüyor.', descriptionEN: 'A dark-faced young man gazes at you with his Sharingan eye.', descriptionJA: '暗い顔の若者が、写輪眼であなたをじっと見つめる。', descriptionFR: 'Un jeune homme au visage sombre te fixe avec son œil Sharingan.', probability: 0.10 },
+      { minAge: 15, maxAge: 25, character: 'Kakashi', description: 'Gümüş saçlı, maske takan bir jonin kitabı okuyarak geçiyor.', descriptionEN: 'A silver-haired, masked jonin walks past while reading a book.', descriptionJA: '銀髪でマスク姿の上忍が、本を読みながら通り過ぎる。', descriptionFR: 'Un jonin aux cheveux argentés et masqué passe en lisant un livre.', probability: 0.08 }
     ],
     kanton: [
-      { minAge: 8, maxAge: 15, character: 'Luffy', description: 'Uzakta, deniz kenarında bir çocuk koşuyor. "Korsanlar Kralı olacağım!" diye bağırıyor.', descriptionEN: 'Far away, by the sea, a kid runs. "I\'m gonna be the Pirate King!" he shouts.', probability: 0.15 },
-      { minAge: 12, maxAge: 20, character: 'Zoro', description: 'Bir kılıç ustası, antrenman yaparken görürsün. Üç kılıç kullanıyor.', descriptionEN: 'You spot a swordsman training. He wields three swords.', probability: 0.10 },
-      { minAge: 15, maxAge: 25, character: 'Nami', description: 'Turuncu saçlı bir kız, harita çizerek geçiyor.', descriptionEN: 'An orange-haired girl walks past while drawing a map.', probability: 0.08 }
+      { minAge: 8, maxAge: 15, character: 'Luffy', description: 'Uzakta, deniz kenarında bir çocuk koşuyor. "Korsanlar Kralı olacağım!" diye bağırıyor.', descriptionEN: 'Far away, by the sea, a kid runs. "I\'m gonna be the Pirate King!" he shouts.', descriptionJA: '遠くで、海辺に少年が走っている。「海賊王になる！」と叫んでいる。', descriptionFR: 'Au loin, au bord de la mer, un gamin court. « Je serai le Roi des Pirates ! » crie-t-il.', probability: 0.15 },
+      { minAge: 12, maxAge: 20, character: 'Zoro', description: 'Bir kılıç ustası, antrenman yaparken görürsün. Üç kılıç kullanıyor.', descriptionEN: 'You spot a swordsman training. He wields three swords.', descriptionJA: '剣士が鍛錬しているのが見える。三本の刀を使っている。', descriptionFR: 'Tu aperçois un épéiste à l\'entraînement. Il manie trois sabres.', probability: 0.10 },
+      { minAge: 15, maxAge: 25, character: 'Nami', description: 'Turuncu saçlı bir kız, harita çizerek geçiyor.', descriptionEN: 'An orange-haired girl walks past while drawing a map.', descriptionJA: 'オレンジの髪の少女が、地図を描きながら通り過ぎる。', descriptionFR: 'Une fille aux cheveux orange passe en dessinant une carte.', probability: 0.08 }
     ],
     soul_society: [
-      { minAge: 10, maxAge: 20, character: 'Ichigo', description: 'Turuncu saçlı bir genç, dev kılıç taşıyor. Hollow avında.', descriptionEN: 'An orange-haired youth carries a massive sword. He is hunting a Hollow.', probability: 0.12 },
-      { minAge: 12, maxAge: 22, character: 'Rukia', description: 'Küçük boylu bir shinigami, kılıç dansı yapıyor.', descriptionEN: 'A short-statured shinigami performing a sword dance.', probability: 0.08 },
-      { minAge: 15, maxAge: 25, character: 'Byakuya', description: 'Sakin ve soğuk bir kaptan, sakura yaprakları savuruyor.', descriptionEN: 'A calm and cold captain scattering sakura petals.', probability: 0.06 }
+      { minAge: 10, maxAge: 20, character: 'Ichigo', description: 'Turuncu saçlı bir genç, dev kılıç taşıyor. Hollow avında.', descriptionEN: 'An orange-haired youth carries a massive sword. He is hunting a Hollow.', descriptionJA: 'オレンジの髪の青年が、大刀を携えている。ホロウを狩っている。', descriptionFR: 'Un jeune homme aux cheveux orange porte un énorme sabre. Il chasse un Hollow.', probability: 0.12 },
+      { minAge: 12, maxAge: 22, character: 'Rukia', description: 'Küçük boylu bir shinigami, kılıç dansı yapıyor.', descriptionEN: 'A short-statured shinigami performing a sword dance.', descriptionJA: '背の低い護廷十三隊士が、剣の舞を舞っている。', descriptionFR: 'Un shinigami de petite taille exécute sa danse de l\'épée.', probability: 0.08 },
+      { minAge: 15, maxAge: 25, character: 'Byakuya', description: 'Sakin ve soğuk bir kaptan, sakura yaprakları savuruyor.', descriptionEN: 'A calm and cold captain scattering sakura petals.', descriptionJA: '穏やかで冷たい隊長が、桜の花びらを舞わせている。', descriptionFR: 'Un capitaine calme et froid disperse des pétales de sakura.', probability: 0.06 }
     ],
     marley: [
-      { minAge: 12, maxAge: 20, character: 'Eren', description: 'Yeşil gözlü bir genç, özgürlükten bahsediyor.', descriptionEN: 'A green-eyed youth talks about freedom.', probability: 0.12 },
-      { minAge: 15, maxAge: 25, character: 'Levi', description: 'Kısa boylu, temizlik takıntılı bir asker komutan geçiyor.', descriptionEN: 'A short, cleanliness-obsessed military commander walks past.', probability: 0.08 },
-      { minAge: 10, maxAge: 18, character: 'Mikasa', description: 'Siyah saçlı bir kız, kırmızı eşarp takıyor.', descriptionEN: 'A black-haired girl wearing a red scarf.', probability: 0.07 }
+      { minAge: 12, maxAge: 20, character: 'Eren', description: 'Yeşil gözlü bir genç, özgürlükten bahsediyor.', descriptionEN: 'A green-eyed youth talks about freedom.', descriptionJA: '緑の目をした青年が、自由について語っている。', descriptionFR: 'Un jeune homme aux yeux verts parle de liberté.', probability: 0.12 },
+      { minAge: 15, maxAge: 25, character: 'Levi', description: 'Kısa boylu, temizlik takıntılı bir asker komutan geçiyor.', descriptionEN: 'A short, cleanliness-obsessed military commander walks past.', descriptionJA: '背の低い、潔癖な軍人が通り過ぎる。', descriptionFR: 'Un court commandant militaire maniaque de la propreté passe.', probability: 0.08 },
+      { minAge: 10, maxAge: 18, character: 'Mikasa', description: 'Siyah saçlı bir kız, kırmızı eşarp takıyor.', descriptionEN: 'A black-haired girl wearing a red scarf.', descriptionJA: '黒髪の少女が、赤いマフラーをつけている。', descriptionFR: 'Une fille aux cheveux noirs porte une écharpe rouge.', probability: 0.07 }
     ],
     jujutsu_high: [
-      { minAge: 15, maxAge: 25, character: 'Gojo', description: 'Beyaz saçlı, körbandı takan bir adam seni geçip gidiyor. Çevresinde hava farklı hissediliyor.', descriptionEN: 'A white-haired, blindfold-wearing man walks past you. The air feels different around him.', probability: 0.10 },
-      { minAge: 14, maxAge: 22, character: 'Yuji', description: 'Pembe saçlı bir genç, yumruk sallayarak antrenman yapıyor.', descriptionEN: 'A pink-haired youth training by throwing punches.', probability: 0.08 },
-      { minAge: 15, maxAge: 25, character: 'Nobara', description: 'Turuncu saçlı bir büyücü, çekiciyle lanetli ruhlara meydan okuyor.', descriptionEN: 'An orange-haired sorcerer challenging cursed spirits with her hammer.', probability: 0.07 }
+      { minAge: 15, maxAge: 25, character: 'Gojo', description: 'Beyaz saçlı, körbandı takan bir adam seni geçip gidiyor. Çevresinde hava farklı hissediliyor.', descriptionEN: 'A white-haired, blindfold-wearing man walks past you. The air feels different around him.', descriptionJA: '白い髪で目隠しをした男があなたを素通りしていく。周りの空気が違って感じられる。', descriptionFR: 'Un homme aux cheveux blancs et bandeau sur les yeux te dépasse. L\'air autour de lui semble différent.', probability: 0.10 },
+      { minAge: 14, maxAge: 22, character: 'Yuji', description: 'Pembe saçlı bir genç, yumruk sallayarak antrenman yapıyor.', descriptionEN: 'A pink-haired youth training by throwing punches.', descriptionJA: 'ピンクの髪の青年が、パンチを振って鍛錬している。', descriptionFR: 'Un jeune aux cheveux roses s\'entraîne en frappant.', probability: 0.08 },
+      { minAge: 15, maxAge: 25, character: 'Nobara', description: 'Turuncu saçlı bir büyücü, çekiciyle lanetli ruhlara meydan okuyor.', descriptionEN: 'An orange-haired sorcerer challenging cursed spirits with her hammer.', descriptionJA: 'オレンジの髪の呪術師が、ハンマーで呪霊に挑んでいる。', descriptionFR: 'Une sorcière aux cheveux orange défie des esprits maudits avec son marteau.', probability: 0.07 }
     ],
     // Diğer dünyalar (tek havuz)
     dark_fantasy: [
-      { minAge: 10, maxAge: 20, character: 'Guts', description: 'Dev kılıç taşıyan bir adam gece yarısı geçip gidiyor. Gözlerinde derin bir hüzün var.', descriptionEN: 'A man carrying a giant sword walks past at midnight. Deep sorrow in his eyes.', probability: 0.08 },
-      { minAge: 15, maxAge: 25, character: 'Levi', description: 'Kısa boylu, temizlik takıntılı bir asker komutan geçiyor.', descriptionEN: 'A short, cleanliness-obsessed military commander walks past.', probability: 0.07 }
+      { minAge: 10, maxAge: 20, character: 'Guts', description: 'Dev kılıç taşıyan bir adam gece yarısı geçip gidiyor. Gözlerinde derin bir hüzün var.', descriptionEN: 'A man carrying a giant sword walks past at midnight. Deep sorrow in his eyes.', descriptionJA: '大剣を持った男が深夜に通り過ぎる。深い悲しみが瞳の奥にある。', descriptionFR: 'Un homme portant une épée géante passe à minuit. Une profonde tristesse dans les yeux.', probability: 0.08 },
+      { minAge: 15, maxAge: 25, character: 'Levi', description: 'Kısa boylu, temizlik takıntılı bir asker komutan geçiyor.', descriptionEN: 'A short, cleanliness-obsessed military commander walks past.', descriptionJA: '背の低い、潔癖な軍人が通り過ぎる。', descriptionFR: 'Un court commandant militaire maniaque de la propreté passe.', probability: 0.07 }
     ],
     isekai: [
-      { minAge: 12, maxAge: 25, character: 'Subaru', description: 'Bir genç, "Emilia-tan!" diye bağırarak koşuyor.', descriptionEN: 'A young man runs while screaming "Emilia-tan!"', probability: 0.10 },
-      { minAge: 10, maxAge: 20, character: 'Kazuma', description: 'Yeşil saçlı bir maceracı, "Chunchunmaru!" diye bağırarak geçiyor.', descriptionEN: 'A green-haired adventurer walks past shouting "Chunchunmaru!"', probability: 0.08 }
+      { minAge: 12, maxAge: 25, character: 'Subaru', description: 'Bir genç, "Emilia-tan!" diye bağırarak koşuyor.', descriptionEN: 'A young man runs while screaming "Emilia-tan!"', descriptionJA: '青年が「エミリアたん！」と叫びながら走っている。', descriptionFR: 'Un jeune homme court en criant « Emilia-tan ! »', probability: 0.10 },
+      { minAge: 10, maxAge: 20, character: 'Kazuma', description: 'Yeşil saçlı bir maceracı, "Chunchunmaru!" diye bağırarak geçiyor.', descriptionEN: 'A green-haired adventurer walks past shouting "Chunchunmaru!"', descriptionJA: '緑の髪の冒険者が「ちゅんちゅん丸！」と叫びながら通り過ぎる。', descriptionFR: 'Un aventurier aux cheveux verts passe en criant « Chunchunmaru ! »', probability: 0.08 }
     ],
     cyberpunk: [
-      { minAge: 15, maxAge: 30, character: 'David', description: 'Siberpsikoz belirtileri gösteren bir genç, çatıdan çatıya atlıyor.', descriptionEN: 'A youth showing signs of cyberpsychosis leaps from rooftop to rooftop.', probability: 0.09 },
-      { minAge: 18, maxAge: 35, character: 'Akane', description: 'Mavi saçlı bir müfettiş, Dominatör ile suç katsayısı ölçüyor.', descriptionEN: 'A blue-haired inspector measures crime coefficients with her Dominator.', probability: 0.07 }
+      { minAge: 15, maxAge: 30, character: 'David', description: 'Siberpsikoz belirtileri gösteren bir genç, çatıdan çatıya atlıyor.', descriptionEN: 'A youth showing signs of cyberpsychosis leaps from rooftop to rooftop.', descriptionJA: 'サイバーサイコシスの兆しを見せる青年が、屋上から屋上へと飛び移っている。', descriptionFR: 'Un jeune montrant des signes de cyberpsychose saute de toit en toit.', probability: 0.09 },
+      { minAge: 18, maxAge: 35, character: 'Akane', description: 'Mavi saçlı bir müfettiş, Dominatör ile suç katsayısı ölçüyor.', descriptionEN: 'A blue-haired inspector measures crime coefficients with her Dominator.', descriptionJA: '青い髪の捜査官が、ドミネーターで殺意係数を測定している。', descriptionFR: 'Une inspectrice aux cheveux bleus mesure le coefficient de criminalité avec son Dominator.', probability: 0.07 }
     ],
     seinen_psych: [
-      { minAge: 18, maxAge: 40, character: 'L', description: 'Beyaz gömlekli, çömelmiş oturan bir dedektif görürsün. Tatlı yiyor.', descriptionEN: 'You spot a detective in a white shirt squatting down. Eating sweets.', probability: 0.06 },
-      { minAge: 20, maxAge: 45, character: 'Johan', description: 'Sarı saçlı, masum yüzlü bir adam. Gözlerinde korkunç bir boşluk var.', descriptionEN: 'A blond, innocent-looking man. A terrifying emptiness in his eyes.', probability: 0.04 }
+      { minAge: 18, maxAge: 40, character: 'L', description: 'Beyaz gömlekli, çömelmiş oturan bir dedektif görürsün. Tatlı yiyor.', descriptionEN: 'You spot a detective in a white shirt squatting down. Eating sweets.', descriptionJA: '白いシャツを着てしゃがみこむ探偵が見える。甘い物を食べている。', descriptionFR: 'Tu aperçois un détective en chemise blanche accroupi. Il mange des sucreries.', probability: 0.06 },
+      { minAge: 20, maxAge: 45, character: 'Johan', description: 'Sarı saçlı, masum yüzlü bir adam. Gözlerinde korkunç bir boşluk var.', descriptionEN: 'A blond, innocent-looking man. A terrifying emptiness in his eyes.', descriptionJA: '金髪で無垢な顔の男。目の奥に恐ろしい空虚がある。', descriptionFR: 'Un homme blond à l\'air innocent. Un vide terrifiant dans les yeux.', probability: 0.04 }
     ],
     romance_drama: [],
     slice_of_life: [],
@@ -550,11 +646,20 @@ function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: numbe
     age,
     year,
     title: L('Kanon Karakter Karşılaşması', 'Canon Character Encounter', '原作キャラクターとの遭遇', 'Rencontre avec un personnage canon'),
-    description: isEn() ? encounter.descriptionEN : encounter.description,
+    description: (() => {
+      const l = lifeLang();
+      if (l === 'tr') return encounter.description;
+      if (l === 'ja') return encounter.descriptionJA;
+      if (l === 'fr') return encounter.descriptionFR;
+      return encounter.descriptionEN;
+    })(),
     type: 'special',
-    outcome: isEn()
-      ? `From afar, you saw ${encounter.character}. You will remember this moment for the rest of your life.`
-      : `Uzaktan ${encounter.character}'ı gördün. Bu anı ömür boyu hatırlayacaksın.`,
+    outcome: L(
+      `Uzaktan ${encounter.character}'ı gördün. Bu anı ömür boyu hatırlayacaksın.`,
+      `From afar, you saw ${encounter.character}. You will remember this moment for the rest of your life.`,
+      `遠くに${encounter.character}を見かけた。この瞬間を生涯忘れないだろう。`,
+      `De loin, tu as aperçu ${encounter.character}. Tu te souviendras de cet instant toute ta vie.`
+    ),
     isCanonEncounter: true,
     canonCharacter: encounter.character
   };
@@ -562,8 +667,30 @@ function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: numbe
 
 // ─── Turnuva Olayı (Tournament) ──────────────────────────
 function createTournamentEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
-  const en = isEn();
-  const tournaments: { title: string; description: string; choices: LifeChoice[] }[] = en ? [
+  const l = lifeLang();
+  const tournaments: { title: string; description: string; choices: LifeChoice[] }[] = l === 'ja' ? [
+    {
+      title: 'トーナメント',
+      description: `${age}歳。${region.nameEN}地方で盛大なトーナメントが開かれている。${world.nameEN}の世界最強の者たちがここに集まっている。`,
+      choices: [
+        { id: 'enter', label: 'トーナメントに出場する', description: '力と運を試す', statChanges: { power: 10, luck: -5, health: -8 }, consequences: ['経験', '名声'], risk: 'high' },
+        { id: 'train', label: '鍛錬する', description: '準備してから参加する', statChanges: { power: 5, intelligence: 5 }, consequences: ['準備', '忍耐'], risk: 'low' },
+        { id: 'watch', label: '観戦して学ぶ', description: '戦術と技術を観察する', statChanges: { intelligence: 8, luck: 3 }, consequences: ['知識', '着想'], risk: 'low' },
+        { id: 'bribe', label: '不正をはたらく', description: '勝つためにあらゆる手を使う', statChanges: { luck: 10, socialClass: -15 }, consequences: ['短期的な勝利', '評判の失墜'], risk: 'extreme' }
+      ]
+    }
+  ] : l === 'fr' ? [
+    {
+      title: 'Tournoi',
+      description: `Tu as ${age} ans. Un grand tournoi se tient dans la région de ${region.nameEN}. Les plus forts du monde ${world.nameEN} sont là.`,
+      choices: [
+        { id: 'enter', label: 'Participer au tournoi', description: 'Teste ta force et ta chance', statChanges: { power: 10, luck: -5, health: -8 }, consequences: ['Expérience', 'Renommée'], risk: 'high' },
+        { id: 'train', label: 'S\'entraîner d\'abord', description: 'Se préparer avant de participer', statChanges: { power: 5, intelligence: 5 }, consequences: ['Préparation', 'Patience'], risk: 'low' },
+        { id: 'watch', label: 'Observer et apprendre', description: 'Observer les tactiques et techniques', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Connaissance', 'Inspiration'], risk: 'low' },
+        { id: 'bribe', label: 'Tricher pour gagner', description: 'Essayer tous les moyens de gagner', statChanges: { luck: 10, socialClass: -15 }, consequences: ['Victoire à court terme', 'Réputation perdue'], risk: 'extreme' }
+      ]
+    }
+  ] : l === 'en' ? [
     {
       title: 'Tournament',
       description: `You are ${age} years old. A grand tournament is being held in the ${regionNameL(region)} region. The strongest of the ${worldNameL(world)} world are here.`,
@@ -601,8 +728,30 @@ function createTournamentEvent(world: AnimeWorld, region: AnimeRegion, age: numb
 
 // ─── Klan Olayı (Clan) ───────────────────────────────────
 function createClanEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
-  const en = isEn();
-  const clans: { title: string; description: string; choices: LifeChoice[] }[] = en ? [
+  const l = lifeLang();
+  const clans: { title: string; description: string; choices: LifeChoice[] }[] = l === 'ja' ? [
+    {
+      title: 'クラン選び',
+      description: `${age}歳。${region.nameEN}地方の有力な一族があなたを招いている。この選択があなたの社会的地位と力への道を決める。`,
+      choices: [
+        { id: 'join', label: 'クランに加わる', description: '力と保護を得る', statChanges: { socialClass: 15, power: 5 }, consequences: ['保護', '忠誠'], risk: 'medium' },
+        { id: 'independent', label: '独立のまま', description: '自分の道を切り開く', statChanges: { intelligence: 5, luck: 5, socialClass: -5 }, consequences: ['自由', '危険'], risk: 'high' },
+        { id: 'rival', label: '対立するクランに加わる', description: '強力な敵と同盟する', statChanges: { power: 10, socialClass: -10 }, consequences: ['力', '敵'], risk: 'extreme' },
+        { id: 'mediate', label: '仲裁者になる', description: 'クラン間の和平', statChanges: { intelligence: 8, socialClass: 8 }, consequences: ['尊敬', '危険'], risk: 'medium' }
+      ]
+    }
+  ] : l === 'fr' ? [
+    {
+      title: 'Choix de clan',
+      description: `Tu as ${age} ans. Un puissant clan de la région de ${region.nameEN} t'invite. Ce choix définira ton statut social et ton chemin vers le pouvoir.`,
+      choices: [
+        { id: 'join', label: 'Rejoindre le clan', description: 'Gagne du pouvoir et de la protection', statChanges: { socialClass: 15, power: 5 }, consequences: ['Protection', 'Loyauté'], risk: 'medium' },
+        { id: 'independent', label: 'Rester indépendant', description: 'Trace ton propre chemin', statChanges: { intelligence: 5, luck: 5, socialClass: -5 }, consequences: ['Liberté', 'Risque'], risk: 'high' },
+        { id: 'rival', label: 'Rejoindre le clan rival', description: 'T\'allier à un puissant ennemi', statChanges: { power: 10, socialClass: -10 }, consequences: ['Pouvoir', 'Ennemi'], risk: 'extreme' },
+        { id: 'mediate', label: 'Devenir médiateur', description: 'La paix entre les clans', statChanges: { intelligence: 8, socialClass: 8 }, consequences: ['Respect', 'Risque'], risk: 'medium' }
+      ]
+    }
+  ] : l === 'en' ? [
     {
       title: 'Clan Selection',
       description: `You are ${age} years old. A powerful clan in the ${regionNameL(region)} region invites you. This choice will define your social standing and your path to power.`,
@@ -641,18 +790,31 @@ function createClanEvent(world: AnimeWorld, region: AnimeRegion, age: number, ye
 // ─── Evrim / Dönüşüm Olayı (Evolution) ──────────────────
 function createEvolutionEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent | null {
   if (stats.power < 50 && stats.intelligence < 50) return null;
-  const en = isEn();
+  const l = lifeLang();
   const isPowerPath = stats.power >= stats.intelligence;
   return {
     id: `evolution_${age}`,
     age,
     year,
-    title: en ? 'Power Awakening' : 'Güç Uyanışı',
-    description: en
-      ? `You are ${age} years old. You feel a profound awakening within the ${world.powerSystem} system. ${isPowerPath ? 'Your physical power is about to reach its peak.' : 'Your mental abilities are on the verge of evolving.'}`
-      : `${age} yaşındasın. ${world.powerSystem} sisteminde derin bir uyanış hissediyorsun. ${isPowerPath ? 'Fiziksel gücün zirveye ulaşmak üzere.' : 'Zihinsel yeteneklerin evrilmek üzere.'}`,
+    title: L('Güç Uyanışı', 'Power Awakening', '力の覚醒', 'Éveil du pouvoir'),
+    description: L(
+      `${age} yaşındasın. ${world.powerSystem} sisteminde derin bir uyanış hissediyorsun. ${isPowerPath ? 'Fiziksel gücün zirveye ulaşmak üzere.' : 'Zihinsel yeteneklerin evrilmek üzere.'}`,
+      `You are ${age} years old. You feel a profound awakening within the ${world.powerSystem} system. ${isPowerPath ? 'Your physical power is about to reach its peak.' : 'Your mental abilities are on the verge of evolving.'}`,
+      `${age}歳。${world.powerSystem}のシステムの中で深い覚醒を感じている。${isPowerPath ? '肉体の力が頂点に達しようとしている。' : '精神の力が進化しようとしている。'}`,
+      `Tu as ${age} ans. Tu ressens un profond éveil au sein du système ${world.powerSystem}. ${isPowerPath ? 'Ta puissance physique est sur le point d\'atteindre son apogée.' : 'Tes capacités mentales sont sur le point d\'évoluer.'}`
+    ),
     type: 'special',
-    choices: en ? [
+    choices: l === 'ja' ? [
+      { id: 'embrace', label: '力を受け入れる', description: '進化を完成させる', statChanges: isPowerPath ? { power: 15, health: -5 } : { intelligence: 15, health: -5 }, consequences: ['進化', '危険'], risk: 'high' },
+      { id: 'reject', label: '拒否する', description: '人間のままで安全に', statChanges: { health: 10, socialClass: 5 }, consequences: ['安全', '平凡'], risk: 'low' },
+      { id: 'study', label: '研究して制御する', description: '力を科学的に調べる', statChanges: { intelligence: 12, power: 5 }, consequences: ['知識', '力'], risk: 'medium' },
+      { id: 'share', label: '力を分かち合う', description: '他者に教える', statChanges: { socialClass: 10, intelligence: 5, power: -3 }, consequences: ['尊敬', '力の喪失'], risk: 'medium' }
+    ] : l === 'fr' ? [
+      { id: 'embrace', label: 'Accepter le pouvoir', description: 'Acheve l\'évolution', statChanges: isPowerPath ? { power: 15, health: -5 } : { intelligence: 15, health: -5 }, consequences: ['Évolution', 'Risque'], risk: 'high' },
+      { id: 'reject', label: 'Refuser', description: 'Rester humain et en sécurité', statChanges: { health: 10, socialClass: 5 }, consequences: ['Sécurité', 'Ordinarité'], risk: 'low' },
+      { id: 'study', label: 'Étudier et contrôler', description: 'Examiner scientifiquement', statChanges: { intelligence: 12, power: 5 }, consequences: ['Connaissance', 'Pouvoir'], risk: 'medium' },
+      { id: 'share', label: 'Partager le pouvoir', description: 'L\'enseigner aux autres', statChanges: { socialClass: 10, intelligence: 5, power: -3 }, consequences: ['Respect', 'Perte de pouvoir'], risk: 'medium' }
+    ] : l === 'en' ? [
       { id: 'embrace', label: 'Embrace the Power', description: 'Complete the evolution', statChanges: isPowerPath ? { power: 15, health: -5 } : { intelligence: 15, health: -5 }, consequences: ['Evolution', 'Risk'], risk: 'high' },
       { id: 'reject', label: 'Refuse', description: 'Stay human and safe', statChanges: { health: 10, socialClass: 5 }, consequences: ['Security', 'Ordinariness'], risk: 'low' },
       { id: 'study', label: 'Study and Control It', description: 'Examine the power scientifically', statChanges: { intelligence: 12, power: 5 }, consequences: ['Knowledge', 'Power'], risk: 'medium' },
@@ -670,17 +832,28 @@ function createEvolutionEvent(world: AnimeWorld, region: AnimeRegion, age: numbe
 // ─── Zaman Döngüsü Olayı (Time Loop) ────────────────────
 function createTimeLoopEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent | null {
   if (!rollChance(0.08)) return null;
-  const en = isEn();
+  const l = lifeLang();
   return {
     id: `timeloop_${age}`,
     age,
     year,
     title: 'Déjà Vu',
-    description: en
-      ? `You are ${age} years old. In the ${regionNameL(region)} region it feels like you already lived this moment. Has time looped?`
-      : `${age} yaşındasın. ${region.nameTR} bölgesinde sanki bu anı daha önce yaşamışsın gibi bir his. Zaman mı döngüye girdi?`,
+    description: L(
+      `${age} yaşındasın. ${region.nameTR} bölgesinde sanki bu anı daha önce yaşamışsın gibi bir his. Zaman mı döngüye girdi?`,
+      `You are ${age} years old. In the ${regionNameL(region)} region it feels like you already lived this moment. Has time looped?`,
+      `${age}歳。${region.nameEN}地方で、この瞬間を前にも経験したような気がする。時はループしたのだろうか？`,
+      `Tu as ${age} ans. Dans la région de ${region.nameEN}, c'est comme si tu avais déjà vécu cet instant. Le temps a-t-il bouclé ?`
+    ),
     type: 'special',
-    choices: en ? [
+    choices: l === 'ja' ? [
+      { id: 'investigate', label: '調べる', description: '謎を解く', statChanges: { intelligence: 10, luck: -3 }, consequences: ['知識', '危険'], risk: 'medium' },
+      { id: 'ignore', label: '無視する', description: '普通の生活を続ける', statChanges: { health: 5 }, consequences: ['安全', '好奇心'], risk: 'low' },
+      { id: 'embrace', label: 'ループを受け入れる', description: '時を使う', statChanges: { luck: 15, health: -10 }, consequences: ['運', 'トラウマ'], risk: 'extreme' }
+    ] : l === 'fr' ? [
+      { id: 'investigate', label: 'Enquêter', description: 'Résoudre le mystère', statChanges: { intelligence: 10, luck: -3 }, consequences: ['Connaissance', 'Risque'], risk: 'medium' },
+      { id: 'ignore', label: 'Ignorer', description: 'Poursuivre ta vie normale', statChanges: { health: 5 }, consequences: ['Sécurité', 'Curiosité'], risk: 'low' },
+      { id: 'embrace', label: 'Accepter la boucle', description: 'Utiliser le temps', statChanges: { luck: 15, health: -10 }, consequences: ['Chance', 'Traumatisme'], risk: 'extreme' }
+    ] : l === 'en' ? [
       { id: 'investigate', label: 'Investigate', description: 'Solve the mystery', statChanges: { intelligence: 10, luck: -3 }, consequences: ['Knowledge', 'Risk'], risk: 'medium' },
       { id: 'ignore', label: 'Ignore It', description: 'Continue your normal life', statChanges: { health: 5 }, consequences: ['Safety', 'Curiosity'], risk: 'low' },
       { id: 'embrace', label: 'Embrace the Loop', description: 'Use the time', statChanges: { luck: 15, health: -10 }, consequences: ['Luck', 'Trauma'], risk: 'extreme' }
@@ -695,8 +868,110 @@ function createTimeLoopEvent(world: AnimeWorld, region: AnimeRegion, age: number
 
 // ─── Dönüm Noktası Olayı (Milestone: 5/15/30/50/70) ────
 function createMilestoneEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
-  const en = isEn();
-  const milestones: Record<number, { title: string; description: string; choices: LifeChoice[] }> = en ? {
+  const l = lifeLang();
+  const milestonesJA: Record<number, { title: string; description: string; choices: LifeChoice[] }> = {
+    5: {
+      title: '幼少期の転機',
+      description: `${age}歳。${region.nameEN}地方で、幼少期のはじめの数年が過ぎた。${world.nameEN}の世界で、自分がどんな人間になるか選ぶときだ。`,
+      choices: [
+        { id: 'curious', label: '好奇心旺盛に', description: '世界を探求し、質問する', statChanges: { intelligence: 8, luck: 5 }, consequences: ['好奇心', '知識'], risk: 'low' },
+        { id: 'obedient', label: '従順になる', description: 'ルールに従い、安全に過ごす', statChanges: { socialClass: 5, health: 5 }, consequences: ['安全', '同調'], risk: 'low' },
+        { id: 'rebel', label: '反逆者になる', description: 'ルールに疑問を投げかける', statChanges: { power: 5, socialClass: -5, luck: 3 }, consequences: ['自立', '危険'], risk: 'medium' }
+      ]
+    },
+    15: {
+      title: '青年期の転機',
+      description: `${age}歳。${region.nameEN}地方で、あなたは十代だ。${world.nameEN}の世界で、将来のための最初の大きな決断のときだ。`,
+      choices: [
+        { id: 'study', label: '勉強に集中する', description: '学校と知識', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['知識', 'キャリア'], risk: 'low' },
+        { id: 'train', label: '力を鍛える', description: '肉体的な力', statChanges: { power: 12, health: -3 }, consequences: ['力', '規律'], risk: 'medium' },
+        { id: 'social', label: '社交の人脈', description: '人間関係とつながり', statChanges: { socialClass: 10, luck: 5 }, consequences: ['人脈', '機会'], risk: 'medium' },
+        { id: 'freedom', label: '自由を選ぶ', description: '自分の道を切り開く', statChanges: { luck: 8, power: 5, socialClass: -5 }, consequences: ['自由', '危険'], risk: 'high' }
+      ]
+    },
+    30: {
+      title: '成人期の転機',
+      description: `${age}歳。${region.nameEN}地方で、成人としての人生の折り返しだ。${world.nameEN}の世界で、これまで積み上げたものを刈り取るか、方向を変えるときだ。`,
+      choices: [
+        { id: 'settle', label: '落ち着く', description: '家族と仕事', statChanges: { socialClass: 10, health: 5 }, consequences: ['安定', '安全'], risk: 'low' },
+        { id: 'adventure', label: '冒険を求める', description: '新しい境地へ', statChanges: { luck: 10, power: 5, health: -5 }, consequences: ['冒険', '危険'], risk: 'high' },
+        { id: 'mentor', label: '導く者になる', description: '若い者を導く', statChanges: { socialClass: 8, intelligence: 8 }, consequences: ['尊敬', '影響力'], risk: 'medium' },
+        { id: 'change', label: '方向を変える', description: '新しい始まり', statChanges: { intelligence: 8, luck: 8, socialClass: -3 }, consequences: ['刷新', '不確かさ'], risk: 'medium' }
+      ]
+    },
+    50: {
+      title: '成熟期の転機',
+      description: `${age}歳。${region.nameEN}地方で、人生の後半戦だ。${world.nameEN}の世界で、あなたの遺すものと影響は何か？`,
+      choices: [
+        { id: 'legacy', label: '遺産を残す', description: '何かを創り、教える', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['遺産', '尊敬'], risk: 'low' },
+        { id: 'enjoy', label: '人生を楽しむ', description: '休み、生きる', statChanges: { health: 10, luck: 5 }, consequences: ['幸福', '健康'], risk: 'low' },
+        { id: 'fight', label: '戦い続ける', description: 'まだ強い', statChanges: { power: 10, health: -5 }, consequences: ['力', '危険'], risk: 'high' },
+        { id: 'reflect', label: '振り返る', description: '自分の人生を見直す', statChanges: { intelligence: 10, socialClass: 5 }, consequences: ['知恵', '平穏'], risk: 'low' }
+      ]
+    },
+    70: {
+      title: '老齢期の転機',
+      description: `${age}歳。${region.nameEN}地方で、人生の最終段階だ。${world.nameEN}の世界で、どのように記憶されたいか？`,
+      choices: [
+        { id: 'peace', label: '穏やかに', description: '穏やかに幸せに生きる', statChanges: { health: 10, luck: 5 }, consequences: ['平穏', '健康'], risk: 'low' },
+        { id: 'story', label: '物語を語る', description: '経験を分かち合う', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['遺産', '尊敬'], risk: 'low' },
+        { id: 'final', label: '最後の冒険', description: 'もう一度だけ、危険を冒す', statChanges: { power: 8, luck: 8, health: -10 }, consequences: ['冒険', '危険'], risk: 'extreme' },
+        { id: 'family', label: '家族と過ごす', description: '愛する人たちと時間を過ごす', statChanges: { socialClass: 8, health: 5 }, consequences: ['絆', '幸福'], risk: 'low' }
+      ]
+    }
+  };
+  const milestonesFR: Record<number, { title: string; description: string; choices: LifeChoice[] }> = {
+    5: {
+      title: 'Tournant de l\'enfance',
+      description: `Tu as ${age} ans. Les premières années de ton enfance sont passées dans la région de ${region.nameEN}. Il est temps de choisir qui tu deviendras dans le monde ${world.nameEN}.`,
+      choices: [
+        { id: 'curious', label: 'Être curieux', description: 'Explore le monde, pose des questions', statChanges: { intelligence: 8, luck: 5 }, consequences: ['Curiosité', 'Connaissance'], risk: 'low' },
+        { id: 'obedient', label: 'Être obéissant', description: 'Suis les règles, reste en sécurité', statChanges: { socialClass: 5, health: 5 }, consequences: ['Sécurité', 'Conformisme'], risk: 'low' },
+        { id: 'rebel', label: 'Être un rebelle', description: 'Remets les règles en question', statChanges: { power: 5, socialClass: -5, luck: 3 }, consequences: ['Indépendance', 'Risque'], risk: 'medium' }
+      ]
+    },
+    15: {
+      title: 'Tournant de l\'adolescence',
+      description: `Tu as ${age} ans. Tu es adolescent dans la région de ${region.nameEN}. Il est temps pour la première grande décision vers ton avenir dans le monde ${world.nameEN}.`,
+      choices: [
+        { id: 'study', label: 'Se concentrer sur les études', description: 'École et connaissances', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Connaissance', 'Carrière'], risk: 'low' },
+        { id: 'train', label: 'Entraînement physique', description: 'Force physique', statChanges: { power: 12, health: -3 }, consequences: ['Pouvoir', 'Discipline'], risk: 'medium' },
+        { id: 'social', label: 'Réseau social', description: 'Relations et connexions', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Réseau', 'Opportunité'], risk: 'medium' },
+        { id: 'freedom', label: 'Choisir la liberté', description: 'Trace ton propre chemin', statChanges: { luck: 8, power: 5, socialClass: -5 }, consequences: ['Liberté', 'Risque'], risk: 'high' }
+      ]
+    },
+    30: {
+      title: 'Tournant de l\'âge adulte',
+      description: `Tu as ${age} ans. Tu es au milieu de ta vie d'adulte dans la région de ${region.nameEN}. Il est temps de récolter les fruits de ta vie, ou de changer de direction.`,
+      choices: [
+        { id: 'settle', label: 'S\'installer', description: 'Famille et carrière', statChanges: { socialClass: 10, health: 5 }, consequences: ['Stabilité', 'Sécurité'], risk: 'low' },
+        { id: 'adventure', label: 'Poursuivre l\'aventure', description: 'Nouveaux horizons', statChanges: { luck: 10, power: 5, health: -5 }, consequences: ['Aventure', 'Risque'], risk: 'high' },
+        { id: 'mentor', label: 'Devenir mentor', description: 'Guide les jeunes', statChanges: { socialClass: 8, intelligence: 8 }, consequences: ['Respect', 'Influence'], risk: 'medium' },
+        { id: 'change', label: 'Changer de direction', description: 'Un nouveau départ', statChanges: { intelligence: 8, luck: 8, socialClass: -3 }, consequences: ['Renouveau', 'Incertitude'], risk: 'medium' }
+      ]
+    },
+    50: {
+      title: 'Tournant de la maturité',
+      description: `Tu as ${age} ans. Tu es dans la deuxième moitié de ta vie dans la région de ${region.nameEN}. Quel sera ton héritage et ton influence dans le monde ${world.nameEN} ?`,
+      choices: [
+        { id: 'legacy', label: 'Laisser un héritage', description: 'Crée quelque chose et enseigne', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Héritage', 'Respect'], risk: 'low' },
+        { id: 'enjoy', label: 'Profiter de la vie', description: 'Repose-toi et vis', statChanges: { health: 10, luck: 5 }, consequences: ['Bonheur', 'Santé'], risk: 'low' },
+        { id: 'fight', label: 'Continuer à se battre', description: 'Tu es encore fort', statChanges: { power: 10, health: -5 }, consequences: ['Pouvoir', 'Risque'], risk: 'high' },
+        { id: 'reflect', label: 'Réfléchir et évaluer', description: 'Revois ta vie', statChanges: { intelligence: 10, socialClass: 5 }, consequences: ['Sagesse', 'Paix'], risk: 'low' }
+      ]
+    },
+    70: {
+      title: 'Tournant de la vieillesse',
+      description: `Tu as ${age} ans. Tu es dans la dernière étape de ta vie dans la région de ${region.nameEN}. Comment aimerais-tu être rappelé dans le monde ${world.nameEN} ?`,
+      choices: [
+        { id: 'peace', label: 'En paix', description: 'Vis calmement et heureux', statChanges: { health: 10, luck: 5 }, consequences: ['Paix', 'Santé'], risk: 'low' },
+        { id: 'story', label: 'Raconter ton histoire', description: 'Partage tes expériences', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Héritage', 'Respect'], risk: 'low' },
+        { id: 'final', label: 'Une dernière aventure', description: 'Prends un risque, une dernière fois', statChanges: { power: 8, luck: 8, health: -10 }, consequences: ['Aventure', 'Risque'], risk: 'extreme' },
+        { id: 'family', label: 'Être avec la famille', description: 'Passe du temps avec tes proches', statChanges: { socialClass: 8, health: 5 }, consequences: ['Lien', 'Bonheur'], risk: 'low' }
+      ]
+    }
+  };
+  const milestones: Record<number, { title: string; description: string; choices: LifeChoice[] }> = (l === 'ja' ? milestonesJA : l === 'fr' ? milestonesFR : (l === 'en' ? {
     5: {
       title: 'Childhood Turning Point',
       description: `You are ${age} years old. The first years of your childhood are behind you in the ${regionNameL(region)} region. It's time to choose who you will become in the ${worldNameL(world)} world.`,
@@ -796,7 +1071,7 @@ function createMilestoneEvent(world: AnimeWorld, region: AnimeRegion, age: numbe
         { id: 'family', label: 'Aileyle Ol', description: 'Sevdiklerinle zaman geçir', statChanges: { socialClass: 8, health: 5 }, consequences: ['Bağ', 'Mutluluk'], risk: 'low' }
       ]
     }
-  };
+  }));
   const m = milestones[age];
   if (!m) return null as any;
   return {
@@ -923,15 +1198,17 @@ export function generateLife(
 
   // Odak kontrolü: her 5 yılda bir — GERÇEK SEÇİM (referanstaki gibi yön değiştirme şansı)
   for (let age = 10; age <= Math.min(60, deathAge - 1); age += 5) {
-    const en = isEn();
     events.push({
       id: `focus_${age}`,
       age,
       year: birthYear + age,
-      title: en ? `Focus Check-in: Age ${age}` : `Odak Kontrolü: ${age} Yaşında`,
-      description: en
-        ? `You are ${age} years old. It is time to review the direction of your life once more. Where do you want to focus next? Your choice will shape your growth over the next years.`
-        : `${age} yaşındasın. Hayatının yönünü bir kez daha gözden geçirme zamanı. Bundan sonra hangi odağa geçeceksin? Seçimin önümüzdeki yılların gelişimini belirleyecek.`,
+      title: L(`Odak Kontrolü: ${age} Yaşında`, `Focus Check-in: Age ${age}`, `注目点チェックイン: ${age}歳`, `Point de concentration : ${age} ans`),
+      description: L(
+        `${age} yaşındasın. Hayatının yönünü bir kez daha gözden geçirme zamanı. Bundan sonra hangi odağa geçeceksin? Seçimin önümüzdeki yılların gelişimini belirleyecek.`,
+        `You are ${age} years old. It is time to review the direction of your life once more. Where do you want to focus next? Your choice will shape your growth over the next years.`,
+        `${age}歳。人生の方向をもう一度見直すときだ。次はどの注目点に焦点を当てるか？あなたの選択が今後の成長を決める。`,
+        `Tu as ${age} ans. Il est temps de revoir une fois de plus la direction de ta vie. Sur quoi veux-tu te concentrer maintenant ? Ton choix façonne ton évolution pour les prochaines années.`
+      ),
       type: 'special',
       choices: LIFE_FOCUSES.map(f => ({
         id: `focus_${f.id}`,
@@ -997,22 +1274,23 @@ export function generateLife(
   }
 
   // Ölüm nedeni: bölge istatistiklerine göre ağırlıklı (WHO GHE benzeri)
-  const en = isEn();
+  const lc = lifeLang();
+  const pick4 = (tr: string, en: string, ja: string, fr: string) => (lc === 'tr' ? tr : lc === 'ja' ? ja : lc === 'fr' ? fr : en);
   let deathCause: string;
-  const disease = en ? 'Disease' : 'Hastalık';
-  const accident = en ? 'Accident' : 'Kaza';
+  const disease = pick4('Hastalık', 'Disease', '病気', 'Maladie');
+  const accident = pick4('Kaza', 'Accident', '事故', 'Accident');
   if (deathAge < 1) {
-    deathCause = en ? 'Infant disease' : 'Bebeklik hastalığı';
+    deathCause = pick4('Bebeklik hastalığı', 'Infant disease', '乳児の病気', 'Maladie infantile');
   } else if (deathAge < 5) {
-    deathCause = en ? 'Childhood illness' : 'Çocukluk hastalığı';
+    deathCause = pick4('Çocukluk hastalığı', 'Childhood illness', '幼少期の病気', 'Maladie de l\'enfance');
   } else if (deathAge < 15) {
     deathCause = Math.random() < 0.6 ? disease : accident;
   } else {
-    const violence = en ? 'Violence/War' : 'Şiddet/Savaş';
-    const disaster = en ? 'Natural disaster' : 'Doğa felaketi';
-    const substance = en ? 'Substance abuse' : 'Madde bağımlılığı';
-    const suicide = en ? 'Suicide' : 'İntihar';
-    const oldAge = en ? 'Old age' : 'Yaşlılık';
+    const violence = pick4('Şiddet/Savaş', 'Violence/War', '暴力・戦争', 'Violence/Guerre');
+    const disaster = pick4('Doğa felaketi', 'Natural disaster', '自然災害', 'Catastrophe naturelle');
+    const substance = pick4('Madde bağımlılığı', 'Substance abuse', '薬物乱用', 'Toxicomanie');
+    const suicide = pick4('İntihar', 'Suicide', '自殺', 'Suicide');
+    const oldAge = pick4('Yaşlılık', 'Old age', '老齢', 'Vieillesse');
     const entries: [string, number][] = [
       [disease, 1 + (100 - stats.health) / 100 + region.stats.diseaseRate * 3],
       [accident, 0.5 + region.stats.accidentRate * 3],
@@ -1041,9 +1319,12 @@ export function generateLife(
     age: deathAge,
     year: birthYear + deathAge,
     title: L('Ölüm', 'Death', '死', 'La mort'),
-    description: en
-      ? `Your life came to an end at the age of ${deathAge} in the ${regionNameL(region)} region. Cause: ${deathCause}.`
-      : `${deathAge} yaşında ${region.nameTR} bölgesinde hayatın sona erdi. Neden: ${deathCause}.`,
+    description: L(
+      `${deathAge} yaşında ${region.nameTR} bölgesinde hayatın sona erdi. Neden: ${deathCause}.`,
+      `Your life came to an end at the age of ${deathAge} in the ${regionNameL(region)} region. Cause: ${deathCause}.`,
+      `${deathAge}歳、${region.nameEN}地方で生涯を終えた。死因: ${deathCause}.`,
+      `Votre vie s'est achevée à l'âge de ${deathAge} dans la région de ${region.nameEN}. Cause : ${deathCause}.`
+    ),
     type: 'death',
     isDeath: true,
     deathCause
@@ -1093,6 +1374,74 @@ export function generateLife(
 
 // ─── Anma Sayfası (Memorial) ─────────────────────────────
 
+export // ─── Anma Sayfası: 4 dil metin havuzu ─────────────────────
+const MEMORIAL_TEXT: Record<LifeLang, {
+  titleLine: string; world: string; region: string; name: string; gender: string;
+  family: string; education: string; assets: string; era: string; born: string; died: string;
+  genderM: string; genderF: string; famPoor: string; famMid: string; famNoble: string;
+  eduNone: string; eduBasic: string; eduHigh: string; eduUni: string;
+  eraPast: string; eraFuture: string; eraToday: string;
+  cause: string; stats: string; power: string; intelligence: string; luck: string;
+  socialClass: string; health: string; canonTitle: string; canonLine: (c: string) => string;
+  summary: string; eventsHappened: (n: number) => string; livedYears: (n: number, r: string) => string;
+  poorLine: string; middleLine: string; nobleLine: string;
+  powerHigh: string; intelligenceHigh: string; luckHigh: string;
+  footer: (n: string) => string;
+}> = {
+  tr: {
+    titleLine: '         ANMA SAYFASI — HATIRLANAN HAYAT', world: '🌍 Evren', region: '📍 Bölge', name: '👤 İsim', gender: '👤 Cinsiyet',
+    family: '👨‍👩‍👧 Aile', education: '🎓 Eğitim', assets: '💰 Varlıklar', era: '⏳ Dönem', born: '📅 Doğum', died: '💀 Ölüm',
+    genderM: 'Erkek', genderF: 'Kadın', famPoor: 'Yoksul', famMid: 'Orta halli', famNoble: 'Soylu',
+    eduNone: 'Yok', eduBasic: 'Temel', eduHigh: 'Lise', eduUni: 'Üniversite',
+    eraPast: 'Geçmiş', eraFuture: 'Gelecek', eraToday: 'Bugün',
+    cause: 'Ölüm nedeni', stats: '📊 İstatistikler:', power: 'Güç', intelligence: 'Zeka', luck: 'Şans', socialClass: 'Sosyal Sınıf', health: 'Sağlık',
+    canonTitle: '✨ Kanon Karakter Karşılaşmaları:', canonLine: (c) => `   • ${c} ile karşılaştın`,
+    summary: '📝 Hayat Özeti:', eventsHappened: (n) => `   ${n} olay yaşandı.`, livedYears: (n, r) => `   ${n} yıl boyunca ${r} bölgesinde yaşadın.\n\n`,
+    poorLine: '   Yoksul bir aileden doğdun, hayatta kalmak için mücadele ettin.', middleLine: '   Orta halli bir aileden doğdun, dengeli bir yaşam sürdün.', nobleLine: '   Soylu bir aileden doğdun, konforlu bir yaşam sürdün.',
+    powerHigh: '   Güçlü bir savaşçıydın.', intelligenceHigh: '   Zeki ve stratejik biriydin.', luckHigh: '   Şanslı bir hayat sürdün.',
+    footer: (n) => `${n} hatırlanacak. Bir hayat yaşandı.`,
+  },
+  en: {
+    titleLine: '         IN MEMORY — A LIFE REMEMBERED', world: '🌍 World', region: '📍 Region', name: '👤 Name', gender: '👤 Gender',
+    family: '👨‍👩‍👧 Family', education: '🎓 Education', assets: '💰 Assets', era: '⏳ Era', born: '📅 Born', died: '💀 Died',
+    genderM: 'Male', genderF: 'Female', famPoor: 'Poor', famMid: 'Average', famNoble: 'Noble',
+    eduNone: 'None', eduBasic: 'Basic', eduHigh: 'High School', eduUni: 'University',
+    eraPast: 'Past', eraFuture: 'Future', eraToday: 'Present Day',
+    cause: 'Cause of death', stats: '📊 Stats:', power: 'Power', intelligence: 'Intelligence', luck: 'Luck', socialClass: 'Social Class', health: 'Health',
+    canonTitle: '✨ Canon Character Encounters:', canonLine: (c) => `   • Met ${c}`,
+    summary: '📝 Life Summary:', eventsHappened: (n) => `   ${n} events happened.`, livedYears: (n, r) => `   You lived ${n} years in the ${r} region.\n\n`,
+    poorLine: '   You were born into a poor family and struggled to survive.', middleLine: '   You were born into an average family and lived a balanced life.', nobleLine: '   You were born into a noble family and lived a comfortable life.',
+    powerHigh: '   You were a powerful fighter.', intelligenceHigh: '   You were a clever, strategic person.', luckHigh: '   You lived a lucky life.',
+    footer: (n) => `${n} will be remembered. A life was lived.`,
+  },
+  ja: {
+    titleLine: '         追悼 — 記憶に残された人生', world: '🌍 世界', region: '📍 地域', name: '👤 名前', gender: '👤 性別',
+    family: '👨‍👩‍👧 家族', education: '🎓 教育', assets: '💰 資産', era: '⏳ 時代', born: '📅 誕生', died: '💀 死亡',
+    genderM: '男性', genderF: '女性', famPoor: '貧しい', famMid: '普通', famNoble: '貴族',
+    eduNone: 'なし', eduBasic: '基礎', eduHigh: '高校', eduUni: '大学',
+    eraPast: '過去', eraFuture: '未来', eraToday: '現在',
+    cause: '死因', stats: '📊 ステータス:', power: '筋力', intelligence: '知力', luck: '運', socialClass: '社会階級', health: '健康',
+    canonTitle: '✨ 原作キャラクターとの遭遇:', canonLine: (c) => `   • ${c}に会った`,
+    summary: '📝 人生のまとめ:', eventsHappened: (n) => `   ${n}件の出来事があった。`, livedYears: (n, r) => `   ${r}地方で${n}年間生きた。\n\n`,
+    poorLine: '   貧しい家に生まれ、生き延びるために戦った。', middleLine: '   普通の家に生まれ、バランスの取れた人生を送った。', nobleLine: '   貴族の家に生まれ、快適な人生を送った。',
+    powerHigh: '   強靭な戦士だった。', intelligenceHigh: '   頭脳明晰で戦略的な人物だった。', luckHigh: '   幸運な人生を送った。',
+    footer: (n) => `${n}は記憶されるだろう。一つの人生が生きられた。`,
+  },
+  fr: {
+    titleLine: '         À LA MÉMOIRE — UNE VIE SOUVENUE', world: '🌍 Monde', region: '📍 Région', name: '👤 Nom', gender: '👤 Genre',
+    family: '👨‍👩‍👧 Famille', education: '🎓 Éducation', assets: '💰 Fortune', era: '⏳ Époque', born: '📅 Né', died: '💀 Mort',
+    genderM: 'Homme', genderF: 'Femme', famPoor: 'Pauvre', famMid: 'Moyenne', famNoble: 'Noble',
+    eduNone: 'Aucune', eduBasic: 'Basique', eduHigh: 'Lycée', eduUni: 'Université',
+    eraPast: 'Passé', eraFuture: 'Futur', eraToday: 'Présent',
+    cause: 'Cause du décès', stats: '📊 Statistiques:', power: 'Force', intelligence: 'Intelligence', luck: 'Chance', socialClass: 'Classe sociale', health: 'Santé',
+    canonTitle: '✨ Rencontres avec des personnages canon:', canonLine: (c) => `   • Rencontre avec ${c}`,
+    summary: '📝 Résumé de la vie:', eventsHappened: (n) => `   ${n} événements vécus.`, livedYears: (n, r) => `   Tu as vécu ${n} ans dans la région de ${r}.\n\n`,
+    poorLine: '   Tu es né dans une famille pauvre et tu t\'es battu pour survivre.', middleLine: '   Tu es né dans une famille moyenne et tu as mené une vie équilibrée.', nobleLine: '   Tu es né dans une famille noble et tu as mené une vie confortable.',
+    powerHigh: '   Tu étais un combattant puissant.', intelligenceHigh: '   Tu étais une personne intelligente et stratégique.', luckHigh: '   Tu as mené une vie chanceuse.',
+    footer: (n) => `${n} sera rappelé. Une vie a été vécue.`,
+  },
+};
+
 export function generateMemorialText(
   world: AnimeWorld,
   region: AnimeRegion,
@@ -1108,129 +1457,64 @@ export function generateMemorialText(
   education: 'none' | 'basic' | 'high' | 'university' = 'basic',
   assets: number = 0
 ): string {
-  const canonEncounters = events.filter(e => e.isCanonEncounter).map(e => e.canonCharacter);
+  const canonEncounters = events.filter(e => e.isCanonEncounter && e.canonCharacter).map(e => e.canonCharacter as string);
   const finalEducation = getEducationTier(stats.intelligence);
-  const en = isEn();
-  const eduNone = en ? 'None' : 'Yok';
-  const eduBasic = en ? 'Basic' : 'Temel';
-  const eduHigh = en ? 'High School' : 'Lise';
-  const eduUni = en ? 'University' : 'Üniversite';
-  const famPoor = en ? 'Poor' : 'Yoksul';
-  const famNoble = en ? 'Noble' : 'Soylu';
-  const famMid = en ? 'Average' : 'Orta halli';
-
-  if (en) {
-    let text = `═══════════════════════════════════════\n`;
-    text += `         IN MEMORY — A LIFE REMEMBERED\n`;
-    text += `═══════════════════════════════════════\n\n`;
-    text += `🌍 World: ${world.nameEN}\n`;
-    text += `📍 Region: ${region.nameEN}\n`;
-    text += `👤 Name: ${characterName}\n`;
-    text += `👤 Gender: ${gender === 'male' ? 'Male' : 'Female'}\n`;
-    text += `👨‍👩‍👧 Family: ${familyStatus === 'poor' ? famPoor : familyStatus === 'noble' ? famNoble : famMid}\n`;
-    text += `🎓 Education: ${finalEducation === 'none' ? eduNone : finalEducation === 'basic' ? eduBasic : finalEducation === 'high' ? eduHigh : eduUni}\n`;
-    text += `💰 Assets: ${assets}\n`;
-    text += `⏳ Era: ${period === 'past' ? 'Past' : period === 'future' ? 'Future' : 'Present Day'}\n`;
-    text += `📅 Born: ${birthYear}\n`;
-    text += `💀 Died: ${birthYear + deathAge} (age ${deathAge})\n`;
-    text += `Cause of death: ${deathCause}\n\n`;
-    text += `📊 Stats:\n`;
-    text += `   Power: ${stats.power}/100\n`;
-    text += `   Intelligence: ${stats.intelligence}/100\n`;
-    text += `   Luck: ${stats.luck}/100\n`;
-    text += `   Social Class: ${stats.socialClass}/100\n`;
-    text += `   Health: ${stats.health}/100\n\n`;
-
-    if (canonEncounters.length > 0) {
-      text += `✨ Canon Character Encounters:\n`;
-      canonEncounters.forEach(c => {
-        text += `   • Met ${c}\n`;
-      });
-      text += `\n`;
-    }
-
-    text += `📝 Life Summary:\n`;
-    text += `   ${events.length} events happened.\n`;
-    text += `   You lived ${deathAge} years in the ${region.nameEN} region.\n\n`;
-
-    if (stats.socialClass < 30) {
-      text += `   You were born into a poor family and struggled to survive.\n`;
-    } else if (stats.socialClass > 70) {
-      text += `   You were born into a noble family and lived a comfortable life.\n`;
-    } else {
-      text += `   You were born into an average family and lived a balanced life.\n`;
-    }
-
-    if (stats.power > 60) {
-      text += `   You were a powerful fighter.\n`;
-    }
-    if (stats.intelligence > 60) {
-      text += `   You were a clever, strategic person.\n`;
-    }
-    if (stats.luck > 60) {
-      text += `   You lived a lucky life.\n`;
-    }
-
-    text += `\n═══════════════════════════════════════\n`;
-    text += `${characterName} will be remembered. A life was lived.\n`;
-    text += `═══════════════════════════════════════`;
-
-    return text;
-  }
+  const l = lifeLang();
+  const T = MEMORIAL_TEXT[l];
 
   let text = `═══════════════════════════════════════\n`;
-  text += `         ANMA SAYFASI — HATIRLANAN HAYAT\n`;
+  text += `         ${T.titleLine.trim()}\n`;
   text += `═══════════════════════════════════════\n\n`;
-  text += `🌍 Evren: ${world.nameTR}\n`;
-  text += `📍 Bölge: ${region.nameTR}\n`;
-  text += `👤 İsim: ${characterName}\n`;
-  text += `👤 Cinsiyet: ${gender === 'male' ? 'Erkek' : 'Kadın'}\n`;
-  text += `👨‍👩‍👧 Aile: ${familyStatus === 'poor' ? famPoor : familyStatus === 'noble' ? famNoble : famMid}\n`;
-  text += `🎓 Eğitim: ${finalEducation === 'none' ? eduNone : finalEducation === 'basic' ? eduBasic : finalEducation === 'high' ? eduHigh : eduUni}\n`;
-  text += `💰 Varlıklar: ${assets}\n`;
-  text += `⏳ Dönem: ${period === 'past' ? 'Geçmiş' : period === 'future' ? 'Gelecek' : 'Bugün'}\n`;
-  text += `📅 Doğum: ${birthYear}\n`;
-  text += `💀 Ölüm: ${birthYear + deathAge} (${deathAge} yaşında)\n`;
-  text += `Ölüm nedeni: ${deathCause}\n\n`;
-  text += `📊 İstatistikler:\n`;
-  text += `   Güç: ${stats.power}/100\n`;
-  text += `   Zeka: ${stats.intelligence}/100\n`;
-  text += `   Şans: ${stats.luck}/100\n`;
-  text += `   Sosyal Sınıf: ${stats.socialClass}/100\n`;
-  text += `   Sağlık: ${stats.health}/100\n\n`;
+  text += `${T.world}: ${worldNameL(world)}\n`;
+  text += `${T.region}: ${regionNameL(region)}\n`;
+  text += `${T.name}: ${characterName}\n`;
+  text += `${T.gender}: ${gender === 'male' ? T.genderM : T.genderF}\n`;
+  text += `${T.family}: ${familyStatus === 'poor' ? T.famPoor : familyStatus === 'noble' ? T.famNoble : T.famMid}\n`;
+  text += `${T.education}: ${finalEducation === 'none' ? T.eduNone : finalEducation === 'basic' ? T.eduBasic : finalEducation === 'high' ? T.eduHigh : T.eduUni}\n`;
+  text += `${T.assets}: ${assets}\n`;
+  text += `${T.era}: ${period === 'past' ? T.eraPast : period === 'future' ? T.eraFuture : T.eraToday}\n`;
+  text += `${T.born}: ${birthYear}\n`;
+  text += `${T.died}: ${birthYear + deathAge} (${deathAge})\n`;
+  text += `${T.cause}: ${deathCause}\n\n`;
+  text += `${T.stats}\n`;
+  text += `   ${T.power}: ${stats.power}/100\n`;
+  text += `   ${T.intelligence}: ${stats.intelligence}/100\n`;
+  text += `   ${T.luck}: ${stats.luck}/100\n`;
+  text += `   ${T.socialClass}: ${stats.socialClass}/100\n`;
+  text += `   ${T.health}: ${stats.health}/100\n\n`;
 
   if (canonEncounters.length > 0) {
-    text += `✨ Kanon Karakter Karşılaşmaları:\n`;
+    text += `${T.canonTitle}\n`;
     canonEncounters.forEach(c => {
-      text += `   • ${c} ile karşılaştın\n`;
+      text += `${T.canonLine(c)}\n`;
     });
     text += `\n`;
   }
 
-  text += `📝 Hayat Özeti:\n`;
-  text += `   ${events.length} olay yaşandı.\n`;
-  text += `   ${deathAge} yıl boyunca ${region.nameTR} bölgesinde yaşadın.\n\n`;
+  text += `${T.summary}\n`;
+  text += `${T.eventsHappened(events.length)}\n`;
+  text += `${T.livedYears(deathAge, regionNameL(region))}`;
 
   if (stats.socialClass < 30) {
-    text += `   Yoksul bir aileden doğdun, hayatta kalmak için mücadele ettin.\n`;
+    text += `${T.poorLine}\n`;
   } else if (stats.socialClass > 70) {
-    text += `   Soylu bir aileden doğdun, konforlu bir yaşam sürdün.\n`;
+    text += `${T.nobleLine}\n`;
   } else {
-    text += `   Orta halli bir aileden doğdun, dengeli bir yaşam sürdün.\n`;
+    text += `${T.middleLine}\n`;
   }
 
   if (stats.power > 60) {
-    text += `   Güçlü bir savaşçıydın.\n`;
+    text += `${T.powerHigh}\n`;
   }
   if (stats.intelligence > 60) {
-    text += `   Zeki ve stratejik biriydin.\n`;
+    text += `${T.intelligenceHigh}\n`;
   }
   if (stats.luck > 60) {
-    text += `   Şanslı bir hayat sürdün.\n`;
+    text += `${T.luckHigh}\n`;
   }
 
   text += `\n═══════════════════════════════════════\n`;
-  text += `${characterName} hatırlanacak. Bir hayat yaşandı.\n`;
+  text += `${T.footer(characterName)}\n`;
   text += `═══════════════════════════════════════`;
 
   return text;
@@ -1246,22 +1530,23 @@ function generateAchievements(
   deathAge: number
 ): string[] {
   const achievements: string[] = [];
-  const en = isEn();
+  const l = lifeLang();
+  const pick = (tr: string, en: string, ja: string, fr: string) => (l === 'tr' ? tr : l === 'ja' ? ja : l === 'fr' ? fr : en);
 
-  if (deathAge >= 80) achievements.push(en ? 'Old Age' : 'Yaşlılık');
-  if (deathAge >= 60 && deathAge < 80) achievements.push(en ? 'Long Life' : 'Uzun Yaşam');
-  if (deathAge < 20) achievements.push(en ? 'Early Passing' : 'Erken Vefat');
-  if (stats.power > 70) achievements.push(en ? 'Mighty Fighter' : 'Güçlü Savaşçı');
-  if (stats.intelligence > 70) achievements.push(en ? 'Brainbox' : 'Zeka Küpü');
-  if (stats.luck > 70) achievements.push(en ? 'Lucky One' : 'Şanslı');
-  if (stats.socialClass > 70) achievements.push(en ? 'Noble' : 'Soylu');
-  if (stats.socialClass < 20) achievements.push(en ? 'Poor' : 'Yoksul');
-  if (stats.health > 80) achievements.push(en ? 'Healthy' : 'Sağlıklı');
-  if (events.some(e => e.isCanonEncounter)) achievements.push(en ? 'Canon Character Encounter' : 'Kanon Karakterle Karşılaştı');
-  if (world.dangerLevel === 'extreme' && deathAge >= 30) achievements.push(en ? 'Survival Master' : 'Hayatta Kalma Ustası');
-  if (world.dangerLevel === 'low' && deathAge >= 70) achievements.push(en ? 'Peaceful Life' : 'Huzurlu Yaşam');
-  if (events.filter(e => e.type === 'crisis').length >= 3) achievements.push(en ? 'Crisis Manager' : 'Kriz Yöneticisi');
-  if (events.filter(e => e.type === 'choice' || (e.choices && e.choices.length > 0)).length >= 2) achievements.push(en ? 'Decisive' : 'Seçimci');
+  if (deathAge >= 80) achievements.push(pick('Yaşlılık', 'Old Age', '長寿', 'Vieillesse'));
+  if (deathAge >= 60 && deathAge < 80) achievements.push(pick('Uzun Yaşam', 'Long Life', '長命', 'Longue vie'));
+  if (deathAge < 20) achievements.push(pick('Erken Vefat', 'Early Passing', '若くして逝く', 'Décès précoce'));
+  if (stats.power > 70) achievements.push(pick('Güçlü Savaşçı', 'Mighty Fighter', '剛勇の戦士', 'Combattant puissant'));
+  if (stats.intelligence > 70) achievements.push(pick('Zeka Küpü', 'Brainbox', '天才', 'Cerveau'));
+  if (stats.luck > 70) achievements.push(pick('Şanslı', 'Lucky One', '幸運な者', 'Chanceux'));
+  if (stats.socialClass > 70) achievements.push(pick('Soylu', 'Noble', '貴族', 'Noble'));
+  if (stats.socialClass < 20) achievements.push(pick('Yoksul', 'Poor', '貧しい', 'Pauvre'));
+  if (stats.health > 80) achievements.push(pick('Sağlıklı', 'Healthy', '健康', 'En bonne santé'));
+  if (events.some(e => e.isCanonEncounter)) achievements.push(pick('Kanon Karakterle Karşılaştı', 'Canon Character Encounter', '原作キャラと遭遇', 'Rencontre avec un personnage canon'));
+  if (world.dangerLevel === 'extreme' && deathAge >= 30) achievements.push(pick('Hayatta Kalma Ustası', 'Survival Master', '生存の達人', 'Maître de la survie'));
+  if (world.dangerLevel === 'low' && deathAge >= 70) achievements.push(pick('Huzurlu Yaşam', 'Peaceful Life', '穏やかな人生', 'Vie paisible'));
+  if (events.filter(e => e.type === 'crisis').length >= 3) achievements.push(pick('Kriz Yöneticisi', 'Crisis Manager', '危機管理者', 'Gestionnaire de crise'));
+  if (events.filter(e => e.type === 'choice' || (e.choices && e.choices.length > 0)).length >= 2) achievements.push(pick('Seçimci', 'Decisive', '決断力のある者', 'Décisif'));
 
   return achievements;
 }
@@ -1281,19 +1566,26 @@ export function getEventTimeline(life: LifeResult): { age: number; event: LifeEv
 // ─── Paylaşım Metni ──────────────────────────────────────
 
 export function generateShareText(life: LifeResult, world: AnimeWorld, region: AnimeRegion): string {
-  const en = isEn();
-  if (en) {
-    return `🌍 I lived ${life.deathAge} years in ${region.nameEN}, ${world.nameEN}.\n` +
-      `👤 ${life.characterName}\n` +
-      `Cause of death: ${life.deathCause}\n` +
-      `Power: ${life.finalStats.power} | Intelligence: ${life.finalStats.intelligence} | Luck: ${life.finalStats.luck}\n` +
-      (life.isCanonEncountered ? `✨ I met canon characters: ${life.canonEncounters.join(', ')}\n` : '') +
-      `AniSync 1 in 8 Billion`;
-  }
-  return `🌍 ${world.nameTR} evreninde ${region.nameTR} bölgesinde ${life.deathAge} yıl yaşadım.\n` +
+  const l = lifeLang();
+  const pick = (tr: string, en: string, ja: string, fr: string) => (l === 'tr' ? tr : l === 'ja' ? ja : l === 'fr' ? fr : en);
+  const line1 = pick(
+    `🌍 ${world.nameTR} evreninde ${region.nameTR} bölgesinde ${life.deathAge} yıl yaşadım.`,
+    `🌍 I lived ${life.deathAge} years in ${region.nameEN}, ${world.nameEN}.`,
+    `🌍 ${world.nameEN}の世界、${region.nameEN}地方で${life.deathAge}年間生きた。`,
+    `🌍 J'ai vécu ${life.deathAge} ans à ${region.nameEN}, dans le monde ${world.nameEN}.`
+  );
+  const lineDeath = pick(`Ölüm nedeni: ${life.deathCause}`, `Cause of death: ${life.deathCause}`, `死因: ${life.deathCause}`, `Cause du décès : ${life.deathCause}`);
+  const lineStats = pick(`Güç: ${life.finalStats.power} | Zeka: ${life.finalStats.intelligence} | Şans: ${life.finalStats.luck}`, `Power: ${life.finalStats.power} | Intelligence: ${life.finalStats.intelligence} | Luck: ${life.finalStats.luck}`, `筋力: ${life.finalStats.power} | 知力: ${life.finalStats.intelligence} | 運: ${life.finalStats.luck}`, `Force : ${life.finalStats.power} | Intelligence : ${life.finalStats.intelligence} | Chance : ${life.finalStats.luck}`);
+  const lineEncounters = life.isCanonEncountered ? pick(
+    `✨ Kanon karakterlerle karşılaştım: ${life.canonEncounters.join(', ')}\n`,
+    `✨ I met canon characters: ${life.canonEncounters.join(', ')}\n`,
+    `✨ 原作キャラに会った: ${life.canonEncounters.join(', ')}\n`,
+    `✨ J'ai rencontré des personnages canon : ${life.canonEncounters.join(', ')}\n`
+  ) : '';
+  return `${line1}\n` +
     `👤 ${life.characterName}\n` +
-    `Ölüm nedeni: ${life.deathCause}\n` +
-    `Güç: ${life.finalStats.power} | Zeka: ${life.finalStats.intelligence} | Şans: ${life.finalStats.luck}\n` +
-    (life.isCanonEncountered ? `✨ Kanon karakterlerle karşılaştım: ${life.canonEncounters.join(', ')}\n` : '') +
-    `AniSync 8 Milyar Evrende 1`;
+    `${lineDeath}\n` +
+    `${lineStats}\n` +
+    lineEncounters +
+    pick('AniSync 8 Milyar Evrende 1', 'AniSync 1 in 8 Billion', 'AniSync 1 in 8 Billion', 'AniSync 1 sur 8 milliards');
 }
