@@ -276,6 +276,100 @@ function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: numbe
   };
 }
 
+// ─── Turnuva Olayı (Tournament) ──────────────────────────
+function createTournamentEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
+  const tournaments: { title: string; description: string; choices: LifeChoice[] }[] = [
+    {
+      title: 'Turnuva',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde büyük bir turnuva düzenleniyor. ${world.nameTR} evreninin en güçlüleri burada.`,
+      choices: [
+        { id: 'enter', label: 'Turnuvaya Katıl', description: 'Güç ve şansını dene', statChanges: { power: 10, luck: -5, health: -8 }, consequences: ['Deneyim', 'Ün'], risk: 'high' },
+        { id: 'train', label: 'Antrenman Yap', description: 'Hazırlan, sonra katıl', statChanges: { power: 5, intelligence: 5 }, consequences: ['Hazırlık', 'Sabır'], risk: 'low' },
+        { id: 'watch', label: 'İzle ve Öğren', description: 'Taktik ve teknik gözlemle', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Bilgi', 'İlham'], risk: 'low' },
+        { id: 'bribe', label: 'Hile Yap', description: 'Kazanmak için her yolu dene', statChanges: { luck: 10, socialClass: -15 }, consequences: ['Kısa vadeli zafer', 'İtibar kaybı'], risk: 'extreme' }
+      ]
+    }
+  ];
+  const t = tournaments[0];
+  return {
+    id: `tournament_${age}`,
+    age,
+    year,
+    title: t.title,
+    description: t.description,
+    type: 'special',
+    choices: t.choices,
+    isCanonEncounter: false
+  };
+}
+
+// ─── Klan Olayı (Clan) ───────────────────────────────────
+function createClanEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
+  const clans: { title: string; description: string; choices: LifeChoice[] }[] = [
+    {
+      title: 'Klan Seçimi',
+      description: `${age} yaşındasın. ${region.nameTR} bölgesinde güçlü bir klan seni davet ediyor. Bu seçim sosyal statünü ve güç yolunu belirleyecek.`,
+      choices: [
+        { id: 'join', label: 'Klana Katıl', description: 'Güç ve koruma kazan', statChanges: { socialClass: 15, power: 5 }, consequences: ['Koruma', 'Bağlılık'], risk: 'medium' },
+        { id: 'independent', label: 'Bağımsız Kal', description: 'Kendi yolunu çiz', statChanges: { intelligence: 5, luck: 5, socialClass: -5 }, consequences: ['Özgürlük', 'Risk'], risk: 'high' },
+        { id: 'rival', label: 'Rakip Klana Katıl', description: 'Güçlü düşmanla ittifak', statChanges: { power: 10, socialClass: -10 }, consequences: ['Güç', 'Düşman'], risk: 'extreme' },
+        { id: 'mediate', label: 'Arabulucu Ol', description: 'Klanlar arasında barış', statChanges: { intelligence: 8, socialClass: 8 }, consequences: ['Saygı', 'Risk'], risk: 'medium' }
+      ]
+    }
+  ];
+  const c = clans[0];
+  return {
+    id: `clan_${age}`,
+    age,
+    year,
+    title: c.title,
+    description: c.description,
+    type: 'faction',
+    choices: c.choices,
+    isCanonEncounter: false
+  };
+}
+
+// ─── Evrim / Dönüşüm Olayı (Evolution) ──────────────────
+function createEvolutionEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent | null {
+  if (stats.power < 50 && stats.intelligence < 50) return null;
+  const isPowerPath = stats.power >= stats.intelligence;
+  return {
+    id: `evolution_${age}`,
+    age,
+    year,
+    title: 'Güç Uyanışı',
+    description: `${age} yaşındasın. ${world.powerSystem} sisteminde derin bir uyanış hissediyorsun. ${isPowerPath ? 'Fiziksel gücün zirveye ulaşmak üzere.' : 'Zihinsel yeteneklerin evrilmek üzere.'}`,
+    type: 'special',
+    choices: [
+      { id: 'embrace', label: 'Gücü Kabul Et', description: 'Evrimi tamamla', statChanges: isPowerPath ? { power: 15, health: -5 } : { intelligence: 15, health: -5 }, consequences: ['Evrim', 'Risk'], risk: 'high' },
+      { id: 'reject', label: 'Reddet', description: 'İnsan kal, güvenli ol', statChanges: { health: 10, socialClass: 5 }, consequences: ['Güvenlik', 'Sıradanlık'], risk: 'low' },
+      { id: 'study', label: 'Çalış ve Kontrol Et', description: 'Gücü bilimsel olarak incele', statChanges: { intelligence: 12, power: 5 }, consequences: ['Bilgi', 'Güç'], risk: 'medium' },
+      { id: 'share', label: 'Gücü Paylaş', description: 'Başkalarına öğret', statChanges: { socialClass: 10, intelligence: 5, power: -3 }, consequences: ['Saygı', 'Güç kaybı'], risk: 'medium' }
+    ],
+    isCanonEncounter: false
+  };
+}
+
+// ─── Zaman Döngüsü Olayı (Time Loop) ────────────────────
+function createTimeLoopEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent | null {
+  if (!rollChance(0.08)) return null;
+  return {
+    id: `timeloop_${age}`,
+    age,
+    year,
+    title: 'Deja Vu',
+    description: `${age} yaşındasın. ${region.nameTR} bölgesinde sanki bu anı daha önce yaşamışsın gibi bir his. Zaman mı döngüye girdi?`,
+    type: 'special',
+    choices: [
+      { id: 'investigate', label: 'Araştır', description: 'Gizemi çöz', statChanges: { intelligence: 10, luck: -3 }, consequences: ['Bilgi', 'Risk'], risk: 'medium' },
+      { id: 'ignore', label: 'Görmezden Gel', description: 'Normal yaşamına devam et', statChanges: { health: 5 }, consequences: ['Güvenlik', 'Merak'], risk: 'low' },
+      { id: 'embrace', label: 'Döngüyü Kabul Et', description: 'Zamanı kullan', statChanges: { luck: 15, health: -10 }, consequences: ['Şans', 'Travma'], risk: 'extreme' }
+    ],
+    isCanonEncounter: false
+  };
+}
+
 // ─── Ana Yaşam Üretici ───────────────────────────────────
 
 export function generateLife(
@@ -305,6 +399,28 @@ export function generateLife(
 
   // Faction choice (age 15)
   events.push(createFactionEvent(world, region, 15, birthYear + 15, stats));
+
+  // Tournament event (age 18, chance)
+  if (rollChance(0.6)) {
+    events.push(createTournamentEvent(world, region, 18, birthYear + 18, stats));
+  }
+
+  // Clan event (age 20)
+  if (clampedLife >= 22) {
+    events.push(createClanEvent(world, region, 20, birthYear + 20, stats));
+  }
+
+  // Evolution event (age 22, if stats qualify)
+  if (clampedLife >= 25) {
+    const evo = createEvolutionEvent(world, region, 22, birthYear + 22, stats);
+    if (evo) events.push(evo);
+  }
+
+  // Time loop events (rare, ages 12-30)
+  for (let age = 12; age <= Math.min(30, clampedLife - 5); age += rollDice(6, 10)) {
+    const tl = createTimeLoopEvent(world, region, age, birthYear + age, stats);
+    if (tl) events.push(tl);
+  }
 
   // Canon encounter check (age 10-25)
   for (let age = 10; age <= 25; age += 5) {
