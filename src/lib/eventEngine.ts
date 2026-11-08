@@ -16,15 +16,24 @@ import { AnimeRegion } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
 import i18n from '../i18n';
 
-/** İçerik motoru dili: Türkçe dışındaki diller (en/ja/fr) İngilizce içeriğe düşer. */
-function isEn(): boolean {
+/** İçerik motoru dili. TR → Türkçe, JA → Japonca, FR → Fransızca, diğerleri → İngilizce. */
+type LifeLang = 'tr' | 'en' | 'ja' | 'fr';
+function lifeLang(): LifeLang {
   const l = (typeof i18n !== 'undefined' && i18n?.language ? i18n.language : 'tr').toLowerCase();
-  return !l.startsWith('tr');
+  if (l.startsWith('tr')) return 'tr';
+  if (l.startsWith('ja')) return 'ja';
+  if (l.startsWith('fr')) return 'fr';
+  return 'en';
 }
 
-const L = (tr: string, en: string) => (isEn() ? en : tr);
-const worldNameL = (w: AnimeWorld) => (isEn() ? w.nameEN : w.nameTR);
-const regionNameL = (r: AnimeRegion) => (isEn() ? r.nameEN : r.nameTR);
+const L = (tr: string, en: string, ja: string, fr: string) => {
+  const l = lifeLang();
+  return l === 'tr' ? tr : l === 'ja' ? ja : l === 'fr' ? fr : en;
+};
+/** TR dışı her şey İngilizce içeriğe düşer (doğum/çocukluk/odak JA/FR tam çeviri). */
+const isEn = () => lifeLang() !== 'tr';
+const worldNameL = (w: AnimeWorld) => (lifeLang() === 'tr' ? w.nameTR : w.nameEN);
+const regionNameL = (r: AnimeRegion) => (lifeLang() === 'tr' ? r.nameTR : r.nameEN);
 
 // ─── Tipler ───────────────────────────────────────────────
 
@@ -166,15 +175,21 @@ export const LIFE_FOCUSES: FocusOption[] = [
   { id: 'survival', label: 'Hayatta Kalma', description: 'Sağlık, dayanıklılık, güvenlik', statBias: { health: 15, socialClass: -5 } }
 ];
 
-const FOCUS_LABELS: Record<LifeFocus, { labelTR: string; labelEN: string; descTR: string; descEN: string }> = {
-  study: { labelTR: 'Eğitim & Bilgi', labelEN: 'Study & Knowledge', descTR: 'Okul, araştırma, zeka odaklı', descEN: 'School, research, intelligence-focused' },
-  combat: { labelTR: 'Güç & Savaş', labelEN: 'Power & Combat', descTR: 'Antrenman, dövüş, güç odaklı', descEN: 'Training, fighting, power-focused' },
-  social: { labelTR: 'Sosyal & İlişkiler', labelEN: 'Social & Relationships', descTR: 'Arkadaşlık, ağ, sosyal statü', descEN: 'Friendship, network, social status' },
-  exploration: { labelTR: 'Keşif & Macera', labelEN: 'Exploration & Adventure', descTR: 'Dünya keşfi, risk alma', descEN: 'Discovery, risk-taking' },
-  survival: { labelTR: 'Hayatta Kalma', labelEN: 'Survival', descTR: 'Sağlık, dayanıklılık, güvenlik', descEN: 'Health, endurance, safety' },
+const FOCUS_LABELS: Record<LifeFocus, { labelTR: string; labelEN: string; labelJA: string; labelFR: string; descTR: string; descEN: string; descJA: string; descFR: string }> = {
+  study: { labelTR: 'Eğitim & Bilgi', labelEN: 'Study & Knowledge', labelJA: '勉強と知恵', labelFR: 'Études et savoir', descTR: 'Okul, araştırma, zeka odaklı', descEN: 'School, research, intelligence-focused', descJA: '学校、研究、知性重視', descFR: 'École, recherche, axé sur l\'intelligence' },
+  combat: { labelTR: 'Güç & Savaş', labelEN: 'Power & Combat', labelJA: '力と戦い', labelFR: 'Force et combat', descTR: 'Antrenman, dövüş, güç odaklı', descEN: 'Training, fighting, power-focused', descJA: '訓練、戦い、力重視', descFR: 'Entraînement, combat, axé sur la force' },
+  social: { labelTR: 'Sosyal & İlişkiler', labelEN: 'Social & Relationships', labelJA: '社交と人間関係', labelFR: 'Vie sociale et relations', descTR: 'Arkadaşlık, ağ, sosyal statü', descEN: 'Friendship, network, social status', descJA: '友情、人脈、社交的な地位', descFR: 'Amitié, réseau, statut social' },
+  exploration: { labelTR: 'Keşif & Macera', labelEN: 'Exploration & Adventure', labelJA: '探求と冒険', labelFR: 'Exploration et aventure', descTR: 'Dünya keşfi, risk alma', descEN: 'Discovery, risk-taking', descJA: '世界探求、リスクを取る', descFR: 'Découverte du monde, prise de risque' },
+  survival: { labelTR: 'Hayatta Kalma', labelEN: 'Survival', labelJA: '生存', labelFR: 'Survie', descTR: 'Sağlık, dayanıklılık, güvenlik', descEN: 'Health, endurance, safety', descJA: '健康、持久、安全', descFR: 'Santé, endurance, sécurité' },
 };
-const focusLabelL = (id: LifeFocus) => (isEn() ? FOCUS_LABELS[id].labelEN : FOCUS_LABELS[id].labelTR);
-const focusDescL = (id: LifeFocus) => (isEn() ? FOCUS_LABELS[id].descEN : FOCUS_LABELS[id].descTR);
+const focusLabelL = (id: LifeFocus) => {
+  const l = lifeLang();
+  return l === 'tr' ? FOCUS_LABELS[id].labelTR : l === 'ja' ? FOCUS_LABELS[id].labelJA : l === 'fr' ? FOCUS_LABELS[id].labelFR : FOCUS_LABELS[id].labelEN;
+};
+const focusDescL = (id: LifeFocus) => {
+  const l = lifeLang();
+  return l === 'tr' ? FOCUS_LABELS[id].descTR : l === 'ja' ? FOCUS_LABELS[id].descJA : l === 'fr' ? FOCUS_LABELS[id].descFR : FOCUS_LABELS[id].descEN;
+};
 
 function applyFocusBias(stats: LifeStats, focus: LifeFocus): LifeStats {
   const opt = LIFE_FOCUSES.find(f => f.id === focus);
@@ -213,10 +228,13 @@ function createBirthEvent(world: AnimeWorld, region: AnimeRegion, birthYear: num
     id: 'birth',
     age: 0,
     year: birthYear,
-    title: L('Doğum', 'Birth'),
-    description: isEn()
-      ? `You were born in the ${regionNameL(region)} region of the ${worldNameL(world)} world. ${hasPowerPotential ? 'You carry a hidden power potential.' : 'You are an ordinary family kid.'} ${hasAdventurePotential ? 'An adventure-filled life may await you.' : 'A peaceful life is likely for you.'}`
-      : `${region.nameTR} bölgesinde, ${world.nameTR} evreninde doğdun. ${hasPowerPotential ? 'Gizli bir güç potansiyelin var.' : 'Sıradan bir ailenin çocuğusun.'} ${hasAdventurePotential ? 'Macera dolu bir hayat seni bekliyor olabilir.' : 'Huzurlu bir yaşam sürmen olası.'}`,
+    title: L('Doğum', 'Birth', '誕生', 'Naissance'),
+    description: L(
+      `${region.nameTR} bölgesinde, ${world.nameTR} evreninde doğdun. ${hasPowerPotential ? 'Gizli bir güç potansiyelin var.' : 'Sıradan bir ailenin çocuğusun.'} ${hasAdventurePotential ? 'Macera dolu bir hayat seni bekliyor olabilir.' : 'Huzurlu bir yaşam sürmen olası.'}`,
+      `You were born in the ${world.nameEN} world, in the ${region.nameEN} region. ${hasPowerPotential ? 'You carry a hidden power potential.' : 'You are an ordinary family kid.'} ${hasAdventurePotential ? 'An adventure-filled life may await you.' : 'A peaceful life is likely for you.'}`,
+      `${world.nameEN}の世界、${region.nameEN}地方に生まれた。${hasPowerPotential ? '秘められた力の資質がある。' : '平凡な家の生まれだ。'} ${hasAdventurePotential ? '冒険に満ちた人生が待っているかもしれない。' : '穏やかな人生を送れそうだ。'}`,
+      `Tu es né dans le monde ${world.nameEN}, dans la région de ${region.nameEN}. ${hasPowerPotential ? 'Tu portes un potentiel de pouvoir caché.' : 'Tu es un enfant de famille ordinaire.'} ${hasAdventurePotential ? 'Une vie pleine d\'aventure t\'attend peut-être.' : 'Une vie paisible t\'est sans doute promise.'}`
+    ),
     type: 'birth',
     statChanges: hasPowerPotential ? { power: 5, luck: 5 } : {},
     isCanonEncounter: false
@@ -224,8 +242,53 @@ function createBirthEvent(world: AnimeWorld, region: AnimeRegion, birthYear: num
 }
 
 function createChildhoodEvent(world: AnimeWorld, region: AnimeRegion, age: number, year: number, stats: LifeStats): LifeEvent {
-  const en = isEn();
-  const childhoodEvents: { title: string; description: string; choices: LifeChoice[] }[] = en ? [
+  const l = lifeLang();
+  const childhoodEvents: { title: string; description: string; choices: LifeChoice[] }[] = (() => {
+    if (l === 'ja') {
+      return [
+        {
+          title: '幼少期',
+          description: `${age}歳。${region.nameEN}地方で育ち、${world.nameEN}の世界のルールを学んでいる。`,
+          choices: [
+            { id: 'school', label: '学校に行く', description: '知識と社交性を身につける', statChanges: { intelligence: 10, socialClass: 5 }, consequences: ['読み書き', '人との絆'], risk: 'low' },
+            { id: 'work', label: '働き始める', description: '早くに収入を得て実践的な技を磨く', statChanges: { power: 5, socialClass: -5 }, consequences: ['実践的な技', '早期の自立'], risk: 'medium' },
+            { id: 'explore', label: '探検して遊ぶ', description: '世界を知り自由を選ぶ', statChanges: { luck: 8, health: -3 }, consequences: ['探求心', 'リスクを取る癖'], risk: 'high' }
+          ]
+        },
+        {
+          title: '家族と社会',
+          description: `家族は${region.stats.povertyRate > 0.2 ? '貧しい' : '普通の'}家庭だ。${world.dangerLevel === 'extreme' ? '毎日生きることとの戦いだ。' : '穏やかだが平凡な暮らしだ。'}`,
+          choices: [
+            { id: 'family', label: '家族を助ける', description: '家族の絆を深める', statChanges: { socialClass: 5, health: 5 }, consequences: ['家族の支え', '安全'], risk: 'low' },
+            { id: 'friends', label: '友達と過ごす', description: '社会的なつながりを築く', statChanges: { intelligence: 3, luck: 5 }, consequences: ['人脈', '知識の共有'], risk: 'medium' },
+            { id: 'alone', label: '一人で取り組む', description: '自立を選ぶ', statChanges: { power: 5, intelligence: 5, socialClass: -3 }, consequences: ['自立', '孤立'], risk: 'high' }
+          ]
+        }
+      ];
+    }
+    if (l === 'fr') {
+      return [
+        {
+          title: 'Enfance',
+          description: `Tu as ${age} ans. Tu grandis dans la région de ${region.nameEN}, à apprendre les règles du monde ${world.nameEN}.`,
+          choices: [
+            { id: 'school', label: 'Aller à l\'école', description: 'Acquérir des connaissances et des compétences sociales', statChanges: { intelligence: 10, socialClass: 5 }, consequences: ['Alphabétisation', 'Liens sociaux'], risk: 'low' },
+            { id: 'work', label: 'Commencer à travailler', description: 'Gagne de l\'argent tôt et apprenez des compétences pratiques', statChanges: { power: 5, socialClass: -5 }, consequences: ['Compétences pratiques', 'Indépendance précoce'], risk: 'medium' },
+            { id: 'explore', label: 'Explorer et jouer', description: 'Découvre le monde et choisis la liberté', statChanges: { luck: 8, health: -3 }, consequences: ['Esprit de découverte', 'Habitude du risque'], risk: 'high' }
+          ]
+        },
+        {
+          title: 'Famille et société',
+          description: `Ta famille est ${region.stats.povertyRate > 0.2 ? 'une famille pauvre' : 'une famille ordinaire'}. ${world.dangerLevel === 'extreme' ? 'Tu te bats chaque jour pour survivre.' : 'Tu mènes une vie paisible mais ordinaire.'}`,
+          choices: [
+            { id: 'family', label: 'Aider ta famille', description: 'Renforce les liens familiaux', statChanges: { socialClass: 5, health: 5 }, consequences: ['Soutien familial', 'Sécurité'], risk: 'low' },
+            { id: 'friends', label: 'Passer du temps avec des amis', description: 'Construire un réseau social', statChanges: { intelligence: 3, luck: 5 }, consequences: ['Réseau social', 'Partage de connaissances'], risk: 'medium' },
+            { id: 'alone', label: 'Travailler seul', description: 'Choisis l\'indépendance', statChanges: { power: 5, intelligence: 5, socialClass: -3 }, consequences: ['Indépendance', 'Isolement'], risk: 'high' }
+          ]
+        }
+      ];
+    }
+    return (l === 'en' ? [
     {
       title: 'Childhood Years',
       description: `You are ${age} years old. You are growing up in the ${regionNameL(region)} region, learning the rules of the ${worldNameL(world)} world.`,
@@ -263,7 +326,8 @@ function createChildhoodEvent(world: AnimeWorld, region: AnimeRegion, age: numbe
         { id: 'alone', label: 'Kendi Başına Çalış', description: 'Bağımsızlığı seç', statChanges: { power: 5, intelligence: 5, socialClass: -3 }, consequences: ['Bağımsızlık', 'İzolasyon'], risk: 'high' }
       ]
     }
-  ];
+  ]);
+  })();
 
   const event = childhoodEvents[age % childhoodEvents.length];
   return {
@@ -485,7 +549,7 @@ function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: numbe
     id: `canon_${encounter.character}_${age}`,
     age,
     year,
-    title: L('Kanon Karakter Karşılaşması', 'Canon Character Encounter'),
+    title: L('Kanon Karakter Karşılaşması', 'Canon Character Encounter', '原作キャラクターとの遭遇', 'Rencontre avec un personnage canon'),
     description: isEn() ? encounter.descriptionEN : encounter.description,
     type: 'special',
     outcome: isEn()
@@ -976,7 +1040,7 @@ export function generateLife(
     id: 'death',
     age: deathAge,
     year: birthYear + deathAge,
-    title: L('Ölüm', 'Death'),
+    title: L('Ölüm', 'Death', '死', 'La mort'),
     description: en
       ? `Your life came to an end at the age of ${deathAge} in the ${regionNameL(region)} region. Cause: ${deathCause}.`
       : `${deathAge} yaşında ${region.nameTR} bölgesinde hayatın sona erdi. Neden: ${deathCause}.`,
