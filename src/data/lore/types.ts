@@ -1,5 +1,7 @@
 // Anime/Manga evren LOR (lore) veri tipleri
 // Her seri/evren için ayrı dosyada saklanır (karışmaması için).
+// `ja`/`fr` opsiyonel dildir; tanımlanan alan sırasıyla { ja: {...} } / { fr: {...} } olarak yazılır.
+// Eşleşmeyen alanlar varsayılan (TR/EN) içerikle döner.
 
 export interface LoreFaction {
   name: string;
@@ -34,4 +36,26 @@ export interface WorldLore {
   keyEvents: string[]; // Önemli olaylar
   themes: string[]; // Temalar
   sourceSeries: string[]; // Kaynak seriler
+  /**
+   * Opsiyonel JA/FR çevirileri. Yalnızca çevrilen alanlar doldurulur;
+   * boş kalanlar varsayılan metne (TR) düşeceği için tam çeviri gerekmez.
+   */
+  ja?: WorldLoreLocale;
+  fr?: WorldLoreLocale;
+}
+
+export interface WorldLoreLocale {
+  summary?: string;
+  history?: string;
+  powerSystem?: {
+    name?: string;
+    description?: string;
+    ranks?: string[];
+  };
+  factions?: LoreFaction[];
+  locations?: LoreLocation[];
+  notableCharacters?: LoreCharacter[];
+  keyEvents?: string[];
+  themes?: string[];
+  sourceSeries?: string[];
 }

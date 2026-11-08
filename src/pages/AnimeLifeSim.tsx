@@ -846,7 +846,7 @@ export const AnimeLifeSim: React.FC = () => {
 
           {/* World Lore Panel */}
           {world && (() => {
-            const lore = getWorldLore(world.id);
+            const lore = getWorldLore(world.id, currentLang as 'tr' | 'en' | 'ja' | 'fr');
             if (!lore) return null;
             return (
               <div className="bg-neutral-900 border-2 border-white/30 p-5 space-y-3">
