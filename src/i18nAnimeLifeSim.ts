@@ -169,6 +169,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_transfer_imported": "Kayıt içe aktarıldı. Ana ekrandan devam et.",
     "als_transfer_invalid": "Geçersiz taşıma kodu.",
     "als_transfer_empty": "Dışa aktarılacak kayıtlı hayat yok.",
+    "als_world_fidelity": "Evrene Sadakat",
+    "als_fidelity_low": "Düşük",
+    "als_fidelity_moderate": "Orta",
+    "als_fidelity_high": "Yüksek",
     "als_unnamed": "İsimsiz",
   },
   en: {
@@ -336,6 +340,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_transfer_imported": "Save imported. Resume from the home screen.",
     "als_transfer_invalid": "Invalid transfer code.",
     "als_transfer_empty": "No saved life to export.",
+    "als_world_fidelity": "World Fidelity",
+    "als_fidelity_low": "Low",
+    "als_fidelity_moderate": "Moderate",
+    "als_fidelity_high": "High",
     "als_unnamed": "Unnamed",
   },
   ja: {
@@ -503,6 +511,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_transfer_imported": "記録を読み込みました。ホーム画面から再開できます。",
     "als_transfer_invalid": "引き継ぎコードが正しくありません。",
     "als_transfer_empty": "書き出す記録がありません。",
+    "als_world_fidelity": "世界忠実度",
+    "als_fidelity_low": "低",
+    "als_fidelity_moderate": "中",
+    "als_fidelity_high": "高",
     "als_unnamed": "名前なし",
   },
   fr: {
@@ -670,6 +682,10 @@ export const animeLifeSimTranslations: Record<AnimeLifeSimLang, Record<string, s
     "als_transfer_imported": "Sauvegarde importée. Reprends depuis l'écran d'accueil.",
     "als_transfer_invalid": "Code de transfert invalide.",
     "als_transfer_empty": "Aucune vie sauvegardée à exporter.",
+    "als_world_fidelity": "Fidélité au monde",
+    "als_fidelity_low": "Faible",
+    "als_fidelity_moderate": "Moyenne",
+    "als_fidelity_high": "Élevée",
     "als_unnamed": "Sans nom",
   },
 };

@@ -14,6 +14,7 @@ import {
   LIFE_FOCUSES,
   computeStatsAt,
   computeAssetsAt,
+  computeWorldFidelity,
   getEducationTier,
   getFamilyStatus,
 } from '../lib/eventEngine';
@@ -209,6 +210,7 @@ export const AnimeLifeSim: React.FC = () => {
   const currentStats = life ? computeStatsAt(life, currentEventIndex, choicesMade) : null;
   const currentAssets = life && currentStats ? computeAssetsAt(life, currentStats) : life?.assets ?? 0;
   const finalLifeStats = life ? computeStatsAt(life, life.events.length - 1, choicesMade) : null;
+  const worldFidelity = life ? computeWorldFidelity(life) : 0;
 
   // Anma metni, oyuncu seçimlerinin etkisini de yansıtsın.
   const memorialText = useMemo(() => {
@@ -1346,6 +1348,18 @@ export const AnimeLifeSim: React.FC = () => {
               </div>
             )}
 
+            {/* World Fidelity */}
+            <div className="mt-4 flex items-center gap-3 bg-neutral-900 border-2 border-amber-400/50 p-4">
+              <span className="text-3xl" aria-hidden="true">🎯</span>
+              <div className="flex-1">
+                <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block">{t('als_world_fidelity')}</span>
+                <span className="text-lg font-black text-white">{worldFidelity}%</span>
+                <span className="ml-2 text-[10px] font-black uppercase text-neutral-400">
+                  {worldFidelity >= 15 ? t('als_fidelity_high') : worldFidelity >= 5 ? t('als_fidelity_moderate') : t('als_fidelity_low')}
+                </span>
+              </div>
+            </div>
+
             {/* Canon Encounters */}
             {life.isCanonEncountered && (
               <div className="mt-6 bg-amber-400/20 border-2 border-amber-400 p-4">
@@ -1448,12 +1462,13 @@ export const AnimeLifeSim: React.FC = () => {
                       ctx.fillText(`${t('als_family')}: ${familyLabel(family)}  ${t('als_profile_education')}: ${educationLabel(edu)}`, 20, 120);
                       ctx.fillText(`${t('als_stat_power')}: ${stats.power}  ${t('als_stat_intelligence')}: ${stats.intelligence}  ${t('als_stat_luck')}: ${stats.luck}`, 20, 145);
                       ctx.fillText(`${t('als_stat_social')}: ${stats.socialClass}  ${t('als_stat_health')}: ${stats.health}  ${t('als_assets')}: ${currentAssets}`, 20, 170);
+                      ctx.fillText(`${t('als_world_fidelity')}: ${worldFidelity}%`, 20, 195);
                       if (life.achievements.length > 0) {
-                        ctx.fillText(`${t('als_achievements_title')}: ${life.achievements.slice(0, 3).join(', ')}`, 20, 200);
+                        ctx.fillText(`${t('als_achievements_title')}: ${life.achievements.slice(0, 3).join(', ')}`, 20, 215);
                       }
                       if (life.isCanonEncountered) {
                         ctx.fillStyle = '#fbbf24';
-                        ctx.fillText(`${t('als_canon_encounters_title')}: ${life.canonEncounters.join(', ')}`, 20, 225);
+                        ctx.fillText(`${t('als_canon_encounters_title')}: ${life.canonEncounters.join(', ')}`, 20, 240);
                       }
                       ctx.fillStyle = '#666';
                       ctx.font = '10px monospace';

@@ -9,6 +9,7 @@ import {
   generateLife,
   computeStatsAt,
   applyStatChanges,
+  computeWorldFidelity,
   LIFE_FOCUSES,
 } from './eventEngine';
 
@@ -146,6 +147,30 @@ describe('eventEngine — generateLife', () => {
     expect(injury).toBe(true);
     expect(party).toBe(true);
     expect(grief).toBe(true);
+  });
+
+  it('Faz 3 olayları ve evrene sadakat puanı çalışır', () => {
+    const sports = getWorldById('sports')!;
+    const isekai = getWorldById('isekai')!;
+
+    let proContract = false;
+    let rankup = false;
+    let fidelitySeen = 0;
+    for (let seed = 1; seed <= 250 && !(proContract && rankup); seed += 1) {
+      randomSpy.mockImplementation(mulberry32(seed));
+      const s = generateLife(sports, getRegionById('karasuno')!, '1h', { focus: 'combat' });
+      if (s.events.some(e => e.id === 'sports_pro_27')) proContract = true;
+      const f = computeWorldFidelity(s);
+      if (f > 0) fidelitySeen += 1;
+
+      randomSpy.mockImplementation(mulberry32(seed));
+      const i = generateLife(isekai, getRegionById('lugunica')!, '1h', { focus: 'study' });
+      if (i.events.some(e => e.id === 'isekai_rankup_17')) rankup = true;
+    }
+
+    expect(proContract).toBe(true);
+    expect(rankup).toBe(true);
+    expect(fidelitySeen).toBeGreaterThan(0);
   });
 
   it('dünya bazında kriz ağırlığı çalışır (slice_of_life krizsiz)', () => {

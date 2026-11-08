@@ -983,6 +983,39 @@ function createWorldUniqueEvent(world: AnimeWorld, region: AnimeRegion, age: num
           isCanonEncounter: false
         };
       }
+      if (age === 27) {
+        return {
+          id: 'sports_pro_27',
+          age,
+          year,
+          title: en4('Profesyonel Sözleşme', 'Pro Contract', 'プロの契約', 'Contrat pro'),
+          description: en4(
+            `${age} yaşındasın. Bir profesyonel takım sana sözleşme teklif ediyor. Karar senin.`,
+            `You are ${age} years old. A professional team is offering you a contract. The choice is yours.`,
+            `${age}歳。プロのチームが契約を提案してきた。決めるのはあなただ。`,
+            `Tu as ${age} ans. Une équipe professionnelle te propose un contrat. Le choix t'appartient.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'sign', label: '契約に署名する', description: 'プロ生活が始まる', statChanges: { socialClass: 15, power: 5 }, consequences: ['プロ', '栄光'], risk: 'medium' },
+            { id: 'coach', label: 'コーチになる', description: '次の世代を育てる', statChanges: { intelligence: 10, socialClass: 8 }, consequences: ['指導', '継承'], risk: 'low' },
+            { id: 'retire', label: '引退する', description: '別の道を探す', statChanges: { health: 8, socialClass: -5 }, consequences: ['終わり', '新しい章'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'sign', label: 'Signer le contrat', description: 'La vie pro commence', statChanges: { socialClass: 15, power: 5 }, consequences: ['Professionnel', 'Gloire'], risk: 'medium' },
+            { id: 'coach', label: 'Devenir coach', description: 'Former la prochaine génération', statChanges: { intelligence: 10, socialClass: 8 }, consequences: ['Enseignement', 'Héritage'], risk: 'low' },
+            { id: 'retire', label: 'Prendre ta retraite', description: 'Chercher une autre voie', statChanges: { health: 8, socialClass: -5 }, consequences: ['Fin', 'Nouveau chapitre'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'sign', label: 'Sign the Contract', description: 'Pro life begins', statChanges: { socialClass: 15, power: 5 }, consequences: ['Pro', 'Glory'], risk: 'medium' },
+            { id: 'coach', label: 'Become a Coach', description: 'Raise the next generation', statChanges: { intelligence: 10, socialClass: 8 }, consequences: ['Teaching', 'Legacy'], risk: 'low' },
+            { id: 'retire', label: 'Retire', description: 'Look for another path', statChanges: { health: 8, socialClass: -5 }, consequences: ['End', 'New Chapter'], risk: 'low' }
+          ] : [
+            { id: 'sign', label: 'Sözleşmeyi İmzala', description: 'Profesyonel yaşam başlar', statChanges: { socialClass: 15, power: 5 }, consequences: ['Profesyonel', 'Şan'], risk: 'medium' },
+            { id: 'coach', label: 'Antrenör Ol', description: 'Yeni nesli yetiştir', statChanges: { intelligence: 10, socialClass: 8 }, consequences: ['Eğitim', 'Miras'], risk: 'low' },
+            { id: 'retire', label: 'Emekli Ol', description: 'Başka bir yol ara', statChanges: { health: 8, socialClass: -5 }, consequences: ['Son', 'Yeni Bölüm'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
       if (age === 17) {
         return {
           id: 'sports_championship_17',
@@ -1395,6 +1428,39 @@ function createWorldUniqueEvent(world: AnimeWorld, region: AnimeRegion, age: num
             { id: 'join', label: 'Yoldaşlarına Katıl', description: 'Takımın parçası', statChanges: { power: 5, socialClass: 8 }, consequences: ['Bağ', 'Yoldaşlık'], risk: 'low' },
             { id: 'solo', label: 'Solo Git', description: 'Kendi maceran', statChanges: { intelligence: 8, luck: 3 }, consequences: ['Özgürlük', 'Yalnızlık'], risk: 'medium' },
             { id: 'merchant', label: 'Tüccar Olarak', description: 'Maceranın arkasında ticaret', statChanges: { socialClass: 10, luck: 5 }, consequences: ['Zenginlik', 'Ticaret'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 17) {
+        return {
+          id: 'isekai_rankup_17',
+          age,
+          year,
+          title: en4('Lonca Sıralaması', 'Guild Rank', 'ギルドランク', 'Rang de guilde'),
+          description: en4(
+            `${age} yaşındasın. Maceracılar loncasında sıralaman yükseliyor. C-sınıfına terfi ettin.`,
+            `You are ${age} years old. Your rank at the Adventurers Guild is rising. You were promoted to C-rank.`,
+            `${age}歳。冒険者ギルドでのランクが上がった。Cランクに昇級した。`,
+            `Tu as ${age} ans. Ton rang à la guilde des aventuriers monte. Tu es promu au rang C.`
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'accept', label: '昇級を受け入れる', description: 'より高い任務が待つ', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['昇級', '責任'], risk: 'low' },
+            { id: 'decline', label: '辞退する', description: '今のランクで十分', statChanges: { health: 5, socialClass: -3 }, consequences: ['平穏', '辞退'], risk: 'low' },
+            { id: 'ambition', label: 'さらに上を目指す', description: 'Bランクを狙う', statChanges: { power: 8, luck: 3 }, consequences: ['野心', '成長'], risk: 'medium' }
+          ] : l === 'fr' ? [
+            { id: 'accept', label: 'Accepter la promotion', description: 'De nouvelles tâches t\'attendent', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Promotion', 'Responsabilité'], risk: 'low' },
+            { id: 'decline', label: 'Refuser', description: 'Ton rang actuel te suffit', statChanges: { health: 5, socialClass: -3 }, consequences: ['Tranquillité', 'Refus'], risk: 'low' },
+            { id: 'ambition', label: 'Viser plus haut', description: 'Viser le rang B', statChanges: { power: 8, luck: 3 }, consequences: ['Ambition', 'Croissance'], risk: 'medium' }
+          ] : l === 'en' ? [
+            { id: 'accept', label: 'Accept the Promotion', description: 'Greater quests await', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Promotion', 'Responsibility'], risk: 'low' },
+            { id: 'decline', label: 'Decline', description: 'Your current rank is enough', statChanges: { health: 5, socialClass: -3 }, consequences: ['Peace', 'Refusal'], risk: 'low' },
+            { id: 'ambition', label: 'Aim Higher', description: 'Aim for B-rank', statChanges: { power: 8, luck: 3 }, consequences: ['Ambition', 'Growth'], risk: 'medium' }
+          ] : [
+            { id: 'accept', label: 'Terfii Kabul Et', description: 'Daha büyük görevler seni bekliyor', statChanges: { socialClass: 10, intelligence: 5 }, consequences: ['Terfi', 'Sorumluluk'], risk: 'low' },
+            { id: 'decline', label: 'Reddet', description: 'Mevcut sıralaman yeterli', statChanges: { health: 5, socialClass: -3 }, consequences: ['Huzur', 'Ret'], risk: 'low' },
+            { id: 'ambition', label: 'Daha Yüksek Hedefle', description: 'B-rank için mücadele et', statChanges: { power: 8, luck: 3 }, consequences: ['Hırs', 'Gelişim'], risk: 'medium' }
           ],
           isCanonEncounter: false
         };
@@ -1942,7 +2008,7 @@ export function generateLife(
   }
 
   // Evrene özgü olaylar (Faz 1) — shonen/dark_fantasy/isekai/sports/romance/slice_of_life/cyberpunk/seinen_psych
-  const uniqueEventAges = [7, 9, 12, 13, 16, 17, 20, 22, 23, 25, 30, 40];
+  const uniqueEventAges = [7, 9, 12, 13, 16, 17, 20, 22, 23, 25, 27, 30, 40];
   for (const uniqueAge of uniqueEventAges) {
     if (uniqueAge < deathAge) {
       const uniqueEvent = createWorldUniqueEvent(world, region, uniqueAge, birthYear + uniqueAge, stats);
@@ -2294,7 +2360,26 @@ export function getLifeDurationMinutes(duration: '30min' | '1h' | '1.5h'): numbe
   return duration === '30min' ? 30 : duration === '1h' ? 60 : 90;
 }
 
-// ─── Olay Zaman Çizelgesi ────────────────────────────────
+// ─── Evrene Sadakat (World Fidelity, Faz 4) ─────────────
+// Evrene özgü olayların, toplam olaylara oranı — evrenin "tadını" ne kadar verdiğini gösterir.
+const WORLD_SPECIFIC_ID_PREFIXES: Record<string, RegExp> = {
+  shonen_battle: /^shonen_/,
+  dark_fantasy: /^df_/,
+  isekai: /^isekai_/,
+  cyberpunk: /^cyber_/,
+  seinen_psych: /^seinen_/,
+  romance_drama: /^romance_/,
+  sports: /^sports_/,
+  slice_of_life: /^sol_/,
+};
+
+export function computeWorldFidelity(life: LifeResult): number {
+  const pattern = WORLD_SPECIFIC_ID_PREFIXES[life.worldId];
+  if (!pattern) return 0;
+  const total = Math.max(1, life.events.length);
+  const hits = life.events.filter(e => pattern.test(e.id) && e.type !== 'death').length;
+  return Math.round((hits / total) * 100);
+}
 
 export function getEventTimeline(life: LifeResult): { age: number; event: LifeEvent }[] {
   return life.events.map(e => ({ age: e.age, event: e }));
@@ -2319,10 +2404,18 @@ export function generateShareText(life: LifeResult, world: AnimeWorld, region: A
     `✨ 原作キャラに会った: ${life.canonEncounters.join(', ')}\n`,
     `✨ J'ai rencontré des personnages canon : ${life.canonEncounters.join(', ')}\n`
   ) : '';
+  const fidelity = computeWorldFidelity(life);
+  const lineFidelity = pick(
+    `🎯 Evrene sadakatım: %${fidelity}\n`,
+    `🎯 World fidelity: ${fidelity}%\n`,
+    `🎯 世界忠実度: ${fidelity}%\n`,
+    `🎯 Fidélité au monde : ${fidelity} %\n`
+  );
   return `${line1}\n` +
     `👤 ${life.characterName}\n` +
     `${lineDeath}\n` +
     `${lineStats}\n` +
     lineEncounters +
+    lineFidelity +
     pick('AniSync 8 Milyar Evrende 1', 'AniSync 1 in 8 Billion', 'AniSync 1 in 8 Billion', 'AniSync 1 sur 8 milliards');
 }
