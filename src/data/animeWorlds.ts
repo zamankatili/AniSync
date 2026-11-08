@@ -11,6 +11,8 @@ export interface AnimeWorld {
   themeColor: string; // Tailwind color class
   descriptionTR: string;
   descriptionEN: string;
+  descriptionJA?: string;
+  descriptionFR?: string;
   lifeExpectancy: [number, number]; // [min, max] years
   dangerLevel: 'low' | 'medium' | 'high' | 'extreme';
   powerSystem: string; // Chakra, Haki, Nen, etc.
@@ -40,6 +42,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     themeColor: 'rose',
     descriptionTR: 'Ninja, kılıç ustası ve şeytan avcılarının yaşadığı, sürekli çatışma ve güçlenme odaklı bir dünya. Her gün bir savaş, her gün bir meydan okuma.',
     descriptionEN: 'A world of ninjas, swordmasters and demon hunters, focused on constant conflict and power-ups. Every day a battle, every day a challenge.',
+    descriptionJA: '忍者、剣士、魔物狩りが暮らす、果てしない戦いと修行を求める世界。毎日が戦い、毎日が挑戦。',
+    descriptionFR: 'Un monde de ninjas, de maîtres d\'épée et de chasseurs de démons, axé sur le combat permanent et la puissance. Chaque jour un combat, chaque jour un défi.',
     lifeExpectancy: [25, 45],
     dangerLevel: 'high',
     powerSystem: 'Chakra / Haki / Nen / Lanetli Enerji',
@@ -66,6 +70,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     themeColor: 'emerald',
     descriptionTR: 'Huzurlu, barışçıl ve günlük yaşamın güzelliğini kutlayan bir dünya. Kamp, müzik, okul ve dostluk odaklı.',
     descriptionEN: 'A peaceful, tranquil world celebrating the beauty of daily life. Focused on camping, music, school and friendship.',
+    descriptionJA: '穏やかで平和な、日々の美しさを讃える世界。キャンプ、音楽、学校、友情が中心。',
+    descriptionFR: 'Un monde paisible et tranquille qui célèbre la beauté du quotidien. Centré sur le camping, la musique, l\'école et l\'amitié.',
     lifeExpectancy: [75, 90],
     dangerLevel: 'low',
     powerSystem: 'Yok (Günlük yaşam)',
@@ -92,6 +98,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     themeColor: 'neutral',
     descriptionTR: 'Kaos, ölüm, ihanet ve hayatta kalma mücadelesinin hüküm sürdüğü karanlık bir dünya. Her gün bir savaş, her gün bir kayıp.',
     descriptionEN: 'A dark world ruled by chaos, death, betrayal and survival struggle. Every day a battle, every day a loss.',
+    descriptionJA: '混沌、死、裏切り、そして生き延びる戦いが支配する闇の世界。毎日が戦い、毎日が喪失。',
+    descriptionFR: 'Un monde sombre dominé par le chaos, la mort, la trahison et la lutte pour la survie. Chaque jour un combat, chaque jour une perte.',
     lifeExpectancy: [15, 30],
     dangerLevel: 'extreme',
     powerSystem: 'Büyü / Lanet / İblis Gücü',
@@ -118,6 +126,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     themeColor: 'purple',
     descriptionTR: 'Modern dünyadan başka bir dünyaya reenkarnasyon veya ışınlanma. Güç sistemleri, maceralar ve kaderin belirsizliği.',
     descriptionEN: 'Reincarnation or teleportation from the modern world to another. Power systems, adventures and the uncertainty of fate.',
+    descriptionJA: '現代世界からもう一つの世界へ、転生あるいは転移。力のシステム、冒険、そして運命の不確かさ。',
+    descriptionFR: 'Réincarnation ou téléportation depuis le monde moderne vers un autre monde. Systèmes de pouvoir, aventures et incertitude du destin.',
     lifeExpectancy: [20, 50],
     dangerLevel: 'medium',
     powerSystem: 'Büyü / Oyun Sistemi / Yetenek Ağacı',
@@ -144,6 +154,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     themeColor: 'cyan',
     descriptionTR: 'Teknoloji, siber suç, yapay zeka ve distopik toplumların hüküm sürdüğü gelecek dünya. İnsan ve makine arasındaki çizgi bulanık.',
     descriptionEN: 'A future world ruled by technology, cybercrime, artificial intelligence and dystopian societies. The line between human and machine is blurred.',
+    descriptionJA: 'テクノロジー、サイバー犯罪、人工知能とディストピア社会が支配する未来の世界。人と機械の境界は曖昧だ。',
+    descriptionFR: 'Un monde futuriste dominé par la technologie, la cybercriminalité, l\'IA et des sociétés dystopiques. La frontière entre humain et machine est floue.',
     lifeExpectancy: [40, 65],
     dangerLevel: 'medium',
     powerSystem: 'Sibernetik / Psişik / Teknolojik',
@@ -170,6 +182,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     themeColor: 'neutral',
     descriptionTR: 'Zeka savaşları, ahlaki ikilemler, psikolojik gerilim ve derin karakter analizlerinin dünyası. Her gün bir satranç hamlesi.',
     descriptionEN: 'A world of intelligence battles, moral dilemmas, psychological thrillers and deep character analysis. Every day a chess move.',
+    descriptionJA: '頭脳戦、道徳的ジレンマ、心理サスペンス、そして深い人物分析の世界。毎日がチェスの一手。',
+    descriptionFR: 'Un monde de batailles d\'intelligence, de dilemmes moraux, de thrillers psychologiques et d\'analyses profondes des personnages. Chaque jour un coup d\'échecs.',
     lifeExpectancy: [30, 55],
     dangerLevel: 'medium',
     powerSystem: 'Zeka / Strateji / Psikoloji',
@@ -196,6 +210,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     themeColor: 'pink',
     descriptionTR: 'Duygusal yolculuklar, aşk, kayıp ve insan ilişkilerinin derinlemesine işlendiği bir dünya. Gözyaşı ve mutluluk bir arada.',
     descriptionEN: 'A world where emotional journeys, love, loss and human relationships are explored in depth. Tears and happiness together.',
+    descriptionJA: '感情の旅路、愛、喪失、そして人間関係を深く描く世界。涙と喜びが同居している。',
+    descriptionFR: 'Un monde où les voyages émotionnels, l\'amour, la perte et les relations humaines sont explorés en profondeur. Larmes et bonheur se mêlent.',
     lifeExpectancy: [60, 80],
     dangerLevel: 'low',
     powerSystem: 'Yok (Duygusal)',
@@ -222,6 +238,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     themeColor: 'amber',
     descriptionTR: 'Takım ruhu, azim ve rekabetin hüküm sürdüğü spor dünyası. Voleybol, futbol, basketbol ve daha fazlası.',
     descriptionEN: 'A sports world ruled by team spirit, determination and competition. Volleyball, football, basketball and more.',
+    descriptionJA: 'チームワーク、根性、そして競争心が支配するスポーツの世界。バレーボール、サッカー、バスケットボールなど。',
+    descriptionFR: 'Un monde dominé par l\'esprit d\'équipe, la détermination et la compétition. Volleyball, foot, basket et plus encore.',
     lifeExpectancy: [70, 85],
     dangerLevel: 'low',
     powerSystem: 'Yok (Fiziksel)',

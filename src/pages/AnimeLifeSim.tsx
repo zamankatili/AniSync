@@ -98,10 +98,12 @@ export const AnimeLifeSim: React.FC = () => {
   const region = selectedRegion ? regions.find(r => r.id === selectedRegion) : null;
 
   const isTr = currentLang === 'tr';
+  const pick4 = (tr: string, en: string, ja: string | undefined, fr: string | undefined) =>
+    currentLang.startsWith('tr') ? tr : currentLang.startsWith('ja') ? (ja || en) : currentLang.startsWith('fr') ? (fr || en) : en;
   const worldName = (w: { nameTR: string; nameEN: string }) => (isTr ? w.nameTR : w.nameEN);
-  const worldDesc = (w: { descriptionTR: string; descriptionEN: string }) => (isTr ? w.descriptionTR : w.descriptionEN);
+  const worldDesc = (w: { descriptionTR: string; descriptionEN: string; descriptionJA?: string; descriptionFR?: string }) => pick4(w.descriptionTR, w.descriptionEN, w.descriptionJA, w.descriptionFR);
   const regionName = (r: { nameTR: string; nameEN: string }) => (isTr ? r.nameTR : r.nameEN);
-  const regionDesc = (r: { descriptionTR: string; descriptionEN: string }) => (isTr ? r.descriptionTR : r.descriptionEN);
+  const regionDesc = (r: { descriptionTR: string; descriptionEN: string; descriptionJA?: string; descriptionFR?: string }) => pick4(r.descriptionTR, r.descriptionEN, r.descriptionJA, r.descriptionFR);
 
   const familyLabel = (status: LifeResult['familyStatus']) =>
     status === 'poor' ? t('als_family_poor') : status === 'noble' ? t('als_family_noble') : t('als_family_middle');
