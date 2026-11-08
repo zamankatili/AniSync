@@ -39,8 +39,17 @@ export const AnimeLifeSim: React.FC = () => {
   const [parallelLives, setParallelLives] = useState<LifeResult[]>([]);
   const [savedLifeIndex, setSavedLifeIndex] = useState(0);
   const [muted, setMuted] = useState(false);
+  const [showEvent, setShowEvent] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const [lifeAge, setLifeAge] = useState(0);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const addToast = useToastStore((s) => s.addToast);
+
+  const DURATION_MS: Record<'30min' | '1h' | '1.5h', number> = {
+    '30min': 30 * 60 * 1000,
+    '1h': 60 * 60 * 1000,
+    '1.5h': 90 * 60 * 1000,
+  };
 
   const world = selectedWorld ? getWorldById(selectedWorld) : null;
   const regions = selectedWorld ? getRegionsByWorld(selectedWorld) : [];
@@ -64,13 +73,12 @@ export const AnimeLifeSim: React.FC = () => {
     ? (savedLifeIndex > 0 ? savedLife.events[Math.min(savedLifeIndex, savedLife.events.length - 1)]?.age ?? 0 : 0)
     : 0;
 
-  const handleStartLife = () => {
-    if (!world || !region) return;
+  const startLifeWith = (w: NonNullable<typeof world>, r: NonNullable<typeof region>) => {
     const includeHeavy = heavyContent && !eduMode;
-    const main = generateLife(world, region, lifeDuration, { includeHeavy, period, focus });
+    const main = generateLife(w, r, lifeDuration, { includeHeavy, period, focus });
     const parallels: LifeResult[] = [];
     for (let i = 0; i < 3; i++) {
-      parallels.push(generateLife(world, region, lifeDuration, { includeHeavy, period, focus }));
+      parallels.push(generateLife(w, r, lifeDuration, { includeHeavy, period, focus }));
     }
     setLife(main);
     setParallelLives([main, ...parallels]);
@@ -78,7 +86,35 @@ export const AnimeLifeSim: React.FC = () => {
     playSound(440, 200, 'sine');
     setCurrentEventIndex(0);
     setChoicesMade({});
+    setLifeAge(0);
+    setShowEvent(true);
+    setIsPaused(false);
     handleClearSave();
+  };
+
+  const handleStartLife = () => {
+    if (!world || !region) return;
+    startLifeWith(world, region);
+  };
+
+  /** Referanstaki gibi: nerede doğacağını seçemezsin. Ağırlık = yıllık doğum sayısı. */
+  const handleRandomBirth = () => {
+    const weights = ANIME_REGIONS.map(r => Math.max(1, r.population * r.birthRate));
+    const total = weights.reduce((sum, w) => sum + w, 0);
+    let roll = Math.random() * total;
+    let picked = ANIME_REGIONS[ANIME_REGIONS.length - 1];
+    for (let i = 0; i < ANIME_REGIONS.length; i++) {
+      roll -= weights[i];
+      if (roll <= 0) {
+        picked = ANIME_REGIONS[i];
+        break;
+      }
+    }
+    const pickedWorld = getWorldById(picked.worldId);
+    if (!pickedWorld) return;
+    setSelectedWorld(picked.worldId);
+    setSelectedRegion(picked.id);
+    startLifeWith(pickedWorld, picked);
   };
 
   const handleChoice = (eventId: string, choiceId: string) => {
@@ -87,13 +123,23 @@ export const AnimeLifeSim: React.FC = () => {
   };
 
   const handleNextEvent = () => {
-    if (life && currentEventIndex < life.events.length - 1) {
-      setCurrentEventIndex(prev => prev + 1);
-      playSound(550, 100, 'triangle');
-    } else {
+    if (!life) return;
+    if (currentEventIndex >= life.events.length - 1) {
       setPhase('memorial');
       playSound(330, 500, 'sine');
+      return;
     }
+    setLifeAge(prev => Math.max(prev, life.events[currentEventIndex].age));
+    setShowEvent(false);
+    setIsPaused(false);
+    playSound(550, 100, 'triangle');
+  };
+
+  const handleSkipToNext = () => {
+    if (!life) return;
+    const next = life.events[currentEventIndex + 1];
+    if (!next) return;
+    setLifeAge(next.age);
   };
 
   const handleRestart = () => {
@@ -104,6 +150,9 @@ export const AnimeLifeSim: React.FC = () => {
     setChoicesMade({});
     setSelectedWorld(null);
     setSelectedRegion(null);
+    setLifeAge(0);
+    setShowEvent(true);
+    setIsPaused(false);
   };
 
   const currentEvent = life?.events[currentEventIndex];
@@ -133,6 +182,36 @@ export const AnimeLifeSim: React.FC = () => {
     }
   };
 
+  // ── Yaşam saati: seçilen süre gerçek oynanış süresini belirler ──
+  // Olaylar arasında yaş otomatik ilerler; olay kartı açıkken saat durur.
+  useEffect(() => {
+    if (phase !== 'playing' || !life || isPaused || showEvent) return;
+    const target = life.events[currentEventIndex + 1]?.age;
+    if (target === undefined) return;
+    const totalMs = DURATION_MS[lifeDuration];
+    const yearsPerMs = life.deathAge > 0 ? life.deathAge / totalMs : 0;
+    const tickMs = 100;
+    const id = window.setInterval(() => {
+      setLifeAge(prev => {
+        const next = prev + yearsPerMs * tickMs * speed;
+        return next >= target ? target : next;
+      });
+    }, tickMs);
+    return () => window.clearInterval(id);
+  }, [phase, life, isPaused, showEvent, currentEventIndex, lifeDuration, speed]);
+
+  // Yaş hedefe ulaşınca sıradaki olayı göster.
+  useEffect(() => {
+    if (phase !== 'playing' || !life || showEvent) return;
+    const next = life.events[currentEventIndex + 1];
+    if (next && lifeAge >= next.age) {
+      setCurrentEventIndex(currentEventIndex + 1);
+      setLifeAge(next.age);
+      setShowEvent(true);
+      playSound(550, 100, 'triangle');
+    }
+  }, [lifeAge, phase, life, showEvent, currentEventIndex]);
+
   // Load saved life from localStorage on mount
   useEffect(() => {
     try {
@@ -157,6 +236,9 @@ export const AnimeLifeSim: React.FC = () => {
         localStorage.setItem('als_saved_choices', JSON.stringify(choicesMade));
         localStorage.setItem('als_saved_parallels', JSON.stringify(parallelLives));
         localStorage.setItem('als_saved_schema', '2');
+        localStorage.setItem('als_saved_lifeage', String(lifeAge));
+        localStorage.setItem('als_saved_showevent', showEvent ? '1' : '0');
+        localStorage.setItem('als_saved_paused', isPaused ? '1' : '0');
         if (world) localStorage.setItem('als_saved_world', world.id);
         if (region) localStorage.setItem('als_saved_region', region.id);
         localStorage.setItem('als_saved_duration', lifeDuration);
@@ -203,6 +285,11 @@ export const AnimeLifeSim: React.FC = () => {
       setSavedLifeIndex(idx);
       setChoicesMade(savedChoices || {});
       setParallelLives(Array.isArray(savedParallels) ? savedParallels : []);
+      const savedAgeRaw = Number(localStorage.getItem('als_saved_lifeage') || 'NaN');
+      const eventAge = parsed.events[Math.min(idx, parsed.events.length - 1)]?.age ?? 0;
+      setLifeAge(Number.isFinite(savedAgeRaw) ? Math.max(savedAgeRaw, eventAge) : eventAge);
+      setShowEvent(localStorage.getItem('als_saved_showevent') !== '0');
+      setIsPaused(localStorage.getItem('als_saved_paused') === '1');
       setPhase(savedPhase);
       setSavedLife(parsed);
     } catch {
@@ -321,11 +408,32 @@ export const AnimeLifeSim: React.FC = () => {
             </div>
           </div>
 
+          {/* Random birth — reference-style primary action */}
+          <div className="bg-rose-950/30 border-2 border-rose-500 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider">
+                {t('als_random_birth_title')}
+              </h2>
+              <p className="text-[11px] text-neutral-300 font-medium leading-snug mt-1 max-w-2xl">
+                {t('als_random_birth_desc')}
+              </p>
+            </div>
+            <button
+              onClick={handleRandomBirth}
+              className="shrink-0 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black uppercase text-sm tracking-widest border-4 border-white neo-shadow-white transition-all cursor-pointer"
+            >
+              {t('als_random_birth_button')}
+            </button>
+          </div>
+
           {/* World Selection */}
           <div className="bg-neutral-900 border-2 border-white p-5">
-            <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-4">
+            <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2 mb-1">
               🌍 {t('als_world_select_title')}
             </h2>
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-4">
+              {t('als_explore_mode_note')}
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {ANIME_WORLDS.map((w) => (
                 <button
@@ -546,13 +654,13 @@ export const AnimeLifeSim: React.FC = () => {
                 {t('als_progress_world_region', { world: world ? worldName(world) : '', region: region ? regionName(region) : '' })} · {life?.gender === 'female' ? '♀' : '♂'} · {life?.period === 'past' ? t('als_period_past') : life?.period === 'future' ? t('als_period_future') : t('als_period_today')}
               </span>
               <span className="text-xs font-mono font-bold text-neutral-400">
-                {t('als_progress_age', { age: currentEvent.age, deathAge: life.deathAge, unit: t('als_years_unit') })}
+                {t('als_progress_age', { age: Math.floor(lifeAge), deathAge: life.deathAge, unit: t('als_years_unit') })}
               </span>
             </div>
             <div className="w-full h-3 bg-neutral-900 border-2 border-white overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-rose-600 via-amber-400 to-emerald-500 transition-all duration-500"
-                style={{ width: `${(currentEventIndex / (life.events.length - 1)) * 100}%` }}
+                style={{ width: `${Math.min(100, (lifeAge / Math.max(1, life.deathAge)) * 100)}%` }}
               />
             </div>
             <div className="mt-2 text-[10px] text-neutral-500 font-mono">
@@ -574,6 +682,15 @@ export const AnimeLifeSim: React.FC = () => {
                   {s}x
                 </button>
               ))}
+              <button
+                onClick={() => setIsPaused(p => !p)}
+                className={cn(
+                  "px-2 py-1 text-[10px] font-black border cursor-pointer",
+                  isPaused ? "bg-rose-600 text-white border-rose-400" : "bg-black text-neutral-300 border-white/20 hover:border-white"
+                )}
+              >
+                {isPaused ? `▶ ${t('als_resume_clock')}` : `⏸ ${t('als_pause')}`}
+              </button>
               <button
                 onClick={() => setMuted(m => !m)}
                 className="ml-auto px-2 py-1 text-[10px] font-black border cursor-pointer bg-black text-neutral-300 border-white/20 hover:border-white"
@@ -600,6 +717,7 @@ export const AnimeLifeSim: React.FC = () => {
           )}
 
           {/* Event Card */}
+          {showEvent ? (
           <div className="bg-neutral-900 border-4 border-white p-6 md:p-8 neo-shadow-white space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">
@@ -709,10 +827,52 @@ export const AnimeLifeSim: React.FC = () => {
                 onClick={handleNextEvent}
                 className="w-full py-3 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm border-4 border-white flex items-center justify-center gap-2 transition-all cursor-pointer neo-shadow-white"
               >
-                {t('als_continue')}
+                {currentEvent.isDeath ? t('als_go_memorial') : t('als_continue')}
               </button>
             )}
           </div>
+          ) : (
+            <div className="bg-black border-4 border-white p-6 md:p-8 neo-shadow-white text-center space-y-4">
+              <div className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">
+                {t('als_life_in_progress')}
+              </div>
+              <div className="text-6xl md:text-7xl font-black text-white font-mono leading-none">
+                {Math.floor(lifeAge)}
+              </div>
+              <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                {t('als_years_unit')} · {life.birthYear + Math.floor(lifeAge)}
+              </div>
+              <div className="max-w-md mx-auto w-full h-2 bg-neutral-900 border border-white/30 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-rose-600 via-amber-400 to-emerald-500 transition-all duration-300"
+                  style={{ width: `${Math.min(100, (lifeAge / Math.max(1, life.deathAge)) * 100)}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-neutral-400 font-medium max-w-xl mx-auto">
+                {life.regionId && region ? regionName(region) : ''}
+                {world ? ` · ${worldName(world)}` : ''}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  onClick={() => setIsPaused(p => !p)}
+                  className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-xs border-2 border-white cursor-pointer"
+                >
+                  {isPaused ? `▶ ${t('als_resume_clock')}` : `⏸ ${t('als_pause')}`}
+                </button>
+                <button
+                  onClick={handleSkipToNext}
+                  className="px-4 py-2 bg-black hover:bg-neutral-800 text-white font-black uppercase text-xs border-2 border-white/30 cursor-pointer"
+                >
+                  {t('als_skip_to_next')}
+                </button>
+              </div>
+              {isPaused && (
+                <div className="text-[10px] font-black text-rose-400 uppercase tracking-wider">
+                  {t('als_paused')}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Stats Panel */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
