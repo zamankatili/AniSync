@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../context/AppStore';
 import {
-  MessageSquare, X, Send, Hash, Calendar, Plus, Vote
+  MessageSquare, X, Send, Hash, Calendar, Plus, Vote, Maximize2
 } from 'lucide-react';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, where, getDoc, getCountFromServer, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -15,6 +15,7 @@ import { resolveAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { OFFICIAL_ROOMS, type CommunityRoom, type OfficialRoom } from '../lib/rooms';
 import { computeOtakuLevel } from '../lib/otakuLevel';
+import { localizeLevelTitle } from '../lib/badgeLocalization';
 import { useQuizStore } from '../store/useQuizStore';
 import { useIsLargeScreen } from '../lib/useMediaQuery';
 import { canAnonSend, recordAnonSend, loadAnonMessages, readAnonQuota, appendAnonMessage, removeAnonMessage, ANON_DAILY_LIMIT } from '../lib/anonQuota';
@@ -38,6 +39,8 @@ export type ChatRoomItem = OfficialRoom | CommunityRoom;
 
 export const GlobalChat = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const isLargeScreen = useIsLargeScreen();
+  const [cafeFullScreen, setCafeFullScreen] = useState(false);
   const [activeRoomId, setActiveRoomId] = useState<string>('genel');
   const [communityRooms, setCommunityRooms] = useState<CommunityRoom[]>([]);
   const [pendingRoomCount, setPendingRoomCount] = useState(0);
@@ -65,13 +68,26 @@ export const GlobalChat = () => {
 
   const { watchlist } = useAppStore();
   const { arcadeHighScore, dailyStreak } = useQuizStore();
-  const myKarma = useMemo(
-    () => computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore).karma,
+  const otakuInfo = useMemo(
+    () => computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore),
     [watchlist, arcadeHighScore, dailyStreak],
+  );
+  const myKarma = otakuInfo.karma;
+  const myLevelInfo = useMemo(
+    () => ({
+      level: otakuInfo.levelInfo.currentLevel.level,
+      title: localizeLevelTitle(otakuInfo.levelInfo.currentLevel.level, otakuInfo.levelInfo.currentLevel.title),
+    }),
+    [otakuInfo.levelInfo.currentLevel.level, otakuInfo.levelInfo.currentLevel.title],
   );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Küçük ekrana düşülünce KÖŞE'yi küçült — panel kalır
+  useEffect(() => {
+    if (!isLargeScreen) setCafeFullScreen(false);
+  }, [isLargeScreen]);
 
   // Topluluk odaları — Firestore canlı; resmi + topluluk birleşir
   useEffect(() => {
@@ -111,8 +127,6 @@ export const GlobalChat = () => {
       })
       .catch(() => setIsAdmin(false));
   }, [currentUser]);
-
-  const isLargeScreen = useIsLargeScreen();
 
   // Anon yerel mesajlar — bu cihazda saklanır, Firestore'a yazılmaz
   const anonLocalMessages = useMemo(
@@ -319,63 +333,37 @@ export const GlobalChat = () => {
     }
   };
 
-  // Masaüstü: tam sayfa "KÖŞE" deneyimi. Mobil: sağ altta yüzen panel.
-  if (isLargeScreen) {
-    return (
-      <>
-        {isOpen && (
-          <ChatCafe
-            rooms={allRooms}
-            activeRoom={currentRoom}
-            messages={allMessages as any}
-            onSelectRoom={setActiveRoomId}
-            onClose={() => setIsOpen(false)}
-            onSend={handleSend}
-            newMessage={newMessage}
-            onChangeNewMessage={setNewMessage}
-            onDeleteMessage={handleDeleteMessage}
-            currentUserName={currentUser?.displayName || userProfile?.name || 'Otaku'}
-            currentUserAvatar={currentUser?.photoURL ?? null}
-            isSignedIn={!!currentUser}
-            myKarma={myKarma}
-            anonUsed={anonQuota.used}
-            anonLimit={ANON_DAILY_LIMIT}
-            onOpenCreateModal={() => setRoomModalOpen(true)}
-            onOpenQueue={() => setQueueOpen(true)}
-            pendingRoomCount={pendingRoomCount}
-            isAdmin={isAdmin}
-            canDirectCreate={myKarma >= 500}
-            inputRef={inputRef}
-            messagesEndRef={messagesEndRef}
-          />
-        )}
-        {!isOpen && (
-          <button
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-8 right-8 z-50 w-16 h-16 bg-[#1a120c] border-2 border-[#e8c07a] flex items-center justify-center text-[#e8c07a] hover:bg-[#e8c07a] hover:text-[#1a120c] transition-all cursor-pointer shadow-[4px_4px_0_#000]"
-            title={t('chat_toggle_title')}
-            aria-label={t('chat_toggle_title')}
-          >
-            <span className="sr-only">{t('chat_toggle_title')}</span>
-            <MessageSquare size={24} strokeWidth={2.5} />
-          </button>
-        )}
-        <RoomRequestModal
-          isOpen={roomModalOpen}
-          onClose={() => setRoomModalOpen(false)}
-          karma={myKarma}
-        />
-        <RoomQueuePanel
-          isOpen={queueOpen}
-          onClose={() => setQueueOpen(false)}
-          isAdmin={isAdmin}
-        />
-      </>
-    );
-  }
-
   return (
     <>
+      {/* KÖŞE tam sayfa — masaüstü veya cafeFullScreen */}
+      {isLargeScreen && cafeFullScreen && isOpen && (
+        <ChatCafe
+          rooms={allRooms}
+          activeRoom={currentRoom}
+          messages={allMessages as any}
+          onSelectRoom={setActiveRoomId}
+          onClose={() => setCafeFullScreen(false)}
+          onSend={handleSend}
+          newMessage={newMessage}
+          onChangeNewMessage={setNewMessage}
+          onDeleteMessage={handleDeleteMessage}
+          currentUserName={currentUser?.displayName || userProfile?.name || 'Otaku'}
+          currentUserAvatar={currentUser?.photoURL ?? null}
+          isSignedIn={!!currentUser}
+          myKarma={myKarma}
+          anonUsed={anonQuota.used}
+          anonLimit={ANON_DAILY_LIMIT}
+          onOpenCreateModal={() => setRoomModalOpen(true)}
+          onOpenQueue={() => setQueueOpen(true)}
+          pendingRoomCount={pendingRoomCount}
+          isAdmin={isAdmin}
+          canDirectCreate={myKarma >= 500}
+          inputRef={inputRef}
+          messagesEndRef={messagesEndRef}
+          levelInfo={myLevelInfo}
+        />
+      )}
+
       <div className="fixed bottom-20 md:bottom-8 right-4 md:right-8 z-50 flex flex-col items-end">
         <AnimatePresence>
           {isOpen && (
@@ -407,12 +395,27 @@ export const GlobalChat = () => {
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => setIsOpen(false)} 
-                  className="text-white hover:text-rose-500 hover:bg-white/10 p-1.5 transition-colors cursor-pointer"
-                >
-                  <X size={20} strokeWidth={2.5} />
-                </button>
+                <div className="flex items-center gap-1">
+                  {/* Tam sayfa KÖŞE'ye geçiş — yalnızca geniş ekranlarda */}
+                  {isLargeScreen && (
+                    <button
+                      onClick={() => setCafeFullScreen(true)}
+                      className="text-amber-400 hover:text-white border border-amber-400/50 hover:border-amber-400 px-2 py-1.5 flex items-center gap-1.5 font-black uppercase text-[9px] tracking-widest transition-colors cursor-pointer"
+                      title={t('chat_to_cafe_title')}
+                      aria-label={t('chat_to_cafe_title')}
+                    >
+                      <Maximize2 size={12} strokeWidth={2.5} />
+                      <span className="hidden sm:inline">{t('chat_to_cafe')}</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-white hover:text-rose-500 hover:bg-white/10 p-1.5 transition-colors cursor-pointer"
+                    aria-label={t('close')}
+                  >
+                    <X size={20} strokeWidth={2.5} />
+                  </button>
+                </div>
               </div>
 
               {/* Admin'in açtığı canlı etkinlik bandı (yoksa gizlenir) */}
