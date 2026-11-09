@@ -7,6 +7,7 @@
 - [x] **ANISYNCDLE**: TR günü, rastgele antrenman, istatistik izolasyonu, takma ad/eşleşme, 4 dilli ipuçları.
 - [x] **Başlık büyütme (TR i→İ) düzeltmesi**: Anime/manga/karakter/ haber başlıklarına `lang="en"` verilerek Türkçe `text-transform` kuralının Latin başlıkları bozması engellendi (CHAİNSAW → CHAINSAW).
 - [x] **Bölüm sayısı gösterimi**: Canlı katalogda bilinmeyen okuma yerine "232 BÖLÜM" formatı (`multimedia_chapters_total`).
+- [x] **MAL/AniList import**: `ImportExportModal` artık uydurma kapak/skor basmıyor (DiceBear identicon, skor 8.0, 2023). `src/lib/importList.ts` CDATA/entitelü MAL XML + AniList JSON (`lists[].entries[].media`) ayrıştırır; `anilistByMalIds` 50'şerli batch ile kapak/özet/skor/yıl/türle zenginleştirir; zenginleştirme alınamazsa akış MAL verisiyle devam eder ve arayüz bunu belirtir.
 
 ## Sende (5 dk – 30 dk)
 - [ ] Firebase Console → Firestore → **Rules yayınla** (`firestore.rules`)

@@ -1,105 +1,75 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
-import { 
-  FileUp, Download, Check, AlertCircle, Copy, 
-  Sparkles, CheckCircle2, Loader2, ArrowRight, X 
+import {
+  FileUp, Download, Check, Copy,
+  Sparkles, CheckCircle2, Loader2, X
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { WatchlistItem, WatchStatus } from '../types';
+import { prepareImportFromText, type PreparedImport } from '../lib/enrichImport';
 
 interface ImportExportModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const SAMPLE_MAL_XML = `<?xml version="1.0" encoding="UTF-8" ?>
+// Örnek MAL `animelist.xml` (gerçek MyAnimeList dışa aktarımını taklit eder;
+// kapak içermez — AniList zenginleştirmesi kapakları getirir).
+const SAMPLE_MAL_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <myanimelist>
   <myinfo>
-    <user_name>OtakuExplorer</user_name>
+    <user_name>OtakuExample</user_name>
     <user_export_type>1</user_export_type>
   </myinfo>
   <anime>
-    <series_animedb_id>52991</series_animedb_id>
-    <series_title>Sousou no Frieren</series_title>
-    <series_episodes>28</series_episodes>
-    <my_watched_episodes>28</my_watched_episodes>
-    <my_score>10</my_score>
-    <my_status>Completed</my_status>
-  </anime>
-  <anime>
-    <series_animedb_id>52347</series_animedb_id>
-    <series_title>Solo Leveling</series_title>
-    <series_episodes>12</series_episodes>
-    <my_watched_episodes>8</my_watched_episodes>
-    <my_score>9</my_score>
-    <my_status>Watching</my_status>
-  </anime>
-  <anime>
     <series_animedb_id>5114</series_animedb_id>
-    <series_title>Fullmetal Alchemist: Brotherhood</series_title>
+    <series_title><![CDATA[Fullmetal Alchemist: Brotherhood]]></series_title>
     <series_episodes>64</series_episodes>
     <my_watched_episodes>64</my_watched_episodes>
     <my_score>10</my_score>
-    <my_status>Completed</my_status>
+    <my_status>2</my_status>
   </anime>
   <anime>
-    <series_animedb_id>57334</series_animedb_id>
-    <series_title>Dan Da Dan</series_title>
-    <series_episodes>12</series_episodes>
-    <my_watched_episodes>6</my_watched_episodes>
-    <my_score>9</my_score>
-    <my_status>Watching</my_status>
-  </anime>
-  <anime>
-    <series_animedb_id>9253</series_animedb_id>
-    <series_title>Steins;Gate</series_title>
-    <series_episodes>24</series_episodes>
-    <my_watched_episodes>24</my_watched_episodes>
+    <series_animedb_id>52991</series_animedb_id>
+    <series_title><![CDATA[Sousou no Frieren]]></series_title>
+    <series_episodes>28</series_episodes>
+    <my_watched_episodes>28</my_watched_episodes>
     <my_score>10</my_score>
-    <my_status>Completed</my_status>
+    <my_status>2</my_status>
   </anime>
   <anime>
-    <series_animedb_id>1535</series_animedb_id>
-    <series_title>Death Note</series_title>
-    <series_episodes>37</series_episodes>
-    <my_watched_episodes>37</my_watched_episodes>
+    <series_animedb_id>16498</series_animedb_id>
+    <series_title><![CDATA[Attack on Titan]]></series_title>
+    <series_episodes>25</series_episodes>
+    <my_watched_episodes>12</my_watched_episodes>
     <my_score>9</my_score>
-    <my_status>Completed</my_status>
-  </anime>
-  <anime>
-    <series_animedb_id>52701</series_animedb_id>
-    <series_title>Bleach: Thousand-Year Blood War</series_title>
-    <series_episodes>13</series_episodes>
-    <my_watched_episodes>13</my_watched_episodes>
-    <my_score>9</my_score>
-    <my_status>Completed</my_status>
+    <my_status>1</my_status>
   </anime>
   <anime>
     <series_animedb_id>21</series_animedb_id>
-    <series_title>One Piece</series_title>
+    <series_title><![CDATA[One Piece]]></series_title>
     <series_episodes>0</series_episodes>
     <my_watched_episodes>1080</my_watched_episodes>
     <my_score>10</my_score>
-    <my_status>Watching</my_status>
+    <my_status>1</my_status>
   </anime>
   <anime>
-    <series_animedb_id>11061</series_animedb_id>
-    <series_title>Hunter x Hunter (2011)</series_title>
-    <series_episodes>148</series_episodes>
-    <my_watched_episodes>148</my_watched_episodes>
-    <my_score>10</my_score>
-    <my_status>Completed</my_status>
-  </anime>
-  <anime>
-    <series_animedb_id>52211</series_animedb_id>
-    <series_title>Oshi no Ko</series_title>
-    <series_episodes>11</series_episodes>
+    <series_animedb_id>40748</series_animedb_id>
+    <series_title><![CDATA[Jujutsu Kaisen]]></series_title>
+    <series_episodes>24</series_episodes>
     <my_watched_episodes>0</my_watched_episodes>
     <my_score>0</my_score>
-    <my_status>Plan to Watch</my_status>
+    <my_status>6</my_status>
+  </anime>
+  <anime>
+    <series_animedb_id>9253</series_animedb_id>
+    <series_title><![CDATA[Steins;Gate]]></series_title>
+    <series_episodes>24</series_episodes>
+    <my_watched_episodes>24</my_watched_episodes>
+    <my_score>10</my_score>
+    <my_status>2</my_status>
   </anime>
 </myanimelist>`;
 
@@ -110,125 +80,34 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
 
   const [activeTab, setActiveTab] = useState<'import' | 'export'>('import');
   const [inputText, setInputText] = useState('');
-  const [parsedItems, setParsedItems] = useState<WatchlistItem[] | null>(null);
+  const [preparedImport, setPreparedImport] = useState<PreparedImport | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isEnriching, setIsEnriching] = useState(false);
   const [importDone, setImportDone] = useState(false);
 
   if (!isOpen) return null;
 
-  // Parser for MyAnimeList XML and JSON
-  const handleParseContent = (content: string) => {
+  // MAL XML ve AniList JSON yedeklerini ayrıştır, sonra AniList zenginleştirmesi yap
+  const handleParseContent = async (content: string) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
+
+    setIsEnriching(true);
+    setPreparedImport(null);
+    setImportDone(false);
     try {
-      const trimmed = content.trim();
-      const items: WatchlistItem[] = [];
-
-      if (trimmed.startsWith('<?xml') || trimmed.includes('<myanimelist>') || trimmed.includes('<anime>')) {
-        // XML Parse
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(trimmed, 'text/xml');
-        const animeNodes = xmlDoc.getElementsByTagName('anime');
-
-        if (animeNodes.length === 0) {
-          throw new Error(t('import_err_no_anime_tag'));
-        }
-
-        for (let i = 0; i < animeNodes.length; i++) {
-          const node = animeNodes[i];
-          const malId = parseInt(node.getElementsByTagName('series_animedb_id')[0]?.textContent || '0', 10);
-          const title = node.getElementsByTagName('series_title')[0]?.textContent || `Anime #${malId}`;
-          const totalEp = parseInt(node.getElementsByTagName('series_episodes')[0]?.textContent || '0', 10);
-          const watchedEp = parseInt(node.getElementsByTagName('my_watched_episodes')[0]?.textContent || '0', 10);
-          const score = parseInt(node.getElementsByTagName('my_score')[0]?.textContent || '0', 10);
-          const rawStatus = node.getElementsByTagName('my_status')[0]?.textContent?.trim() || '';
-
-          // Map status
-          let status: WatchStatus = 'plan_to_watch';
-          const lowerStatus = rawStatus.toLowerCase();
-          if (lowerStatus === '1' || lowerStatus.includes('watching') || lowerStatus.includes('izlen')) {
-            status = 'watching';
-          } else if (lowerStatus === '2' || lowerStatus.includes('completed') || lowerStatus.includes('tamam')) {
-            status = 'completed';
-          } else if (lowerStatus === '3' || lowerStatus.includes('on-hold') || lowerStatus.includes('hold')) {
-            status = 'on_hold';
-          } else if (lowerStatus === '4' || lowerStatus.includes('dropped') || lowerStatus.includes('bırak')) {
-            status = 'dropped';
-          } else {
-            status = 'plan_to_watch';
-          }
-
-          items.push({
-            anime: {
-              mal_id: malId || Math.floor(100000 + Math.random() * 900000),
-              title: title,
-              title_english: title,
-              images: {
-                jpg: { 
-                  image_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(title)}`, 
-                  large_image_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(title)}` 
-                },
-                webp: { 
-                  image_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(title)}`, 
-                  large_image_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(title)}` 
-                }
-              },
-              synopsis: `${title} - ${t('import_synopsis_source')}`,
-              score: score || 8.0,
-              episodes: totalEp > 0 ? totalEp : null,
-              status: status === 'completed' ? 'Finished Airing' : 'Currently Airing',
-              genres: [{ mal_id: 1, name: 'Anime' }],
-              year: 2023
-            },
-            status,
-            userScore: score,
-            episodesWatched: watchedEp,
-            addedAt: new Date().toISOString()
-          });
-        }
-      } else if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-        // JSON Parse
-        const data = JSON.parse(trimmed);
-        const list = Array.isArray(data) ? data : data.anime || data.watchlist || data.entries || [];
-
-        list.forEach((item: any) => {
-          const malId = item.mal_id || item.id || Math.floor(100000 + Math.random() * 900000);
-          const title = item.title_english || item.title || item.name || `Anime #${malId}`;
-          const status = (item.status?.toLowerCase() === 'completed' ? 'completed' : item.status?.toLowerCase() === 'watching' ? 'watching' : item.status?.toLowerCase() === 'dropped' ? 'dropped' : 'plan_to_watch') as WatchStatus;
-
-          items.push({
-            anime: {
-              mal_id: malId,
-              title,
-              title_english: title,
-              images: item.anime?.images || {
-                jpg: { image_url: item.image || '', large_image_url: item.image || '' },
-                webp: { image_url: item.image || '', large_image_url: item.image || '' }
-              },
-              synopsis: item.synopsis || '',
-              score: item.score || item.userScore || 8.0,
-              episodes: item.episodes || item.totalEpisodes || null,
-              status: 'Airing',
-              genres: [{ mal_id: 1, name: 'Anime' }],
-              year: item.year || 2023
-            },
-            status,
-            userScore: item.userScore || item.score || 0,
-            episodesWatched: item.episodesWatched || item.watched_episodes || 0,
-            addedAt: new Date().toISOString()
-          });
-        });
-      } else {
-        throw new Error(t('import_err_format'));
+      const result = await prepareImportFromText(trimmed);
+      if (result.items.length === 0) {
+        addToast(t('import_err_no_entries'), 'error');
+        return;
       }
-
-      if (items.length === 0) {
-        throw new Error(t('import_err_no_entries'));
-      }
-
-      setParsedItems(items);
-      addToast(t('import_success_detected', { count: items.length }), 'success');
-    } catch (err: any) {
+      setPreparedImport(result);
+      addToast(t('import_success_detected', { count: result.items.length }), 'success');
+    } catch (err) {
       console.error(err);
-      addToast(err.message || t('import_err_parse_failed'), 'error');
+      addToast(err instanceof Error && err.message ? err.message : t('import_err_parse_failed'), 'error');
+    } finally {
+      setIsEnriching(false);
     }
   };
 
@@ -251,11 +130,11 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
   };
 
   const handleExecuteImport = async () => {
-    if (!parsedItems || parsedItems.length === 0) return;
+    if (!preparedImport || preparedImport.items.length === 0) return;
 
     setIsProcessing(true);
     try {
-      const count = await importWatchlistItems(parsedItems);
+      const count = await importWatchlistItems(preparedImport.items);
       setImportDone(true);
       addToast(t('import_success_added', { count }), 'success');
     } catch (err) {
@@ -347,7 +226,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
                   {t('import_done_title')}
                 </h3>
                 <p className="text-neutral-400 font-bold text-xs uppercase tracking-wider mt-2 max-w-sm">
-                  {t('import_done_desc', { count: parsedItems?.length ?? 0 })}
+                  {t('import_done_desc', { count: preparedImport?.items.length ?? 0 })}
                 </p>
                 <button
                   onClick={onClose}
@@ -356,7 +235,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
                   {t('import_go_to_list')}
                 </button>
               </div>
-            ) : parsedItems ? (
+            ) : preparedImport ? (
               <div className="space-y-4">
                 <div className="bg-neutral-900 border-2 border-white p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -364,32 +243,53 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
                       {t('import_summary_title')}
                     </span>
                     <span className="text-xs font-black bg-rose-600 text-white px-2 py-0.5 border border-white">
-                      {t('import_anime_count', { count: parsedItems.length })}
+                      {t('import_anime_count', { count: preparedImport.items.length })}
                     </span>
                   </div>
+
+                  {(preparedImport.enriched > 0 || preparedImport.enrichmentFailed || preparedImport.skipped > 0) && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {preparedImport.enriched > 0 && (
+                        <span className="text-[10px] font-black bg-emerald-500 text-black px-2 py-0.5 border border-black uppercase">
+                          {t('import_enriched_note', { count: preparedImport.enriched })}
+                        </span>
+                      )}
+                      {preparedImport.enrichmentFailed && (
+                        <span className="text-[10px] font-black bg-amber-400 text-black px-2 py-0.5 border border-black uppercase">
+                          {t('import_enrichment_failed')}
+                        </span>
+                      )}
+                      {preparedImport.skipped > 0 && (
+                        <span className="text-[10px] font-black bg-neutral-700 text-white px-2 py-0.5 border border-white/40 uppercase">
+                          {t('import_skipped_note', { count: preparedImport.skipped })}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <p className="text-[10px] text-neutral-500 font-bold uppercase mb-3">{t('import_mal_only_note')}</p>
 
                   <div className="grid grid-cols-4 gap-2 text-center">
                     <div className="bg-black p-2 border border-white/20">
                       <div className="text-base font-black text-white">
-                        {parsedItems.filter(i => i.status === 'watching').length}
+                        {preparedImport.items.filter(i => i.status === 'watching').length}
                       </div>
                       <div className="text-[10px] text-neutral-400 font-bold uppercase">{t('watching')}</div>
                     </div>
                     <div className="bg-black p-2 border border-white/20">
                       <div className="text-base font-black text-white">
-                        {parsedItems.filter(i => i.status === 'completed').length}
+                        {preparedImport.items.filter(i => i.status === 'completed').length}
                       </div>
                       <div className="text-[10px] text-neutral-400 font-bold uppercase">{t('completed')}</div>
                     </div>
                     <div className="bg-black p-2 border border-white/20">
                       <div className="text-base font-black text-white">
-                        {parsedItems.filter(i => i.status === 'plan_to_watch').length}
+                        {preparedImport.items.filter(i => i.status === 'plan_to_watch').length}
                       </div>
                       <div className="text-[10px] text-neutral-400 font-bold uppercase">{t('plan_to_watch')}</div>
                     </div>
                     <div className="bg-black p-2 border border-white/20">
                       <div className="text-base font-black text-white">
-                        {parsedItems.filter(i => i.status === 'dropped' || i.status === 'on_hold').length}
+                        {preparedImport.items.filter(i => i.status === 'dropped' || i.status === 'on_hold').length}
                       </div>
                       <div className="text-[10px] text-neutral-400 font-bold uppercase">{t('import_status_other')}</div>
                     </div>
@@ -398,7 +298,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
 
                 {/* Preview List */}
                 <div className="max-h-52 overflow-y-auto space-y-2 border-2 border-white/20 p-2 bg-black">
-                  {parsedItems.slice(0, 10).map(item => (
+                  {preparedImport.items.slice(0, 10).map(item => (
                     <div key={item.anime.mal_id} className="flex items-center justify-between p-2 bg-neutral-900 border border-white/10 text-xs">
                       <div className="font-black text-white truncate max-w-[280px]">
                         {item.anime.title}
@@ -413,9 +313,9 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
                       </div>
                     </div>
                   ))}
-                  {parsedItems.length > 10 && (
+                  {preparedImport.items.length > 10 && (
                     <div className="text-center text-[10px] text-neutral-400 uppercase font-black py-1">
-                      {t('import_more_anime', { count: parsedItems.length - 10 })}
+                      {t('import_more_anime', { count: preparedImport.items.length - 10 })}
                     </div>
                   )}
                 </div>
@@ -430,7 +330,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
                     <span>{isProcessing ? t('import_processing') : t('import_confirm_cta')}</span>
                   </button>
                   <button
-                    onClick={() => setParsedItems(null)}
+                    onClick={() => setPreparedImport(null)}
                     className="py-3 px-4 bg-neutral-800 text-white font-black uppercase text-xs border border-white/40 hover:bg-neutral-700"
                   >
                     {t('back_label')}
@@ -478,7 +378,8 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
                   <button
                     onClick={handleLoadSample}
                     type="button"
-                    className="flex items-center gap-1.5 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-400/50 font-black text-[11px] uppercase tracking-wider transition-colors"
+                    disabled={isEnriching}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-400/50 font-black text-[11px] uppercase tracking-wider transition-colors disabled:opacity-50"
                   >
                     <Sparkles size={14} />
                     <span>{t('import_load_sample')}</span>
@@ -486,10 +387,11 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
 
                   <button
                     onClick={() => handleParseContent(inputText)}
-                    disabled={!inputText.trim()}
-                    className="px-6 py-2.5 bg-white hover:bg-rose-600 hover:text-white text-black font-black uppercase text-xs tracking-wider border-2 border-black neo-shadow-white transition-colors disabled:opacity-40"
+                    disabled={!inputText.trim() || isEnriching}
+                    className="px-6 py-2.5 bg-white hover:bg-rose-600 hover:text-white text-black font-black uppercase text-xs tracking-wider border-2 border-black neo-shadow-white transition-colors disabled:opacity-40 flex items-center gap-2"
                   >
-                    {t('import_parse_cta')}
+                    {isEnriching && <Loader2 size={14} className="animate-spin" />}
+                    {isEnriching ? t('import_enriching') : t('import_parse_cta')}
                   </button>
                 </div>
               </div>
@@ -530,3 +432,4 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
     </div>
   );
 };
+

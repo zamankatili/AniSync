@@ -353,6 +353,47 @@ export async function getAniListMediaByMalId(malId: number, signal?: AbortSignal
   return media;
 }
 
+/**
+ * MyAnimeList kimliklerini toplu çözümler (50'lik dilimler, `idMal_in`).
+ * Import akışında kapak, özet ve skor zenginleştirmesi içindir; bir dilim
+ * başarısız olursa diğerleri korunur (kısmi sonuç Map'i).
+ */
+export async function getAniListByMalIds(
+  malIds: number[],
+  signal?: AbortSignal
+): Promise<Map<number, UnifiedMedia>> {
+  const unique = Array.from(new Set(malIds.filter((id) => Number.isFinite(id) && id > 0)));
+  const out = new Map<number, UnifiedMedia>();
+  if (unique.length === 0) return out;
+
+  for (let index = 0; index < unique.length; index += 50) {
+    const chunk = unique.slice(index, index + 50);
+    try {
+      const payload = await graphql<AniListPageResponse>(
+        `query ($ids: [Int]) {
+          Page(page: 1, perPage: 50) {
+            media(idMal_in: $ids, type: ANIME) {
+              ...MediaCore
+            }
+          }
+        }`,
+        { ids: chunk },
+        `toplu MAL (${chunk.length})`,
+        signal
+      );
+      for (const node of payload.data?.Page?.media ?? []) {
+        if (typeof node.idMal === 'number') {
+          out.set(node.idMal, mapAniListMedia(node));
+        }
+      }
+    } catch {
+      // Dilim başarısız olursa bu kısmı MAL verisiyle geçeriz; import kopmaz.
+    }
+  }
+
+  return out;
+}
+
 /** Sezonluk / popüler listeler için kısayol. */
 export async function getAniListTrending(
   kind: 'anime' | 'manga' | 'light_novel' = 'anime',
