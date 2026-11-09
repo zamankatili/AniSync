@@ -4,6 +4,7 @@ import { useToastStore } from '../store/useToastStore';
 import { Settings, Play, CheckCircle, Heart, Clock, BarChart3, Navigation as NavigationIcon, ChevronRight, LogOut, PieChart as PieChartIcon, UserPlus, Grid3X3, FileUp, Compass, Download, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
+import { resolveAvatar } from '../lib/avatar';
 import { AnimeCard } from '../components/AnimeCard';
 import { MonthlyActivityChart } from '../components/MonthlyActivityChart';
 import { ProfileAnalyticsDashboard } from '../components/ProfileAnalyticsDashboard';
@@ -186,7 +187,7 @@ export const Profile = () => {
         <div className="px-6 pb-8 md:px-10 md:pb-10 relative">
           <div className="flex flex-col md:flex-row gap-6 md:items-end -mt-16 md:-mt-20 mb-6">
             <div className="w-28 h-28 md:w-36 md:h-36 border-4 border-black overflow-hidden bg-white flex-shrink-0 relative z-10 transition-colors grayscale group-hover:grayscale-0">
-              <img src={(isOwnProfile ? currentUser?.photoURL : (targetProfile as any)?.photoURL) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`} alt="Profile" className="w-full h-full object-cover" />
+              <img src={resolveAvatar(isOwnProfile ? currentUser?.photoURL : (targetProfile as any)?.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 pb-2 md:pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>

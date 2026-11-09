@@ -10,6 +10,7 @@ import { db } from '../firebase';
 import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { cn } from '../lib/utils';
+import { resolveAvatar, getDefaultAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
 export interface CommunityReview {
@@ -81,7 +82,7 @@ export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({
     setIsSubmitting(true);
     const userId = currentUser.uid;
     const userName = userProfile?.name || currentUser?.displayName || 'AnimeSever';
-    const userAvatar = currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`;
+    const userAvatar = resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed);
 
     const newReview: CommunityReview = {
       id: currentUser.uid,
@@ -281,7 +282,7 @@ export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({
                 <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
                   <div className="flex items-center gap-2.5">
                     <img 
-                      src={rev.userAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${rev.userName}`} 
+                      src={rev.userAvatar || getDefaultAvatar(rev.userName)} 
                       alt={rev.userName} 
                       className="w-9 h-9 border border-white bg-white object-cover"
                     />

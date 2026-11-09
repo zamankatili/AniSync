@@ -9,6 +9,7 @@ import { updateProfile } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { localizeGenre } from '../lib/genreNames';
+import { resolveAvatar } from '../lib/avatar';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -101,7 +102,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 <div className="flex flex-col items-center gap-4">
                   <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                     <img 
-                      src={currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} 
+                      src={resolveAvatar(currentUser?.photoURL, avatarSeed)} 
                       alt="Preview" 
                       className={`w-24 h-24 bg-white border-4 border-black object-cover ${!currentUser?.photoURL ? 'grayscale' : ''}`}
                     />

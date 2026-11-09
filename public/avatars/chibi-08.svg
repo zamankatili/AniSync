@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Chibi avatar">
+  <rect width="200" height="200" rx="100" fill="#DDF3F5"/>
+  <path d="M35 200c0-42 29-66 65-66s65 24 65 66z" fill="#1B998B"/>
+  <path d="M78 156h44l-6 20H84z" fill="#F2C6A0"/>
+  <path d="M45 88c0-37 24-60 55-60s55 23 55 60c0 20-7 36-19 47H64C52 124 45 108 45 88z" fill="#1B998B"/>
+  <ellipse cx="100" cy="96" rx="55" ry="52" fill="#F7D0B0"/>
+  <circle cx="45" cy="100" r="10" fill="#F2C6A0"/>
+  <circle cx="155" cy="100" r="10" fill="#F2C6A0"/>
+  <path d="M46 82c0-32 24-54 54-54s54 22 54 54c-6-14-16-24-30-28-4 18-18 30-40 30-8 0-16-2-24-6-6 4-10 10-14 18z" fill="#1B998B"/>
+  <path d="M52 62h96" stroke="#FFD166" stroke-width="10" stroke-linecap="round"/>
+  <ellipse cx="78" cy="100" rx="13" ry="16" fill="#fff"/>
+  <ellipse cx="122" cy="100" rx="13" ry="16" fill="#fff"/>
+  <ellipse cx="78" cy="102" rx="8" ry="11" fill="#EF476F"/>
+  <ellipse cx="122" cy="102" rx="8" ry="11" fill="#EF476F"/>
+  <circle cx="75" cy="97" r="3" fill="#fff"/>
+  <circle cx="119" cy="97" r="3" fill="#fff"/>
+  <path d="M66 84q6-4 12-1" stroke="#157A6F" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M122 83q6-3 12 1" stroke="#157A6F" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <ellipse cx="64" cy="118" rx="8" ry="4" fill="#FF9AA2" opacity=".75"/>
+  <ellipse cx="136" cy="118" rx="8" ry="4" fill="#FF9AA2" opacity=".75"/>
+  <path d="M94 121q6 6 12 0" stroke="#B4553A" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <rect x="118" y="54" width="16" height="8" rx="3" fill="#FFD166" stroke="#E0A800" stroke-width="2"/>
+</svg>

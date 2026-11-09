@@ -4,6 +4,7 @@ import { auth, googleProvider, db } from '../firebase';
 import { useDailyPoll } from '../hooks/useDailyPoll';
 import { onAuthStateChanged, signInWithPopup, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
+import { resolveAvatar } from '../lib/avatar';
 
 
 interface AppState {
@@ -491,7 +492,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ...post,
       author: {
         name: currentUser?.displayName || userProfile.name,
-        avatar: currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`,
+        avatar: resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed),
         isFriend: true,
         uid: currentUser?.uid
       },
@@ -567,7 +568,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       id: Math.random().toString(36).substring(2, 9),
       author: {
         name: currentUser?.displayName || userProfile.name,
-        avatar: currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`,
+        avatar: resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed),
         isFriend: true
       },
       content,

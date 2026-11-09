@@ -10,6 +10,7 @@ import { useAppTranslation } from '../hooks/useAppTranslation';
 import { apiUrl } from '../lib/apiBase';
 import { auth } from '../firebase';
 import { getCachedTranslation, setCachedTranslation } from '../lib/translationCache';
+import { resolveAvatar } from '../lib/avatar';
 
 interface FeedPostProps {
   post: ForumPost;
@@ -279,7 +280,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
                   }}
                   className="flex gap-4 items-center"
                 >
-                  <img src={currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`} alt="Me" className="w-10 h-10 border-2 border-white bg-white shrink-0 object-cover grayscale" />
+                  <img src={resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed)} alt="Me" className="w-10 h-10 border-2 border-white bg-white shrink-0 object-cover grayscale" />
                   <input 
                     type="text" 
                     placeholder="YANITINI YAZ..."

@@ -10,6 +10,7 @@ import { useRemoteConfig } from '../hooks/useRemoteConfig';
 import { cn, formatRelativeTime } from '../lib/utils';
 import { useToastStore } from '../store/useToastStore';
 import { ReportButton } from './ReportButton';
+import { resolveAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
 interface ChatMessage {
@@ -154,7 +155,7 @@ export const GlobalChat = () => {
         roomId: activeRoomId,
         uid: currentUser.uid,
         name: currentUser.displayName || userProfile.name,
-        avatar: currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`,
+        avatar: resolveAvatar(currentUser.photoURL, userProfile.avatarSeed),
         createdAt: serverTimestamp()
       });
       scrollToBottom();

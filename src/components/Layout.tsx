@@ -10,6 +10,7 @@ import { useToastStore } from '../store/useToastStore';
 import { AuthModal } from './AuthModal';
 import { AiringScheduleModal } from './AiringScheduleModal';
 import { DailyModalManager } from './DailyModalManager';
+import { resolveAvatar } from '../lib/avatar';
 import { AnimeRadioPlayer } from './AnimeRadioPlayer';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { GlobalChat } from './GlobalChat';
@@ -458,7 +459,7 @@ export const Layout = () => {
                      className="w-9 h-9 border-2 border-white p-[2px] cursor-pointer bg-white"
                    >
                      <div className="w-full h-full bg-black flex items-center justify-center overflow-hidden">
-                       <img src={currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" />
+                       <img src={resolveAvatar(currentUser.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" />
                      </div>
                    </div>
                  )}
@@ -545,7 +546,7 @@ export const Layout = () => {
                  className="w-12 h-12 border-2 border-white cursor-pointer bg-white p-[2px]"
                >
                  <div className="w-full h-full bg-black flex items-center justify-center overflow-hidden">
-                   <img src={currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" />
+                   <img src={resolveAvatar(currentUser.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" />
                  </div>
                </div>
              ) : (

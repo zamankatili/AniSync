@@ -5,6 +5,7 @@ import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { RecentActivity, Anime } from '../types';
 import { getSafeImageUrl, formatRelativeTime, cn } from '../lib/utils';
+import { getDefaultAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { 
   Activity, BookmarkPlus, Check, Star, ExternalLink, Filter, 
@@ -371,7 +372,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
                     <div>
                       <div className="flex items-center gap-1.5 mb-1">
                         <img
-                          src={act.userAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${act.userAvatarSeed || act.userName}`}
+                          src={act.userAvatar || getDefaultAvatar(act.userAvatarSeed || act.userName)}
                           alt={act.userName}
                           className="w-4 h-4 rounded-full border border-white/50 bg-white"
                         />
@@ -626,7 +627,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
                       <img
                         src={
                           activity.userAvatar ||
-                          `https://api.dicebear.com/7.x/avataaars/svg?seed=${activity.userAvatarSeed || activity.userName}`
+                          getDefaultAvatar(activity.userAvatarSeed || activity.userName)
                         }
                         alt={activity.userName}
                         className="w-10 h-10 border-2 border-white bg-neutral-200 shrink-0 object-cover"

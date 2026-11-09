@@ -9,6 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
+import { resolveAvatar } from '../lib/avatar';
 import { DAILY_PICKS } from '../data/picks';
 import { DailyPollModal } from '../components/DailyPollModal';
 import { DailyChallengeModal } from '../components/DailyChallengeModal';
@@ -167,7 +168,7 @@ export const Home = () => {
             {/* Create Post (Twitter/X style) */}
             <div className="bg-black p-4 md:p-6 border-2 border-white/20 neo-shadow-white mb-8">
               <div className="flex gap-4">
-                <img src={currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.avatarSeed}`} alt="Me" className="w-12 h-12 border-2 border-white bg-white shrink-0 grayscale hover:grayscale-0 transition-all" />
+                <img src={resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed)} alt="Me" className="w-12 h-12 border-2 border-white bg-white shrink-0 grayscale hover:grayscale-0 transition-all" />
                 <form onSubmit={handlePost} className="flex-1">
                   <textarea 
                     ref={postInputRef}
@@ -215,13 +216,13 @@ export const Home = () => {
                 <Sparkles size={20} className="text-white" strokeWidth={2.5} />
                 <span className="font-black tracking-widest text-white uppercase">{t('daily_pick')}</span>
               </div>
-              <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight relative z-10">{todayPick.anime.title_english || todayPick.anime.title}</h3>
-              <p className="text-rose-100 font-bold mb-5 relative z-10 max-w-[90%]">{todayPick.desc}: {todayPick.anime.synopsis}</p>
+              <h3 lang="en" className="text-3xl font-black text-white mb-2 uppercase tracking-tight relative z-10">{todayPick.anime.title_english || todayPick.anime.title}</h3>
+              <p lang="en" className="text-rose-100 font-bold mb-5 relative z-10 max-w-[90%]">{todayPick.desc}: {todayPick.anime.synopsis}</p>
               <div className="bg-black p-4 flex gap-4 border-2 border-white relative z-10 group">
                  <img src={getSafeImageUrl(todayPick.anime.images.webp.image_url)} alt={todayPick.anime.title} className="w-20 h-28 object-cover border-2 border-white transition-all" referrerPolicy="no-referrer" />
                  <div className="flex flex-col justify-center">
-                    <div className="font-black text-white mb-1 tracking-wider uppercase">{todayPick.anime.title}</div>
-                    <div className="text-sm text-neutral-400 font-bold uppercase">{localizeGenres(todayPick.anime.genres?.map(g => g.name) || []).join(', ')} • {todayPick.anime.episodes} {t('episodes')}</div>
+                    <div lang="en" className="font-black text-white mb-1 tracking-wider uppercase">{todayPick.anime.title}</div>
+                    <div lang="en" className="text-sm text-neutral-400 font-bold uppercase">{localizeGenres(todayPick.anime.genres?.map(g => g.name) || []).join(', ')} • {todayPick.anime.episodes} {t('episodes')}</div>
                     <div className="text-sm text-rose-500 flex items-center gap-1 font-black mt-2"><Star size={16} strokeWidth={2.5} fill="currentColor" /> {todayPick.anime.score}</div>
                  </div>
               </div>

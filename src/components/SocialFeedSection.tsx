@@ -19,6 +19,7 @@ import { SocialFeedPost, Anime } from '../types';
 import { useToastStore } from '../store/useToastStore';
 import { getSafeImageUrl, formatRelativeTime } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { getDefaultAvatar } from '../lib/avatar';
 import { ReportButton } from './ReportButton';
 import { 
   MessageSquare, 
@@ -457,7 +458,7 @@ export const SocialFeedSection: React.FC = () => {
                 <div className="flex items-center justify-between border-b border-white/20 pb-3">
                   <div className="flex items-center gap-2.5">
                     <img
-                      src={post.userAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.userAvatarSeed || 'Otaku'}`}
+                      src={post.userAvatar || getDefaultAvatar(post.userAvatarSeed || 'Otaku')}
                       alt={post.userName}
                       className="w-9 h-9 border-2 border-white object-cover bg-neutral-800"
                     />

@@ -6,6 +6,7 @@ import { useAppTranslation } from '../hooks/useAppTranslation';
 import { Loader2, MessageSquare, Send, Trash2 } from 'lucide-react';
 import { useToastStore } from '../store/useToastStore';
 import { formatRelativeTime } from '../lib/utils';
+import { resolveAvatar, getDefaultAvatar } from '../lib/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AnimeComment {
@@ -95,7 +96,7 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
 
       {currentUser ? (
         <form onSubmit={handleSubmit} className="mb-8 flex gap-4 bg-white p-4 border-4 border-black neo-shadow">
-          <img src={currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.avatarSeed}`} alt="Me" className="w-12 h-12 border-2 border-black bg-neutral-200 shrink-0" />
+          <img src={resolveAvatar(currentUser.photoURL, userProfile?.avatarSeed)} alt="Me" className="w-12 h-12 border-2 border-black bg-neutral-200 shrink-0" />
           <div className="flex-1 flex flex-col gap-3">
             <textarea
               value={newComment}
@@ -145,7 +146,7 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
                 className="flex gap-4 p-4 border-4 border-black bg-white neo-shadow group"
               >
                 <img 
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.userAvatarSeed}`} 
+                  src={getDefaultAvatar(comment.userAvatarSeed)} 
                   alt={comment.userName} 
                   className="w-12 h-12 border-2 border-black bg-neutral-200 shrink-0" 
                 />
