@@ -193,14 +193,14 @@ export function mapAniListMedia(node: AniListMediaNode): UnifiedMedia {
   };
 }
 
-function assertNoErrors(payload: AniListPageResponse, context: string): void {
+function assertNoErrors(payload: { errors?: { message?: string }[] | null }, context: string): void {
   if (payload?.errors?.length) {
     const message = payload.errors.map((e) => e.message).filter(Boolean).join('; ') || 'Bilinmeyen AniList hatası';
     throw new Error(`AniList: ${context} — ${message}`);
   }
 }
 
-async function graphql<T extends AniListPageResponse>(
+async function graphql<T extends { errors?: { message?: string }[] | null }>(
   query: string,
   variables: Record<string, unknown>,
   context: string,
@@ -433,6 +433,64 @@ export async function fetchRecommendationsByGenres(
     }
   }
   return [];
+}
+
+export interface AniListRecommendationEntry {
+  /** AniList topluluğu tarafından verilen öneri oyu (gerçek sayı). */
+  rating: number;
+  media: UnifiedMedia;
+}
+
+interface AniListRecommendationsResponse {
+  data?: {
+    Media?: {
+      recommendations?: {
+        nodes?: { rating?: number | null; mediaRecommendation?: AniListMediaNode | null }[] | null;
+      } | null;
+    } | null;
+  } | null;
+  errors?: { message?: string }[] | null;
+}
+
+/**
+ * AniList `Media.recommendations` — "bunu sevenler bunu da seviyor".
+ * `sort: RATING_DESC` ile gerçek topluluk oylamasına göre sıralanır.
+ * Sonuç boşsa boş dizi döner (uydurma değil, dürüst boş durum).
+ */
+export async function getAniListRecommendationsByMalId(
+  malId: number,
+  perPage = 8,
+  signal?: AbortSignal
+): Promise<AniListRecommendationEntry[]> {
+  const queryDoc = `
+    query ($idMal: Int, $perPage: Int) {
+      Media(idMal: $idMal, type: ANIME) {
+        recommendations(page: 1, perPage: $perPage, sort: RATING_DESC) {
+          nodes {
+            rating
+            mediaRecommendation {
+              ...MediaCore
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const payload = await graphql<AniListRecommendationsResponse>(
+    queryDoc,
+    { idMal: malId, perPage },
+    `öneriler (MAL ${malId})`,
+    signal
+  );
+
+  const raw = payload.data?.Media?.recommendations?.nodes ?? [];
+  const out: AniListRecommendationEntry[] = [];
+  for (const node of raw) {
+    if (!node?.mediaRecommendation) continue;
+    out.push({ rating: Math.max(0, node.rating ?? 0), media: mapAniListMedia(node.mediaRecommendation) });
+  }
+  return out;
 }
 
 /** Sezonluk / popüler listeler için kısayol. */

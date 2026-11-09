@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Anime } from '../types';
 import { FALLBACK_LISTS, EXTENDED_RANDOM_CATALOG } from '../data/fallbackLists';
-import { CURATED_SIMILAR_DATA, SimilarRecommendation } from '../data/animeRecommendations';
+import { fetchSimilarRecommendations, type SimilarRecommendation } from '../lib/similarAnime';
 import { fetchAnimeFallback, toLegacyAnime } from '../lib/api/animeBridge';
 import { searchAniList, fetchSeasonalTrendingAnime } from '../lib/api/anilist';
 
@@ -402,47 +402,12 @@ export const useAnimeData = (): UseAnimeResult => {
     }
   }, []);
 
-  // Fetch Similar Anime Recommendations
-  const fetchSimilarAnime = useCallback(async (animeId: number): Promise<SimilarRecommendation[]> => {
-    // 1. Check curated data first for instant rich matches
-    const curated = CURATED_SIMILAR_DATA[animeId];
-    if (curated && curated.length > 0) {
-      return curated;
-    }
-
-    // 2. Fetch live recommendations from Jikan
-    try {
-      const json = await jikanFetch(`${BASE_URL}/anime/${animeId}/recommendations`);
-      if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
-        const recommendations: SimilarRecommendation[] = json.data.slice(0, 6).map((rec: any) => ({
-          anime: {
-            mal_id: rec.entry.mal_id,
-            title: rec.entry.title,
-            title_english: rec.entry.title,
-            images: rec.entry.images,
-            synopsis: 'Topluluk tarafından bu seriyi beğenenler için önerildi.',
-            score: 8.0,
-            episodes: 12,
-            status: 'Finished Airing',
-            genres: [],
-            year: 2022
-          } as Anime,
-          reason: `Topluluktaki yüzlerce izleyici bu seriyi tamamladıktan sonra önerdi (${rec.votes || 10}+ Tavsiye oyu).`,
-          matchScore: Math.min(99, 85 + Math.min(14, rec.votes || 5))
-        }));
-        return recommendations;
-      }
-    } catch (err) {
-      console.warn(`Jikan recommendations failed for ${animeId}:`, err);
-    }
-
-    // 3. Fallback: Return diverse high-rated recommendations from catalog
-    return EXTENDED_RANDOM_CATALOG.slice(0, 4).map((anime, idx) => ({
-      anime,
-      reason: 'Benzer tür, sürükleyici hikaye anlatımı ve yüksek topluluk puanı.',
-      matchScore: 90 - idx * 3
-    }));
-  }, []);
+  // Fetch Similar Anime — AniList `Media.recommendations` (topluluk oyu)
+  const fetchSimilarAnime = useCallback(
+    async (animeId: number): Promise<SimilarRecommendation[]> =>
+      fetchSimilarRecommendations(animeId, 6),
+    []
+  );
 
   return { 
     data, 

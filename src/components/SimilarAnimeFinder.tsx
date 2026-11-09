@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Anime } from '../types';
 import { useAnimeData } from '../hooks/useAnimeData';
 import { useAppStore } from '../context/AppStore';
-import { POPULAR_PRESETS, SimilarRecommendation } from '../data/animeRecommendations';
+import { POPULAR_PRESETS } from '../data/animeRecommendations';
+import type { SimilarRecommendation } from '../lib/similarAnime';
+import { toLegacyAnime } from '../lib/api/animeBridge';
+import { searchAniList } from '../lib/api/anilist';
 import { AnimeCard } from './AnimeCard';
 import { Sparkles, Search, Layers, Compass, CheckCircle2, ChevronRight, BookmarkPlus, Flame, Heart } from 'lucide-react';
 import { getSafeImageUrl } from '../lib/utils';
 import { localizeGenres } from '../lib/genreNames';
-import { POPULAR_PRESET_TAGS, CURATED_REASONS, pickLocalized } from '../data/localizedContent';
+import { POPULAR_PRESET_TAGS, pickLocalized } from '../data/localizedContent';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppTranslation } from '../hooks/useAppTranslation';
@@ -60,11 +63,12 @@ export const SimilarAnimeFinder: React.FC = () => {
 
     setIsSearching(true);
     try {
-      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(searchQuery)}&limit=6&sfw=true`);
-      const json = await res.json();
-      if (json && json.data) {
-        setSearchResults(json.data);
-      }
+      const result = await searchAniList({ kind: 'anime', query: searchQuery.trim(), page: 1, perPage: 6 });
+      setSearchResults(
+        result.items
+          .filter((item) => typeof item.externalIds?.mal === 'number')
+          .map((item) => toLegacyAnime(item, item.externalIds!.mal as number))
+      );
     } catch (err) {
       console.warn('Search error:', err);
     } finally {
@@ -289,18 +293,18 @@ export const SimilarAnimeFinder: React.FC = () => {
                   <AnimeCard anime={rec.anime} />
                 </div>
 
-                {/* Match Reason Banner */}
+                {/* Topluluk Oy Bilgisi */}
                 <div className="p-3 bg-black border-t-2 border-white/20 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-rose-600 text-white border border-black">
-                      {t('similar_match', { score: rec.matchScore })}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-rose-600 text-white border border-black inline-flex items-center gap-1">
+                      <Heart size={10} fill="currentColor" /> {rec.votes.toLocaleString()} {t('similar_votes')}
                     </span>
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase">
-                      {t('similar_why')}
+                    <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+                      {t('similar_community_pick')}
                     </span>
                   </div>
-                  <p className="text-[11px] font-bold text-neutral-300 leading-snug line-clamp-3 uppercase">
-                    {pickLocalized(CURATED_REASONS[`${selectedAnime.mal_id}:${rec.anime.mal_id}`], rec.reason)}
+                  <p className="text-[11px] font-black text-neutral-300 leading-snug line-clamp-2 uppercase">
+                    {rec.genres.length > 0 ? localizeGenres(rec.genres).join(' · ') : t('similar_genre_unknown')}
                   </p>
                 </div>
               </div>
