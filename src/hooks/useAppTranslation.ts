@@ -7,11 +7,13 @@ import i18n from '../i18n';
  * while ensuring reactive updates whenever the user changes language.
  */
 export function useAppTranslation() {
-  const [currentLang, setCurrentLang] = useState(i18n.language || 'tr');
+  // Sayacı artır: dil değişimi sessiz (aynı değer) olsa bile yeniden boya
+  // (örn. uygulama TR→JA→TR ardışık yaptığında son adım aynı değere düşer).
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
-    const onLanguageChanged = (lng: string) => {
-      setCurrentLang(lng);
+    const onLanguageChanged = () => {
+      setVersion((v) => v + 1);
     };
 
     i18n.on('languageChanged', onLanguageChanged);
@@ -20,6 +22,8 @@ export function useAppTranslation() {
     };
   }, []);
 
+  const currentLang = (i18n.language || 'tr').split('-')[0].toLowerCase();
+
   const t = useCallback((key: string, options?: any): string => {
     try {
       const res = i18n.t(key, options);
@@ -27,7 +31,8 @@ export function useAppTranslation() {
     } catch {
       return key;
     }
-  }, [currentLang]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version]);
 
   return { t, i18n, currentLang };
 }
