@@ -9,6 +9,10 @@
 - [x] **Bölüm sayısı gösterimi**: Canlı katalogda bilinmeyen okuma yerine "232 BÖLÜM" formatı (`multimedia_chapters_total`).
 - [x] **MAL/AniList import**: `ImportExportModal` artık uydurma kapak/skor basmıyor (DiceBear identicon, skor 8.0, 2023). `src/lib/importList.ts` CDATA/entitelü MAL XML + AniList JSON (`lists[].entries[].media`) ayrıştırır; `anilistByMalIds` 50'şerli batch ile kapak/özet/skor/yıl/türle zenginleştirir; zenginleştirme alınamazsa akış MAL verisiyle devam eder ve arayüz bunu belirtir.
 - [x] **Adım 2 — Nazik onboarding**: Kayıt sonrası tek sayfa `/onboarding` (PrivateRoute); isim + 2+ tür + canlı AniList önerileri (genre_in; TRENDING → POPULARITY), karttan tek dokunuşla "Listeme Ekle". Kanca: `anisync_onboarding_pending` (Google/e-posta kaydında), Layout yönlendirir; "Şimdilik Atla" her an; günlük modal yöneticisi atlar. **Sahte `['Action','Fantasy']` varsayılanları kaldırıldı** — sinyal yoksa "SENİN İÇİN SEÇİLDİ" artık gösterilmiyor.
+- [x] **Sınırsız Keşif Motoru**: Rastgele seçim artık AniList (POPULARITY_DESC, 1..15 sayfa, SFW) — sayfa başına 20 anime, her tıklayışta farklı; tür filtresi `genre_in`; zincir AniList → Jikan → dürüst yedek katalog. Hero'da "CANLI ANILIST KATALOĞU" notu; tür düğümleri Türkçe büyütmeden korundu.
+- [x] **XP / Seviye eğrisi & rütbeler**: `src/lib/level.ts` (`25·(L−1)·L`, 30 seviye, 6 rütbe: Misafir→Efsane); `badgeData.LEVELS` eğriden üretiliyor; `OtakuLevelBadge` anasayfada XP kartı + tek seferlik seviye-atla toast; Profile BadgeShowcase aynı hesap; TR/EN/JA/FR rütbe isimleri.
+- [x] **Günün Sorusu**: 12 soru × 4 dil, yılın günüyle deterministik seçim; "YANITLA" düğmesi soru ile besteciyi doldurur + odaklar; anasayfada kart.
+- [x] **README.md**: ürün/feature, stack, scriptler, env, Firebase/Vercel/Capacitor dağıtımı, admin & gizlilik, katkılama.
 
 ## Sende (5 dk – 30 dk)
 - [ ] Firebase Console → Firestore → **Rules yayınla** (`firestore.rules`)
