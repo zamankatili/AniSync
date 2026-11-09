@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { 
-  BookOpen, Gamepad2, Heart, Plus, Star, CheckCircle2, 
-  Sparkles, Layers, Book, Trophy, Search, ChevronRight, X, User
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  BookOpen, Gamepad2, Heart, Plus, Star, Sparkles, Search,
+  ChevronRight, X, User, Loader2, RefreshCw, Trash2, CheckCircle2,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
 import { useToastStore } from '../store/useToastStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { searchAniList, fetchPopularCharacters } from '../lib/api/anilist';
+import type { AniListPopularCharacter } from '../lib/api/anilist';
+import { searchSteam } from '../lib/api/steam';
+import type { UnifiedMedia } from '../types/unified';
 
 export interface MangaItem {
   id: string;
@@ -40,83 +43,240 @@ export interface FavoriteCharacter {
   seiyuuName?: string;
 }
 
-const INITIAL_MANGAS: MangaItem[] = [
-  { id: 'm1', title: 'Chainsaw Man', type: 'manga', coverImage: 'https://cdn.myanimelist.net/images/anime/1806/126216l.jpg', currentChapter: 168, totalChapters: 200, currentVolume: 17, status: 'reading', score: 9.5 },
-  { id: 'm2', title: 'Omniscient Reader\'s Viewpoint', type: 'web_novel', coverImage: 'https://cdn.myanimelist.net/images/anime/1210/141049l.webp', currentChapter: 215, totalChapters: 551, currentVolume: 8, status: 'reading', score: 9.8 },
-  { id: 'm3', title: 'Solo Leveling (Novel)', type: 'light_novel', coverImage: 'https://cdn.myanimelist.net/images/anime/1210/141049l.webp', currentChapter: 270, totalChapters: 270, currentVolume: 14, status: 'completed', score: 9.2 }
-];
+interface LibraryState {
+  mangas: MangaItem[];
+  games: GameItem[];
+  characters: FavoriteCharacter[];
+}
 
-const INITIAL_GAMES: GameItem[] = [
-  { id: 'g1', title: 'Elden Ring: Shadow of the Erdtree', platform: 'PC', coverImage: 'https://cdn.myanimelist.net/images/anime/1171/123961l.jpg', hoursPlayed: 142, status: 'completed', score: 10 },
-  { id: 'g2', title: 'Genshin Impact (Natlan Update)', platform: 'PC', coverImage: 'https://cdn.myanimelist.net/images/anime/1169/143761l.webp', hoursPlayed: 320, status: 'playing', score: 8.8 },
-  { id: 'g3', title: 'Persona 3 Reload', platform: 'PS5', coverImage: 'https://cdn.myanimelist.net/images/anime/1208/135328l.jpg', hoursPlayed: 85, status: 'completed', score: 9.6 }
-];
+const LIBRARY_KEY = 'anisync_multimedia_library_v1';
+const EMPTY_LIBRARY: LibraryState = { mangas: [], games: [], characters: [] };
 
-const INITIAL_CHARACTERS: FavoriteCharacter[] = [
-  { id: 'c1', name: 'Makima', animeTitle: 'Chainsaw Man', role: 'Waifu', image: 'https://cdn.myanimelist.net/images/anime/1806/126216l.jpg', quote: 'Tüm köpekler söz dinlemeli.', seiyuuName: 'Tomori Kusunoki' },
-  { id: 'c2', name: 'Gojo Satoru', animeTitle: 'Jujutsu Kaisen', role: 'Husbando', image: 'https://cdn.myanimelist.net/images/anime/1171/123961l.jpg', quote: 'Merak etme, ben en güçlüyüm.', seiyuuName: 'Yuichi Nakamura' },
-  { id: 'c3', name: 'Fern', animeTitle: 'Sousou no Frieren', role: 'Waifu', image: 'https://cdn.myanimelist.net/images/anime/1015/138006l.webp', quote: 'Frieren-sama, lütfen büyü yapmayı bırakın.', seiyuuName: 'Kana Ichinose' }
-];
+function readLibrary(): LibraryState {
+  try {
+    const raw = localStorage.getItem(LIBRARY_KEY);
+    if (!raw) return EMPTY_LIBRARY;
+    const parsed = JSON.parse(raw) as Partial<LibraryState>;
+    return {
+      mangas: Array.isArray(parsed.mangas) ? parsed.mangas : [],
+      games: Array.isArray(parsed.games) ? parsed.games : [],
+      characters: Array.isArray(parsed.characters) ? parsed.characters : [],
+    };
+  } catch {
+    return EMPTY_LIBRARY;
+  }
+}
+
+const toTenPointScore = (score?: number | null): number | undefined => {
+  if (typeof score !== 'number' || Number.isNaN(score)) return undefined;
+  return Math.round((score / 10) * 10) / 10;
+};
+
+const mediaCover = (item: UnifiedMedia): string =>
+  item.cover?.large || item.cover?.medium || item.cover?.small || '';
 
 export const MultiMediaHub: React.FC = () => {
   const { addToast } = useToastStore();
-  const { t } = useAppTranslation();
+  const { t, currentLang } = useAppTranslation();
   const [activeTab, setActiveTab] = useState<'manga' | 'games' | 'characters'>('manga');
 
-  const [mangas, setMangas] = useState<MangaItem[]>(INITIAL_MANGAS);
-  const [games, setGames] = useState<GameItem[]>(INITIAL_GAMES);
-  const [characters, setCharacters] = useState<FavoriteCharacter[]>(INITIAL_CHARACTERS);
+  // Kullanıcının cihazında saklanan GERÇEK kütüphane (uydurma ilerleme yok).
+  const [library, setLibrary] = useState<LibraryState>(readLibrary);
 
-  // New Item Modals
-  const [isAddMangaOpen, setIsAddMangaOpen] = useState(false);
-  const [isAddGameOpen, setIsAddGameOpen] = useState(false);
+  // Canlı keşif verileri
+  const [mangaResults, setMangaResults] = useState<UnifiedMedia[]>([]);
+  const [mangaLoading, setMangaLoading] = useState(false);
+  const [mangaError, setMangaError] = useState(false);
+  const [mangaQuery, setMangaQuery] = useState('');
 
-  const [newTitle, setNewTitle] = useState('');
-  const [newType, setNewType] = useState<'manga' | 'light_novel' | 'web_novel'>('manga');
-  const [newChapter, setNewChapter] = useState(1);
+  const [gameResults, setGameResults] = useState<UnifiedMedia[]>([]);
+  const [gamesLoading, setGamesLoading] = useState(false);
+  const [gamesError, setGamesError] = useState(false);
+  const [gameQuery, setGameQuery] = useState('anime');
 
-  const handleIncrementChapter = (id: string) => {
-    setMangas(prev => prev.map(m => {
-      if (m.id === id) {
-        const next = m.currentChapter + 1;
-        addToast(`📖 ${m.title} - Bölüm ${next} okundu!`, 'success');
-        return { ...m, currentChapter: next };
-      }
-      return m;
-    }));
+  const [characterResults, setCharacterResults] = useState<AniListPopularCharacter[]>([]);
+  const [charactersLoading, setCharactersLoading] = useState(false);
+  const [charactersError, setCharactersError] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LIBRARY_KEY, JSON.stringify(library));
+    } catch {
+      /* kota dolu olabilir — kütüphane oturum boyunca çalışır */
+    }
+  }, [library]);
+
+  const loadManga = useCallback(async (query: string) => {
+    setMangaLoading(true);
+    setMangaError(false);
+    try {
+      const [manga, novels] = await Promise.all([
+        searchAniList({ kind: 'manga', query, perPage: 6 }),
+        searchAniList({ kind: 'light_novel', query, perPage: 4 }),
+      ]);
+      const merged = [...manga.items, ...novels.items];
+      const seen = new Set<string>();
+      setMangaResults(
+        merged.filter((item) => {
+          if (seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        }),
+      );
+    } catch {
+      setMangaError(true);
+      setMangaResults([]);
+    } finally {
+      setMangaLoading(false);
+    }
+  }, []);
+
+  const loadGames = useCallback(async (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setGameResults([]);
+      setGamesError(false);
+      return;
+    }
+    setGamesLoading(true);
+    setGamesError(false);
+    try {
+      const result = await searchSteam(trimmed, 1, 6, currentLang);
+      setGameResults(result.items);
+    } catch {
+      setGamesError(true);
+      setGameResults([]);
+    } finally {
+      setGamesLoading(false);
+    }
+  }, [currentLang]);
+
+  const loadCharacters = useCallback(async () => {
+    setCharactersLoading(true);
+    setCharactersError(false);
+    try {
+      setCharacterResults(await fetchPopularCharacters(8));
+    } catch {
+      setCharactersError(true);
+      setCharacterResults([]);
+    } finally {
+      setCharactersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadManga('');
+    void loadCharacters();
+  }, [loadManga, loadCharacters]);
+
+  useEffect(() => {
+    void loadGames('anime');
+  }, [loadGames]);
+
+  const refreshActive = () => {
+    if (activeTab === 'manga') void loadManga(mangaQuery);
+    else if (activeTab === 'games') void loadGames(gameQuery);
+    else void loadCharacters();
   };
 
-  const handleIncrementHour = (id: string) => {
-    setGames(prev => prev.map(g => {
-      if (g.id === id) {
-        const next = g.hoursPlayed + 1;
-        addToast(`🎮 ${g.title} - Toplam ${next} saat oynandı!`, 'info');
-        return { ...g, hoursPlayed: next };
-      }
-      return g;
-    }));
-  };
-
-  const handleAddMangaSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-
-    const newItem: MangaItem = {
-      id: 'm-' + Date.now(),
-      title: newTitle.trim(),
-      type: newType,
-      coverImage: 'https://cdn.myanimelist.net/images/anime/1015/138006l.webp',
-      currentChapter: newChapter,
-      currentVolume: 1,
-      status: 'reading',
-      score: 9.0
+  const addManga = (item: UnifiedMedia) => {
+    if (library.mangas.some((entry) => entry.id === item.id)) {
+      addToast(t('multimedia_already_added', { title: item.displayTitle }), 'info');
+      return;
+    }
+    const entry: MangaItem = {
+      id: item.id,
+      title: item.displayTitle,
+      type: item.kind === 'light_novel' ? 'light_novel' : 'manga',
+      coverImage: mediaCover(item),
+      currentChapter: 0,
+      totalChapters: item.chapters ?? undefined,
+      currentVolume: 0,
+      status: 'plan_to_read',
+      score: toTenPointScore(item.averageScore),
     };
-
-    setMangas([newItem, ...mangas]);
-    addToast(`${newTitle} okuma listenize eklendi!`, 'success');
-    setNewTitle('');
-    setIsAddMangaOpen(false);
+    setLibrary((prev) => ({ ...prev, mangas: [entry, ...prev.mangas] }));
+    addToast(t('multimedia_added', { title: entry.title }), 'success');
   };
+
+  const addGame = (item: UnifiedMedia) => {
+    if (library.games.some((entry) => entry.id === item.id)) {
+      addToast(t('multimedia_already_added', { title: item.displayTitle }), 'info');
+      return;
+    }
+    const entry: GameItem = {
+      id: item.id,
+      title: item.displayTitle,
+      platform: 'PC',
+      coverImage: mediaCover(item),
+      hoursPlayed: 0,
+      status: 'backlog',
+      score: toTenPointScore(item.averageScore),
+    };
+    setLibrary((prev) => ({ ...prev, games: [entry, ...prev.games] }));
+    addToast(t('multimedia_added', { title: entry.title }), 'success');
+  };
+
+  const addCharacter = (character: AniListPopularCharacter) => {
+    if (library.characters.some((entry) => entry.id === character.id)) {
+      addToast(t('multimedia_already_added', { title: character.name }), 'info');
+      return;
+    }
+    const entry: FavoriteCharacter = {
+      id: character.id,
+      name: character.name,
+      animeTitle: character.animeTitle ?? '—',
+      role: 'Favorit',
+      image: character.image ?? '',
+    };
+    setLibrary((prev) => ({ ...prev, characters: [entry, ...prev.characters] }));
+    addToast(t('multimedia_added', { title: entry.name }), 'success');
+  };
+
+  const removeManga = (id: string) => {
+    setLibrary((prev) => ({ ...prev, mangas: prev.mangas.filter((entry) => entry.id !== id) }));
+    addToast(t('multimedia_removed'), 'info');
+  };
+
+  const removeGame = (id: string) => {
+    setLibrary((prev) => ({ ...prev, games: prev.games.filter((entry) => entry.id !== id) }));
+    addToast(t('multimedia_removed'), 'info');
+  };
+
+  const removeCharacter = (id: string) => {
+    setLibrary((prev) => ({ ...prev, characters: prev.characters.filter((entry) => entry.id !== id) }));
+    addToast(t('multimedia_removed'), 'info');
+  };
+
+  const incrementChapter = (id: string) => {
+    setLibrary((prev) => ({
+      ...prev,
+      mangas: prev.mangas.map((entry) => {
+        if (entry.id !== id) return entry;
+        const next = entry.currentChapter + 1;
+        addToast(`📖 ${entry.title} — ${t('multimedia_chapter_progress', { done: next, total: entry.totalChapters ?? '?' })}`, 'success');
+        return { ...entry, currentChapter: next, status: 'reading' };
+      }),
+    }));
+  };
+
+  const incrementHour = (id: string) => {
+    setLibrary((prev) => ({
+      ...prev,
+      games: prev.games.map((entry) => {
+        if (entry.id !== id) return entry;
+        const next = entry.hoursPlayed + 1;
+        addToast(`🎮 ${entry.title} — ${t('multimedia_hours_played', { hours: next })}`, 'info');
+        return { ...entry, hoursPlayed: next, status: 'playing' };
+      }),
+    }));
+  };
+
+  const tabs = [
+    { id: 'manga' as const, label: t('multimedia_tab_manga'), icon: BookOpen, count: library.mangas.length },
+    { id: 'games' as const, label: t('multimedia_tab_games'), icon: Gamepad2, count: library.games.length },
+    { id: 'characters' as const, label: t('multimedia_tab_characters'), icon: Heart, count: library.characters.length },
+  ];
 
   return (
     <div className="bg-black border-4 border-white neo-shadow p-6 space-y-6 text-white">
@@ -139,33 +299,24 @@ export const MultiMediaHub: React.FC = () => {
           </p>
         </div>
 
-        {/* Action Button */}
         <button
-          onClick={() => {
-            if (activeTab === 'manga') setIsAddMangaOpen(true);
-            else if (activeTab === 'games') setIsAddGameOpen(true);
-            else addToast(t('multimedia_character_hint'), 'info');
-          }}
+          onClick={refreshActive}
           className="px-4 py-2.5 bg-amber-400 hover:bg-white text-black font-black text-xs uppercase tracking-wider border-2 border-black flex items-center gap-2 transition-transform active:translate-y-0.5 cursor-pointer neo-shadow"
         >
-          <Plus size={16} strokeWidth={3} />
-          <span>{activeTab === 'manga' ? t('multimedia_add_manga') : activeTab === 'games' ? t('multimedia_add_game') : t('multimedia_add_character')}</span>
+          <RefreshCw size={16} strokeWidth={3} />
+          <span>{t('multimedia_refresh')}</span>
         </button>
       </div>
 
       {/* Mode Tabs */}
       <div className="flex bg-neutral-900 border-2 border-white/30 p-1 overflow-x-auto gap-1">
-        {[
-          { id: 'manga', label: t('multimedia_tab_manga'), icon: BookOpen, count: mangas.length },
-          { id: 'games', label: t('multimedia_tab_games'), icon: Gamepad2, count: games.length },
-          { id: 'characters', label: t('multimedia_tab_characters'), icon: Heart, count: characters.length }
-        ].map((tab) => {
+        {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={cn(
                 "flex-1 py-2.5 px-4 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap",
                 isActive
@@ -180,208 +331,373 @@ export const MultiMediaHub: React.FC = () => {
         })}
       </div>
 
-      {/* Tab Content 1: Manga & Novel Tracker */}
+      {/* Tab 1: Manga & Light Novel */}
       {activeTab === 'manga' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {mangas.map((item) => (
-            <div
-              key={item.id}
-              className="bg-neutral-900 border-2 border-white/20 p-4 neo-shadow flex flex-col justify-between hover:border-amber-400 transition-colors group"
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
+              <Sparkles size={15} /> {t('multimedia_discover')}
+            </h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void loadManga(mangaQuery);
+              }}
+              className="flex gap-2 w-full sm:w-auto"
             >
-              <div className="flex gap-3">
-                <img
-                  src={getSafeImageUrl(item.coverImage)}
-                  alt={item.title}
-                  className="w-20 h-28 object-cover border-2 border-white shrink-0 group-hover:scale-105 transition-transform"
-                />
-                <div className="flex-1 min-w-0">
-                  <span className={cn(
-                    "text-[9px] font-black uppercase px-2 py-0.5 border border-white inline-block mb-1",
-                    item.type === 'manga' ? "bg-rose-600 text-white" : item.type === 'light_novel' ? "bg-cyan-500 text-black" : "bg-purple-600 text-white"
-                  )}>
-                    {item.type.replace('_', ' ').toUpperCase()}
-                  </span>
-
-                  <h3 className="font-black text-sm uppercase text-white line-clamp-1 group-hover:text-amber-400 transition-colors">
-                    {item.title}
-                  </h3>
-
-                  <div className="text-xs font-mono font-bold text-amber-400 mt-2">
-                    Bölüm {item.currentChapter} / {item.totalChapters || '?'}
-                  </div>
-                  <div className="text-[10px] text-neutral-400 font-bold uppercase mt-0.5">
-                    Cilt {item.currentVolume} • Skor: ⭐ {item.score || 'N/A'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Increments */}
-              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
-                <span className="text-[10px] font-black text-emerald-400 uppercase flex items-center gap-1">
-                  <CheckCircle2 size={12} /> {item.status.toUpperCase()}
-                </span>
-
-                <button
-                  onClick={() => handleIncrementChapter(item.id)}
-                  className="px-3 py-1 bg-amber-400 hover:bg-white text-black font-black text-xs uppercase border border-black flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <Plus size={12} strokeWidth={3} />
-                  <span>+1 BÖLÜM OKUNDU</span>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Tab Content 2: Gaming Library */}
-      {activeTab === 'games' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {games.map((game) => (
-            <div
-              key={game.id}
-              className="bg-neutral-900 border-2 border-white/20 p-4 neo-shadow flex flex-col justify-between hover:border-cyan-400 transition-colors group"
-            >
-              <div className="flex gap-3">
-                <img
-                  src={getSafeImageUrl(game.coverImage)}
-                  alt={game.title}
-                  className="w-20 h-28 object-cover border-2 border-white shrink-0 group-hover:scale-105 transition-transform"
-                />
-                <div className="flex-1 min-w-0">
-                  <span className="text-[9px] font-black uppercase px-2 py-0.5 border border-white bg-black text-cyan-400 inline-block mb-1">
-                    {game.platform}
-                  </span>
-
-                  <h3 className="font-black text-sm uppercase text-white line-clamp-2 group-hover:text-cyan-400 transition-colors">
-                    {game.title}
-                  </h3>
-
-                  <div className="text-xs font-mono font-bold text-amber-400 mt-2">
-                    {game.hoursPlayed} SAAT OYNANDI
-                  </div>
-                  <div className="text-[10px] text-neutral-400 font-bold uppercase mt-0.5">
-                    Skor: ⭐ {game.score || 'N/A'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Hours Increment */}
-              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
-                <span className="text-[10px] font-black text-emerald-400 uppercase">
-                  DURUM: {game.status.toUpperCase()}
-                </span>
-
-                <button
-                  onClick={() => handleIncrementHour(game.id)}
-                  className="px-3 py-1 bg-cyan-400 hover:bg-white text-black font-black text-xs uppercase border border-black flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <Plus size={12} strokeWidth={3} />
-                  <span>+1 SAAT EKLE</span>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Tab Content 3: Favorite Characters & Seiyuu Shrine */}
-      {activeTab === 'characters' && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {characters.map((char) => (
-            <div
-              key={char.id}
-              className="bg-neutral-900 border-4 border-white p-4 neo-shadow relative overflow-hidden group hover:border-rose-500 transition-colors"
-            >
-              <div className="absolute top-2 right-2 bg-rose-600 text-white font-black text-[9px] px-2 py-0.5 border border-white uppercase">
-                {char.role}
-              </div>
-
-              <div className="flex gap-4 items-center mb-3">
-                <img
-                  src={getSafeImageUrl(char.image)}
-                  alt={char.name}
-                  className="w-18 h-24 object-cover border-2 border-white shrink-0 group-hover:scale-105 transition-transform"
-                />
-                <div>
-                  <h3 className="font-black text-lg text-white uppercase tracking-tight group-hover:text-rose-400 transition-colors">
-                    {char.name}
-                  </h3>
-                  <p className="text-xs text-amber-400 font-bold uppercase">
-                    {char.animeTitle}
-                  </p>
-                  {char.seiyuuName && (
-                    <p className="text-[10px] text-neutral-400 font-bold uppercase mt-1">
-                      Seiyuu: <span className="text-white">{char.seiyuuName}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {char.quote && (
-                <p className="text-xs text-neutral-300 font-medium italic border-t border-white/20 pt-2 leading-relaxed">
-                  &ldquo;{char.quote}&rdquo;
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Add Manga Modal */}
-      {isAddMangaOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-black border-4 border-white neo-shadow p-6 relative">
-            <button onClick={() => setIsAddMangaOpen(false)} className="absolute top-3 right-3 text-white">
-              <X size={16} />
-            </button>
-            <h3 className="font-black text-lg uppercase text-white mb-4">{t('multimedia_add_manga_title')}</h3>
-            <form onSubmit={handleAddMangaSubmit} className="space-y-4">
-              <div>
-                <label className="font-black text-xs uppercase text-white block mb-1">Eser Adı</label>
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Örn: Solo Leveling"
-                  className="w-full p-2.5 bg-neutral-900 border border-white text-white font-bold text-xs uppercase focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="font-black text-xs uppercase text-white block mb-1">Tür</label>
-                <select
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value as any)}
-                  className="w-full p-2.5 bg-neutral-900 border border-white text-white font-bold text-xs uppercase focus:outline-none"
-                >
-                  <option value="manga">Manga</option>
-                  <option value="light_novel">Light Novel</option>
-                  <option value="web_novel">Web Novel / Manhwa</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="font-black text-xs uppercase text-white block mb-1">Kaldığın Bölüm</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={newChapter}
-                  onChange={(e) => setNewChapter(parseInt(e.target.value) || 1)}
-                  className="w-full p-2.5 bg-neutral-900 border border-white text-white font-bold text-xs focus:outline-none"
-                />
-              </div>
-
+              <input
+                type="text"
+                value={mangaQuery}
+                onChange={(e) => setMangaQuery(e.target.value)}
+                placeholder={t('multimedia_search_manga')}
+                className="flex-1 sm:w-64 px-3 py-2 bg-neutral-900 border-2 border-white text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+              />
               <button
                 type="submit"
-                className="w-full py-3 bg-amber-400 hover:bg-white text-black font-black text-xs uppercase border-2 border-black neo-shadow cursor-pointer"
+                className="px-3 py-2 bg-cyan-500 hover:bg-white text-black border-2 border-white cursor-pointer"
+                aria-label={t('multimedia_search_manga')}
               >
-                KÜTÜPHANEYE EKLE
+                <Search size={14} strokeWidth={3} />
               </button>
             </form>
           </div>
+
+          {mangaLoading ? (
+            <div className="flex items-center justify-center gap-2 p-8 text-neutral-400 font-black uppercase text-xs">
+              <Loader2 size={16} className="animate-spin" /> {t('multimedia_loading')}
+            </div>
+          ) : mangaError ? (
+            <div className="p-4 border-2 border-rose-500 text-rose-400 font-black uppercase text-xs">
+              {t('multimedia_load_error')}
+            </div>
+          ) : mangaResults.length === 0 ? (
+            <div className="p-4 border-2 border-white/20 text-neutral-400 font-black uppercase text-xs">
+              {t('multimedia_no_results')}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {mangaResults.map((item) => (
+                <div key={item.id} className="bg-neutral-900 border-2 border-white/20 p-3 flex gap-3 hover:border-cyan-400 transition-colors">
+                  <img
+                    src={getSafeImageUrl(mediaCover(item))}
+                    alt={item.displayTitle}
+                    className="w-16 h-24 object-cover border-2 border-white shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <span className={cn(
+                        "text-[9px] font-black uppercase px-1.5 py-0.5 border border-white inline-block mb-1",
+                        item.kind === 'light_novel' ? "bg-cyan-500 text-black" : "bg-rose-600 text-white"
+                      )}>
+                        {item.kind === 'light_novel' ? 'LIGHT NOVEL' : 'MANGA'}
+                      </span>
+                      <h4 lang="en" className="font-black text-xs uppercase text-white line-clamp-2">{item.displayTitle}</h4>
+                      <div className="text-[10px] text-neutral-400 font-bold uppercase mt-1 flex items-center gap-1">
+                        <Star size={10} className="text-amber-400" />
+                        {toTenPointScore(item.averageScore) ?? '—'}
+                        {item.chapters ? ` • ${t('multimedia_chapters_total', { total: item.chapters })}` : ''}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => addManga(item)}
+                      className="mt-2 px-2 py-1 bg-amber-400 hover:bg-white text-black font-black text-[10px] uppercase border border-black cursor-pointer flex items-center gap-1 self-start"
+                    >
+                      <Plus size={11} strokeWidth={3} /> {t('multimedia_add_to_library')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t-2 border-white/20 pt-4 space-y-3">
+            <h3 className="text-sm font-black uppercase tracking-widest text-amber-400 flex items-center gap-2">
+              <BookOpen size={15} /> {t('multimedia_library')} ({library.mangas.length})
+            </h3>
+            {library.mangas.length === 0 ? (
+              <div className="p-4 border-2 border-white/20 text-neutral-400 font-black uppercase text-xs">
+                {t('multimedia_empty_library')}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {library.mangas.map((item) => (
+                  <div key={item.id} className="bg-neutral-900 border-2 border-white/20 p-4 neo-shadow flex flex-col justify-between">
+                    <div className="flex gap-3">
+                      <img
+                        src={getSafeImageUrl(item.coverImage)}
+                        alt={item.title}
+                        className="w-20 h-28 object-cover border-2 border-white shrink-0"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className={cn(
+                          "text-[9px] font-black uppercase px-2 py-0.5 border border-white inline-block mb-1",
+                          item.type === 'manga' ? "bg-rose-600 text-white" : item.type === 'light_novel' ? "bg-cyan-500 text-black" : "bg-purple-600 text-white"
+                        )}>
+                          {item.type.replace('_', ' ').toUpperCase()}
+                        </span>
+                        <h4 lang="en" className="font-black text-sm uppercase text-white line-clamp-2">{item.title}</h4>
+                        <div className="text-xs font-mono font-bold text-amber-400 mt-2">
+                          {t('multimedia_chapter_progress', { done: item.currentChapter, total: item.totalChapters ?? '?' })}
+                        </div>
+                        <div className="text-[10px] text-neutral-400 font-bold uppercase mt-0.5">
+                          {t('multimedia_volume', { count: item.currentVolume })} • {t('multimedia_score')}: ⭐ {item.score ?? '—'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-black text-emerald-400 uppercase flex items-center gap-1">
+                        <CheckCircle2 size={12} />
+                        {t(`media_status_${item.status}`)}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => incrementChapter(item.id)}
+                          className="px-2 py-1 bg-amber-400 hover:bg-white text-black font-black text-[10px] uppercase border border-black flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus size={11} strokeWidth={3} /> +1
+                        </button>
+                        <button
+                          onClick={() => removeManga(item.id)}
+                          className="p-1 bg-neutral-900 hover:bg-rose-600 text-white border border-white cursor-pointer"
+                          aria-label={t('multimedia_remove')}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
+
+      {/* Tab 2: Games */}
+      {activeTab === 'games' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
+              <Gamepad2 size={15} /> {t('multimedia_discover')}
+            </h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void loadGames(gameQuery);
+              }}
+              className="flex gap-2 w-full sm:w-auto"
+            >
+              <input
+                type="text"
+                value={gameQuery}
+                onChange={(e) => setGameQuery(e.target.value)}
+                placeholder={t('multimedia_search_games')}
+                className="flex-1 sm:w-64 px-3 py-2 bg-neutral-900 border-2 border-white text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+              />
+              <button
+                type="submit"
+                className="px-3 py-2 bg-cyan-500 hover:bg-white text-black border-2 border-white cursor-pointer"
+                aria-label={t('multimedia_search_games')}
+              >
+                <Search size={14} strokeWidth={3} />
+              </button>
+            </form>
+          </div>
+
+          {gamesLoading ? (
+            <div className="flex items-center justify-center gap-2 p-8 text-neutral-400 font-black uppercase text-xs">
+              <Loader2 size={16} className="animate-spin" /> {t('multimedia_loading')}
+            </div>
+          ) : gamesError ? (
+            <div className="p-4 border-2 border-rose-500 text-rose-400 font-black uppercase text-xs">
+              {t('multimedia_load_error')}
+            </div>
+          ) : gameResults.length === 0 ? (
+            <div className="p-4 border-2 border-white/20 text-neutral-400 font-black uppercase text-xs">
+              {t('multimedia_no_results')}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {gameResults.map((game) => (
+                <div key={game.id} className="bg-neutral-900 border-2 border-white/20 p-3 flex gap-3 hover:border-cyan-400 transition-colors">
+                  <img
+                    src={getSafeImageUrl(mediaCover(game))}
+                    alt={game.displayTitle}
+                    className="w-20 h-16 object-cover border-2 border-white shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <h4 lang="en" className="font-black text-xs uppercase text-white line-clamp-2">{game.displayTitle}</h4>
+                      <div className="text-[10px] text-neutral-400 font-bold uppercase mt-1 flex items-center gap-1">
+                        <Star size={10} className="text-amber-400" />
+                        {toTenPointScore(game.averageScore) ?? '—'} • STEAM
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => addGame(game)}
+                      className="mt-2 px-2 py-1 bg-cyan-400 hover:bg-white text-black font-black text-[10px] uppercase border border-black cursor-pointer flex items-center gap-1 self-start"
+                    >
+                      <Plus size={11} strokeWidth={3} /> {t('multimedia_add_to_backlog')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t-2 border-white/20 pt-4 space-y-3">
+            <h3 className="text-sm font-black uppercase tracking-widest text-amber-400 flex items-center gap-2">
+              <Gamepad2 size={15} /> {t('multimedia_library')} ({library.games.length})
+            </h3>
+            {library.games.length === 0 ? (
+              <div className="p-4 border-2 border-white/20 text-neutral-400 font-black uppercase text-xs">
+                {t('multimedia_empty_library')}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {library.games.map((game) => (
+                  <div key={game.id} className="bg-neutral-900 border-2 border-white/20 p-4 neo-shadow flex flex-col justify-between">
+                    <div className="flex gap-3">
+                      <img
+                        src={getSafeImageUrl(game.coverImage)}
+                        alt={game.title}
+                        className="w-20 h-16 object-cover border-2 border-white shrink-0"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[9px] font-black uppercase px-2 py-0.5 border border-white bg-black text-cyan-400 inline-block mb-1">
+                          {game.platform}
+                        </span>
+                        <h4 lang="en" className="font-black text-sm uppercase text-white line-clamp-2">{game.title}</h4>
+                        <div className="text-xs font-mono font-bold text-amber-400 mt-2">
+                          {t('multimedia_hours_played', { hours: game.hoursPlayed })}
+                        </div>
+                        <div className="text-[10px] text-neutral-400 font-bold uppercase mt-0.5">
+                          {t('multimedia_score')}: ⭐ {game.score ?? '—'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-black text-emerald-400 uppercase">
+                        {t(`media_status_${game.status}`)}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => incrementHour(game.id)}
+                          className="px-2 py-1 bg-cyan-400 hover:bg-white text-black font-black text-[10px] uppercase border border-black flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus size={11} strokeWidth={3} /> +1
+                        </button>
+                        <button
+                          onClick={() => removeGame(game.id)}
+                          className="p-1 bg-neutral-900 hover:bg-rose-600 text-white border border-white cursor-pointer"
+                          aria-label={t('multimedia_remove')}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab 3: Characters */}
+      {activeTab === 'characters' && (
+        <div className="space-y-6">
+          <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
+            <User size={15} /> {t('multimedia_popular_characters')}
+          </h3>
+
+          {charactersLoading ? (
+            <div className="flex items-center justify-center gap-2 p-8 text-neutral-400 font-black uppercase text-xs">
+              <Loader2 size={16} className="animate-spin" /> {t('multimedia_loading')}
+            </div>
+          ) : charactersError ? (
+            <div className="p-4 border-2 border-rose-500 text-rose-400 font-black uppercase text-xs">
+              {t('multimedia_load_error')}
+            </div>
+          ) : characterResults.length === 0 ? (
+            <div className="p-4 border-2 border-white/20 text-neutral-400 font-black uppercase text-xs">
+              {t('multimedia_no_results')}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {characterResults.map((character) => (
+                <div key={character.id} className="bg-neutral-900 border-2 border-white/20 p-2 flex flex-col hover:border-rose-400 transition-colors">
+                  <img
+                    src={getSafeImageUrl(character.image ?? '')}
+                    alt={character.name}
+                    className="w-full aspect-[3/4] object-cover border-2 border-white mb-2"
+                    referrerPolicy="no-referrer"
+                  />
+                  <h4 lang="en" className="font-black text-[11px] uppercase text-white line-clamp-1">{character.name}</h4>
+                  <p lang="en" className="text-[9px] text-amber-400 font-bold uppercase line-clamp-1 mb-2">
+                    {character.animeTitle ?? '—'}
+                  </p>
+                  <button
+                    onClick={() => addCharacter(character)}
+                    className="mt-auto px-2 py-1 bg-rose-600 hover:bg-white text-white hover:text-black font-black text-[9px] uppercase border border-white cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <Plus size={10} strokeWidth={3} /> {t('multimedia_add_to_favorites')}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t-2 border-white/20 pt-4 space-y-3">
+            <h3 className="text-sm font-black uppercase tracking-widest text-amber-400 flex items-center gap-2">
+              <Heart size={15} /> {t('multimedia_favorites')} ({library.characters.length})
+            </h3>
+            {library.characters.length === 0 ? (
+              <div className="p-4 border-2 border-white/20 text-neutral-400 font-black uppercase text-xs">
+                {t('multimedia_empty_library')}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {library.characters.map((character) => (
+                  <div key={character.id} className="bg-neutral-900 border-4 border-white p-4 neo-shadow relative overflow-hidden">
+                    <div className="absolute top-2 right-2 bg-rose-600 text-white font-black text-[9px] px-2 py-0.5 border border-white uppercase">
+                      {character.role}
+                    </div>
+                    <div className="flex gap-4 items-center mb-3">
+                      <img
+                        src={getSafeImageUrl(character.image)}
+                        alt={character.name}
+                        className="w-18 h-24 object-cover border-2 border-white shrink-0"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="min-w-0">
+                        <h4 lang="en" className="font-black text-lg text-white uppercase tracking-tight line-clamp-2">{character.name}</h4>
+                        <p lang="en" className="text-xs text-amber-400 font-bold uppercase line-clamp-1">{character.animeTitle}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeCharacter(character.id)}
+                      className="w-full py-1.5 bg-neutral-900 hover:bg-rose-600 text-white font-black text-[10px] uppercase border border-white cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <X size={12} strokeWidth={3} /> {t('multimedia_remove')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Footer note: verinin nereden geldiği dürüstçe belirtilir. */}
+      <div className="border-t border-white/10 pt-3 flex items-center gap-2 text-[10px] font-bold uppercase text-neutral-500">
+        <ChevronRight size={12} />
+        <span>ANILIST + STEAM • {t('multimedia_live_note')}</span>
+      </div>
     </div>
   );
 };
