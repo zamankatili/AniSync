@@ -13,6 +13,7 @@
 - [x] **XP / Seviye eğrisi & rütbeler**: `src/lib/level.ts` (`25·(L−1)·L`, 30 seviye, 6 rütbe: Misafir→Efsane); `badgeData.LEVELS` eğriden üretiliyor; `OtakuLevelBadge` anasayfada XP kartı + tek seferlik seviye-atla toast; Profile BadgeShowcase aynı hesap; TR/EN/JA/FR rütbe isimleri.
 - [x] **Günün Sorusu**: 12 soru × 4 dil, yılın günüyle deterministik seçim; "YANITLA" düğmesi soru ile besteciyi doldurur + odaklar; anasayfada kart.
 - [x] **Günün Önerileri**: `data/picks.ts` silindi; seçim artık canlı AniList `season+seasonYear TRENDING_DESC` (TR günüyle deterministik kaydırma; kullanıcı `favoriteGenres`'u varsa tür eşleşmesine göre sıralanır, "ZEVKİNE UYAN" rozeti gösterilir). Discover + Home kartı canlı kapak/skor/tür/bölüm taşır; hata durumunda `AnimeErrorCard` ile dürüst boş durum.
+- [x] **Anon chat 3 mesaj/gün + Café "KÖŞE" tam sayfa sohbet**: Anon kullanıcılar günlük 3 yerel mesaj gönderir (localStorage kotası, Firestore'a yazılmaz); 1024px ve üstünde `useMediaQuery` ile cafe görünüm (masa 1–7, ahşap/gold tema, saat, kurallar), altında eski yüzen panel; iki görünüm de aynı oda mantığını paylaşır.
 - [x] **README.md**: ürün/feature, stack, scriptler, env, Firebase/Vercel/Capacitor dağıtımı, admin & gizlilik, katkılama.
 
 ## Sende (5 dk – 30 dk)

@@ -16,10 +16,13 @@ import { useAppTranslation } from '../hooks/useAppTranslation';
 import { OFFICIAL_ROOMS, type CommunityRoom, type OfficialRoom } from '../lib/rooms';
 import { computeOtakuLevel } from '../lib/otakuLevel';
 import { useQuizStore } from '../store/useQuizStore';
+import { useIsLargeScreen } from '../lib/useMediaQuery';
+import { canAnonSend, recordAnonSend, loadAnonMessages, readAnonQuota, appendAnonMessage, removeAnonMessage, ANON_DAILY_LIMIT } from '../lib/anonQuota';
 import { RoomRequestModal } from './RoomRequestModal';
 import { RoomQueuePanel } from './RoomQueuePanel';
+import { ChatCafe } from './ChatCafe';
 
-interface ChatMessage {
+export interface ChatMessage {
   id: string;
   text: string;
   uid: string;
@@ -27,6 +30,8 @@ interface ChatMessage {
   avatar: string;
   roomId?: string;
   createdAt: any;
+  /** Yalnız bu cihazda saklanan misafir mesajı. */
+  isLocal?: boolean;
 }
 
 export type ChatRoomItem = OfficialRoom | CommunityRoom;
@@ -39,6 +44,7 @@ export const GlobalChat = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [roomModalOpen, setRoomModalOpen] = useState(false);
   const [queueOpen, setQueueOpen] = useState(false);
+  const [anonLoadKey, setAnonLoadKey] = useState(0);
   const [eventJoined, setEventJoined] = useState(false);
   const [eventAttendees, setEventAttendees] = useState<number | null>(null); // null = yükleniyor; Firestore'dan gerçekte
   const [rsvpBusy, setRsvpBusy] = useState(false);
@@ -49,7 +55,6 @@ export const GlobalChat = () => {
   const { addToast } = useToastStore();
   const { t, i18n } = useAppTranslation();
   const { config } = useRemoteConfig();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastSentAt = useRef(0);
 
   // Admin'in açtığı canlı etkinlik (yoksa bant hiç gösterilmez)
@@ -64,6 +69,9 @@ export const GlobalChat = () => {
     () => computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore).karma,
     [watchlist, arcadeHighScore, dailyStreak],
   );
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Topluluk odaları — Firestore canlı; resmi + topluluk birleşir
   useEffect(() => {
@@ -103,6 +111,34 @@ export const GlobalChat = () => {
       })
       .catch(() => setIsAdmin(false));
   }, [currentUser]);
+
+  const isLargeScreen = useIsLargeScreen();
+
+  // Anon yerel mesajlar — bu cihazda saklanır, Firestore'a yazılmaz
+  const anonLocalMessages = useMemo(
+    () => loadAnonMessages(activeRoomId),
+    [activeRoomId, anonLoadKey],
+  );
+  const allMessages = useMemo(() => {
+    const toSeconds = (c: any): number => {
+      if (c && typeof c.seconds === 'number') return c.seconds * 1000 + ((c.nanoseconds ?? 0) / 1e6);
+      if (typeof c === 'number') return c;
+      return 0;
+    };
+    const local: ChatMessage[] = anonLocalMessages.map((m) => ({
+      id: m.id,
+      text: m.text,
+      uid: 'anon',
+      name: m.name,
+      avatar: '',
+      roomId: activeRoomId,
+      createdAt: { seconds: Math.floor(m.createdAt / 1000), nanoseconds: 0 },
+      isLocal: true,
+    }));
+    return [...messages, ...local].sort((a, b) => toSeconds(a.createdAt) - toSeconds(b.createdAt));
+  }, [messages, anonLocalMessages, activeRoomId]);
+
+  const anonQuota = readAnonQuota();
 
   const allRooms = useMemo<ChatRoomItem[]>(
     () => [...OFFICIAL_ROOMS, ...communityRooms],
@@ -165,13 +201,30 @@ export const GlobalChat = () => {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUser) {
-      if (!currentUser) {
-        addToast(t('chat_login_required'), "info");
+    const text = newMessage.trim();
+    if (!text) return;
+
+    // Anon misafirler: günlük 3 mesaj (bu cihazda, Firestore'a yazılmadan)
+    if (!currentUser) {
+      const now = new Date();
+      if (!canAnonSend(now)) {
+        addToast(t('chat_anon_quota_exhausted'), 'info');
+        return;
       }
+      const quota = recordAnonSend(now);
+      const dayIndex = quota.used;
+      const anonName = t('chat_anon_name', { n: dayIndex });
+      appendAnonMessage(activeRoomId, {
+        id: `anon-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        text,
+        createdAt: Date.now(),
+        name: anonName,
+      });
+      setAnonLoadKey((k) => k + 1);
+      setNewMessage('');
       return;
     }
-    
+
     if (newMessage.length > 250) {
       addToast(t('chat_message_too_long'), "error");
       return;
@@ -184,7 +237,6 @@ export const GlobalChat = () => {
     }
     lastSentAt.current = now;
 
-    const text = newMessage.trim();
     setNewMessage('');
     
     try {
@@ -252,6 +304,12 @@ export const GlobalChat = () => {
   };
 
   const handleDeleteMessage = async (msgId: string) => {
+    const target = allMessages.find((m) => m.id === msgId);
+    if (target?.isLocal) {
+      removeAnonMessage(msgId);
+      setAnonLoadKey((k) => k + 1);
+      return;
+    }
     if (!currentUser) return;
     try {
       await deleteDoc(doc(db, 'globalChat', msgId));
@@ -260,6 +318,61 @@ export const GlobalChat = () => {
       addToast(t('chat_delete_failed'), "error");
     }
   };
+
+  // Masaüstü: tam sayfa "KÖŞE" deneyimi. Mobil: sağ altta yüzen panel.
+  if (isLargeScreen) {
+    return (
+      <>
+        {isOpen && (
+          <ChatCafe
+            rooms={allRooms}
+            activeRoom={currentRoom}
+            messages={allMessages as any}
+            onSelectRoom={setActiveRoomId}
+            onClose={() => setIsOpen(false)}
+            onSend={handleSend}
+            newMessage={newMessage}
+            onChangeNewMessage={setNewMessage}
+            onDeleteMessage={handleDeleteMessage}
+            currentUserName={currentUser?.displayName || userProfile?.name || 'Otaku'}
+            currentUserAvatar={currentUser?.photoURL ?? null}
+            isSignedIn={!!currentUser}
+            myKarma={myKarma}
+            anonUsed={anonQuota.used}
+            anonLimit={ANON_DAILY_LIMIT}
+            onOpenCreateModal={() => setRoomModalOpen(true)}
+            onOpenQueue={() => setQueueOpen(true)}
+            pendingRoomCount={pendingRoomCount}
+            isAdmin={isAdmin}
+            canDirectCreate={myKarma >= 500}
+            inputRef={inputRef}
+            messagesEndRef={messagesEndRef}
+          />
+        )}
+        {!isOpen && (
+          <button
+            onClick={() => setIsOpen(true)}
+            className="fixed bottom-8 right-8 z-50 w-16 h-16 bg-[#1a120c] border-2 border-[#e8c07a] flex items-center justify-center text-[#e8c07a] hover:bg-[#e8c07a] hover:text-[#1a120c] transition-all cursor-pointer shadow-[4px_4px_0_#000]"
+            title={t('chat_toggle_title')}
+            aria-label={t('chat_toggle_title')}
+          >
+            <span className="sr-only">{t('chat_toggle_title')}</span>
+            <MessageSquare size={24} strokeWidth={2.5} />
+          </button>
+        )}
+        <RoomRequestModal
+          isOpen={roomModalOpen}
+          onClose={() => setRoomModalOpen(false)}
+          karma={myKarma}
+        />
+        <RoomQueuePanel
+          isOpen={queueOpen}
+          onClose={() => setQueueOpen(false)}
+          isAdmin={isAdmin}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -377,7 +490,7 @@ export const GlobalChat = () => {
               
               {/* Messages Body */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-black relative">
-                {messages.length === 0 ? (
+                {allMessages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-neutral-500 gap-2">
                     <Hash size={32} className="text-neutral-700" />
                     <p className="text-xs font-black uppercase tracking-widest text-neutral-400">
@@ -388,28 +501,31 @@ export const GlobalChat = () => {
                     </p>
                   </div>
                 ) : (
-                  messages.map((msg, i) => {
-                    const isMe = msg.uid === currentUser?.uid;
-                    const showHeader = i === 0 || messages[i-1].uid !== msg.uid;
-                    
+                  allMessages.map((msg, i) => {
+                    const isMe = msg.uid === currentUser?.uid || msg.uid === 'anon';
+                    const showHeader = i === 0 || allMessages[i-1].uid !== msg.uid;
+                     
                     return (
                       <div key={msg.id} className={cn("flex flex-col relative z-10", isMe ? "items-end" : "items-start")}>
-                        {showHeader && !isMe && (
+                        {showHeader && (
                           <div className="flex items-center gap-1.5 mb-1 pl-1">
-                            <img src={msg.avatar} alt={msg.name} className="w-5 h-5 border border-white bg-white grayscale" />
+                            <img src={msg.avatar || resolveAvatar(null, msg.uid === 'anon' ? `misafir-${msg.id}` : msg.name)} alt={msg.name} className="w-5 h-5 border border-white bg-white grayscale" />
                             <span className="text-[10px] text-neutral-300 font-black uppercase tracking-widest">{msg.name}</span>
+                            {msg.isLocal && (
+                              <span className="text-[8px] font-black uppercase px-1.5 py-0.5 border border-amber-400 text-amber-400 bg-amber-400/10">{t('chat_local_room_badge')}</span>
+                            )}
                           </div>
                         )}
                         <div className="flex flex-col gap-0.5 w-full" style={{ alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                           <div className={cn(
                             "px-3.5 py-2.5 max-w-[85%] text-xs font-bold tracking-wide border-2 uppercase text-left relative group/msg",
-                            isMe 
-                              ? "bg-rose-600 text-white border-white neo-shadow-white" 
+                            isMe
+                              ? "bg-rose-600 text-white border-white neo-shadow-white"
                               : "bg-neutral-900 text-neutral-100 border-white/30"
                           )}>
                             {msg.text}
                             {isMe && (
-                              <button 
+                              <button
                                 onClick={() => handleDeleteMessage(msg.id)}
                                 className="absolute -left-7 top-1/2 -translate-y-1/2 opacity-0 group-hover/msg:opacity-100 text-rose-500 hover:text-white p-1 bg-black border border-white transition-opacity cursor-pointer"
                                 title={t('chat_delete_message')}
@@ -441,29 +557,29 @@ export const GlobalChat = () => {
               
               {/* Message Input Box */}
               <div className="p-3 bg-neutral-950 border-t-4 border-white/20 relative z-10">
-                {currentUser ? (
-                  <form onSubmit={handleSend} className="flex gap-2">
-                    <input 
-                      type="text" 
-                      value={newMessage}
-                      onChange={e => setNewMessage(e.target.value)}
-                      placeholder={t('chat_input_placeholder', { room: roomLabel(currentRoom) })}
-                      maxLength={250}
-                      className="flex-1 min-w-0 bg-black border-2 border-white/30 px-3 py-2.5 text-white font-bold uppercase tracking-wider text-xs focus:outline-none focus:border-rose-500 placeholder-neutral-600 transition-colors"
-                    />
-                    <button 
-                      type="submit"
-                      disabled={!newMessage.trim()}
-                      className="bg-white text-black disabled:opacity-40 p-2.5 border-2 border-black hover:bg-amber-400 transition-colors flex items-center justify-center font-black neo-shadow-white shrink-0 cursor-pointer"
-                    >
-                      <Send size={16} strokeWidth={2.5} className="translate-x-[1px]" />
-                    </button>
-                  </form>
-                ) : (
-                  <div className="text-center py-2.5 text-xs text-amber-400 font-black uppercase tracking-widest bg-black border border-amber-400/50">
-                    {t('chat_login_to_join')}
+                {!currentUser && (
+                  <div className="flex items-center justify-between gap-2 mb-1.5 px-2 py-1 border border-amber-400/50 bg-amber-400/10 text-[9px] font-black uppercase">
+                    <span className="text-amber-400">{t('chat_anon_remaining', { used: anonQuota.used, limit: ANON_DAILY_LIMIT })}</span>
+                    <span className="text-neutral-500">{t('chat_anon_only_this_device')}</span>
                   </div>
                 )}
+                <form onSubmit={handleSend} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={e => setNewMessage(e.target.value)}
+                    placeholder={t('chat_input_placeholder', { room: roomLabel(currentRoom) })}
+                    maxLength={250}
+                    className="flex-1 min-w-0 bg-black border-2 border-white/30 px-3 py-2.5 text-white font-bold uppercase tracking-wider text-xs focus:outline-none focus:border-rose-500 placeholder-neutral-600 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim()}
+                    className="bg-white text-black disabled:opacity-40 p-2.5 border-2 border-black hover:bg-amber-400 transition-colors flex items-center justify-center font-black neo-shadow-white shrink-0 cursor-pointer"
+                  >
+                    <Send size={16} strokeWidth={2.5} className="translate-x-[1px]" />
+                  </button>
+                </form>
               </div>
             </motion.div>
           )}
