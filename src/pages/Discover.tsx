@@ -86,10 +86,11 @@ export const Discover = () => {
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
           <div className="flex-1 space-y-6 text-center md:text-left w-full h-full flex flex-col justify-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-black text-white text-xs font-black tracking-widest uppercase mb-4 border-2 border-transparent">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-black text-white text-xs font-black tracking-widest uppercase mb-1.5 border-2 border-transparent">
                 <Sparkles size={14} className="text-white" />
                 {t('discover_badge')}
               </div>
+              <p className="text-[10px] font-bold text-black/50 uppercase tracking-widest mb-2">{t('discover_live_note')}</p>
               <h2 className="text-4xl md:text-5xl font-black text-black uppercase tracking-tighter leading-[1.1]" dangerouslySetInnerHTML={{ __html: t('cant_find_watch').replace('<br>', '<br class="hidden md:block"/>') }}>
               </h2>
               <p className="text-black/70 font-bold mt-4 max-w-md text-sm md:text-base mx-auto md:mx-0 uppercase tracking-wider">
@@ -120,7 +121,7 @@ export const Discover = () => {
                           )}
                         >
                           <span>{g.emoji}</span>
-                          {g.name}
+                          <span lang="en">{g.name}</span>
                         </button>
                       ))}
                     </div>

@@ -237,6 +237,8 @@ export interface AniListSearchParams {
   page?: number;
   perPage?: number;
   hideAdult?: boolean;
+  /** AniList tür adları (ör. ['Action', 'Fantasy']); boşsa uygulanmaz. */
+  genreIn?: string[];
   signal?: AbortSignal;
 }
 
@@ -244,12 +246,13 @@ export interface AniListSearchParams {
  * AniList'te arama yapar. `query` boşsa popülerlik sırasına göre listeler.
  */
 export async function searchAniList(params: AniListSearchParams): Promise<MediaSearchResult> {
-  const { query = '', kind, page = 1, perPage = 20, hideAdult = true, signal } = params;
+  const { query = '', kind, page = 1, perPage = 20, hideAdult = true, genreIn, signal } = params;
   const type = KIND_TO_ANILIST_TYPE[kind];
   if (!type) throw new Error(`AniList desteklenmeyen tür: ${kind}`);
 
   const trimmed = query.trim();
-  const cacheKey = `search:${kind}:${trimmed.toLowerCase()}:${page}:${perPage}:${hideAdult ? 'sfw' : 'all'}`;
+  const genres = Array.isArray(genreIn) ? Array.from(new Set(genreIn.map((g) => g.trim()).filter(Boolean))) : [];
+  const cacheKey = `search:${kind}:${trimmed.toLowerCase()}:${page}:${perPage}:${hideAdult ? 'sfw' : 'all'}:${genres.join('|')}`;
 
   return dedupe(cacheKey, async () => {
     const cached = cache.get(cacheKey) as MediaSearchResult | null;
@@ -258,23 +261,25 @@ export async function searchAniList(params: AniListSearchParams): Promise<MediaS
     const useSearch = trimmed.length > 0;
     // AniList'te NOVEL ayrı bir formattır; light novel sonuçlarını sunucu tarafında süz.
     const format = kind === 'light_novel' ? 'NOVEL' : undefined;
+    const genreArg = genres.length > 0 ? ', $genres: [String]' : '';
+    const genreInArg = genres.length > 0 ? ', genre_in: $genres' : '';
 
     const queryDoc = useSearch
       ? `
-        query ($search: String, $type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat) {
+        query ($search: String, $type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}) {
           Page(page: $page, perPage: $perPage) {
             pageInfo { total currentPage lastPage hasNextPage }
-            media(search: $search, type: $type, isAdult: $isAdult, format: $format, sort: SEARCH_MATCH) {
+            media(search: $search, type: $type, isAdult: $isAdult, format: $format, sort: SEARCH_MATCH${genreInArg}) {
               ...MediaCore
             }
           }
         }
       `
       : `
-        query ($type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat) {
+        query ($type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}) {
           Page(page: $page, perPage: $perPage) {
             pageInfo { total currentPage lastPage hasNextPage }
-            media(type: $type, isAdult: $isAdult, format: $format, sort: POPULARITY_DESC) {
+            media(type: $type, isAdult: $isAdult, format: $format, sort: POPULARITY_DESC${genreInArg}) {
               ...MediaCore
             }
           }
@@ -282,8 +287,8 @@ export async function searchAniList(params: AniListSearchParams): Promise<MediaS
       `;
 
     const variables = useSearch
-      ? { search: trimmed, type, page, perPage, isAdult: hideAdult ? false : undefined, format }
-      : { type, page, perPage, isAdult: hideAdult ? false : undefined, format };
+      ? { search: trimmed, type, page, perPage, isAdult: hideAdult ? false : undefined, format, genres: genres.length > 0 ? genres : undefined }
+      : { type, page, perPage, isAdult: hideAdult ? false : undefined, format, genres: genres.length > 0 ? genres : undefined };
 
     const payload = await graphql<AniListPageResponse>(queryDoc, variables, `arama (${kind})`, signal);
 

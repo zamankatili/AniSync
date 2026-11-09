@@ -6,6 +6,19 @@ import { fetchAnimeFallback, toLegacyAnime } from '../lib/api/animeBridge';
 import { searchAniList, fetchSeasonalTrendingAnime } from '../lib/api/anilist';
 
 const BASE_URL = 'https://api.jikan.moe/v4';
+
+// MAL tür kimliği -> AniList tür adı (Explore'un genre filtresi bunları kullanır)
+const MAL_GENRE_TO_ANILIST: Record<number, string> = {
+  1: 'Action',
+  2: 'Adventure',
+  4: 'Comedy',
+  8: 'Drama',
+  10: 'Fantasy',
+  14: 'Horror',
+  22: 'Romance',
+  24: 'Sci-Fi',
+  36: 'Slice of Life',
+};
 const CACHE_KEY_PREFIX = 'ety_jikan_cache_';
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes cache
 
@@ -238,31 +251,44 @@ export const useAnimeData = (): UseAnimeResult => {
     }
   }, []);
 
-  // Multi-tier Random Engine across ALL aired anime series without repetition
+  // SINIRSIZ KEŞİF MOTORU — AniList birincil: 1..15 POPULARITY_DESC sayfasında rastgele 20'lik dilim
   const fetchRandom = useCallback(async (): Promise<Anime | null> => {
     setLoading(true);
     setError(null);
 
+    try {
     // Filter helper to pick an unseen anime from an array
     const pickUnseen = (pool: Anime[]): Anime | null => {
-      const unseen = pool.filter(a => !shownRandomIds.has(a.mal_id));
+      const unseen = pool.filter((a) => a.mal_id > 0 && !shownRandomIds.has(a.mal_id));
       if (unseen.length > 0) {
         const picked = unseen[Math.floor(Math.random() * unseen.length)];
         shownRandomIds.add(picked.mal_id);
         return picked;
       }
-      // If all seen, reset and pick any
-      if (pool.length > 0) {
-        const picked = pool[Math.floor(Math.random() * pool.length)];
+      const any = pool.find((a) => a.mal_id > 0);
+      if (any) {
         shownRandomIds.clear();
-        shownRandomIds.add(picked.mal_id);
-        return picked;
+        shownRandomIds.add(any.mal_id);
+        return any;
       }
       return null;
     };
 
     try {
-      // Pick random page from top anime (pages 1 to 30 = 750 high-quality aired series)
+      // AniList birincil: 1..15 POPULARITY_DESC sayfasında rastgele 20'lik dilim (canlı, SFW)
+      const page = Math.floor(Math.random() * 15) + 1;
+      const result = await searchAniList({ kind: 'anime', page, perPage: 20 });
+      const pool = result.items
+        .filter((m) => typeof m.externalIds?.mal === 'number')
+        .map((m) => toLegacyAnime(m, m.externalIds!.mal as number));
+      const picked = pool.length > 0 ? pickUnseen(pool) : null;
+      if (picked) return picked;
+    } catch (e) {
+      console.warn('AniList rastgele motoru başarısız, Jikan deneniyor:', e);
+    }
+
+    try {
+      // Yedek: Jikan sayfası
       const randomPage = Math.floor(Math.random() * 25) + 1;
       const json = await jikanFetch(`${BASE_URL}/top/anime?page=${randomPage}&limit=25&_nocache=${Date.now()}`);
       if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
@@ -270,11 +296,11 @@ export const useAnimeData = (): UseAnimeResult => {
         if (picked) return picked;
       }
     } catch (e) {
-      console.warn('Page-based random fetch failed, trying random endpoint:', e);
+      console.warn('Jikan sayfa rastgele fetch başarısız, random endpoint deneniyor:', e);
     }
 
     try {
-      // Secondary attempt: Jikan direct random endpoint with timestamp
+      // yedek: Jikan direkt rastgele
       const json = await jikanFetch(`${BASE_URL}/random/anime?_ts=${Date.now()}`);
       if (json && json.data) {
         const anime = json.data as Anime;
@@ -282,35 +308,49 @@ export const useAnimeData = (): UseAnimeResult => {
         return anime;
       }
     } catch (e) {
-      console.warn('Random endpoint failed, using extended catalog:', e);
+      console.warn('Jikan /random başarısız:', e);
     }
 
-    // Tertiary guarantee: pick unseen from our extended catalog of 25+ iconic series
+    // son çare: dürüst yedek katalog
     const fallbackPicked = pickUnseen(EXTENDED_RANDOM_CATALOG);
-    if (fallbackPicked) return fallbackPicked;
-
-    return EXTENDED_RANDOM_CATALOG[0];
+    return fallbackPicked ?? EXTENDED_RANDOM_CATALOG[0];
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Filter by Criteria across random pages for maximum variety
+  // Filter by Criteria — AniList birincil: genre_in ile rastgele sayfa
   const fetchByCriteria = useCallback(async (genres: number[]): Promise<Anime[] | null> => {
     setLoading(true);
     setError(null);
     try {
-      const genreString = genres.join(',');
-      // Randomize page (1 to 4) so user doesn't always see the exact same 10 anime
-      const randomPage = Math.floor(Math.random() * 4) + 1;
-      const json = await jikanFetch(`${BASE_URL}/anime?genres=${genreString}&page=${randomPage}&order_by=popularity&sort=asc&sfw=true&limit=15&_nocache=${Date.now()}`);
-      if (json && json.data && json.data.length > 0) {
-        return json.data as Anime[];
-      }
-      return EXTENDED_RANDOM_CATALOG.filter(a => 
-        a.genres?.some(g => genres.includes(g.mal_id))
+      const names = Array.from(
+        new Set(genres.map((id) => MAL_GENRE_TO_ANILIST[id]).filter((name): name is string => Boolean(name)))
       );
-    } catch (err: any) {
-      console.warn('fetchByCriteria failed, using filtered catalog:', err);
-      const matches = EXTENDED_RANDOM_CATALOG.filter(a => 
-        a.genres?.some(g => genres.includes(g.mal_id))
+
+      if (names.length > 0) {
+        const page = Math.floor(Math.random() * 4) + 1;
+        const result = await searchAniList({ kind: 'anime', page, perPage: 15, genreIn: names });
+        const pool = result.items
+          .filter((m) => typeof m.externalIds?.mal === 'number')
+          .map((m) => toLegacyAnime(m, m.externalIds!.mal as number));
+        if (pool.length > 0) return pool;
+      }
+
+      // yedek: Jikan (MAL tür id'leri doğrudan çalışır)
+      try {
+        const genreString = genres.join(',');
+        const randomPage = Math.floor(Math.random() * 4) + 1;
+        const json = await jikanFetch(`${BASE_URL}/anime?genres=${genreString}&page=${randomPage}&order_by=popularity&sort=asc&sfw=true&limit=15&_nocache=${Date.now()}`);
+        if (json && json.data && json.data.length > 0) {
+          return json.data as Anime[];
+        }
+      } catch (err: any) {
+        console.warn('Jikan kriter motoru başarısız:', err);
+      }
+
+      const matches = EXTENDED_RANDOM_CATALOG.filter((a) =>
+        a.genres?.some((g) => genres.includes(g.mal_id))
       );
       return matches.length > 0 ? matches : FALLBACK_LISTS['evergreen_popular'];
     } finally {
