@@ -57,6 +57,7 @@ export default {
       "home_tab_news": "ニュース",
       "more": "もっと",
       "arcade": "アーケード",
+      "voice_duel": "このキャラは誰？",
       "anime_life_sim": "ライフシミュレーション",
       "arcade_tagline": "オタク街のレトロコーナー",
       "play": "プレイ",

@@ -57,6 +57,7 @@ export default {
       "home_tab_news": "HABERLER",
       "more": "DAHA",
       "arcade": "ARCADE",
+      "voice_duel": "KİM BU KARAKTER?",
       "anime_life_sim": "YAŞAM SİMÜLASYONU",
       "arcade_tagline": "OTAKU MAHALLESİNİN RETRO KÖŞESİ",
       "play": "OYNA",

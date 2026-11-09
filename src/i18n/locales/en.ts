@@ -57,6 +57,7 @@ export default {
       "home_tab_news": "NEWS",
       "more": "MORE",
       "arcade": "ARCADE",
+      "voice_duel": "WHO IS THIS?",
       "anime_life_sim": "LIFE SIMULATION",
       "arcade_tagline": "THE OTAKU DISTRICT'S RETRO CORNER",
       "play": "PLAY",

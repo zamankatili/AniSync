@@ -57,6 +57,7 @@ export default {
       "home_tab_news": "ACTUALITÉS",
       "more": "PLUS",
       "arcade": "ARCADE",
+      "voice_duel": "QUI EST CE PERSO ?",
       "anime_life_sim": "SIMULATION DE VIE",
       "arcade_tagline": "LE COIN RÉTRO DU QUARTIER OTAKU",
       "play": "JOUER",

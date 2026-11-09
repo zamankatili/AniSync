@@ -20,6 +20,7 @@ const ListsPage = lazy(() => import('./pages/Lists').then(m => ({ default: m.Lis
 const AiringCalendar = lazy(() => import('./pages/AiringCalendar').then(m => ({ default: m.AiringCalendar })));
 const AnimeGridMaker = lazy(() => import('./pages/AnimeGridMaker').then(m => ({ default: m.AnimeGridMaker })));
 const MusicQuiz = lazy(() => import('./pages/MusicQuiz').then(m => ({ default: m.MusicQuiz })));
+const VoiceDuel = lazy(() => import('./pages/VoiceDuel').then(m => ({ default: m.VoiceDuel })));
 const WatchParty = lazy(() => import('./pages/WatchParty').then(m => ({ default: m.WatchParty })));
 const WeeklyChallengePage = lazy(() => import('./pages/WeeklyChallengePage').then(m => ({ default: m.WeeklyChallengePage })));
 const AniSyncDle = lazy(() => import('./pages/AniSyncDle').then(m => ({ default: m.AniSyncDle })));
@@ -44,6 +45,7 @@ export default function App() {
               <Route path="dle" element={<AniSyncDle />} />
               <Route path="anisyncdle" element={<AniSyncDle />} />
               <Route path="music-quiz" element={<MusicQuiz />} />
+<Route path="voice-duel" element={<VoiceDuel />} />
               <Route path="arcade" element={<Arcade />} />
               <Route path="anime-life-sim" element={<AnimeLifeSim />} />
               <Route path="calendar" element={<AiringCalendar />} />
