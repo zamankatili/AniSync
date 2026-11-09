@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { CHARACTERS_POOL } from '../data/charactersPool';
+import { CHARACTERS_POOL, normalizeCharacterName } from '../data/charactersPool';
 import { Search, Send, Sparkles } from 'lucide-react';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
@@ -16,11 +16,15 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onGuess, disabled }) => 
 
   // Filter matching suggestions
   const suggestions = useMemo(() => {
-    if (!guess.trim() || guess.length < 2) return [];
-    const query = guess.toLowerCase();
-    return CHARACTERS_POOL.filter(
-      c => c.name.toLowerCase().includes(query) || c.series.toLowerCase().includes(query)
-    ).slice(0, 6);
+    if (!guess.trim() || guess.trim().length < 2) return [];
+    const query = normalizeCharacterName(guess);
+    if (!query) return [];
+    return CHARACTERS_POOL.filter((c) => {
+      const haystack = [c.name, c.series, ...(c.aliases ?? [])]
+        .map(normalizeCharacterName)
+        .join(' ');
+      return haystack.includes(query);
+    }).slice(0, 6);
   }, [guess]);
 
   useEffect(() => {
@@ -93,8 +97,8 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onGuess, disabled }) => 
                   className="w-8 h-8 rounded-none border border-white object-cover"
                 />
                 <div>
-                  <div className="text-white font-black text-sm uppercase">{item.name}</div>
-                  <div className="text-neutral-400 text-xs font-bold">{item.series}</div>
+                  <div lang="en" className="text-white font-black text-sm uppercase">{item.name}</div>
+                  <div lang="en" className="text-neutral-400 text-xs font-bold">{item.series}</div>
                 </div>
               </div>
               <span className="text-[10px] bg-amber-400 text-black font-black px-1.5 py-0.5 uppercase border border-black">
