@@ -101,13 +101,13 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, compact = false }) 
 
         {/* Hover info for desktop - centered over image */}
         <div className="absolute inset-0 flex flex-col items-center justify-center p-5 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/85 backdrop-blur-[2px] z-0 pointer-events-none">
-          <p className="text-white text-xs font-bold leading-relaxed line-clamp-6 uppercase tracking-wide text-center">
+          <p lang="en" className="text-white text-xs font-bold leading-relaxed line-clamp-6 uppercase tracking-wide text-center">
             {anime.synopsis || t('anime_card_no_synopsis')}
           </p>
           {anime.genres && anime.genres.length > 0 && (
             <div className="flex flex-wrap justify-center gap-1.5 mt-3">
               {anime.genres.slice(0, 3).map(g => (
-                <span key={g.mal_id} className="text-[10px] uppercase font-black tracking-widest bg-white text-black px-2 py-0.5 border border-black shadow-[2px_2px_0px_0px_#000]">
+                <span lang="en" key={g.mal_id} className="text-[10px] uppercase font-black tracking-widest bg-white text-black px-2 py-0.5 border border-black shadow-[2px_2px_0px_0px_#000]">
                   {g.name}
                 </span>
               ))}
@@ -118,7 +118,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, compact = false }) 
       
       {!compact && (
          <div className="p-4 pt-3 relative z-10 bg-white group-hover:bg-rose-500 transition-colors">
-           <h3 className="font-black text-black text-sm line-clamp-1 uppercase tracking-tight group-hover:text-white transition-colors" title={anime.title_english || anime.title}>
+           <h3 lang="en" className="font-black text-black text-sm line-clamp-1 uppercase tracking-tight group-hover:text-white transition-colors" title={anime.title_english || anime.title}>
              {anime.title_english || anime.title}
            </h3>
            <div className="flex items-center justify-between mt-2 text-xs text-black/70 font-bold uppercase tracking-wider group-hover:text-white/80 transition-colors">

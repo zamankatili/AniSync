@@ -1,11 +1,19 @@
 # AniSync — Kalan İşler (tek liste)
 *Son güncelleme: 9 Kasım 2026. Bitenler SYSTEM_REVIEW_2026-11.md'de işaretli.*
 
+## Bu oturumda tamamlananlar
+- [x] **Varsayılan avatarlar → chibi anime**: DiceBear `avataaars` yerine yerel `public/avatars/chibi-01..08.svg` + `src/lib/avatar.ts` (`getDefaultAvatar` / `resolveAvatar`). İnternet gerektirmez, seed'e göre deterministik.
+- [x] **Veri motorları**: gün bazlı/sayfalı AniList yayın takvimi, `/api/anime-news` + ölü rss2json temizliği, güncel sezon trendleri, canlı manga/karakter/Steam keşfi.
+- [x] **ANISYNCDLE**: TR günü, rastgele antrenman, istatistik izolasyonu, takma ad/eşleşme, 4 dilli ipuçları.
+- [x] **Başlık büyütme (TR i→İ) düzeltmesi**: Anime/manga/karakter/ haber başlıklarına `lang="en"` verilerek Türkçe `text-transform` kuralının Latin başlıkları bozması engellendi (CHAİNSAW → CHAINSAW).
+- [x] **Bölüm sayısı gösterimi**: Canlı katalogda bilinmeyen okuma yerine "232 BÖLÜM" formatı (`multimedia_chapters_total`).
+
 ## Sende (5 dk – 30 dk)
 - [ ] Firebase Console → Firestore → **Rules yayınla** (`firestore.rules`)
 - [ ] **`firestore.indexes.json`'daki indeksleri** Yayınla (globalChat roomId+createdAt; `firebase deploy --only firestore:indexes` veya Console → Indexes)
 - [ ] `users/{uid}` → `role: 'admin'` ekle (veya Google ile giriş sonrası söyle, birlikte alalım)
 - [ ] Vercel env: `GEMINI_API_KEY`, `CRON_SECRET`, `FIREBASE_PROJECT_ID=folkloric-centaur-q6tp2`
+- [ ] **Native build**: `VITE_API_BASE_URL=https://<canlı-domain>` ver (varsayılan `https://anisync.app` yayında değil; native'de /api çağrıları kırılır)
 - [ ] GitHub repo secret `FIREBASE_TOKEN` (`firebase login:ci`) → rules otomatik deploy
 - [ ] `.env` içeriğini Google hesabınla Firebase konsolundan doğrula (auth provider'lar)
 

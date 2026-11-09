@@ -364,7 +364,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                               />
 
                               <div className="min-w-0">
-                                <h4 className="font-black text-sm uppercase text-white truncate">{title}</h4>
+                                <h4 lang="en" className="font-black text-sm uppercase text-white truncate">{title}</h4>
 
                                 <div className="flex items-center gap-2 mt-1 text-xs text-neutral-400 font-bold flex-wrap">
                                   {item.averageScore ? (

@@ -243,10 +243,10 @@ export const MediaDetail = () => {
                 ) : null}
               </div>
 
-              <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none break-words">{localizedTitle}</h1>
+              <h1 lang="en" className="text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none break-words">{localizedTitle}</h1>
 
               {alternativeTitles.length > 0 && (
-                <p className="mt-2 text-xs font-bold text-neutral-400 break-words">{alternativeTitles.join(' · ')}</p>
+                <p lang="en" className="mt-2 text-xs font-bold text-neutral-400 break-words">{alternativeTitles.join(' · ')}</p>
               )}
 
               {animeMalId ? (

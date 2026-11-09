@@ -329,11 +329,11 @@ export const AnimeDetail = () => {
                 </motion.div>
               )}
 
-              <h1 className="text-4xl md:text-6xl font-black text-black mb-2 tracking-tighter uppercase leading-[1.1]">
+              <h1 lang="en" className="text-4xl md:text-6xl font-black text-black mb-2 tracking-tighter uppercase leading-[1.1]">
                 {anime.title_english || anime.title}
               </h1>
               {anime.title_english && (
-                <h2 className="text-lg md:text-2xl text-black/60 font-bold uppercase tracking-wider mb-6">
+                <h2 lang="en" className="text-lg md:text-2xl text-black/60 font-bold uppercase tracking-wider mb-6">
                   {anime.title}
                 </h2>
               )}
@@ -353,7 +353,7 @@ export const AnimeDetail = () => {
 
             <div>
               <h3 className="text-2xl font-black text-black mb-4 uppercase tracking-tighter border-b-4 border-black pb-2 inline-block">{t('synopsis')}</h3>
-              <p className="text-black font-bold uppercase tracking-wide leading-relaxed text-sm md:text-base whitespace-pre-line p-6 bg-white border-4 border-black neo-shadow">
+              <p lang="en" className="text-black font-bold uppercase tracking-wide leading-relaxed text-sm md:text-base whitespace-pre-line p-6 bg-white border-4 border-black neo-shadow">
                 {anime.synopsis || t('no_synopsis')}
               </p>
             </div>
@@ -361,7 +361,7 @@ export const AnimeDetail = () => {
             {anime.background && (
               <div>
                 <h3 className="text-2xl font-black text-black mb-4 uppercase tracking-tighter border-b-4 border-black pb-2 inline-block">{t('background')}</h3>
-                <p className="text-white font-bold uppercase tracking-wide leading-relaxed text-sm md:text-base italic bg-black p-6 border-4 border-black neo-shadow-white">
+                <p lang="en" className="text-white font-bold uppercase tracking-wide leading-relaxed text-sm md:text-base italic bg-black p-6 border-4 border-black neo-shadow-white">
                   {anime.background}
                 </p>
               </div>

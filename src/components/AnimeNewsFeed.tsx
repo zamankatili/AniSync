@@ -205,11 +205,11 @@ export const AnimeNewsFeed: React.FC = () => {
                       </span>
                     </div>
 
-                    <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tight leading-snug group-hover:text-cyan-400 transition-colors mb-2 line-clamp-2">
+                    <h3 lang="en" className="text-base md:text-lg font-black text-white uppercase tracking-tight leading-snug group-hover:text-cyan-400 transition-colors mb-2 line-clamp-2">
                       {item.title}
                     </h3>
 
-                    <p className="text-xs text-neutral-300 font-bold leading-relaxed line-clamp-2 mb-3">
+                    <p lang="en" className="text-xs text-neutral-300 font-bold leading-relaxed line-clamp-2 mb-3">
                       {item.summary}
                     </p>
                   </div>
