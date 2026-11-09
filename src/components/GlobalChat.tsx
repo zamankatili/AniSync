@@ -338,28 +338,10 @@ export const GlobalChat = () => {
       {/* KÖŞE tam sayfa — masaüstü veya cafeFullScreen */}
       {isLargeScreen && cafeFullScreen && isOpen && (
         <ChatCafe
-          rooms={allRooms}
-          activeRoom={currentRoom}
-          messages={allMessages as any}
-          onSelectRoom={setActiveRoomId}
           onClose={() => setCafeFullScreen(false)}
-          onSend={handleSend}
-          newMessage={newMessage}
-          onChangeNewMessage={setNewMessage}
-          onDeleteMessage={handleDeleteMessage}
           currentUserName={currentUser?.displayName || userProfile?.name || 'Otaku'}
           currentUserAvatar={currentUser?.photoURL ?? null}
-          isSignedIn={!!currentUser}
           myKarma={myKarma}
-          anonUsed={anonQuota.used}
-          anonLimit={ANON_DAILY_LIMIT}
-          onOpenCreateModal={() => setRoomModalOpen(true)}
-          onOpenQueue={() => setQueueOpen(true)}
-          pendingRoomCount={pendingRoomCount}
-          isAdmin={isAdmin}
-          canDirectCreate={myKarma >= 500}
-          inputRef={inputRef}
-          messagesEndRef={messagesEndRef}
           levelInfo={myLevelInfo}
         />
       )}

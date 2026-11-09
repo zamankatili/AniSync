@@ -1,368 +1,440 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  X, Send, Trash2, Sparkles, ChevronRight, Plus, Vote, LogIn, ShieldCheck, Maximize2
+  X, Send, Heart, Radio, Play, Pause, SkipForward, SkipBack, SkipBack as Rewind,
+  ShieldCheck, Volume2, VolumeX, Sparkles, LogIn, CornerDownRight
 } from 'lucide-react';
 import { cn, formatRelativeTime } from '../lib/utils';
 import { resolveAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { DIRECT_ROOM_MIN_XP, ROOM_VOTE_THRESHOLD, OFFICIAL_ROOMS, type OfficialRoom } from '../lib/rooms';
-import type { ChatMessage, ChatRoomItem } from './GlobalChat';
-import { useIsLargeScreen } from '../lib/useMediaQuery';
+import { useAppStore } from '../context/AppStore';
+import { useRadioStore, RADIO_STATIONS } from '../store/useRadioStore';
+import { levelProgress } from '../lib/level';
+import type { UserProfile } from '../types';
 
 /**
- * KÖŞE — tam ekran "otaku mahallesi köşe masası" sohbeti.
- * https://anisync-tau.vercel.app/kose referansındaki görünümden ilhamla,
- * kendi tasarım dilimize uyarlanmıştır: koyu zeytin, amber sınırlar, serif.
+ * KÖŞE — tam ekran fikir/kahve masası ("otaku mahallesi köşe").
  *
- * Küçük ekranlarda otomatik olarak yüzen panel kullanılır; bu bileşen
- * yalnızca geniş ekranlarda render edilir.
+ * NEO-BRÜTALİST yaklaşım: siyah zemin, beyaz kalın sınırlar, sert gölgeler.
+ * Masalar (sol), katkı akışı (orta) ve RADYO/SEVİYE (sağ) — iki ayrı şey:
+ * Salonun konuşma masaları (fikir) burada, sohbet odaları sağ altta mini panelde.
  */
 export interface ChatCafeProps {
-  rooms: ChatRoomItem[];
-  activeRoom: ChatRoomItem;
-  messages: Array<ChatMessage & { anonymousIndex?: number }>;
-  onSelectRoom: (id: string) => void;
   onClose: () => void;
-  onSend: (e: React.FormEvent) => void;
-  newMessage: string;
-  onChangeNewMessage: (value: string) => void;
-  onDeleteMessage: (msgId: string) => void;
   currentUserName: string;
   currentUserAvatar?: string | null;
-  isSignedIn: boolean;
   myKarma: number;
-  anonUsed: number;
-  anonLimit: number;
-  onOpenCreateModal: () => void;
-  onOpenQueue: () => void;
-  pendingRoomCount: number;
-  isAdmin: boolean;
-  canDirectCreate: boolean;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   levelInfo?: { level: number; title: string };
 }
 
-const BG = 'radial-gradient(1200px 700px at 65% -10%, rgba(232,192,122,0.10), transparent 55%), radial-gradient(900px 800px at -10% 115%, rgba(127,176,105,0.07), transparent 55%), #141c17';
-const CARD = '#1d2722';
-const CARD_SOFT = '#242f28';
-const BORDER = '#e8c07a33';
-const BORDER_STRONG = '#e8c07a66';
-const TEXT = '#f2ead8';
-const MUTED = '#8ba08f';
-const GOLD = '#e8c07a';
+type TableId = 'all' | 'Sohbet' | 'Soru' | 'Öneri' | 'İnceleme';
 
-const CIRCLE_COLORS: Record<string, string> = {
-  genel: '#e8c07a',
-  'haftalik-spoiler': '#e07040',
-  'one-piece-spoiler': '#d94a3d',
-  'bolum-odasi': '#57b8a2',
-  muzik: '#b083f0',
-  'vs-tartisma': '#e05252',
-  etkinlik: '#5aa4e6',
-};
-
-const KIND_BADGES: Array<{ prefix: string; label: string; className: string }> = [
-  { prefix: 'soru:', label: 'SORU', className: 'text-amber-300 border-amber-400/50 bg-amber-400/10' },
-  { prefix: 'öneri:', label: 'ÖNERİ', className: 'text-emerald-300 border-emerald-400/50 bg-emerald-400/10' },
-  { prefix: 'oneri:', label: 'ÖNERİ', className: 'text-emerald-300 border-emerald-400/50 bg-emerald-400/10' },
-  { prefix: 'inceleme:', label: 'İNCELEME', className: 'text-purple-300 border-purple-400/50 bg-purple-400/10' },
-  { prefix: 'sohbet:', label: 'SOHBET', className: 'text-neutral-300 border-neutral-500/50 bg-neutral-500/10' },
+const TABLES: Array<{ id: TableId; label: Record<string, string>; icon: string; accent: string; desc: Record<string, string> }> = [
+  { id: 'all', label: { tr: 'Hepsi', en: 'All', ja: 'すべて', fr: 'Tout' }, icon: '◉', accent: '#f2ead8', desc: { tr: '', en: '', ja: '', fr: '' } },
+  { id: 'Sohbet', label: { tr: 'Sohbet', en: 'Chat', ja: 'おしゃべり', fr: 'Bavardage' }, icon: '💬', accent: '#e8c07a', desc: { tr: '', en: '', ja: '', fr: '' } },
+  { id: 'Soru', label: { tr: 'Soru', en: 'Question', ja: '質問', fr: 'Question' }, icon: '❓', accent: '#ffd166', desc: { tr: '', en: '', ja: '', fr: '' } },
+  { id: 'Öneri', label: { tr: 'Öneri', en: 'Advice', ja: 'おすすめ', fr: 'Conseil' }, icon: '📗', accent: '#7fb069', desc: { tr: '', en: '', ja: '', fr: '' } },
+  { id: 'İnceleme', label: { tr: 'İnceleme', en: 'Review', ja: 'レビュー', fr: 'Critique' }, icon: '📖', accent: '#d2a4ff', desc: { tr: '', en: '', ja: '', fr: '' } },
 ];
 
-const detectKind = (text: string) => {
-  const lower = text.toLowerCase();
-  return KIND_BADGES.find((b) => lower.startsWith(b.prefix));
-};
+const DOT_GRID = 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)';
 
-const chipPrefix = (chip: string) => {
-  if (chip === 'Sohbet') return 'Sohbet:';
-  if (chip === 'Soru') return 'Soru:';
-  if (chip === 'Öneri') return 'Öneri:';
-  return '';
-};
+const BlackPanel: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, children, ...rest }) => (
+  <div className={cn('bg-black border-4 border-white neo-shadow-white', className)} {...rest}>{children}</div>
+);
 
 export const ChatCafe: React.FC<ChatCafeProps> = ({
-  rooms,
-  activeRoom,
-  messages,
-  onSelectRoom,
   onClose,
-  onSend,
-  newMessage,
-  onChangeNewMessage,
-  onDeleteMessage,
   currentUserName,
   currentUserAvatar,
-  isSignedIn,
   myKarma,
-  anonUsed,
-  anonLimit,
-  onOpenCreateModal,
-  onOpenQueue,
-  pendingRoomCount,
-  isAdmin,
-  canDirectCreate,
-  inputRef,
-  messagesEndRef,
   levelInfo,
 }) => {
-  const { t } = useAppTranslation();
-  const [activeChip, setActiveChip] = useState<string>('Sohbet');
+  const { t, currentLang } = useAppTranslation();
+  const { forumPosts, addForumPost, toggleLike, currentUser, userProfile } = useAppStore();
+  const { isPlaying, togglePlay, currentStationIndex, volume, isMuted, setVolume, toggleMute, nextStation, prevStation } = useRadioStore();
+
+  const [activeTable, setActiveTable] = useState<TableId>('all');
+  const [composerText, setComposerText] = useState('');
+  const [composerKind, setComposerKind] = useState<TableId>('Sohbet');
   const [clock, setClock] = useState(() => new Date());
 
   useEffect(() => {
-    const id = window.setInterval(() => setClock(new Date()), 30_000);
+    const id = window.setInterval(() => setClock(new Date()), 1000);
     return () => window.clearInterval(id);
   }, []);
 
-  const clockText = useMemo(
-    () => clock.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
-    [clock],
-  );
-  const dayText = useMemo(
-    () => clock.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' }),
-    [clock],
-  );
+  const clockText = clock.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dayText = clock.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  const roomLabel = (room: ChatRoomItem) =>
-    room.isOfficial ? t(`chat_room_name_${room.id}`, { defaultValue: room.name }) : room.name;
-  const roomTopic = (room: ChatRoomItem) =>
-    room.isOfficial ? t(`chat_room_topic_${room.id}`, { defaultValue: room.topic }) : room.topic;
+  const lang = (currentLang as 'tr' | 'en' | 'ja' | 'fr' | string) || 'tr';
+  const L = (entry: Record<string, string>) => entry[lang] || entry.tr || entry.en || '';
 
-  const chipLabel = (chip: string): string => {
-    const map: Record<string, string> = {
-      Sohbet: 'Sohbet',
-      Soru: 'Soru',
-      Öneri: 'Öneri',
-      İnceleme: 'İnceleme',
-    };
-    return map[chip] ?? chip;
+  const isSignedIn = !!currentUser;
+
+  const posts = useMemo(() => {
+    const base = [...forumPosts].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    if (activeTable === 'all') return base;
+    return base.filter((p) => (p.category || '').toLowerCase() === activeTable.toLowerCase());
+  }, [forumPosts, activeTable]);
+
+  const station = RADIO_STATIONS[currentStationIndex];
+  const progressPercent = levelProgress(myKarma).percent;
+
+  const handlePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = composerText.trim();
+    if (!text || !currentUser) return;
+
+    await addForumPost({
+      title: composerKind,
+      content: text,
+      likes: 0,
+      replies: 0,
+      category: composerKind,
+      type: composerKind === 'İnceleme' ? 'review' : composerKind === 'Öneri' ? 'recommendation' : 'discussion',
+      likedBy: [],
+      comments: [],
+    });
+    setComposerText('');
   };
 
   return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto" style={{ background: BG, color: TEXT }}>
-      <div className="max-w-[1180px] mx-auto px-5 md:px-8 pt-4 md:pt-6 pb-10">
+    <div
+      className="fixed inset-0 z-[70] overflow-hidden text-white flex flex-col select-none"
+      style={{ background: '#0b0b0b' }}
+    >
+      <div
+        className="absolute inset-0 opacity-70"
+        style={{ backgroundImage: DOT_GRID, backgroundSize: '24px 24px' }}
+      />
 
-        {/* ─── ÜST ŞERİT ───────────────────── */}
-        <header className="flex items-start justify-between gap-4 border-b border-[#e8c07a1f] pb-4 md:pb-5">
-          <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-[#b3c7b0]">ANİSYNC · İÇ MAHALLE</p>
-            <h1 className="font-serif font-black text-[64px] md:text-[80px] leading-[0.92] tracking-tight text-[#f2ead8] mt-1 select-none">KÖŞE</h1>
-            <p className="font-serif italic text-[13.5px] md:text-[15px] text-[#b3c7b0] mt-2 max-w-md leading-snug">
-              {t('chat_cafe_tagline')}
-            </p>
+      {/* ─── HEADER BANDI ───────────────────────────── */}
+      <header className="relative border-b-4 border-white bg-black flex items-center justify-between gap-4 px-5 md:px-8 pt-3 md:pt-4 pb-3">
+        <div className="flex items-center gap-4 min-w-0">
+          <a href="#" onClick={(e) => e.preventDefault()} className="font-mono font-black text-3xl md:text-4xl tracking-tighter leading-none select-none">
+            A<span className="text-amber-400">N</span>İ<span className="text-rose-600">SYNC</span>
+          </a>
+          <div className="hidden sm:block h-10 w-px bg-white/20" />
+          <div className="hidden sm:block">
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">İÇ MAHALLE</p>
+            <h1 className="font-serif font-black text-[40px] md:text-[56px] leading-none tracking-tight">
+              KÖŞE<span className="text-amber-400">.</span>
+            </h1>
           </div>
+        </div>
 
-          <div className="flex flex-col items-end gap-2 shrink-0 pt-2">
-            <button
-              onClick={onClose}
-              className="flex items-center gap-2 border border-[#e8c07a33] text-[#e8c07a] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.3em] hover:bg-[#e8c07a] hover:text-[#141c17] transition-all cursor-pointer"
-              aria-label={t('chat_back_to_panel')}
-              title={t('chat_back_to_panel')}
-            >
-              <Maximize2 size={13} strokeWidth={2.5} />
-              {t('chat_back_to_panel')}
-            </button>
-            <div className="text-right">
-              <p className="font-serif font-bold text-[20px] leading-none text-[#f2ead8] tabular-nums">{clockText}</p>
-              <p className="font-mono text-[8px] uppercase tracking-widest text-[#8ba08f] mt-0.5">{dayText}</p>
-            </div>
-            {isSignedIn ? (
-              <div className="flex items-center gap-2 border border-[#e8c07a33] px-2 py-1">
-                {currentUserAvatar ? (
-                  <img src={currentUserAvatar} alt={currentUserName} className="w-6 h-6 rounded-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <span className="w-6 h-6 rounded-full bg-[#e8c07a]/20 border border-[#e8c07a] flex items-center justify-center text-[10px] font-black text-[#e8c07a]">{(currentUserName || '?').charAt(0).toUpperCase()}</span>
-                )}
-                <span className="font-mono text-[10px] font-bold uppercase text-[#f2ead8] max-w-[110px] truncate">{currentUserName}</span>
-              </div>
-            ) : (
-              <button className="flex items-center gap-1.5 border border-[#e8c07a]/60 text-[#e8c07a] px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-widest hover:bg-[#e8c07a] hover:text-[#141c17] transition-all cursor-pointer">
-                <LogIn size={11} strokeWidth={3} /> {t('chat_anon_cta')}
-              </button>
-            )}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-right hidden md:block">
+            <p className="font-serif font-bold text-[22px] leading-none tabular-nums tracking-tighter">{clockText}</p>
+            <p className="font-mono text-[8px] uppercase tracking-[0.3em] text-neutral-500 mt-0.5">{dayText}</p>
           </div>
-        </header>
+          <button
+            onClick={onClose}
+            className="p-2.5 border-4 border-white bg-black hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
+            aria-label={t('close')}
+            title={t('close')}
+          >
+            <X size={20} strokeWidth={3} />
+          </button>
+        </div>
+      </header>
 
-        {/* ─── MASALAR ───────────────────────────────── */}
-        <section className="mt-5 md:mt-6">
-          <div className="flex items-end justify-between gap-3 pb-2 border-b border-[#e8c07a1f]">
-            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-[#b3c7b0]">MASALAR</p>
-            <p className="font-mono text-[8px] uppercase tracking-widest text-[#8ba08f]">
-              {t('chat_cafe_caption', { defaultValue: 'katıldığın masaların akışta hep görünür' })}
-            </p>
+      {/* ─── ANA GRID: MASALAR | AKIŞ | RADYO ───────── */}
+      <div className="relative flex-1 grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] xl:grid-cols-[320px_1fr_340px] overflow-hidden">
+
+        {/* ── SOL — MASALAR ─────────────────────── */}
+        <aside className="hidden lg:flex flex-col border-r-4 border-white bg-black overflow-y-auto">
+          <div className="p-4 md:p-5 border-b-4 border-white/20">
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">MASALAR</p>
+            <p className="text-neutral-500 font-bold text-[10px] uppercase tracking-wider mt-1">{t('chat_cafe_subtitle')}</p>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
-            {rooms.map((room) => {
-              const active = room.id === activeRoom.id;
-              const tint = CIRCLE_COLORS[room.id] ?? '#8ba08f';
+          <div className="flex-1 p-3 md:p-4 space-y-2">
+            {TABLES.map((table) => {
+              const active = table.id === activeTable;
+              const count = forumPosts.filter((p) => table.id === 'all' || (p.category || '').toLowerCase() === table.id.toLowerCase()).length;
               return (
                 <button
-                  key={room.id}
-                  onClick={() => onSelectRoom(room.id)}
+                  key={table.id}
+                  onClick={() => setActiveTable(table.id)}
                   className={cn(
-                    'group relative text-left p-3 md:p-4 border transition-all cursor-pointer rounded-[10px]',
+                    'w-full flex items-center gap-3 p-2.5 border-2 transition-all text-left cursor-pointer group',
                     active
-                      ? 'border-[#e8c07a] bg-[#242f28] shadow-[0_0_30px_-8px_rgba(232,192,122,0.45)]'
-                      : 'border-[#e8c07a33] bg-[#1d2722] hover:border-[#e8c07a66] hover:-translate-y-0.5'
+                      ? 'bg-amber-400 text-black border-white neo-shadow-white'
+                      : 'bg-neutral-950 text-white border-white/20 hover:border-amber-400 hover:bg-neutral-900'
                   )}
-                  style={{ background: active ? `linear-gradient(160deg, ${tint}14, transparent 70%), ${CARD_SOFT}` : `linear-gradient(160deg, ${tint}0c, transparent 70%), ${CARD}` }}
                 >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-[20px] md:text-[22px] shrink-0 border border-[#e8c07a33]"
-                      style={{ background: `radial-gradient(circle at 35% 35%, ${tint}33, transparent 70%)`, color: tint }}
-                    >
-                      {room.icon}
+                  <span
+                    className="w-10 h-10 flex items-center justify-center font-black text-xl shrink-0 border-2"
+                    style={{
+                      background: active ? '#000' : table.accent + '22',
+                      color: active ? '#amber-400' : table.accent,
+                      borderColor: active ? '#000' : table.accent + '55',
+                    }}
+                  >
+                    {table.icon}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[12px] font-black uppercase tracking-tight truncate">{L(table.label)}</span>
+                    <span className={cn('block font-mono text-[9px] uppercase tracking-wider mt-0.5', active ? 'text-black/70' : 'text-neutral-500')}>
+                      {count} gönderi
                     </span>
-                    <span className="min-w-0">
-                      <span lang="en" className="block text-[12px] md:text-[13px] font-black uppercase leading-tight truncate text-[#f2ead8] group-hover:text-[#e8c07a] transition-colors">#{roomLabel(room)}</span>
-                      <span className="block text-[8px] md:text-[9px] font-mono uppercase tracking-widest text-[#8ba08f] mt-1 truncate">
-                        {room.isOfficial ? t(`chat_room_badge_${room.id}`, { defaultValue: room.badge }) : t('chat_badge_community', { defaultValue: 'TOPLULUK' })}
-                      </span>
-                    </span>
-                  </div>
-                  <p className="text-[9px] md:text-[10px] text-[#b3c7b0] leading-snug mt-2.5 line-clamp-2 min-h-[28px]">{roomTopic(room)}</p>
-                  <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-[#e8c07a1f]">
-                    <span className="font-mono text-[8px] uppercase tracking-widest text-[#8ba08f]">№ {(OFFICIAL_ROOMS.findIndex((r) => r.id === room.id) + 1) || '•'}</span>
-                    {active ? (
-                      <span className="font-mono text-[9px] font-black uppercase tracking-widest text-[#e8c07a]">{t('chat_cafe_joined')} ✓</span>
-                    ) : (
-                      <span className="font-mono text-[9px] uppercase tracking-widest text-[#b3c7b0] group-hover:text-[#e8c07a]">{t('chat_cafe_join')} →</span>
-                    )}
-                  </div>
+                  </span>
+                  <span className="text-xl">{active ? '◉' : '○'}</span>
                 </button>
               );
             })}
-
-            {/* Yeni masa kartı */}
-            <button
-              onClick={onOpenCreateModal}
-              className="group text-left p-3 md:p-4 border border-dashed border-[#e8c07a44] rounded-[10px] flex flex-col justify-between min-h-[128px] hover:border-[#e8c07a] hover:bg-[#e8c07a08] transition-all cursor-pointer"
-            >
-              <span className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] text-[#b3c7b0]">
-                <Plus size={14} strokeWidth={3} /> {canDirectCreate ? t('chat_open_room') : t('chat_request_room')}
-              </span>
-              <span className="text-[9px] font-mono text-[#8ba08f] leading-snug">
-                {canDirectCreate
-                  ? t('chat_rule_direct', { defaultValue: `${DIRECT_ROOM_MIN_XP}+ XP — doğrudan aç` })
-                  : t('chat_rule_request', { defaultValue: `${ROOM_VOTE_THRESHOLD} OY + Moderatör onayı` })}
-              </span>
-              <span className="font-mono text-[9px] uppercase tracking-widest text-[#e8c07a]">→ {canDirectCreate ? '500 XP ✓' : `${ROOM_VOTE_THRESHOLD} OY`}</span>
-            </button>
           </div>
-        </section>
+        </aside>
 
-        {/* ─── COMPOSER + AKIŞ ───────────────────────── */}
-        <section className="mt-6 md:mt-7 max-w-[860px] mx-auto w-full">
-          <div className="flex items-center justify-between gap-3 pb-2 border-b border-[#e8c07a1f]">
-            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-[#b3c7b0]">{t('chat_cafe_feed_label')}</p>
-            <div className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-widest text-[#8ba08f]">
-              {pendingRoomCount > 0 && (
+        {/* ── ORTA — COMPOSER + AKIŞ ──────────────── */}
+        <main className="min-w-0 flex flex-col overflow-y-auto bg-black">
+          {/* Mobile table selector */}
+          <div className="lg:hidden sticky top-0 z-10 bg-black border-b-2 border-white/20 p-2 flex gap-1.5 overflow-x-auto">
+            {TABLES.map((table) => {
+              const active = table.id === activeTable;
+              return (
                 <button
-                  onClick={onOpenQueue}
-                  className="flex items-center gap-1 border border-[#e8c07a44] text-[#e8c07a] px-2 py-1 hover:bg-[#e8c07a] hover:text-[#141c17] transition-all cursor-pointer"
+                  key={table.id}
+                  onClick={() => setActiveTable(table.id)}
+                  className={cn(
+                    'shrink-0 px-3 py-1.5 border-2 border-white font-black uppercase text-[10px] tracking-wider cursor-pointer transition-colors',
+                    active ? 'bg-amber-400 text-black' : 'bg-black text-white hover:bg-neutral-800',
+                  )}
                 >
-                  <Vote size={11} /> {t('chat_pending_requests')} ({pendingRoomCount})
+                  {table.icon} {L(table.label)}
                 </button>
-              )}
-              {!isSignedIn && (
-                <span className="hidden sm:inline">{t('chat_anon_remaining', { used: anonUsed, limit: anonLimit })}</span>
-              )}
-              {levelInfo && (
-                <span className="hidden lg:inline-flex items-center gap-1.5 border border-[#e8c07a33] px-2 py-1 text-[#e8c07a]">
-                  <Sparkles size={11} /> LV {levelInfo.level} · {levelInfo.title}
-                </span>
-              )}
-            </div>
+              );
+            })}
           </div>
 
           {/* Composer */}
-          <form onSubmit={onSend} className="mt-3 border border-[#e8c07a33] rounded-[10px] bg-[#1d2722] p-3 flex gap-3 items-center">
-            <img
-              src={resolveAvatar(currentUserAvatar, isSignedIn ? currentUserName : `misafir-${anonUsed}`)}
-              alt={currentUserName}
-              className="w-11 h-11 rounded-[8px] object-cover border border-[#e8c07a33] shrink-0"
-              referrerPolicy="no-referrer"
-            />
-            <input
-              ref={inputRef}
-              value={newMessage}
-              onChange={(e) => onChangeNewMessage(e.target.value)}
-              placeholder={isSignedIn ? t('chat_input_placeholder', { room: roomLabel(activeRoom) }) : t('chat_anon_placeholder')}
-              maxLength={250}
-              className="flex-1 min-w-0 bg-transparent outline-none border-none placeholder-[#5f7263] text-[#f2ead8] font-serif italic text-[15px] md:text-[16px] h-10"
-              aria-label={t('chat_input_placeholder', { room: roomLabel(activeRoom) })}
-            />
-            <button
-              type="submit"
-              disabled={!newMessage.trim()}
-              className="shrink-0 bg-[#e8c07a] disabled:opacity-40 text-[#141c17] font-mono text-[11px] md:text-[12px] font-black uppercase tracking-[0.25em] px-4 md:px-5 h-11 hover:bg-[#f2d083] transition-colors flex items-center gap-2 cursor-pointer"
+          <div className="p-3 md:p-5">
+            <form
+              onSubmit={handlePost}
+              className="bg-neutral-950 border-4 border-white p-3 md:p-4 flex flex-col gap-2 neo-shadow-white"
             >
-              {t('chat_cafe_share')} <Send size={13} strokeWidth={3} />
-            </button>
-          </form>
+              <div className="flex items-center gap-3">
+                <img
+                  src={resolveAvatar(currentUserAvatar ?? null, isSignedIn ? currentUserName : 'misafir')}
+                  alt={currentUserName}
+                  className="w-12 h-12 border-2 border-white bg-white shrink-0 object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                <textarea
+                  value={composerText}
+                  onChange={(e) => setComposerText(e.target.value)}
+                  placeholder={isSignedIn ? (lang === 'tr' ? 'Kafanda ne var? Bir sahne, bir düşünce, bir öneri...' : 'What\'s on your mind? A scene, a thought, a recommendation...') : (lang === 'tr' ? 'Giriş yaparak masaya otur...' : 'Sign in to take a seat...')}
+                  maxLength={280}
+                  rows={2}
+                  className="flex-1 min-w-0 bg-black border-2 border-white/30 focus:border-amber-400 outline-none text-white font-bold p-3 text-sm resize-none placeholder-neutral-700"
+                  onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handlePost(e); }}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  {TABLES.filter((t) => t.id !== 'all').map((table) => {
+                    const active = composerKind === table.id;
+                    return (
+                      <button
+                        key={table.id}
+                        type="button"
+                        onClick={() => setComposerKind(table.id)}
+                        className={cn(
+                          'px-2.5 py-1 border-2 font-black uppercase text-[9px] tracking-wider cursor-pointer transition-colors',
+                          active ? 'border-amber-400 bg-amber-400 text-black' : 'border-white/20 text-neutral-400 hover:border-white',
+                        )}
+                        aria-pressed={active}
+                      >
+                        {table.icon} {L(table.label)}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="submit"
+                  disabled={!isSignedIn || !composerText.trim()}
+                  className="px-6 py-2 bg-amber-400 hover:bg-white disabled:opacity-40 text-black font-black uppercase text-xs tracking-widest border-4 border-black flex items-center gap-2 neo-shadow transition-colors"
+                >
+                  {currentUser ? (lang === 'tr' ? 'YAZ →' : 'POST →') : (lang === 'tr' ? 'GİRİŞ' : 'SIGN IN')}
+                </button>
+              </div>
+              {!isSignedIn && (
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                  {lang === 'tr' ? 'Masaya oturmak için Google ile giriş yap.' : 'Sign in with Google to take a seat.'}
+                </p>
+              )}
+            </form>
+          </div>
 
-          {/* Akış */}
-          <div className="mt-4 space-y-3">
-            {messages.length === 0 ? (
-              <div className="border border-dashed border-[#e8c07a33] rounded-[10px] py-12 px-6 text-center">
-                <p className="font-serif font-black text-[26px] text-[#f2ead8]">{t('chat_cafe_first_title')}</p>
-                <p className="font-serif italic text-[12.5px] text-[#b3c7b0] mt-2 max-w-md mx-auto leading-snug">{t('chat_cafe_first_hint')}</p>
+          {/* Feed */}
+          <div className="px-3 md:px-5 pb-8 flex-1">
+            <div className="flex items-center justify-between pb-2 border-b-2 border-white/20">
+              <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">{t('chat_cafe_feed_label')}</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+                {posts.length} {lang === 'tr' ? 'gönderi' : lang === 'ja' ? '件' : 'posts'}
+              </p>
+            </div>
+            {posts.length === 0 ? (
+              <div className="mt-8 border-2 border-white/20 p-10 text-center">
+                <p className="font-serif font-black text-3xl text-white">{lang === 'tr' ? 'İlk cümleyi sen yaz.' : 'Write the first sentence.'}</p>
+                <p className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest mt-2">{lang === 'tr' ? 'Kimse yargılamasın — bu masada yargı yok.' : 'No judgment at this table.'}</p>
               </div>
             ) : (
-              messages.map((msg) => {
-                const kind = detectKind(msg.text);
-                const isMe = msg.uid === 'anon' || msg.isLocal;
-                const avatar = msg.uid === 'anon' || msg.isLocal
-                  ? resolveAvatar(null, `misafir-${msg.id}`)
-                  : resolveAvatar((msg as any).avatar, msg.name || msg.uid);
-                const time = formatRelativeTime(
-                  msg.createdAt?.seconds ? msg.createdAt.seconds * 1000 : msg.createdAt,
-                );
-                const kindKey = kind;
-                return (
-                  <article key={msg.id} className="group relative border border-[#e8c07a1f] rounded-[10px] bg-[#1d2722] p-3 md:p-4 flex gap-3 hover:border-[#e8c07a44] transition-colors">
-                    <img
-                      src={avatar}
-                      alt={msg.name}
-                      className="w-11 h-11 rounded-[8px] object-cover border border-[#e8c07a33] shrink-0 mt-0.5"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span lang="en" className="font-serif font-bold text-[14.5px] text-[#f2ead8]">{msg.name}</span>
-                        <span className="font-mono text-[9px] uppercase tracking-widest text-[#8ba08f]">{time}</span>
-                        {msg.isLocal && (
-                          <span className="font-mono text-[8px] font-black px-1.5 py-0.5 border border-[#e8c07a] text-[#e8c07a] rounded-[4px]">YEREL</span>
-                        )}
-                        {kindKey && (
-                          <span className={cn('font-mono text-[8px] font-black px-1.5 py-0.5 border rounded-[4px]', kindKey.className)}>
-                            {kindKey.label}
+              <div className="mt-4 space-y-3">
+                {posts.slice(0, 40).map((post) => {
+                  const kind = (post.category || 'Sohbet') as TableId;
+                  const kindMeta = TABLES.find((tb) => tb.id === (kind as any)) ?? TABLES[1];
+                  const avatar = resolveAvatar(post.author?.avatar ?? null, post.author?.name || post.id);
+                  const isOwn = currentUser?.uid && post.author?.uid === currentUser.uid;
+                  return (
+                    <article
+                      key={post.id}
+                      className="relative bg-black border-2 border-white/20 hover:border-amber-400 transition-colors p-3 md:p-4 flex gap-3 group"
+                    >
+                      <img src={avatar} alt={post.author?.name} className="w-11 h-11 border-2 border-white/40 bg-white/10 object-cover shrink-0" referrerPolicy="no-referrer" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span lang="en" className="font-black text-white text-[13px] uppercase tracking-tight">{post.author?.name ?? 'Anonim'}</span>
+                          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">{formatRelativeTime(post.createdAt)}</span>
+                          <span
+                            className="font-mono text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 border"
+                            style={{ color: kindMeta.accent, borderColor: kindMeta.accent + '88', background: kindMeta.accent + '14' }}
+                          >
+                            {kindMeta.icon} {L(kindMeta.label)}
                           </span>
-                        )}
+                          {isOwn && <span className="font-mono text-[8px] font-black uppercase px-1 py-0.5 border border-rose-600 text-rose-400">SEN</span>}
+                        </div>
+                        <p lang="en" className="text-[13px] leading-snug text-neutral-100 mt-1 whitespace-pre-wrap break-words">{post.content}</p>
+                        <div className="flex items-center gap-4 mt-2 text-neutral-400">
+                          <button onClick={() => toggleLike(post.id)} className={cn('flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider hover:text-rose-500 transition-colors', post.isLikedByMe && 'text-rose-500')}>
+                            <Heart size={13} strokeWidth={2.5} className={post.isLikedByMe ? 'fill-rose-500' : ''} />
+                            {post.likes ?? 0}
+                          </button>
+                          <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider">
+                            <CornerDownRight size={12} strokeWidth={3} /> {post.replies ?? 0}
+                          </span>
+                          {post.animeRef && (
+                            <span className="hidden md:inline-flex items-center gap-1 text-[9px] font-mono uppercase text-amber-400">★ {post.animeRef.title?.slice(0, 30)}</span>
+                          )}
+                        </div>
                       </div>
-                      <p lang="en" className="text-[13.5px] leading-relaxed text-[#d8c9b4] mt-1 whitespace-pre-wrap break-words">{msg.text}</p>
-                    </div>
-                    {(isMe || isAdmin) && (
-                      <button
-                        onClick={() => onDeleteMessage(msg.id)}
-                        className="opacity-0 group-hover:opacity-100 self-start p-1.5 text-[#5f7263] hover:text-[#e07040] transition-all cursor-pointer"
-                        aria-label={t('chat_delete_message')}
-                        title={t('chat_delete_message')}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                  </article>
-                );
-              })
+                    </article>
+                  );
+                })}
+              </div>
             )}
           </div>
-        </section>
+        </main>
+
+        {/* ── SAĞ — RADYO + SEVİYE ─────────────────── */}
+        <aside className="hidden xl:flex flex-col border-l-4 border-white bg-neutral-950 overflow-y-auto">
+          {/* ANİME RADYOSU */}
+          <div className="p-4 md:p-5 border-b-4 border-white/20">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 border-2 border-amber-400 flex items-center justify-center">
+                <Radio size={18} className={cn('text-amber-400', isPlaying && 'animate-pulse')} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">ANİME RADYOSU</p>
+                <p className="font-mono text-[8px] uppercase tracking-widest text-neutral-500">CANLI YAYIN</p>
+              </div>
+              <button onClick={nextStation} className="ml-auto p-1.5 text-white hover:text-amber-400 transition-colors" aria-label="Next station">
+                <SkipForward size={18} strokeWidth={2.5} />
+              </button>
+            </div>
+
+            <div className="mt-3 border-2 border-white/20 bg-black p-3">
+              <div
+                className="h-16 flex items-center justify-center gap-1.5 overflow-hidden"
+                aria-hidden="true"
+              >
+                {[0.4, 0.8, 1, 0.7, 0.95, 0.6, 1, 0.75, 0.9, 0.55, 0.8, 0.65, 1, 0.5].map((h, i) => (
+                  <span
+                    key={i}
+                    className="w-1.5 bg-amber-400 rounded-sm"
+                    style={{
+                      height: `${Math.round(h * 100)}%`,
+                      transition: 'height 180ms ease-in-out',
+                      animation: isPlaying ? `eqbar ${0.5 + (i % 5) * 0.13}s ease-in-out ${i * 0.06}s infinite alternate` : 'none',
+                      opacity: isPlaying ? 1 : 0.3,
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="mt-2 text-center">
+                <p lang="en" className="font-black text-white text-sm uppercase leading-tight line-clamp-2">{station.name}</p>
+                <span
+                  className="inline-block font-mono text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 mt-1.5 border"
+                  style={{ backgroundColor: station.color, color: '#000', borderColor: station.color }}
+                >
+                  {station.badge}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-center gap-4">
+                <button onClick={prevStation} className="p-1.5 text-white hover:text-amber-400" aria-label="Previous station"><SkipBack size={18} strokeWidth={2.5} /></button>
+                <button onClick={togglePlay} className="w-12 h-12 border-4 border-amber-400 bg-black flex items-center justify-center hover:bg-amber-400 hover:text-black transition-colors text-amber-400" aria-label={isPlaying ? 'Pause' : 'Play'}>
+                  {isPlaying ? <Pause size={20} strokeWidth={3} fill="currentColor" /> : <Play size={20} strokeWidth={3} fill="currentColor" className="translate-x-[2px]" />}
+                </button>
+                <button onClick={nextStation} className="p-1.5 text-white hover:text-amber-400" aria-label="Next station"><SkipForward size={18} strokeWidth={2.5} /></button>
+              </div>
+              <div className="mt-2.5 flex items-center gap-2">
+                <button onClick={toggleMute} className="text-neutral-400 hover:text-white" aria-label="mute">{isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}</button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="flex-1 h-1 appearance-none bg-neutral-800 accent-amber-400"
+                  aria-label="Volume"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* LV / KALFA */}
+          <div className="p-4 md:p-5 border-b-4 border-white/20">
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">SEVİYEN</p>
+            <div className="mt-2 flex items-center gap-3">
+              <div className="w-14 h-14 border-4 border-white bg-amber-400 flex items-center justify-center">
+                <span className="font-black text-black text-2xl leading-none">{levelInfo?.level ?? 0}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-white text-base uppercase leading-none">{levelInfo?.title ?? 'Misafir'}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mt-1">{myKarma.toLocaleString()} XP</p>
+              </div>
+            </div>
+            <div className="mt-2.5 h-2 w-full bg-neutral-800 border border-white/30 overflow-hidden"><div className="h-full bg-gradient-to-r from-amber-400 to-rose-500 transition-all duration-500" style={{ width: `${Math.round(progressPercent)}%` }} /></div>
+            <p className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 mt-1">KALFA olmak için 500 XP</p>
+          </div>
+
+          {/* KURALLAR */}
+          <div className="p-4 md:p-5 flex-1">
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-neutral-500">KÖŞE KURALLARI</p>
+            <ul className="mt-2 space-y-1.5 text-[11px] text-neutral-400 leading-snug">
+              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> Küfre tahammül yok.</li>
+              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> Spoiler olsa bile kaba konuşma.</li>
+              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> Reklam, link, kanal yasak.</li>
+              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> Kalfa (Lv5, 500 XP) ve üzeri masa açar.</li>
+            </ul>
+          </div>
+
+          {/* Footer mini */}
+          <div className="p-4 md:p-5 border-t-4 border-white/20">
+            <p className="font-mono text-[8px] uppercase tracking-[0.3em] text-neutral-600">Made in SHİNJUKU · UTC+3</p>
+          </div>
+        </aside>
       </div>
+
+      <style>{`
+        @keyframes eqbar {
+          from { transform: scaleY(0.15); }
+          to { transform: scaleY(1); }
+        }
+      `}</style>
     </div>
   );
 };
