@@ -12,6 +12,7 @@
 - [x] **Sınırsız Keşif Motoru**: Rastgele seçim artık AniList (POPULARITY_DESC, 1..15 sayfa, SFW) — sayfa başına 20 anime, her tıklayışta farklı; tür filtresi `genre_in`; zincir AniList → Jikan → dürüst yedek katalog. Hero'da "CANLI ANILIST KATALOĞU" notu; tür düğümleri Türkçe büyütmeden korundu.
 - [x] **XP / Seviye eğrisi & rütbeler**: `src/lib/level.ts` (`25·(L−1)·L`, 30 seviye, 6 rütbe: Misafir→Efsane); `badgeData.LEVELS` eğriden üretiliyor; `OtakuLevelBadge` anasayfada XP kartı + tek seferlik seviye-atla toast; Profile BadgeShowcase aynı hesap; TR/EN/JA/FR rütbe isimleri.
 - [x] **Günün Sorusu**: 12 soru × 4 dil, yılın günüyle deterministik seçim; "YANITLA" düğmesi soru ile besteciyi doldurur + odaklar; anasayfada kart.
+- [x] **Günün Önerileri**: `data/picks.ts` silindi; seçim artık canlı AniList `season+seasonYear TRENDING_DESC` (TR günüyle deterministik kaydırma; kullanıcı `favoriteGenres`'u varsa tür eşleşmesine göre sıralanır, "ZEVKİNE UYAN" rozeti gösterilir). Discover + Home kartı canlı kapak/skor/tür/bölüm taşır; hata durumunda `AnimeErrorCard` ile dürüst boş durum.
 - [x] **README.md**: ürün/feature, stack, scriptler, env, Firebase/Vercel/Capacitor dağıtımı, admin & gizlilik, katkılama.
 
 ## Sende (5 dk – 30 dk)

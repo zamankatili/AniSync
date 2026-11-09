@@ -7,7 +7,8 @@ import { SocialFeedSection } from '../components/SocialFeedSection';
 import { Sparkles, Loader2, Play, Calendar, Filter, Shuffle, Search, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Anime } from '../types';
-import { DAILY_PICKS } from '../data/picks';
+import { useDailyPicks } from '../hooks/useDailyPicks';
+import { toLegacyAnime } from '../lib/api/animeBridge';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { AnimeErrorCard } from '../components/AnimeErrorCard';
@@ -32,6 +33,7 @@ export const Discover = () => {
   const [isRolling, setIsRolling] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const { items: dailyPicks, personalized, state: picksState, refresh: refreshPicks } = useDailyPicks(3);
 
   useEffect(() => {
     fetchTop();
@@ -69,15 +71,6 @@ export const Discover = () => {
     );
   };
 
-  const dayIndex = Math.floor(new Date().getTime() / (1000 * 60 * 60 * 24));
-  const picksLength = DAILY_PICKS.length;
-  
-  const currentPicks = [
-    DAILY_PICKS[dayIndex % picksLength],
-    DAILY_PICKS[(dayIndex + 1) % picksLength],
-    DAILY_PICKS[(dayIndex + 2) % picksLength]
-  ];
-  
   return (
     <div className="space-y-16">
       {/* Hero Section - Infinite Random Discovery Engine */}
@@ -215,27 +208,53 @@ export const Discover = () => {
         <GenreTrendingVisualization />
       </section>
 
-      {/* Günün Önerileri Section */}
+      {/* Günün Önerileri — CANLI bu sezonun trendlerinden, zevkine göre */}
       <section>
-        <div className="flex items-center justify-between mb-8 pb-4 border-b-4 border-white/20">
-          <h2 className="text-3xl font-black text-white uppercase tracking-tighter flex items-center gap-4">
-            <Calendar size={28} strokeWidth={2.5} className="text-rose-500" />
-            {t('daily_recs')}
-          </h2>
+        <div className="flex items-center justify-between mb-8 pb-4 border-b-4 border-white/20 gap-4 flex-wrap">
+          <div>
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter flex items-center gap-4 flex-wrap">
+              <Calendar size={28} strokeWidth={2.5} className="text-rose-500" />
+              {t('daily_recs')}
+              {personalized && (
+                <span className="text-[9px] bg-amber-400 text-black font-black px-2 py-1 border border-black uppercase tracking-widest">
+                  {t('picks_personalized')}
+                </span>
+              )}
+            </h2>
+            <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mt-1">{t('picks_live')}</p>
+          </div>
+          <button
+            onClick={refreshPicks}
+            className="flex items-center gap-2 px-3 py-1.5 bg-black border-2 border-white text-white font-black text-xs uppercase hover:bg-white hover:text-black transition-colors"
+          >
+            <RotateCcw size={14} className={picksState === 'loading' ? 'animate-spin' : ''} />
+            {t('refresh')}
+          </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {currentPicks.map((pick, i) => (
-            <div key={i} className="flex flex-col gap-4 bg-black p-4 border-2 border-white/20 hover:border-rose-500 transition-colors group">
-              <div className="text-center md:text-left border-b-2 border-white/20 pb-3 mb-2 group-hover:border-rose-500 transition-colors">
-                <h3 className="font-black text-xl uppercase tracking-tighter text-white">{pick.theme}</h3>
-                <p className="text-xs text-neutral-400 mt-2 h-8 font-bold uppercase tracking-wider">{pick.desc}</p>
-              </div>
-              <div className="flex-1">
-                <AnimeCard anime={pick.anime} />
-              </div>
-            </div>
-          ))}
-        </div>
+
+        {picksState === 'loading' ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="aspect-[3/4] border-4 border-white/20 bg-white/5 animate-pulse" />
+            ))}
+          </div>
+        ) : picksState === 'error' ? (
+          <AnimeErrorCard
+            code="RATE_LIMIT"
+            title={t('trending_error_title')}
+            message={t('trending_error_message')}
+            onRetry={refreshPicks}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {dailyPicks.map((pick) => {
+              const anime = toLegacyAnime(pick, typeof pick.externalIds?.mal === 'number' ? pick.externalIds.mal : 0);
+              return (
+                <AnimeCard key={pick.id} anime={anime} />
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Trending Section */}

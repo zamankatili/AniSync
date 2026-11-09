@@ -1146,6 +1146,8 @@ export default {
       "genres_selected": "GENRES SELECTED",
       "click_discover": "CLICK THE BUTTON AND DISCOVER YOUR NEXT MASTERPIECE!",
       "daily_recs": "DAILY RECOMMENDATIONS",
+      "picks_live": "FROM LIVE ANILIST SEASON TRENDS",
+      "picks_personalized": "FOR YOUR TASTE",
       "trending_now": "TRENDING NOW",
       "try_again_later": "Please try again later.",
       "watching": "WATCHING",

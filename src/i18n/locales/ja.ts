@@ -1144,6 +1144,8 @@ export default {
       "genres_selected": "選択されたジャンル",
       "click_discover": "ボタンをクリックして、次の傑作を見つけましょう！",
       "daily_recs": "毎日のおすすめ",
+      "picks_live": "AniListのライブシーズントレンドより",
+      "picks_personalized": "あなたの好み",
       "trending_now": "今トレンド",
       "try_again_later": "後でもう一度お試しください。",
       "watching": "視聴中",

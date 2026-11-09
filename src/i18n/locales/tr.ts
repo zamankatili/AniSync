@@ -1146,6 +1146,8 @@ export default {
       "genres_selected": "TÜR SEÇİLİ",
       "click_discover": "BUTONA TIKLA VE İZLEYECEĞİN SIRADAKİ ŞAHESERİ KEŞFET!",
       "daily_recs": "GÜNÜN ÖNERİLERİ",
+      "picks_live": "CANLI ANİLİST SEZON TRENDLERİNDEN",
+      "picks_personalized": "ZEVKİNE UYAN",
       "trending_now": "TRENDING NOW",
       "try_again_later": "Lütfen daha sonra tekrar deneyin.",
       "watching": "İZLİYORUM",

@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
 import { resolveAvatar } from '../lib/avatar';
-import { DAILY_PICKS } from '../data/picks';
+import { useDailyPicks } from '../hooks/useDailyPicks';
 import { DailyPollModal } from '../components/DailyPollModal';
 import { DailyChallengeModal } from '../components/DailyChallengeModal';
 import { TasteProfileSurveyModal } from '../components/TasteProfileSurveyModal';
@@ -53,14 +53,8 @@ export const Home = () => {
     window.setTimeout(() => postInputRef.current?.focus(), 60);
   };
 
-  const [todayPick, setTodayPick] = useState(DAILY_PICKS[0]);
-
-  useEffect(() => {
-    // Determine today's pick based on date to ensure it changes every midnight
-    const daysSinceEpoch = Math.floor(new Date().getTime() / (1000 * 60 * 60 * 24));
-    const index = daysSinceEpoch % DAILY_PICKS.length;
-    setTodayPick(DAILY_PICKS[index]);
-  }, []);
+  const { items: picksToday, personalized: picksPersonalized, state: picksState } = useDailyPicks(1);
+  const todayPick = picksToday[0] ?? null;
 
   const handlePost = (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,39 +210,41 @@ export const Home = () => {
             {/* Compact Recent Activity Feed showing community list additions */}
             <RecentActivityFeed compact={true} onViewAll={() => setActiveTab('activity')} />
 
-            {/* System Post: Daily Picks inserted into feed */}
+            {/* System Post: Daily Pick (canlı AniList sezon trendi) */}
+            {picksState === 'ready' && todayPick && (
             <div className="bg-rose-600 p-5 md:p-6 border-2 border-white neo-shadow-white mb-8 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none">
                 <Sparkles size={120} strokeWidth={1} />
               </div>
               <div className="flex items-center gap-2 mb-4 relative z-10">
                 <Sparkles size={20} className="text-white" strokeWidth={2.5} />
-                <span className="font-black tracking-widest text-white uppercase">{t('daily_pick')}</span>
+                <span className="font-black tracking-widest text-white uppercase">{t('daily_pick')}{picksPersonalized ? ` · ${t('picks_personalized')}` : ''}</span>
               </div>
-              <h3 lang="en" className="text-3xl font-black text-white mb-2 uppercase tracking-tight relative z-10">{todayPick.anime.title_english || todayPick.anime.title}</h3>
-              <p lang="en" className="text-rose-100 font-bold mb-5 relative z-10 max-w-[90%]">{todayPick.desc}: {todayPick.anime.synopsis}</p>
+              <h3 lang="en" className="text-3xl font-black text-white mb-2 uppercase tracking-tight relative z-10">{todayPick.title.english || todayPick.title.romaji || todayPick.displayTitle}</h3>
+              <p lang="en" className="text-rose-100 font-bold mb-5 relative z-10 max-w-[90%] line-clamp-2">{todayPick.synopsis}</p>
               <div className="bg-black p-4 flex gap-4 border-2 border-white relative z-10 group">
-                 <img src={getSafeImageUrl(todayPick.anime.images.webp.image_url)} alt={todayPick.anime.title} className="w-20 h-28 object-cover border-2 border-white transition-all" referrerPolicy="no-referrer" />
+                 <img src={getSafeImageUrl(todayPick.cover?.large ?? todayPick.cover?.medium)} alt={todayPick.displayTitle} className="w-20 h-28 object-cover border-2 border-white transition-all" referrerPolicy="no-referrer" />
                  <div className="flex flex-col justify-center">
-                    <div lang="en" className="font-black text-white mb-1 tracking-wider uppercase">{todayPick.anime.title}</div>
-                    <div lang="en" className="text-sm text-neutral-400 font-bold uppercase">{localizeGenres(todayPick.anime.genres?.map(g => g.name) || []).join(', ')} • {todayPick.anime.episodes} {t('episodes')}</div>
-                    <div className="text-sm text-rose-500 flex items-center gap-1 font-black mt-2"><Star size={16} strokeWidth={2.5} fill="currentColor" /> {todayPick.anime.score}</div>
+                    <div lang="en" className="font-black text-white mb-1 tracking-wider uppercase">{todayPick.displayTitle}</div>
+                    <div lang="en" className="text-sm text-neutral-400 font-bold uppercase">{localizeGenres(todayPick.genres ?? []).slice(0, 3).join(', ')} • {todayPick.episodes ?? '—'} {t('episodes')}</div>
+                    <div className="text-sm text-rose-500 flex items-center gap-1 font-black mt-2"><Star size={16} strokeWidth={2.5} fill="currentColor" /> {todayPick.averageScore != null ? (todayPick.averageScore / 10).toFixed(1) : '—'}</div>
                  </div>
               </div>
               <div className="flex gap-4 mt-6 relative z-10">
-                <button 
+                <button
                   onClick={() => {
                     if (postInputRef.current) {
                       postInputRef.current.focus();
-                      setNewPostContent(`${todayPick.anime.title} hakkında: `);
+                      setNewPostContent(`${todayPick.displayTitle} hakkında: `);
                     }
-                  }} 
+                  }}
                   className="flex items-center bg-white text-black px-4 py-2 gap-2 border-2 border-white font-black hover:bg-black hover:text-white transition-all uppercase tracking-wider"
                 >
                   <MessageSquare size={18} strokeWidth={2.5} /> {t('join_discussion')}
                 </button>
               </div>
             </div>
+            )}
 
           </motion.div>
         ) : activeTab === 'activity' ? (

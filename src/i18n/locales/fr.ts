@@ -1146,6 +1146,8 @@ export default {
       "genres_selected": "GENRES SÉLECTIONNÉS",
       "click_discover": "CLIQUEZ ET DÉCOUVREZ VOTRE PROCHAIN CHEF-D'ŒUVRE !",
       "daily_recs": "RECOMMANDATIONS DU JOUR",
+      "picks_live": "ISSUES DES TENDANCES ANILIST DU MOMENT",
+      "picks_personalized": "POUR TON GOÛT",
       "trending_now": "TENDANCES ACTUELLES",
       "try_again_later": "Veuillez réessayer plus tard.",
       "watching": "EN COURS",
