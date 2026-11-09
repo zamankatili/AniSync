@@ -136,3 +136,66 @@ Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
     return { status: 200, body: { recommendations: [], fallback: true } };
   }
 }
+
+// ─── POST /api/moderate-room ────────────────────────────────────
+interface ModerateRoomResult {
+  ok: boolean;
+  verdict: 'ok' | 'flagged';
+  reason: string;
+}
+
+export async function handleModerateRoom(body: any, headers: Record<string, unknown>): Promise<EndpointResult> {
+  const auth = await requireApiAuth(headers);
+  if (!auth.ok) return { status: auth.status ?? 401, body: { error: auth.error ?? 'Unauthorized' } };
+
+  const name = typeof body?.name === 'string' ? body.name.trim().slice(0, 60) : '';
+  const topic = typeof body?.topic === 'string' ? body.topic.trim().slice(0, 160) : '';
+  if (!name || !topic) {
+    return { status: 400, body: { error: 'Missing name or topic' } };
+  }
+
+  const client = getGeminiClient();
+  if (!client) {
+    // AI anahtarı yoksa doğrudan reddetme; moderatör kuyruğuna flagged olarak düşür.
+    return { status: 200, body: { ok: false, verdict: 'flagged', reason: 'ai-unavailable' } as ModerateRoomResult };
+  }
+
+  const prompt = `You moderate room creation requests for an anime, manga, novel and games community chat.
+
+Room name: "${name}"
+Room topic: "${topic}"
+
+Approve only if the room is clearly about anime/manga/light novels/games/music/otaku culture.
+Reject: NSFW, hate/harassment, illegal content, self-harm, spam, malicious links, or unrelated topics (policy, spammy SEO, ads).
+
+Return ONLY this JSON object, no markdown, no explanation:
+{"ok": true or false, "reason": "<one short English sentence on the decision>"}`;
+
+  try {
+    const response = await client.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: prompt,
+    });
+
+    const raw = (response.text || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+    let parsed: { ok?: boolean; reason?: string } | undefined;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = { ok: false, reason: 'ai-parse-error' };
+    }
+
+    const ok = parsed?.ok === true;
+    const reason = typeof parsed?.reason === 'string' && parsed.reason.trim() ? parsed.reason.trim().slice(0, 200) : ok ? 'approved' : 'rejected';
+
+    return { status: 200, body: { ok, verdict: ok ? 'ok' : 'flagged', reason } as ModerateRoomResult };
+  } catch (error: any) {
+    console.error('Moderate room error', error);
+    if (error?.status === 429 || error?.code === 429 || error?.message?.includes('429')) {
+      return { status: 429, body: { error: 'LIMIT_REACHED' } };
+    }
+    return { status: 503, body: { error: 'Moderation unavailable' } };
+  }
+}
+
+

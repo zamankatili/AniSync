@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../context/AppStore';
-import { 
-  MessageSquare, X, Send, Hash, Calendar, Plus
+import {
+  MessageSquare, X, Send, Hash, Calendar, Plus, Vote
 } from 'lucide-react';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, where, getDoc, getCountFromServer, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -10,8 +10,14 @@ import { useRemoteConfig } from '../hooks/useRemoteConfig';
 import { cn, formatRelativeTime } from '../lib/utils';
 import { useToastStore } from '../store/useToastStore';
 import { ReportButton } from './ReportButton';
+import { isBootstrapAdminEmail } from '../lib/adminConfig';
 import { resolveAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { OFFICIAL_ROOMS, type CommunityRoom, type OfficialRoom } from '../lib/rooms';
+import { computeOtakuLevel } from '../lib/otakuLevel';
+import { useQuizStore } from '../store/useQuizStore';
+import { RoomRequestModal } from './RoomRequestModal';
+import { RoomQueuePanel } from './RoomQueuePanel';
 
 interface ChatMessage {
   id: string;
@@ -23,36 +29,16 @@ interface ChatMessage {
   createdAt: any;
 }
 
-export interface ChatRoom {
-  id: string;
-  name: string;
-  topic: string;
-  icon: string;
-  badge: string;
-  isOfficial?: boolean;
-}
-
-const DEFAULT_ROOMS: ChatRoom[] = [
-  { id: 'genel', name: 'genel-sohbet', topic: 'Anime dünyası, öneriler ve günlük geyik', icon: '💬', badge: 'ANA ODA', isOfficial: true },
-  { id: 'spoiler', name: 'haftalik-spoiler', topic: 'Yeni çıkan bölümler, mangalar ve teoriler', icon: '🍿', badge: 'SPOILER', isOfficial: true },
-  { id: 'muzik', name: 'muzik-ve-lofi', topic: 'Anime OST, radyo şarkıları ve favori açılışlar', icon: '🎧', badge: 'OST & LOFI', isOfficial: true },
-  { id: 'vs-tartisma', name: 'guc-karsilastirma', topic: 'Karakter güç seviyeleri ve vs tartışmaları', icon: '⚔️', badge: 'VS ARENA', isOfficial: true },
-  { id: 'etkinlik', name: 'online-etkinlikler', topic: 'Haftalık izleme geceleri ve canlı topluluk sohbeti', icon: '🎉', badge: 'CANLI ETKİNLİK', isOfficial: true },
-];
+export type ChatRoomItem = OfficialRoom | CommunityRoom;
 
 export const GlobalChat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeRoomId, setActiveRoomId] = useState<string>('genel');
-  const [customRooms, setCustomRooms] = useState<ChatRoom[]>(() => {
-    try {
-      const saved = localStorage.getItem('anisync_custom_rooms');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [newRoomName, setNewRoomName] = useState('');
-  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [communityRooms, setCommunityRooms] = useState<CommunityRoom[]>([]);
+  const [pendingRoomCount, setPendingRoomCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [roomModalOpen, setRoomModalOpen] = useState(false);
+  const [queueOpen, setQueueOpen] = useState(false);
   const [eventJoined, setEventJoined] = useState(false);
   const [eventAttendees, setEventAttendees] = useState<number | null>(null); // null = yükleniyor; Firestore'dan gerçekte
   const [rsvpBusy, setRsvpBusy] = useState(false);
@@ -72,12 +58,64 @@ export const GlobalChat = () => {
   const eventTitle = chatEvent ? (chatEvent[eventLang] || chatEvent.tr || chatEvent.en || '') : '';
   const eventVisible = !!eventTitle;
 
-  const allRooms = [...DEFAULT_ROOMS, ...customRooms];
-  const currentRoom = allRooms.find(r => r.id === activeRoomId) || DEFAULT_ROOMS[0];
+  const { watchlist } = useAppStore();
+  const { arcadeHighScore, dailyStreak } = useQuizStore();
+  const myKarma = useMemo(
+    () => computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore).karma,
+    [watchlist, arcadeHighScore, dailyStreak],
+  );
 
-  const roomLabel = (room: ChatRoom) => t(`chat_room_name_${room.id}`, { defaultValue: room.name });
-  const roomTopic = (room: ChatRoom) => t(`chat_room_topic_${room.id}`, { defaultValue: room.topic });
-  const roomBadge = (room: ChatRoom) => t(`chat_room_badge_${room.id}`, { defaultValue: room.badge });
+  // Topluluk odaları — Firestore canlı; resmi + topluluk birleşir
+  useEffect(() => {
+    if (!isOpen) return;
+    const q = query(collection(db, 'chatRooms'), orderBy('createdAt', 'desc'), limit(40));
+    const unsub = onSnapshot(q, (snap) => {
+      const rows: CommunityRoom[] = [];
+      snap.forEach((d) => rows.push({ id: d.id, isOfficial: false, ...(d.data() as Omit<CommunityRoom, 'id' | 'isOfficial'>) }));
+      setCommunityRooms(rows);
+    }, (err) => console.warn('chatRooms listener error', err));
+
+    const q2 = query(collection(db, 'roomRequests'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(60));
+    const unsub2 = onSnapshot(q2, (snap) => setPendingRoomCount(snap.size), (err) => {
+      console.warn('roomRequests count listener error', err);
+    });
+
+    return () => {
+      unsub();
+      unsub2();
+    };
+  }, [isOpen]);
+
+  // Admin/moderatör rolünü Firestore'dan oku (bootstrap e-posta ile de tanınır)
+  useEffect(() => {
+    if (!currentUser) {
+      setIsAdmin(false);
+      return;
+    }
+    if (isBootstrapAdminEmail(currentUser.email)) {
+      setIsAdmin(true);
+      return;
+    }
+    getDoc(doc(db, 'users', currentUser.uid))
+      .then((snap) => {
+        const role = snap.exists() ? (snap.data() as { role?: string })?.role : undefined;
+        setIsAdmin(role === 'admin' || role === 'moderator');
+      })
+      .catch(() => setIsAdmin(false));
+  }, [currentUser]);
+
+  const allRooms = useMemo<ChatRoomItem[]>(
+    () => [...OFFICIAL_ROOMS, ...communityRooms],
+    [communityRooms],
+  );
+  const currentRoom = allRooms.find(r => r.id === activeRoomId) || allRooms[0] || OFFICIAL_ROOMS[0];
+
+  const roomLabel = (room: ChatRoomItem) =>
+    room.isOfficial ? t(`chat_room_name_${room.id}`, { defaultValue: room.name }) : room.name;
+  const roomTopic = (room: ChatRoomItem) =>
+    room.isOfficial ? t(`chat_room_topic_${room.id}`, { defaultValue: room.topic }) : room.topic;
+  const roomBadge = (room: ChatRoomItem) =>
+    room.isOfficial ? t(`chat_room_badge_${room.id}`, { defaultValue: room.badge }) : t('chat_badge_community', { defaultValue: 'TOPLULUK' });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -163,38 +201,6 @@ export const GlobalChat = () => {
       console.error(err);
       addToast(t('chat_send_failed'), "error");
     }
-  };
-
-  const handleCreateRoom = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRoomName.trim()) return;
-
-    const formattedId = newRoomName.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20);
-    if (allRooms.some(r => r.id === formattedId)) {
-      addToast(t('chat_room_exists'), "error");
-      return;
-    }
-
-    const created: ChatRoom = {
-      id: formattedId,
-      name: newRoomName.trim().toLowerCase().replace(/\s+/g, '-'),
-      topic: t('chat_custom_room_topic'),
-      icon: '✨',
-      // Yalnızca bu cihazda (localStorage) görünür — açıkça etiketlenir
-      badge: t('chat_local_room_badge'),
-      isOfficial: false
-    };
-
-    const updated = [...customRooms, created];
-    setCustomRooms(updated);
-    try {
-      localStorage.setItem('anisync_custom_rooms', JSON.stringify(updated));
-    } catch {}
-
-    setActiveRoomId(created.id);
-    setNewRoomName('');
-    setIsCreatingRoom(false);
-    addToast(t('chat_room_created', { name: created.name }), 'success');
   };
 
   // Gerçek RSVP verisini yükle (yalnızca etkinlik banner'ı görünürken)
@@ -347,35 +353,27 @@ export const GlobalChat = () => {
                   );
                 })}
 
+                {currentUser && pendingRoomCount > 0 && (
+                  <button
+                    onClick={() => setQueueOpen(true)}
+                    className="px-2 py-1 bg-cyan-500 hover:bg-white text-black border border-black text-[10px] font-black uppercase flex items-center gap-0.5 shrink-0 transition-colors cursor-pointer"
+                    title={t('chat_pending_requests_title')}
+                  >
+                    <Vote size={12} />
+                    <span>{t('chat_pending_requests')} ({pendingRoomCount})</span>
+                  </button>
+                )}
+
                 <button
-                  onClick={() => setIsCreatingRoom(!isCreatingRoom)}
+                  onClick={() => setRoomModalOpen(true)}
                   className="px-2 py-1 bg-black hover:bg-white hover:text-black text-neutral-300 border border-white/30 text-[10px] font-black uppercase flex items-center gap-0.5 shrink-0 transition-colors cursor-pointer"
                   title={t('chat_open_room_title')}
                 >
                   <Plus size={12} />
-                  <span>{t('chat_open_room')}</span>
+                  <span>{t(myKarma >= 500 ? 'chat_open_room' : 'chat_request_room')}</span>
                 </button>
               </div>
 
-              {/* Room Creation Sub-panel */}
-              {isCreatingRoom && (
-                <form onSubmit={handleCreateRoom} className="bg-neutral-950 border-b-2 border-white/30 p-2.5 flex gap-2">
-                  <input
-                    type="text"
-                    value={newRoomName}
-                    onChange={(e) => setNewRoomName(e.target.value)}
-                    placeholder={t('chat_new_room_placeholder')}
-                    maxLength={25}
-                    className="flex-1 bg-black border border-white/40 px-2 py-1 text-xs font-bold text-white uppercase outline-none focus:border-amber-400"
-                  />
-                  <button
-                    type="submit"
-                    className="px-3 py-1 bg-amber-400 text-black font-black text-xs uppercase border border-black hover:bg-white cursor-pointer"
-                  >
-                    {t('chat_create')}
-                  </button>
-                </form>
-              )}
               
               {/* Messages Body */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-black relative">
@@ -487,6 +485,18 @@ export const GlobalChat = () => {
           </button>
         )}
       </div>
+
+      {/* Oda öneri / aç pencereleri */}
+      <RoomRequestModal
+        isOpen={roomModalOpen}
+        onClose={() => setRoomModalOpen(false)}
+        karma={myKarma}
+      />
+      <RoomQueuePanel
+        isOpen={queueOpen}
+        onClose={() => setQueueOpen(false)}
+        isAdmin={isAdmin}
+      />
     </>
   );
 };

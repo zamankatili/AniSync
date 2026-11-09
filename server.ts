@@ -2,7 +2,7 @@
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { ingestAnimeNews } from "./src/lib/rssIngest";
-import { handleTranslate, handleAiRecommendations } from "./src/lib/geminiEndpoints";
+import { handleTranslate, handleAiRecommendations, handleModerateRoom } from "./src/lib/geminiEndpoints";
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -94,6 +94,12 @@ async function startServer() {
   // Gemini AI Personalized Recommendations Endpoint
   app.post("/api/ai-recommendations", async (req, res) => {
     const r = await handleAiRecommendations(req.body, req.headers as Record<string, unknown>);
+    res.status(r.status).json(r.body);
+  });
+
+  // Community Room Moderation Endpoint
+  app.post("/api/moderate-room", async (req, res) => {
+    const r = await handleModerateRoom(req.body, req.headers as Record<string, unknown>);
     res.status(r.status).json(r.body);
   });
 

@@ -170,6 +170,55 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
     }
 
+    // ─── Kozmik sohbet odaları (resmi + topluluk) ──────────────
+    // okuma imzalı kullanıcılara; oda açma: Kalfa+ (istemcide uygulanır) + AI filtresi;
+    // istek odası: 50 oy + moderatör onayı; yalnızca kendi uid'i ile oy verilebilir.
+    function isValidRoom(data) {
+      return data.keys().hasOnly(['name', 'topic', 'icon', 'createdAt', 'createdBy', 'karmaAtCreation', 'source'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 40
+        && data.topic is string && data.topic.size() <= 160
+        && data.icon is string && data.icon.size() > 0 && data.icon.size() <= 8
+        && data.createdBy.uid == request.auth.uid
+        && data.createdBy.name is string
+        && data.karmaAtCreation is int
+        && data.source in ['direct', 'approved'];
+    }
+    function isValidRoomRequest(data) {
+      return data.keys().hasOnly(['name', 'topic', 'icon', 'requestedBy', 'status', 'votes', 'voters', 'createdAt', 'aiVerdict', 'aiReason', 'modNote', 'approvedBy', 'approvedAt', 'rejectedBy'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 40
+        && data.topic is string && data.topic.size() <= 160
+        && data.icon is string && data.icon.size() > 0 && data.icon.size() <= 8
+        && data.requestedBy.uid == request.auth.uid
+        && data.requestedBy.name is string
+        && data.requestedBy.karma is int;
+    }
+
+    match /chatRooms/{id} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidRoom(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+    match /roomRequests/{id} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && isValidRoomRequest(request.resource.data)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.votes == 0
+        && request.resource.data.voters == []
+        && request.resource.data.aiReason is string
+        && request.resource.data.aiReason.size() <= 220;
+      // Oy verme: yalnızca kendi uid eklenir; tek oy; status değişmez
+      allow update: if isSignedIn()
+        && resource.data.status == 'pending'
+        && affectedKeys().hasOnly(['voters', 'votes'])
+        && request.resource.data.voters == resource.data.voters.concat([request.auth.uid])
+        && !resource.data.voters.hasAny([request.auth.uid])
+        && request.resource.data.votes == resource.data.votes + 1;
+      // Moderatör/admin onayı/reddi + notu
+      allow update: if isAdmin() && affectedKeys().hasOnly(['status', 'modNote', 'approvedBy', 'approvedAt', 'rejectedBy']);
+      allow delete: if isAdmin();
+    }
+
     // ─── İzleme partisi odaları ────────────────────────────────
     match /watchPartyRooms/{id} {
       allow read: if true;
