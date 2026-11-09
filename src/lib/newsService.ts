@@ -28,15 +28,6 @@ const NEWS_CACHE_KEY = 'anisync_live_news_v3';
 const NEWS_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 saat
 const LOCAL_IMAGE = '/icons/icon-192.png';
 
-function classifyNewsCategory(rawTitle: string): AnimeNewsItem['category'] {
-  const t = rawTitle.toLowerCase();
-  if (/(fragman|trailer|teaser)/i.test(t)) return 'FRAGMAN';
-  if (/(film|movie|sinema)/i.test(t)) return 'FİLM';
-  if (/(manga|manhwa|cilt)/i.test(t)) return 'MANGA';
-  if (/(sezon|season|episode|bölüm|premiere|yayına girdi|airing)/i.test(t)) return 'SEZON';
-  return 'DUYURU';
-}
-
 function decodeEntities(input: string): string {
   return input
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
@@ -51,51 +42,9 @@ function stripHtml(input: string): string {
   return decodeEntities(input).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function isFreshEnough(iso: string | undefined, maxAgeDays = 30): boolean {
-  if (!iso) return false;
-  const time = new Date(iso).getTime();
-  if (Number.isNaN(time)) return false;
-  return Date.now() - time <= maxAgeDays * 24 * 60 * 60 * 1000;
-}
-
-/** rss2json.com — CORS açık ücretsiz RSS→JSON köprüsü (anahtar gerektirmez). */
-async function fetchRssViaProxy(feedUrl: string, timeoutMs = 5000): Promise<any[]> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(
-      `https://api.rss2json.com/v1/api.cgi?rss_url=${encodeURIComponent(feedUrl)}&count=12`,
-      { signal: controller.signal }
-    );
-    clearTimeout(timeout);
-    if (!res.ok) return [];
-    const json = await res.json();
-    return Array.isArray(json?.items) ? json.items : [];
-  } catch (_err) {
-    clearTimeout(timeout);
-    return [];
-  }
-}
-
-function mapRssItem(item: any, feedSource: string, idx: number): AnimeNewsItem | null {
-  const title = stripHtml(String(item?.title || '')).trim();
-  if (!title) return null;
-  const published = item?.pubDate ? new Date(item.pubDate) : null;
-  const publishedIso = published && !Number.isNaN(published.getTime()) ? published.toISOString() : new Date().toISOString();
-  const summary = stripHtml(String(item?.description || item?.content || '')).slice(0, 240) || title;
-  return {
-    id: `rss_${feedSource.replace(/\W+/g, '_')}_${idx}_${publishedIso}`,
-    title,
-    summary: summary.endsWith('.') || summary.length < 30 ? summary : `${summary}…`,
-    source: feedSource,
-    category: classifyNewsCategory(title),
-    date: publishedIso,
-    publishedAt: publishedIso,
-    imageUrl: item?.thumbnail || item?.enclosure?.link || LOCAL_IMAGE,
-    linkUrl: item?.link || undefined,
-    isHot: false,
-  };
-}
+/** NOT: rss2json.com köprüsü 2026 itibarıyla 404 döndüğü için kaldırıldı.
+ *  Tarayıcıdan doğrudan RSS çekmek CORS'a takılır; bu yüzden haber akışı
+ *  `/api/anime-news` (Vercel serverless + yerel Express) üzerinden gelir. */
 
 export async function fetchLiveNews(forceRefresh = false): Promise<NewsFetchResult> {
   const fetchedAt = new Date().toISOString();
@@ -183,37 +132,8 @@ export async function fetchLiveNews(forceRefresh = false): Promise<NewsFetchResu
     // Vercel/serverless: endpoint yok → doğrudan RSS dene
   }
 
-  // 3. Doğrudan canlı RSS (client-side) — ANN + Google News (TR, son 7 gün)
-  const [annItems, googleItems] = await Promise.all([
-    fetchRssViaProxy('https://www.animenewsnetwork.com/all/rss.xml', 5000),
-    fetchRssViaProxy('https://news.google.com/rss/search?q=anime&hl=tr&gl=TR&ceid=TR:tr&when=7d', 5000),
-  ]);
-
-  const mapped = [
-    ...googleItems.map((item, idx) => mapRssItem(item, 'Google News', idx)),
-    ...annItems.map((item, idx) => mapRssItem(item, 'Anime News Network', idx)),
-  ].filter((item): item is AnimeNewsItem => item !== null)
-   .filter(item => isFreshEnough(item.publishedAt, 30));
-
-  if (mapped.length > 0) {
-    const seen = new Set<string>();
-    const deduped = mapped.filter(item => {
-      const key = item.title.toLowerCase().slice(0, 60);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime())
-      .slice(0, 12)
-      .map((item, idx) => ({ ...item, isHot: idx < 3 }));
-
-    try {
-      localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ news: deduped, timestamp: Date.now() }));
-    } catch (_e) { /* yoksay */ }
-
-    return { news: deduped, source: 'Canlı RSS (Google News / ANN)', isGrounded: true, stale: false, fetchedAt };
-  }
-
-  // 4. Son çare: yayındaki sezon animeleri — HABER DEĞİL, “sezon takvimi” olarak dürüstçe etiketlenir
+  // 3. Hiçbir haber kaynağı yoksa: yayındaki sezon animeleri — HABER DEĞİL,
+  //    "sezon takvimi" olarak dürüstçe etiketlenir (sahte haber üretilmez).
   try {
     const season = getAnimeSeason();
     const jikanController = new AbortController();

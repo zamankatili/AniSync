@@ -14,7 +14,7 @@ import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useNavigate } from 'react-router-dom';
 import { Anime, DayOfWeek } from '../types';
 
-import { fetchLiveScheduleForDay } from '../lib/airingService';
+import { fetchScheduleWeek } from '../lib/airingService';
 import { getAnimeSeason } from '../lib/season';
 
 export const AiringCalendar: React.FC = () => {
@@ -68,34 +68,39 @@ export const AiringCalendar: React.FC = () => {
   const [sourceLabel, setSourceLabel] = useState<string>(t('cal_live_source'));
   const [scheduleStale, setScheduleStale] = useState(true);
 
-  // Live schedule fetch per day
+  // Live schedule fetch — haftanın TAMAMI (7 gün) tek seferde, gün bazlı sayfalı AniList.
   useEffect(() => {
     let isMounted = true;
-    const fetchLiveSchedule = async () => {
+    const loadWeek = async () => {
       setIsSyncing(true);
       try {
-        const result = await fetchLiveScheduleForDay(selectedDay);
-        if (result.list && result.list.length > 0 && isMounted) {
-          setLiveAnimeMap((prev) => ({ ...prev, [selectedDay]: result.list }));
-          setSourceLabel(result.source);
-          setScheduleStale(result.stale);
-        }
+        const result = await fetchScheduleWeek();
+        if (!isMounted) return;
+        setLiveAnimeMap(result.days);
+        setSourceLabel(result.source);
+        setScheduleStale(result.stale);
       } catch (_err) {
-        // Fall back seamlessly to static verified 2026 list
+        // Kaynak yok: statik arşiv listesi "örnek veri" rozetiyle gösterilir.
+        if (isMounted) setScheduleStale(true);
       } finally {
         if (isMounted) setIsSyncing(false);
       }
     };
-    fetchLiveSchedule();
-    return () => { isMounted = false; };
-  }, [selectedDay]);
+    loadWeek();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Helper to get anime list for any day
   const getAnimeListForDay = (day: DayOfWeek) => {
     const liveItems = liveAnimeMap[day];
+    // Canlı veri hiç yoksa (çevrimdışı) arşiv listesi gösterilir; varsa
+    // boş gün boş kalır — eski klasikler "bu hafta yayında" gibi görünmesin.
+    const hasAnyLive = Object.keys(liveAnimeMap).length > 0;
     const sourceList = (liveItems && liveItems.length > 0)
       ? liveItems
-      : AIRING_SCHEDULE.filter(a => a.day === day);
+      : (hasAnyLive ? [] : AIRING_SCHEDULE.filter(a => a.day === day));
 
     return sourceList.filter(anime => {
       if (onlyMyWatchlist && !watchlist.some(w => w.anime.mal_id === anime.mal_id)) {
@@ -442,13 +447,14 @@ export const AiringCalendar: React.FC = () => {
 
                           <h3 
                             onClick={() => navigate(`/anime/${anime.mal_id}`)}
+                            lang="en"
                             className="font-black text-base uppercase text-white tracking-tight line-clamp-1 cursor-pointer hover:text-rose-500 transition-colors"
                             title={anime.title_english || anime.title}
                           >
                             {anime.title_english || anime.title}
                           </h3>
 
-                          <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-wide mt-1">
+                          <p lang="en" className="text-[11px] text-neutral-400 font-bold uppercase tracking-wide mt-1">
                             {t('studio')}: <span className="text-white">{anime.studio}</span>
                           </p>
 
@@ -624,13 +630,13 @@ export const AiringCalendar: React.FC = () => {
                                   <span>{t('airing_episode', { episode: anime.currentEpisode })}</span>
                                 )}
                               </div>
-                              <h4 className="font-black text-xs text-white uppercase line-clamp-2 leading-tight group-hover:text-amber-400 transition-colors">
+                              <h4 lang="en" className="font-black text-xs text-white uppercase line-clamp-2 leading-tight group-hover:text-amber-400 transition-colors">
                                 {anime.title_english || anime.title}
                               </h4>
                             </div>
 
                             <div className="pt-2 flex items-center justify-between">
-                              <span className="text-[9px] font-bold text-neutral-400 uppercase truncate">
+                              <span lang="en" className="text-[9px] font-bold text-neutral-400 uppercase truncate">
                                 {anime.studio}
                               </span>
                               <button

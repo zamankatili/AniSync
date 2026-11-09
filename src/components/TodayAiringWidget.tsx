@@ -119,10 +119,10 @@ export const TodayAiringWidget: React.FC = () => {
                     <> • {t('airing_ep_watched', { count: anime.currentEpisode })}</>
                   )}
                 </span>
-                <h4 className="text-xs font-black uppercase text-white truncate group-hover:text-amber-400 transition-colors mt-0.5">
+                <h4 lang="en" className="text-xs font-black uppercase text-white truncate group-hover:text-amber-400 transition-colors mt-0.5">
                   {anime.title_english || anime.title}
                 </h4>
-                <p className="text-[10px] text-neutral-400 font-bold uppercase truncate mt-0.5">
+                <p lang="en" className="text-[10px] text-neutral-400 font-bold uppercase truncate mt-0.5">
                   {anime.studio}
                 </p>
               </div>

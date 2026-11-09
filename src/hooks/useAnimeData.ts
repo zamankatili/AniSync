@@ -120,19 +120,20 @@ const jikanFetch = async (url: string) => {
   }
 };
 
-// Çevrimdışı fallback: "airing/now/seasons" gibi CANLI yollar boş döner
-// (klasikler sezon listesi gibi sunulmasın), diğerleri evergreen listelerine düşer.
+// Çevrimdışı fallback: CANLI yollar (güncel yayın / sezon / yaklaşan) boş döner —
+// eski klasikler "bu sezon yayında" gibi sunulmaz. Yalnızca doğası gereği
+// "tüm zamanlar" olan listeler arşivden beslenir.
 const getFallbackByPath = (path: string): Anime[] => {
-  if (path.includes('airing') || path.includes('now') || path.includes('season')) {
+  if (path.includes('airing') || path.includes('now') || path.includes('season') || path.includes('upcoming')) {
     return [];
-  }
-  if (path.includes('upcoming')) {
-    return FALLBACK_LISTS['evergreen_upcoming'];
   }
   if (path.includes('movie')) {
     return FALLBACK_LISTS['evergreen_movies'];
   }
-  return FALLBACK_LISTS['evergreen_popular'];
+  if (path.includes('bypopularity') || path.includes('type=tv')) {
+    return FALLBACK_LISTS['evergreen_popular'];
+  }
+  return [];
 };
 
 // Track shown anime IDs across random calls to prevent repeating
@@ -174,45 +175,40 @@ export const useAnimeData = (): UseAnimeResult => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Trending — önce Jikan (top airing), sonra AniList GÜNCEL SEZON trendleri;
-  // ikisi de başarısızsa boş liste + hata (klasikler "güncel" gibi sunulmaz).
+  // Trending — GÜNCEL SEZON trendleri AniList'ten (birincil), Jikan sezonu yedek.
+  // Eski davranış: Jikan `top/anime?filter=airing` = tüm zamanların puan
+  // sıralaması; "güncel" gibi gösterilmesi yanıltıcıydı.
   const fetchTop = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const json = await jikanFetch(`${BASE_URL}/top/anime?filter=airing&limit=10`);
-      if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
-        setData(json.data as Anime[]);
-        setError(null);
-        return;
-      }
       const seasonal = await fetchSeasonalTrendingAnime(12);
       const items = seasonal.items.map((item) => toLegacyAnime(item));
       if (items.length > 0) {
         setData(items);
         setError(null);
+        setLoading(false);
         return;
       }
-      setData([]);
-      setError('Güncel sezon listesi alınamadı. Bağlantınızı kontrol edip tekrar deneyin.');
-    } catch (err: any) {
-      console.warn('fetchTop fallback triggered:', err);
-      try {
-        const seasonal = await fetchSeasonalTrendingAnime(12);
-        const items = seasonal.items.map((item) => toLegacyAnime(item));
-        if (items.length > 0) {
-          setData(items);
-          setError(null);
-          return;
-        }
-      } catch (_inner) {
-        // hem Jikan hem AniList başarısız
-      }
-      setData([]);
-      setError('Güncel sezon listesi alınamadı. Bağlantınızı kontrol edip tekrar deneyin.');
-    } finally {
-      setLoading(false);
+    } catch (_anilistErr) {
+      // AniList yoksa Jikan'ın GERÇEK güncel sezon listesine geç
     }
+
+    try {
+      const json = await jikanFetch(`${BASE_URL}/seasons/now?limit=12&sfw=true`);
+      if (json && Array.isArray(json.data) && json.data.length > 0) {
+        setData(json.data as Anime[]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+    } catch (_jikanErr) {
+      // iki kaynak da yok
+    }
+
+    setData([]);
+    setError('Güncel sezon listesi alınamadı. Bağlantınızı kontrol edip tekrar deneyin.');
+    setLoading(false);
   }, []);
 
   // Search anime by query with resilient offline fallback
@@ -327,8 +323,7 @@ export const useAnimeData = (): UseAnimeResult => {
     setLoading(true);
     setError(null);
     try {
-      const normalizedPath = path.includes('/seasons/2026/fall') ? '/seasons/now?limit=10' : path;
-      const json = await jikanFetch(`${BASE_URL}${normalizedPath}`);
+      const json = await jikanFetch(`${BASE_URL}${path}`);
       if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
         return json.data as Anime[];
       }

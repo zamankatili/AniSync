@@ -355,11 +355,102 @@ export async function getAniListMediaByMalId(malId: number, signal?: AbortSignal
 
 /** Sezonluk / popüler listeler için kısayol. */
 export async function getAniListTrending(
-  kind: 'anime' | 'manga' = 'anime',
+  kind: 'anime' | 'manga' | 'light_novel' = 'anime',
   page = 1,
   perPage = 20
 ): Promise<MediaSearchResult> {
   return searchAniList({ kind, page, perPage });
+}
+
+export interface AniListPopularCharacter {
+  /** Global kimlik: `anilist:character:123` */
+  id: string;
+  anilistId: number;
+  name: string;
+  nativeName?: string;
+  image?: string;
+  animeTitle?: string;
+  favourites: number;
+}
+
+/**
+ * AniList'te en çok favorilenen karakterler (canlı).
+ * MultiMedya merkezindeki karakter keşfi için kullanılır; sabit liste yok.
+ */
+export async function fetchPopularCharacters(perPage = 8): Promise<AniListPopularCharacter[]> {
+  const cacheKey = `characters:popular:${perPage}`;
+
+  return dedupe(cacheKey, async () => {
+    const cached = cache.get(cacheKey) as AniListPopularCharacter[] | null;
+    if (cached) return cached;
+
+    await limiter();
+    const payload = await fetchJson<{
+      data?: {
+        Page?: {
+          characters?: {
+            id: number;
+            name?: { full?: string | null; native?: string | null } | null;
+            image?: { large?: string | null; medium?: string | null } | null;
+            favourites?: number | null;
+            media?: {
+              nodes?: { title?: { romaji?: string | null; english?: string | null } | null }[] | null;
+            } | null;
+          }[] | null;
+        } | null;
+      } | null;
+      errors?: { message?: string }[] | null;
+    }>(
+      ANILIST_ENDPOINT,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          query: `
+            query ($perPage: Int) {
+              Page(page: 1, perPage: $perPage) {
+                characters(sort: FAVOURITES_DESC) {
+                  id
+                  name { full native }
+                  image { large medium }
+                  favourites
+                  media(type: ANIME, perPage: 1, sort: POPULARITY_DESC) {
+                    nodes { title { romaji english } }
+                  }
+                }
+              }
+            }
+          `,
+          variables: { perPage },
+        }),
+      },
+      { timeoutMs: 10000, retries: 2 },
+    );
+
+    if (payload?.errors?.length) {
+      throw new Error(`AniList: popüler karakterler — ${payload.errors.map((e) => e.message).join('; ')}`);
+    }
+
+    const characters = payload.data?.Page?.characters ?? [];
+    const result: AniListPopularCharacter[] = [];
+    for (const character of characters) {
+      const title = character.media?.nodes?.[0]?.title;
+      const name = character.name?.full || character.name?.native || '';
+      if (!character.id || !name) continue;
+      result.push({
+        id: `anilist:character:${character.id}`,
+        anilistId: character.id,
+        name,
+        nativeName: character.name?.native ?? undefined,
+        image: character.image?.large || character.image?.medium || undefined,
+        animeTitle: title?.english || title?.romaji || undefined,
+        favourites: character.favourites ?? 0,
+      });
+    }
+
+    cache.set(cacheKey, result);
+    return result;
+  });
 }
 
 /**

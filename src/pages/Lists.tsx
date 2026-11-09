@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Plus, Star, Heart, Flame, LayoutList, Calendar, TrendingUp, Compass, Clapperboard } from 'lucide-react';
+import { Trophy, Plus, Star, Heart, Flame, LayoutList, Calendar, TrendingUp, Compass, Clapperboard, BookOpen } from 'lucide-react';
 import { useAnimeData } from '../hooks/useAnimeData';
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, getDocs, updateDoc, doc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
@@ -12,6 +12,8 @@ import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useToastStore } from '../store/useToastStore';
 import { CreateListModal } from '../components/CreateListModal';
 import { useNavigate } from 'react-router-dom';
+import { getAniListTrending } from '../lib/api/anilist';
+import type { UnifiedMedia } from '../types/unified';
 
 const MiniAnimeList = ({ title, icon: Icon, path }: { title: string, icon: any, path: string }) => {
   const { fetchAnimeList } = useAnimeData();
@@ -68,9 +70,84 @@ const MiniAnimeList = ({ title, icon: Icon, path }: { title: string, icon: any, 
                   onError={handleImageError}
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-black uppercase truncate text-sm">{anime.title}</h4>
+                  <h4 lang="en" className="font-black uppercase truncate text-sm">{anime.title}</h4>
                   <p className="text-[10px] uppercase font-bold text-neutral-400 group-hover:text-rose-200">
                     <Star size={10} className="inline mr-1" /> {anime.score || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Manga / light novel listeleri AniList'ten gelir (Jikan manga uçları
+ * farklı kimlik şeması kullandığı için anime detayına yanlış yönlendiriyordu).
+ * Kartlar birleşik medya detayına (`/media/anilist:...`) gider.
+ */
+const MiniMangaList = ({ title, icon: Icon, kind }: { title: string; icon: any; kind: 'manga' | 'light_novel' }) => {
+  const [data, setData] = useState<UnifiedMedia[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const loadData = () => {
+    setLoading(true);
+    getAniListTrending(kind, 1, 10)
+      .then((res) => setData(res.items))
+      .catch(() => setData([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [kind]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 border-b-4 border-black pb-2">
+        <Icon size={24} className="text-white" strokeWidth={2.5} />
+        <h2 className="text-xl font-black text-white uppercase tracking-tighter">{title}</h2>
+      </div>
+
+      <div className="bg-white border-4 border-black p-1 neo-shadow h-[400px] overflow-y-auto">
+        {loading ? (
+          <div className="p-8 text-center text-black font-black uppercase tracking-widest">YÜKLENİYOR...</div>
+        ) : !data || data.length === 0 ? (
+          <div className="p-8 text-center text-black font-black uppercase tracking-widest text-sm flex flex-col items-center gap-3">
+            <span>YÜKLENEMEDİ.</span>
+            <button
+              onClick={loadData}
+              className="px-4 py-2 bg-black text-white text-xs font-black uppercase border-2 border-black hover:bg-rose-600 transition-colors"
+            >
+              YENİDEN DENE
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col space-y-1">
+            {data.slice(0, 10).map((item, idx) => (
+              <div
+                key={item.id}
+                onClick={() => navigate(`/media/${item.id}`)}
+                className="flex items-center gap-3 bg-black text-white p-2 group hover:bg-cyan-600 transition-colors cursor-pointer"
+              >
+                <span className="font-black text-xl w-6 text-center text-white/50 group-hover:text-white">{idx + 1}</span>
+                <img
+                  src={getSafeImageUrl(item.cover?.medium || item.cover?.large || '')}
+                  alt="cover"
+                  className="w-10 h-14 object-cover border-2 border-white"
+                  referrerPolicy="no-referrer"
+                  onError={handleImageError}
+                />
+                <div className="flex-1 min-w-0">
+                  <h4 lang="en" className="font-black uppercase truncate text-sm">{item.displayTitle}</h4>
+                  <p className="text-[10px] uppercase font-bold text-neutral-400 group-hover:text-cyan-100">
+                    <Star size={10} className="inline mr-1" />
+                    {item.averageScore ? (item.averageScore / 10).toFixed(1) : 'N/A'}
+                    {item.chapters ? ` • ${item.chapters} BÖLÜM` : ''}
                   </p>
                 </div>
               </div>
@@ -183,13 +260,15 @@ export const ListsPage = () => {
             exit={{ opacity: 0, y: -20 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
-            <MiniAnimeList title="TOP GÜNCEL" icon={Flame} path="/top/anime?filter=airing&limit=10" />
-            <MiniAnimeList title="YAKLAŞAN EFSANELER" icon={Calendar} path="/top/anime?filter=upcoming&limit=10" />
+            <MiniAnimeList title="TOP GÜNCEL" icon={Flame} path="/top/anime?filter=airing&limit=10&sfw=true" />
+            <MiniAnimeList title="YAKLAŞAN EFSANELER" icon={Calendar} path="/seasons/upcoming?limit=10&sfw=true" />
             <MiniAnimeList title="TÜM ZAMANLAR POPÜLER" icon={Trophy} path="/top/anime?filter=bypopularity&limit=10" />
             
-            <MiniAnimeList title={getAnimeSeason().labelTR.toUpperCase()} icon={TrendingUp} path="/seasons/now?limit=10" />
+            <MiniAnimeList title={getAnimeSeason().labelTR.toUpperCase()} icon={TrendingUp} path="/seasons/now?limit=10&sfw=true" />
             <MiniAnimeList title="FİLM BAŞYAPITLARI" icon={Clapperboard} path="/top/anime?type=movie&limit=10" />
-            <MiniAnimeList title="AKSİYON DOLU" icon={Compass} path="/top/anime?type=tv&limit=10" />
+            <MiniAnimeList title="AKSİYON DOLU" icon={Compass} path="/anime?genres=1&order_by=score&sort=desc&limit=10&sfw=true" />
+            <MiniMangaList title="TOP MANGA (ANILIST)" icon={BookOpen} kind="manga" />
+            <MiniMangaList title="TOP LIGHT NOVEL (ANILIST)" icon={BookOpen} kind="light_novel" />
           </motion.div>
         ) : (
           <motion.div
@@ -254,7 +333,7 @@ export const ListsPage = () => {
                                onError={handleImageError}
                              />
                              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center pointer-events-none">
-                               <span className="text-[8px] font-black text-white uppercase">{anime.title}</span>
+                               <span lang="en" className="text-[8px] font-black text-white uppercase">{anime.title}</span>
                              </div>
                            </div>
                          ))}
