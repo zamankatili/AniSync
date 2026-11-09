@@ -31,7 +31,7 @@ Bu raporun yazıldığı gün içinde uygulanan ve doğrulananlar (her biri buil
 - `npm audit fix`: 2 kritik (proxy-addr, websocket-driver) çözüldü; 31 → 19 (mod/yük: tamamı dev zinciri).
 
 **Kalan işler (bilinçli ertelendi / sende)**
-- i18n split (index 254 KB gzip; route-level i18n) — t() çağrılarını her yerde kırmamak için ayrı oturum.
+- ~~i18n split~~ — **tamamlandı (commit `575c17b` sonrası `i18n` chunk'ı ayrı; index 254 KB gzip → 180 KB)** — `i18nAnimeLifeSim` aynı loader'a geçebilir (TODO.md).
 - `eventEngine.ts` break-out (generateLife/memorial ayrımı) + AppStore'da kalan slice'lar (forum/watchlist) — hook test altyapısı ile birlikte yapılacak.
 - Firestore kuralları yayınlandı mı? **Hayır — senin Firebase Console'dan yayınlaman gerekiyor** (bu oturumdan `firestore.rules` + **`firestore.indexes.json`** güncel; globalChat kompozit indeksini de yükle). `role:'admin'` ataması da senin. `deploy-rules.yml` çalışması için `FIREBASE_TOKEN` repo secret gerekir.
 - Vercel env: `GEMINI_API_KEY`, `CRON_SECRET`, `FIREBASE_PROJECT_ID` set edilmeli (aksi halde prod'da translate/AI 401 döner — fail-closed).
