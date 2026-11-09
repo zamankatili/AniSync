@@ -18,6 +18,15 @@
 
 ## Sende (5 dk – 30 dk)
 - [ ] Firebase Console → Firestore → **Rules yayınla** (`firestore.rules`)
+- [ ] **Voice Duel (/voice-duel) fix list** (Sebastian'dan istek):
+  - [ ] Doğru cevap her zaman A — şıklar rastgele karışıklmalı (`shuffleList` lokasyonda, değilse klip başına shuffle)
+  - [ ] **Karakterler ekranda görünüyor** — official PV'lerdeki görselleri kapatarak yalnızca ses oynat (ör. iframe'in üstüne `position:absolute; background:#000; display:flex; align center "?"` overlay; YouTube iframe arka planda ses oynatmaya devam eder)
+  - [ ] Madoka Exedra dışına genişlet (kullanıcı seriyi tanımıyor; dahil edilen seslendirmeler daha yaygın anime/karakterlere kaydır: One Piece, Naruto, Jujutsu Kaisen, Demon Slayer…) — official channel klipleriyle fresh dataset
+  - [ ] Yanlışlar puan kırılmasın? (karar) + skor kalıcı localStorage’da en iyi skorla yüzleşme
+- [ ] **AIRecommendationsSection mock verisi**: "%98 uyumlu" `AI_FALLBACK_REASONS` gösteriliyor; Vercel'de `GEMINI_API_KEY` boş olduğu için gerçek API yerine user'lar mock görüyor.
+  - [ ] Seçim: (a) dürüstçe "AI kapalı" kartı + mock gizlenir, ya da (b) ücretsiz alternatif (Groq/OpenRouter — llama) ile gerçek API'ye geçilir; (c) AI Studio ücretsiz proje (kart yok) ile aynı kod → Vercel env'e koyulması.
+- [ ] **Gemini bakiyesi**: verilen key (`AQ.Ab8…`) 402 `RESOURCE_EXHAUSTED` — prepaid credits bitmiş. Yeni key ya da bakiye yüklemesi gerekli; şu haliyle `/api/moderate-room` "flagged → moderatör kuyruğuna" düşer (calismasi: tam zamanında tercih düşer, ama yüksek XP'li kullanıcılar yine de kendi odasını açar çünkü `canDirectCreate && moderation.ok` olur — bu durumda AI olmadan `ok: false` dönecektir, **oda isteği** ve **moderatör onayına** düşer).
+- [ ] **Push/deploy**: `main` forced-push edildi (önceki `main` → `legacy-v2` dalında arşivlendi). Canlı: https://anisync-tau.vercel.app — `GEMINI_API_KEY` Vercel env'e **DEĞİL** (kullanıcı kararı: "şimdilik ekleme").
 - [ ] **`firestore.indexes.json`'daki indeksleri** Yayınla (globalChat roomId+createdAt; `firebase deploy --only firestore:indexes` veya Console → Indexes)
 - [ ] `users/{uid}` → `role: 'admin'` ekle (veya Google ile giriş sonrası söyle, birlikte alalım)
 - [ ] Vercel env: `GEMINI_API_KEY`, `CRON_SECRET`, `FIREBASE_PROJECT_ID=folkloric-centaur-q6tp2`
