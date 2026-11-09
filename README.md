@@ -129,7 +129,7 @@ public/                PWA, og ikonları, chibi avatarlar (public/avatars/)
   arama, karakterler, `idMal_in` toplu zenginleştirme, medya detay
 - **Jikan v4 (yedek)** — AniList erişilemediğinde canlı yedek
 - **Google News RSS (sunucu)** — `/api/anime-news` üzerinden, `/api/refresh-news`
-  cron'u her 12 saatte tazeler (`Authorization: Bearer CRON_SECRET`)
+  cron'u günde bir tazeler — Hobby plan üst limiti (`Authorization: Bearer CRON_SECRET`)
 - **Steam** — `/api/games/search`, `/api/games/[appid]` keyless proxy
 - **Firebase** — auth, sosyal, takip edilen içerik, KVKK/GDPR veri dışa/ekle-sil
 
