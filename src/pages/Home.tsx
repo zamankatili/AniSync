@@ -14,6 +14,8 @@ import { DAILY_PICKS } from '../data/picks';
 import { DailyPollModal } from '../components/DailyPollModal';
 import { DailyChallengeModal } from '../components/DailyChallengeModal';
 import { TasteProfileSurveyModal } from '../components/TasteProfileSurveyModal';
+import { OtakuLevelBadge } from '../components/OtakuLevelBadge';
+import { DailyPromptCard } from '../components/DailyPromptCard';
 
 import { MemeZone } from '../components/MemeZone';
 import { RecentActivityFeed } from '../components/RecentActivityFeed';
@@ -43,6 +45,13 @@ export const Home = () => {
   const challengeProgress = getOverallProgress();
 
   const postInputRef = React.useRef<HTMLTextAreaElement>(null);
+
+  /** Günün sorusu yanıtla → feed sekmesine geç, soru ile doldur, odaklan. */
+  const handleDailyQuestionAnswer = (question: string) => {
+    setActiveTab('feed');
+    setNewPostContent(`${question} — `);
+    window.setTimeout(() => postInputRef.current?.focus(), 60);
+  };
 
   const [todayPick, setTodayPick] = useState(DAILY_PICKS[0]);
 
@@ -473,6 +482,12 @@ export const Home = () => {
             <ChevronRight size={14} strokeWidth={3} />
           </button>
         </div>
+
+        {/* Otaku Rübesi — XP & Seviye */}
+        <OtakuLevelBadge />
+
+        {/* Günün Sorusu — herkes aynı soruyu görür */}
+        <DailyPromptCard onAnswer={handleDailyQuestionAnswer} />
 
       </div>
     

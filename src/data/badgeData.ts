@@ -29,13 +29,23 @@ export interface LevelInfo {
   color: string;
 }
 
-export const LEVELS: LevelInfo[] = [
-  { level: 1, title: 'Acemi Otaku (Genin)', minKarma: 0, maxKarma: 200, badge: '🌱', color: '#10b981' },
-  { level: 2, title: 'Hevesli İzleyici (Chunin)', minKarma: 200, maxKarma: 600, badge: '⚡', color: '#06b6d4' },
-  { level: 3, title: 'Sezon Gazisi (Hashira)', minKarma: 600, maxKarma: 1400, badge: '⚔️', color: '#f59e0b' },
-  { level: 4, title: 'Özel Derece Büyücü (Hokage)', minKarma: 1400, maxKarma: 2800, badge: '🔮', color: '#a855f7' },
-  { level: 5, title: 'Kadim Efsane (Korsan Kralı)', minKarma: 2800, maxKarma: 999999, badge: '👑', color: '#ef4444' }
-];
+import { MAX_LEVEL, xpToReach, levelProgress, rankForLevel } from '../lib/level';
+
+/** 25·(L−1)·L eğrisi + 6 rütbeli 30 kademeli seviye tablosu. */
+export const LEVELS: LevelInfo[] = Array.from({ length: MAX_LEVEL }, (_, index) => {
+  const level = index + 1;
+  const rank = rankForLevel(level);
+  const xpFloor = xpToReach(level);
+  const nextFloor = xpToReach(level + 1);
+  return {
+    level,
+    title: rank.title,
+    minKarma: xpFloor,
+    maxKarma: level >= MAX_LEVEL ? Number.MAX_SAFE_INTEGER : nextFloor,
+    badge: rank.badge,
+    color: rank.color,
+  };
+});
 
 export const BADGES: Badge[] = [
   {
@@ -209,29 +219,16 @@ export function getLevelForKarma(karma: number): {
   karmaInCurrentLevel: number;
   karmaNeededForNext: number;
 } {
-  const current = LEVELS.slice().reverse().find(l => karma >= l.minKarma) || LEVELS[0];
-  const next = LEVELS.find(l => l.level === current.level + 1) || null;
-
-  if (!next) {
-    return {
-      currentLevel: current,
-      nextLevel: null,
-      progressPercent: 100,
-      karmaInCurrentLevel: karma - current.minKarma,
-      karmaNeededForNext: 0
-    };
-  }
-
-  const range = next.minKarma - current.minKarma;
-  const currentProgress = karma - current.minKarma;
-  const progressPercent = Math.min(100, Math.max(0, Math.floor((currentProgress / range) * 100)));
+  const progress = levelProgress(karma);
+  const current = LEVELS[progress.level - 1];
+  const next = progress.level >= MAX_LEVEL ? null : LEVELS[progress.level];
 
   return {
     currentLevel: current,
     nextLevel: next,
-    progressPercent,
-    karmaInCurrentLevel: currentProgress,
-    karmaNeededForNext: next.minKarma - karma
+    progressPercent: Math.floor(progress.percent),
+    karmaInCurrentLevel: progress.into,
+    karmaNeededForNext: next ? progress.remaining : 0
   };
 }
 

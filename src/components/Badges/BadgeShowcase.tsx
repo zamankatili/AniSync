@@ -3,10 +3,11 @@ import {
   Award, Shield, Sparkles, Lock, CheckCircle2, ChevronRight, 
   HelpCircle, Star, Flame, Trophy, Info, X, Zap 
 } from 'lucide-react';
-import { 
-  Badge, UserBadgeProgress, LevelInfo, getLevelForKarma, 
-  evaluateBadges, calculateKarma 
+import {
+  Badge, UserBadgeProgress, LevelInfo,
+  evaluateBadges
 } from '../../data/badgeData';
+import { computeOtakuLevel } from '../../lib/otakuLevel';
 import { cn } from '../../lib/utils';
 import { useQuizStore } from '../../store/useQuizStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -47,23 +48,12 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({
   const [selectedBadgeModal, setSelectedBadgeModal] = useState<UserBadgeProgress | null>(null);
   const [isKarmaGuideOpen, setIsKarmaGuideOpen] = useState(false);
 
-  // Calculate Karma and Level
-  const completedCount = watchlist.filter(w => w.status === 'completed').length;
-  const ratedCount = watchlist.filter(w => (w.userScore || 0) > 0).length;
-  const totalEpisodes = watchlist
-    .filter(w => w.status === 'completed')
-    .reduce((acc, w) => acc + (w.anime?.episodes || w.episodesWatched || 0), 0);
-
-  const totalKarma = calculateKarma(
-    watchlist.length,
-    completedCount,
-    ratedCount,
-    totalEpisodes,
+  // Calculate Karma and Level (paylaşılan hesap)
+  const { karma: totalKarma, levelInfo } = computeOtakuLevel(
+    watchlist,
     arcadeHighScore > 0 || dailyStreak > 0,
     arcadeHighScore
   );
-
-  const levelInfo = getLevelForKarma(totalKarma);
   const badgeProgressList = evaluateBadges(watchlist, {
     played: arcadeHighScore > 0 || dailyStreak > 0,
     highScore: arcadeHighScore

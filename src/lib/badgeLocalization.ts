@@ -4,6 +4,7 @@
  * Eksik dilde Türkçe metne düşer.
  */
 import i18n from '../i18n';
+import { RANK_TIERS } from './level';
 
 export interface LocalizedText {
   tr: string;
@@ -94,12 +95,13 @@ export const BADGE_TEXTS: Record<string, BadgeTextEntry> = {
   },
 };
 
-export const LEVEL_TITLES: Record<number, LocalizedText> = {
-  1: L('Acemi Otaku (Genin)', 'Rookie Otaku (Genin)', '新人オタク (下忍)', 'Otaku Débutant (Genin)'),
-  2: L('Hevesli İzleyici (Chunin)', 'Eager Viewer (Chunin)', '熱心な視聴者 (中忍)', 'Spectateur Enthousiaste (Chunin)'),
-  3: L('Sezon Gazisi (Hashira)', 'Season Veteran (Hashira)', 'シーズン古参 (柱)', 'Vétéran des Saisons (Hashira)'),
-  4: L('Özel Derece Büyücü (Hokage)', 'Special Grade Sorcerer (Hokage)', '特級術師 (火影)', 'Sorcier de Grade Spécial (Hokage)'),
-  5: L('Kadim Efsane (Korsan Kralı)', 'Ancient Legend (Pirate King)', '古の伝説 (海賊王)', 'Légende Ancienne (Roi des Pirates)'),
+export const RANK_TITLES: Record<string, LocalizedText> = {
+  guest: L('Misafir', 'Guest', '見習い', 'Invité'),
+  regular: L('Müdavim', 'Regular', '常連', 'Habitué'),
+  adept: L('Kalfa', 'Adept', '職人', 'Compagnon'),
+  master: L('Usta', 'Master', '達人', 'Maître'),
+  owner: L('Mekân Sahibi', 'Householder', '持ち主', 'Hôte'),
+  legend: L('Efsane', 'Legend', '伝説', 'Légende'),
 };
 
 export const localizeBadgeTitle = (badgeId: string, fallback: string): string =>
@@ -108,5 +110,7 @@ export const localizeBadgeDescription = (badgeId: string, fallback: string): str
   pickText(BADGE_TEXTS[badgeId]?.description, fallback);
 export const localizeBadgeRequirement = (badgeId: string, fallback: string): string =>
   pickText(BADGE_TEXTS[badgeId]?.requirement, fallback);
-export const localizeLevelTitle = (level: number, fallback: string): string =>
-  pickText(LEVEL_TITLES[level], fallback);
+export const localizeLevelTitle = (level: number, fallback: string): string => {
+  const tier = RANK_TIERS.slice().reverse().find((r) => level >= r.from)?.id ?? 'guest';
+  return pickText(RANK_TITLES[tier], fallback);
+};
