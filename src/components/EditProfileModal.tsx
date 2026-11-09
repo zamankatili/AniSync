@@ -10,15 +10,14 @@ import { auth } from '../firebase';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { localizeGenre } from '../lib/genreNames';
 import { resolveAvatar } from '../lib/avatar';
+import { GENRE_OPTIONS } from '../data/genres';
 
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ALL_GENRES = [
-  'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Mystery', 'Slice of Life', 'Supernatural'
-];
+const ALL_GENRES: string[] = [...GENRE_OPTIONS];
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) => {
   const { userProfile, updateUserProfile, currentUser } = useAppStore();
@@ -28,7 +27,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   const [name, setName] = useState(userProfile.name);
   const [handle, setHandle] = useState(userProfile.handle);
   const [avatarSeed, setAvatarSeed] = useState(userProfile.avatarSeed);
-  const [favoriteGenres, setFavoriteGenres] = useState<string[]>(userProfile.favoriteGenres || ['Action', 'Fantasy']);
+  const [favoriteGenres, setFavoriteGenres] = useState<string[]>(userProfile.favoriteGenres ?? []);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

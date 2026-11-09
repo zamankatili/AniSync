@@ -170,6 +170,18 @@ export const Layout = () => {
     setIsLangMenuOpen(false);
   }, [location.pathname]);
 
+  // Yeni kayıt olanları nazikçe karşılama akışına yönlendir (anlık tanıtım yok)
+  useEffect(() => {
+    try {
+      if (authLoading || !currentUser) return;
+      if (localStorage.getItem('anisync_onboarding_pending') !== '1') return;
+      if (location.pathname === '/onboarding') return;
+      navigate('/onboarding', { replace: true });
+    } catch {
+      // localStorage kapalıysa engelleme
+    }
+  }, [authLoading, currentUser, location.pathname, navigate]);
+
   // Mobil "daha fazla" menüsü açıkken body scroll'unu kilitle
   useEffect(() => {
     if (!isMoreNavOpen) return;

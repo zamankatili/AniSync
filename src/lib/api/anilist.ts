@@ -394,6 +394,42 @@ export async function getAniListByMalIds(
   return out;
 }
 
+/**
+ * Onboarding önerileri: seçilen türlere (genre_in) göre ANİME kayıtları.
+ * Önce TRENDING_DESC; kombinasyon sonuçsuz kalırsa POPULARITY_DESC'e düşer.
+ * Sonuç 0 ise boş dizi döner — kıyağa örnek yok, dürüst boş durum.
+ */
+export async function fetchRecommendationsByGenres(
+  genres: string[],
+  perPage = 8
+): Promise<UnifiedMedia[]> {
+  const cleaned = Array.from(new Set(genres.map((g) => g.trim()).filter(Boolean))).slice(0, 5);
+  if (cleaned.length === 0) return [];
+
+  const queryDoc = `
+    query ($genres: [String], $perPage: Int, $sort: [MediaSort]) {
+      Page(page: 1, perPage: $perPage) {
+        media(type: ANIME, genre_in: $genres, isAdult: false, sort: $sort) {
+          ...MediaCore
+        }
+      }
+    }
+  `;
+
+  for (const sort of ['TRENDING_DESC', 'POPULARITY_DESC']) {
+    const payload = await graphql<AniListPageResponse>(
+      queryDoc,
+      { genres: cleaned, perPage, sort: [sort] },
+      `tür önerileri (${cleaned.join(', ')} · ${sort})`
+    );
+    const media = payload.data?.Page?.media ?? [];
+    if (media.length > 0) {
+      return media.map(mapAniListMedia);
+    }
+  }
+  return [];
+}
+
 /** Sezonluk / popüler listeler için kısayol. */
 export async function getAniListTrending(
   kind: 'anime' | 'manga' | 'light_novel' = 'anime',

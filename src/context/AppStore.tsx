@@ -2,7 +2,7 @@
 import { WatchlistItem, WatchStatus, Anime, ForumPost, Friend, UserProfile, UserNamedList } from '../types';
 import { auth, googleProvider, db } from '../firebase';
 import { useDailyPoll } from '../hooks/useDailyPoll';
-import { onAuthStateChanged, signInWithPopup, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, getAdditionalUserInfo } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { resolveAvatar } from '../lib/avatar';
 
@@ -190,9 +190,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return () => unsubscribeAuth();
   }, []);
 
+  const markOnboardingPending = () => {
+    try {
+      localStorage.setItem('anisync_onboarding_pending', '1');
+    } catch {
+      // localStorage kapalıysa onboarding atlanır, akış bozulmaz
+    }
+  };
+
   const loginWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const credential = await signInWithPopup(auth, googleProvider);
+      if (getAdditionalUserInfo(credential)?.isNewUser) {
+        markOnboardingPending();
+      }
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -210,7 +221,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const registerWithEmail = async (email: string, pass: string) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, pass);
+      const credential = await createUserWithEmailAndPassword(auth, email, pass);
+      if (getAdditionalUserInfo(credential)?.isNewUser) {
+        markOnboardingPending();
+      }
     } catch (error) {
       console.error("Email register failed:", error);
       throw error;

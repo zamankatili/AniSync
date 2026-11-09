@@ -26,6 +26,7 @@ const AniSyncDle = lazy(() => import('./pages/AniSyncDle').then(m => ({ default:
 const Arcade = lazy(() => import('./pages/Arcade').then(m => ({ default: m.Arcade })));
 const AnimeLifeSim = lazy(() => import('./pages/AnimeLifeSim').then(m => ({ default: m.AnimeLifeSim })));
 const AdminPage = lazy(() => import('./pages/admin/AdminPage').then(m => ({ default: m.AdminPage })));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="media/:id" element={<MediaDetail />} />
               
               {/* Private Routes Protected by PrivateRoute */}
+              <Route path="onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
               <Route path="watch-party" element={<PrivateRoute><WatchParty /></PrivateRoute>} />
               <Route path="watch-party/:roomId" element={<PrivateRoute><WatchParty /></PrivateRoute>} />
               <Route path="grid-maker" element={<PrivateRoute><AnimeGridMaker /></PrivateRoute>} />

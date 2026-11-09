@@ -32,7 +32,8 @@ export const DailyModalManager = () => {
       path.startsWith('/admin') ||
       path.startsWith('/anime-life-sim') ||
       path.startsWith('/music-quiz') ||
-      path.startsWith('/arcade')
+      path.startsWith('/arcade') ||
+      path.startsWith('/onboarding')
     ) {
       return;
     }

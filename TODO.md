@@ -8,6 +8,7 @@
 - [x] **Başlık büyütme (TR i→İ) düzeltmesi**: Anime/manga/karakter/ haber başlıklarına `lang="en"` verilerek Türkçe `text-transform` kuralının Latin başlıkları bozması engellendi (CHAİNSAW → CHAINSAW).
 - [x] **Bölüm sayısı gösterimi**: Canlı katalogda bilinmeyen okuma yerine "232 BÖLÜM" formatı (`multimedia_chapters_total`).
 - [x] **MAL/AniList import**: `ImportExportModal` artık uydurma kapak/skor basmıyor (DiceBear identicon, skor 8.0, 2023). `src/lib/importList.ts` CDATA/entitelü MAL XML + AniList JSON (`lists[].entries[].media`) ayrıştırır; `anilistByMalIds` 50'şerli batch ile kapak/özet/skor/yıl/türle zenginleştirir; zenginleştirme alınamazsa akış MAL verisiyle devam eder ve arayüz bunu belirtir.
+- [x] **Adım 2 — Nazik onboarding**: Kayıt sonrası tek sayfa `/onboarding` (PrivateRoute); isim + 2+ tür + canlı AniList önerileri (genre_in; TRENDING → POPULARITY), karttan tek dokunuşla "Listeme Ekle". Kanca: `anisync_onboarding_pending` (Google/e-posta kaydında), Layout yönlendirir; "Şimdilik Atla" her an; günlük modal yöneticisi atlar. **Sahte `['Action','Fantasy']` varsayılanları kaldırıldı** — sinyal yoksa "SENİN İÇİN SEÇİLDİ" artık gösterilmiyor.
 
 ## Sende (5 dk – 30 dk)
 - [ ] Firebase Console → Firestore → **Rules yayınla** (`firestore.rules`)

@@ -42,8 +42,9 @@ export const AnimeDetail = () => {
         counts[g.name] = (counts[g.name] || 0) + 1;
       });
     });
+    // Sinyalin yoksa kişisel öneri UYDURMA — boş liste dön
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
-    return sorted.length > 0 ? sorted.slice(0, 3) : ['Action', 'Fantasy'];
+    return sorted.slice(0, 3);
   }, [userProfile.favoriteGenres, watchlist]);
 
   // Check matching genres
