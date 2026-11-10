@@ -76,6 +76,40 @@ export const getSafeImageUrl = (url?: string): string => {
   return secureUrl;
 };
 
+/**
+ * Firestore Timestamp, { seconds, nanoseconds }, ISO string, sayı veya Date'i
+ * güvenli biçimde Date'e çevirir. Anonim/yerel mesajlarda `toDate()` bulunmadığı
+ * için doğrudan çağrı yapmak uygulamayı çökertiyordu (bkz. GlobalChat).
+ */
+export const toDateSafe = (value: unknown): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value === 'number') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value === 'string') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value === 'object') {
+    const candidate = value as { toDate?: () => Date; seconds?: number; nanoseconds?: number };
+    if (typeof candidate.toDate === 'function') {
+      try {
+        const d = candidate.toDate();
+        return d instanceof Date && !Number.isNaN(d.getTime()) ? d : null;
+      } catch {
+        return null;
+      }
+    }
+    if (typeof candidate.seconds === 'number') {
+      const d = new Date(candidate.seconds * 1000 + (candidate.nanoseconds ?? 0) / 1e6);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+  }
+  return null;
+};
+
 export const formatRelativeTime = (dateString: string | number | Date) => {
   const date = new Date(dateString);
   const now = new Date();

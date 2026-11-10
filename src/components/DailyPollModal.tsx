@@ -4,7 +4,7 @@ import { X, CheckCircle2, TrendingUp, Sparkles, MessageCircle } from 'lucide-rea
 import { useToastStore } from '../store/useToastStore';
 import { useAppStore } from '../context/AppStore';
 import { getSafeImageUrl, cn, handleImageError } from '../lib/utils';
-import { doc, getDoc, setDoc, updateDoc, increment, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, increment, runTransaction } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
@@ -78,14 +78,26 @@ export const DailyPollModal: React.FC<DailyPollModalProps> = ({ isOpen, onClose 
     if (currentUser) {
       try {
         const voteRef = doc(db, `polls/${activePoll.id}/votes/${currentUser.uid}`);
-        await setDoc(voteRef, { optionId: selectedOption, timestamp: new Date().toISOString() });
-        // Veritabanındaki sayaçları güncelle - Prototype için
         const pollRef = doc(db, 'polls', activePoll.id);
-        await updateDoc(pollRef, {
-          [`votes.${selectedOption}`]: increment(1)
+        const optionId = selectedOption;
+
+        // Tek oy güvencesi + sayaç atomikliği: aynı kullanıcı iki kez oy veremez.
+        await runTransaction(db, async (tx) => {
+          const voteSnap = await tx.get(voteRef);
+          if (voteSnap.exists()) throw new Error('ALREADY_VOTED');
+          tx.set(voteRef, { optionId, timestamp: new Date().toISOString() });
+          tx.update(pollRef, { [`votes.${optionId}`]: increment(1) });
         });
       } catch (e) {
-        console.error("Vote save error", e);
+        const alreadyVoted = e instanceof Error && e.message === 'ALREADY_VOTED';
+        if (!alreadyVoted) {
+          // İyimser sayacı geri al
+          setLocalVotes(prev => ({
+            ...prev,
+            [selectedOption]: Math.max(0, (prev[selectedOption] || 1) - 1)
+          }));
+          addToast(t('poll_vote_failed', { defaultValue: 'Oyun kaydedilemedi. Tekrar dene.' }), 'error');
+        }
       }
     } else {
       localStorage.setItem(`anisync_daily_poll_${activePoll.id}`, JSON.stringify({

@@ -587,7 +587,9 @@ export const Layout = () => {
         onClose={closeScheduleModal} 
         initialTab={modalInitialTab} 
       />
-      <GlobalChat />
+      <AnimeErrorBoundary>
+        <GlobalChat />
+      </AnimeErrorBoundary>
       <AnimeRadioPlayer />
       <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
       <ErrorConsoleModal />

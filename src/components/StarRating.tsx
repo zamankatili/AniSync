@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { db } from '../firebase';
-import { doc, getDoc, setDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, runTransaction } from 'firebase/firestore';
 import { useAppStore } from '../context/AppStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useToastStore } from '../store/useToastStore';
@@ -55,36 +55,48 @@ export const StarRating = ({ animeId }: { animeId: number }) => {
       addToast(t('login_required'), 'error');
       return;
     }
-    
+
     // Optimistic UI update
     const oldRating = userRating;
+    const oldAvg = averageRating;
+    const oldTotal = totalRatings;
     setUserRating(rating);
-    
+
     try {
-       const userRatingRef = doc(db, `animeRatings/${animeId}/ratings`, currentUser.uid);
-       const animeRef = doc(db, 'animeRatings', animeId.toString());
-       
-       await setDoc(userRatingRef, { rating });
-       
-       // Calculate new average
-       const ratingsSnapshot = await getDocs(collection(db, `animeRatings/${animeId}/ratings`));
-       let sum = 0;
-       let count = 0;
-       ratingsSnapshot.forEach((doc) => {
-         sum += doc.data().rating;
-         count += 1;
-       });
-       
-       const avg = count > 0 ? (sum / count) : 0;
-       setAverageRating(avg);
-       setTotalRatings(count);
-       
-       await setDoc(animeRef, { averageRating: avg, totalRatings: count }, { merge: true });
-       addToast(t('rating_saved'), 'success');
+      const userRatingRef = doc(db, `animeRatings/${animeId}/ratings`, currentUser.uid);
+      const animeRef = doc(db, 'animeRatings', animeId.toString());
+
+      // Transaction: tek kullanıcı tek oy; özet sayaç atomik güncellenir (O(1), yarışsız).
+      const result = await runTransaction(db, async (tx) => {
+        const userSnap = await tx.get(userRatingRef);
+        const animeSnap = await tx.get(animeRef);
+
+        const prevRating = userSnap.exists() ? Number(userSnap.data().rating) || 0 : 0;
+        const data = animeSnap.exists() ? animeSnap.data() : {};
+        const prevTotal = Number(data.totalRatings) || 0;
+        // Eski kayıtlarda sumRatings yoksa ortalamadan türet.
+        const prevSum = typeof data.sumRatings === 'number'
+          ? data.sumRatings
+          : (Number(data.averageRating) || 0) * prevTotal;
+
+        const newTotal = prevRating > 0 ? prevTotal : prevTotal + 1;
+        const newSum = prevSum - prevRating + rating;
+        const avg = newTotal > 0 ? newSum / newTotal : 0;
+
+        tx.set(userRatingRef, { rating, updatedAt: new Date().toISOString() });
+        tx.set(animeRef, { averageRating: avg, totalRatings: newTotal, sumRatings: newSum }, { merge: true });
+        return { avg, newTotal };
+      });
+
+      setAverageRating(result.avg);
+      setTotalRatings(result.newTotal);
+      addToast(t('rating_saved'), 'success');
     } catch (e) {
-       console.error(e);
-       setUserRating(oldRating); // Backtrack
-       addToast('Error', 'error');
+      console.error(e);
+      setUserRating(oldRating); // Backtrack
+      setAverageRating(oldAvg);
+      setTotalRatings(oldTotal);
+      addToast('Error', 'error');
     }
   };
 

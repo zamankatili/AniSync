@@ -6,6 +6,7 @@ service cloud.firestore {
     function isBootstrapAdminEmail() {
       return request.auth != null
         && request.auth.token.email != null
+        && request.auth.token.email_verified == true
         && request.auth.token.email in ['zamankatilii@gmail.com'];
     }
     function isSignedIn() {
@@ -89,12 +90,20 @@ service cloud.firestore {
     match /polls/{id} {
       allow read: if true;
       allow create, delete: if isAdminOnly();
-      // Sadece `votes` haritasını değiştirebilir (oy sayacı sapması düşük riskli, admin sıfırlayabilir)
-      allow update: if isAdminOnly() || (isSignedIn() && affectedKeys().hasOnly(['votes']));
+      // Sayaç güncellemesi: yalnız `votes` haritası; mevcut seçenek anahtarları korunur,
+      // yeni anahtar eklenemez/çıkarılamaz. (Tek oy kuralı istemci transaction'ı + votes/{uid} ile.)
+      allow update: if isAdminOnly()
+        || (isSignedIn()
+            && affectedKeys().hasOnly(['votes'])
+            && request.resource.data.votes is map
+            && request.resource.data.votes.keys().hasAll(resource.data.votes.keys())
+            && request.resource.data.votes.keys().hasOnly(resource.data.votes.keys()));
 
       match /votes/{uid} {
         allow read: if true;
-        allow write: if isSignedIn() && request.auth.uid == uid;
+        allow create, update: if isSignedIn() && request.auth.uid == uid
+          && request.resource.data.optionId is string;
+        allow delete: if isAdmin();
       }
     }
     match /suggestedPolls/{id} { allow read: if isAdmin(); allow create: if isSignedIn(); allow update, delete: if isAdmin(); }
@@ -120,6 +129,29 @@ service cloud.firestore {
     }
 
     // ─── Anime yorumları ───────────────────────────────────────
+    // Yıldız puanları: `animeRatings/{animeId}` özet + `ratings/{uid}` tek oy.
+    // Özet dokümanı istemci transaction ile günceller; değerler aralık dışına çıkamaz.
+    match /animeRatings/{animeId} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+        && request.resource.data.averageRating is number
+        && request.resource.data.averageRating >= 0
+        && request.resource.data.averageRating <= 5
+        && request.resource.data.totalRatings is int
+        && request.resource.data.totalRatings >= 0
+        && (!request.resource.data.keys().hasAny(['sumRatings']) || request.resource.data.sumRatings is number);
+      allow delete: if isAdminOnly();
+
+      match /ratings/{uid} {
+        allow read: if true;
+        allow create, update: if isSignedIn() && request.auth.uid == uid
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5;
+        allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      }
+    }
+
     // Chat canlı etkinlik RSVP'leri: everyone reads count; only own write
     match /chatEventRsvps/{uid} {
       allow read: if true;
@@ -178,10 +210,15 @@ service cloud.firestore {
         && data.name is string && data.name.size() > 0 && data.name.size() <= 40
         && data.topic is string && data.topic.size() <= 160
         && data.icon is string && data.icon.size() > 0 && data.icon.size() <= 8
-        && data.createdBy.uid == request.auth.uid
         && data.createdBy.name is string
         && data.karmaAtCreation is int
-        && data.source in ['direct', 'approved'];
+        && data.source in ['direct', 'approved']
+        // Doğrudan oda: kullanıcı yalnız kendi adına açar.
+        // Onaylı oda: moderatör, isteği onaylarken istek sahibi adına oluşturur.
+        && (
+          (data.source == 'direct' && data.createdBy.uid == request.auth.uid)
+          || (data.source == 'approved' && isAdmin())
+        );
     }
     function isValidRoomRequest(data) {
       return data.keys().hasOnly(['name', 'topic', 'icon', 'requestedBy', 'status', 'votes', 'voters', 'createdAt', 'aiVerdict', 'aiReason', 'modNote', 'approvedBy', 'approvedAt', 'rejectedBy'])
@@ -223,8 +260,16 @@ service cloud.firestore {
     match /watchPartyRooms/{id} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.hostId == request.auth.uid;
-      // İzleme senkronu herkese açık (oda içi), silme host/admin'e
-      allow update: if isSignedIn();
+      // Oynatma senkronu: host/admin her alanı; diğer imzalı kullanıcılar yalnız
+      // kilit açıkken oynatma zamanını değiştirebilir. videoId/title/lock host'a kapalıdır.
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.hostId == request.auth.uid)
+        || (isSignedIn()
+            && resource.data.isLocked != true
+            && affectedKeys().hasOnly(['isPlaying', 'currentTime', 'updatedAt'])
+            && request.resource.data.currentTime is int
+            && request.resource.data.currentTime >= 0
+            && request.resource.data.currentTime <= 86400);
       allow delete: if isAdmin() || (isSignedIn() && resource.data.hostId == request.auth.uid);
 
       match /messages/{mid} {

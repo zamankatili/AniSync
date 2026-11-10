@@ -73,6 +73,13 @@ const DEFAULT_USER_NAMED_LISTS: UserNamedList[] = [
   }
 ];
 
+const DEFAULT_GUEST_PROFILE: UserProfile = {
+  name: 'Hikikomori',
+  handle: 'otaku_master',
+  avatarSeed: 'Me',
+  joinYear: new Date().getFullYear(),
+};
+
 const AppContext = createContext<AppState | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -93,20 +100,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
   
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('anisync_profile');
-    if (saved) return JSON.parse(saved);
-    return {
-      name: 'Hikikomori',
-      handle: 'otaku_master',
-      avatarSeed: 'Me',
-      joinYear: new Date().getFullYear()
-    };
+    try {
+      const saved = localStorage.getItem('anisync_profile');
+      if (saved) return JSON.parse(saved) as UserProfile;
+    } catch {
+      // bozuk kayıt → misafir profili
+    }
+    return { ...DEFAULT_GUEST_PROFILE };
   });
-  
+
   const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
   const [friends] = useState<Friend[]>([]);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [uid, setUid] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   
   // Daily Poll (src/hooks/useDailyPoll.ts — koleksiyonu dinler, rotasyona göre seçer)
@@ -133,9 +140,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [auth.currentUser]);
 
   // Firestore Sync Effect for Watchlist & Auth
+  // Not: watchlist listener'ı auth callback'inin İÇİNDE kurulmaz; aksi halde
+  // dönen unsubscribe Firebase tarafından yok sayılır ve her token yenilemesinde
+  // listener sızar. Listener ayrı effect'te uid'e bağlıdır.
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      setUid(user?.uid ?? null);
       setAuthLoading(false);
       if (user) {
         setUserProfile(prev => ({
@@ -143,52 +154,71 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           name: user.displayName || prev.name,
           handle: user.email?.split('@')[0] || prev.handle,
         }));
-        
-        // Sync Profile Data
-        setDoc(doc(db, `users/${user.uid}`), {
-          name: user.displayName || 'Hikikomori',
-          handle: user.email?.split('@')[0] || 'otaku_master',
-          photoURL: user.photoURL || null
-        }, { merge: true });
-
-        // Sync local watchlist to Firestore
-        const localWatchlistString = localStorage.getItem('anisync_watchlist');
-        if (localWatchlistString) {
-          try {
-            const localWatchlist = JSON.parse(localWatchlistString) as WatchlistItem[];
-            if (localWatchlist.length > 0) {
-              const batch = writeBatch(db);
-              localWatchlist.forEach(item => {
-                const docRef = doc(db, `users/${user.uid}/watchlist`, item.anime.mal_id.toString());
-                batch.set(docRef, item, { merge: true });
-              });
-              await batch.commit();
-              // Only clear local storage after successful sync
-              localStorage.removeItem('anisync_watchlist');
-            }
-          } catch(e) {
-            console.error("Local sync error", e);
-          }
-        }
-
-        // Listen to watchlist in firestore
-        const wq = collection(db, `users/${user.uid}/watchlist`);
-        const unsubWatchlist = onSnapshot(wq, (snapshot) => {
-          const wlist: WatchlistItem[] = [];
-          snapshot.forEach((doc) => {
-            wlist.push(doc.data() as WatchlistItem);
-          });
-          setWatchlist(wlist.sort((a,b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()));
-        }, (err) => {
-          console.warn("Watchlist listener permission or network error:", err);
-        });
-        return () => unsubWatchlist();
       } else {
+        // Çıkış: kişisel veriyi state'ten ve cihazdan temizle (paylaşılan cihaz).
         setWatchlist([]);
+        setUserProfile({ ...DEFAULT_GUEST_PROFILE, joinYear: new Date().getFullYear() });
+        setForumPosts([]);
+        try {
+          localStorage.removeItem('anisync_profile');
+        } catch {
+          // localStorage kapalıysa yoksay
+        }
       }
     });
     return () => unsubscribeAuth();
   }, []);
+
+  useEffect(() => {
+    if (!uid) return;
+    const user = auth.currentUser;
+    if (!user) return;
+    let alive = true;
+
+    // Profil dokümanını bir kez senkronla (rol/ban alanlarına dokunmaz).
+    setDoc(doc(db, `users/${uid}`), {
+      name: user.displayName || 'Hikikomori',
+      handle: user.email?.split('@')[0] || 'otaku_master',
+      photoURL: user.photoURL || null,
+    }, { merge: true }).catch((err) => console.warn('Profile sync failed:', err));
+
+    // Yerel (misafir) watchlist'i hesaba taşı — yalnızca bir kez.
+    (async () => {
+      try {
+        const localWatchlistString = localStorage.getItem('anisync_watchlist');
+        if (!localWatchlistString) return;
+        const localWatchlist = JSON.parse(localWatchlistString) as WatchlistItem[];
+        if (!Array.isArray(localWatchlist) || localWatchlist.length === 0) return;
+        const batch = writeBatch(db);
+        localWatchlist.forEach(item => {
+          const docRef = doc(db, `users/${uid}/watchlist`, item.anime.mal_id.toString());
+          batch.set(docRef, item, { merge: true });
+        });
+        await batch.commit();
+        if (!alive) return;
+        localStorage.removeItem('anisync_watchlist');
+      } catch (e) {
+        console.warn('Local watchlist sync failed:', e);
+      }
+    })();
+
+    // Hesabın watchlist'ini dinle.
+    const wq = collection(db, `users/${uid}/watchlist`);
+    const unsubWatchlist = onSnapshot(wq, (snapshot) => {
+      const wlist: WatchlistItem[] = [];
+      snapshot.forEach((docSnap) => {
+        wlist.push(docSnap.data() as WatchlistItem);
+      });
+      setWatchlist(wlist.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()));
+    }, (err) => {
+      console.warn('Watchlist listener permission or network error:', err);
+    });
+
+    return () => {
+      alive = false;
+      unsubWatchlist();
+    };
+  }, [uid]);
 
   const markOnboardingPending = () => {
     try {

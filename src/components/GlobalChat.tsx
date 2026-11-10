@@ -7,7 +7,8 @@ import {
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, where, getDoc, getCountFromServer, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useRemoteConfig } from '../hooks/useRemoteConfig';
-import { cn, formatRelativeTime } from '../lib/utils';
+import { cn, toDateSafe } from '../lib/utils';
+import { formatRelativeTime } from '../lib/relativeTime';
 import { useToastStore } from '../store/useToastStore';
 import { ReportButton } from './ReportButton';
 import { isBootstrapAdminEmail } from '../lib/adminConfig';
@@ -523,7 +524,7 @@ export const GlobalChat = () => {
                             "text-[8px] font-bold text-neutral-500 uppercase tracking-widest px-1 flex items-center gap-2",
                             isMe ? "text-right" : "text-left"
                           )}>
-                            {msg.createdAt ? formatRelativeTime(msg.createdAt.toDate()) : t('chat_now')}
+                            {formatRelativeTime(toDateSafe(msg.createdAt)?.toISOString(), i18n.language) || t('chat_now')}
                             {!isMe && (
                               <ReportButton
                                 target={{ targetPath: `globalChat/${msg.id}`, targetLabel: msg.text?.slice(0, 60) }}

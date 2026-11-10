@@ -210,6 +210,13 @@ export const VoiceDuel = () => {
                   className="absolute inset-0 w-full h-full border-0"
                 />
               )}
+              {/* Karakter görünmesin: yalnızca ses. Cevap verilince overlay kalkar. */}
+              {iframeSrc && selected === null && (
+                <div className="absolute inset-0 z-10 bg-black pointer-events-none flex flex-col items-center justify-center">
+                  <span className="font-serif font-black text-7xl text-amber-400 leading-none">?</span>
+                  <span className="mt-3 font-mono text-[10px] uppercase tracking-[0.3em] text-neutral-400">Ses ile tahmin et</span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between gap-3">

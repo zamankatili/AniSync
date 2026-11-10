@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, 
   Maximize, Minimize, Lock, Unlock, Crown, RefreshCw, 
@@ -39,33 +39,82 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'drift'>('synced');
   const [lastActionToast, setLastActionToast] = useState<string | null>(null);
+  const [duration, setDuration] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Sync internal state with Firestore room updates
+  /** YouTube IFrame API'sine komut gönder (harici script gerekmez). */
+  const postCommand = useCallback((func: string, args: unknown[] = []) => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func, args }),
+      '*',
+    );
+  }, []);
+
+  /**
+   * Embed src'i SABİT tutulur: yalnız video değişince değişir.
+   * Önceki sürümde `start=${Math.floor(localTime)}` her saniye src'yi değiştiriyor,
+   * YouTube iframe'i her saniye yeniden yükleniyordu (oynatma imkansız).
+   */
+  const embedSrc = useMemo(
+    () => `https://www.youtube.com/embed/${room.youtubeId}?enablejsapi=1&controls=1&rel=0&modestbranding=1&playsinline=1&autoplay=0&origin=${encodeURIComponent(window.location.origin)}`,
+    [room.youtubeId],
+  );
+
+  // YouTube player'dan gelen currentTime/duration/state bilgisini dinle.
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.youtube.com') return;
+      let payload: any = event.data;
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload);
+        } catch {
+          return;
+        }
+      }
+      const info = payload?.info;
+      if (!info) return;
+      if (typeof info.currentTime === 'number' && Number.isFinite(info.currentTime)) {
+        setLocalTime(Math.floor(info.currentTime));
+      }
+      if (typeof info.duration === 'number' && info.duration > 0) {
+        setDuration(info.duration);
+      }
+      if (typeof info.playerState === 'number') {
+        setIsPlaying(info.playerState === 1);
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  // Oda (host) durumu değiştiğinde player'ı gerçekten senkronla.
   useEffect(() => {
     setIsPlaying(room.isPlaying);
-    // If incoming room time is significantly different (> 3s), jump local time
     if (Math.abs(room.currentTime - localTime) > 3) {
       setLocalTime(room.currentTime);
+      postCommand('seekTo', [room.currentTime, true]);
       setSyncStatus('synced');
     }
-  }, [room.currentTime, room.isPlaying]);
+    postCommand(room.isPlaying ? 'playVideo' : 'pauseVideo');
+    // localTime bilinçli olarak dışarıda: her tick'te komut yağmuru olmasın.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room.currentTime, room.isPlaying, postCommand]);
 
-  // Local ticker when playing
+  // Ses seviyesi / sessize alma gerçek player'a uygulanır.
   useEffect(() => {
-    let interval: any = null;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setLocalTime((prev) => {
-          const next = prev + 1;
-          return next > 600 ? 0 : next;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+    postCommand('setVolume', [Math.round(volume * 100)]);
+    postCommand(isMuted ? 'mute' : 'unMute');
+  }, [volume, isMuted, postCommand]);
+
+  const handleIframeLoad = () => {
+    postCommand('setVolume', [Math.round(volume * 100)]);
+    postCommand(isMuted ? 'mute' : 'unMute');
+    if (room.isPlaying) postCommand('playVideo');
+    if (room.currentTime > 0) postCommand('seekTo', [room.currentTime, true]);
+  };
 
   const handlePlayToggle = async () => {
     if (!canControl) {
@@ -75,6 +124,7 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
     }
     const nextState = !isPlaying;
     setIsPlaying(nextState);
+    postCommand(nextState ? 'playVideo' : 'pauseVideo');
     await togglePlayPause(room.id, nextState, localTime);
   };
 
@@ -84,8 +134,10 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
       setTimeout(() => setLastActionToast(null), 3000);
       return;
     }
-    const clamped = Math.max(0, Math.min(newSec, 300));
+    const upper = duration > 0 ? duration : 86400;
+    const clamped = Math.max(0, Math.min(Math.floor(newSec), upper));
     setLocalTime(clamped);
+    postCommand('seekTo', [clamped, true]);
     await seekTo(room.id, clamped);
   };
 
@@ -93,6 +145,8 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
     setSyncStatus('syncing');
     setLocalTime(room.currentTime);
     setIsPlaying(room.isPlaying);
+    postCommand('seekTo', [room.currentTime, true]);
+    postCommand(room.isPlaying ? 'playVideo' : 'pauseVideo');
     setTimeout(() => {
       setSyncStatus('synced');
       setLastActionToast(t('watch_party_player_synced'));
@@ -115,7 +169,14 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
     sendReaction(room.id, currentUser, typeId);
   };
 
-  const youtubeEmbedUrl = `https://www.youtube.com/embed/${room.youtubeId}?autoplay=${isPlaying ? 1 : 0}&start=${Math.floor(localTime)}&controls=1&rel=0&modestbranding=1&enablejsapi=1`;
+  const handleMuteToggle = () => {
+    setIsMuted(prev => !prev);
+  };
+
+  const handleVolumeChange = (value: number) => {
+    setVolume(value);
+    if (isMuted && value > 0) setIsMuted(false);
+  };
 
   return (
     <div ref={containerRef} className="flex flex-col bg-black border-4 border-black neo-shadow select-none relative">
@@ -163,8 +224,9 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
         {room.youtubeId ? (
           <iframe
             ref={iframeRef}
-            src={youtubeEmbedUrl}
+            src={embedSrc}
             title={room.title}
+            onLoad={handleIframeLoad}
             className="w-full h-full border-0 pointer-events-auto"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
@@ -197,18 +259,18 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
             <input
               type="range"
               min="0"
-              max="240"
-              value={localTime}
+              max={duration > 0 ? Math.floor(duration) : 0}
+              value={duration > 0 ? Math.min(localTime, Math.floor(duration)) : 0}
               onChange={(e) => handleSeek(parseFloat(e.target.value))}
-              disabled={!canControl}
+              disabled={!canControl || duration <= 0}
               className={cn(
                 "w-full h-2 accent-rose-600 bg-neutral-800 rounded-none border border-white/30 cursor-pointer",
-                !canControl && "cursor-not-allowed opacity-75"
+                (!canControl || duration <= 0) && "cursor-not-allowed opacity-75"
               )}
             />
           </div>
           <span className="text-[11px] font-mono font-bold text-neutral-500 w-10">
-            04:00
+            {duration > 0 ? formatVideoTime(duration) : '--:--'}
           </span>
         </div>
 
@@ -266,7 +328,7 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
           <div className="flex items-center gap-2">
             {/* Volume */}
             <button
-              onClick={() => setIsMuted(!isMuted)}
+              onClick={handleMuteToggle}
               className="p-1.5 text-neutral-400 hover:text-white transition-colors cursor-pointer"
             >
               {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
@@ -277,10 +339,7 @@ export const VideoPlayerDeck: React.FC<VideoPlayerDeckProps> = ({
               max="1"
               step="0.05"
               value={isMuted ? 0 : volume}
-              onChange={(e) => {
-                setVolume(parseFloat(e.target.value));
-                if (isMuted) setIsMuted(false);
-              }}
+              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
               className="w-16 accent-amber-400 h-1 bg-neutral-800 cursor-pointer hidden sm:inline-block"
             />
 

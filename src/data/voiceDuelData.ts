@@ -139,5 +139,18 @@ export const scoreFor = (clipId: string, streak: number): number => {
 };
 
 export const getRound = (count = 10): VoiceClip[] => {
-    return [...VOICE_CLIPS].sort(() => Math.random() - 0.5).slice(0, count);
+    return [...VOICE_CLIPS]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, count)
+        .map((clip) => ({ ...clip, options: shuffleOptions(clip.options) }));
+};
+
+/** Şıkları Fisher–Yates ile karıştırır — doğru cevap hep aynı sırada kalmasın. */
+const shuffleOptions = (options: readonly string[]): [string, string, string, string] => {
+    const result = [...options];
+    for (let i = result.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result as [string, string, string, string];
 };

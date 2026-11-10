@@ -83,6 +83,8 @@ export interface UserProfile {
   joinYear: number;
   favoriteGenres?: string[];
   bio?: string;
+  /** Firestore `users/{uid}.role` — yalnız admin/moderatör için dolu. İstemci yazamaz (rules). */
+  role?: 'admin' | 'moderator' | 'user';
 }
 
 export interface SocialFeedPost {

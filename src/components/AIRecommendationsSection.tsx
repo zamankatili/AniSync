@@ -10,10 +10,10 @@ import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { localizeGenre } from '../lib/genreNames';
-import { AI_FALLBACK_REASONS, AI_FALLBACK_SYNOPSIS, pickLocalized } from '../data/localizedContent';
+import { AI_FALLBACK_REASONS, pickLocalized } from '../data/localizedContent';
 import { cn, getSafeImageUrl } from '../lib/utils';
 import { apiUrl } from '../lib/apiBase';
-import { Anime } from '../types';
+import { fetchAnimeFallback } from '../lib/api/animeBridge';
 
 export interface AIRecommendationItem {
   id: number;
@@ -87,6 +87,7 @@ export const AIRecommendationsSection: React.FC = () => {
 
   const [recommendations, setRecommendations] = useState<AIRecommendationItem[]>(FALLBACK_RECOMMENDATIONS);
   const [isAiGenerated, setIsAiGenerated] = useState<boolean>(false);
+  const [aiUnavailable, setAiUnavailable] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
 
@@ -112,16 +113,20 @@ export const AIRecommendationsSection: React.FC = () => {
       const data = await res.json();
       if (data.recommendations && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
         setRecommendations(data.recommendations);
-        setIsAiGenerated(data.aiGenerated === true);
-        addToast(t('ai_recs_updated'), 'success');
+        const generated = data.aiGenerated === true;
+        setIsAiGenerated(generated);
+        setAiUnavailable(!generated);
+        if (generated) addToast(t('ai_recs_updated'), 'success');
       } else {
         setRecommendations(FALLBACK_RECOMMENDATIONS);
         setIsAiGenerated(false);
+        setAiUnavailable(true);
       }
     } catch (err) {
       console.warn('AI recommendations fetch notice:', err);
       setRecommendations(FALLBACK_RECOMMENDATIONS);
       setIsAiGenerated(false);
+      setAiUnavailable(true);
     } finally {
       setLoading(false);
     }
@@ -131,24 +136,14 @@ export const AIRecommendationsSection: React.FC = () => {
     fetchAIRecommendations();
   }, [watchlist.length]);
 
-  const handleAddToList = (rec: AIRecommendationItem) => {
-    const mockAnime: Anime = {
-      mal_id: rec.id,
-      title: rec.title,
-      title_english: rec.englishTitle || rec.title,
-      images: {
-        jpg: { image_url: rec.imageUrl, large_image_url: rec.imageUrl },
-        webp: { image_url: rec.imageUrl, large_image_url: rec.imageUrl }
-      },
-      synopsis: pickLocalized(AI_FALLBACK_SYNOPSIS[rec.id], rec.synopsis),
-      score: rec.score,
-      episodes: rec.episodes,
-      status: 'Finished Airing',
-      genres: rec.genres.map((g, idx) => ({ mal_id: idx + 1, name: g })),
-      year: 2024
-    };
-
-    addToWatchlist(mockAnime, 'plan_to_watch');
+  const handleAddToList = async (rec: AIRecommendationItem) => {
+    const anime = await fetchAnimeFallback(rec.id);
+    if (!anime) {
+      // Uydurma metadata ile listeye eklemek yerine dürüstçe hata ver.
+      addToast(t('ai_rec_add_failed', { defaultValue: 'Bu serinin bilgileri şu an alınamadı. Lütfen detay sayfasından ekle.' }), 'error');
+      return;
+    }
+    addToWatchlist(anime, 'plan_to_watch');
     setAddedIds((prev) => new Set(prev).add(rec.id));
     addToast(t('added_to_list_toast', { title: rec.title }), 'success');
   };
@@ -174,7 +169,9 @@ export const AIRecommendationsSection: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider">
-              {t('ai_recs_subtitle', { count: watchlist.length })}
+              {isAiGenerated
+                ? t('ai_recs_subtitle', { count: watchlist.length })
+                : t('ai_recs_curated_subtitle', { defaultValue: 'Yapay zekâ şu an devre dışı — aşağıdakiler elle seçilmiş editör önerileridir.' })}
             </p>
           </div>
         </div>
@@ -188,6 +185,18 @@ export const AIRecommendationsSection: React.FC = () => {
           <span>{loading ? t('analyzing') : t('refresh_recs')}</span>
         </button>
       </div>
+
+      {/* Dürüstlük notu: AI kapalıyken kullanıcıya açıkça söyle */}
+      {aiUnavailable && !isAiGenerated && (
+        <div className="mb-4 border-2 border-amber-400/60 bg-amber-950/40 px-3 py-2 text-[11px] font-bold text-amber-200 uppercase tracking-wide relative z-10 flex items-start gap-2">
+          <Sparkles size={14} className="shrink-0 mt-0.5" />
+          <span>
+            {t('ai_recs_unavailable_desc', {
+              defaultValue: 'AI öneri servisi şu an kapalı. Kartlar sahte yüzdeler içermez; elle seçilmiş editör önerileridir.',
+            })}
+          </span>
+        </div>
+      )}
 
       {/* Recommendations Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
