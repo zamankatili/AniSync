@@ -4,6 +4,7 @@ import {
   serverTimestamp, query, orderBy, limit
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { FALLBACK_ANIME_COVER } from '../lib/utils';
 import { 
   WatchPartyRoomData, WatchPartyMessage, FloatingReaction,
   REACTION_TYPES, extractYouTubeId
@@ -132,8 +133,8 @@ export const useWatchPartyStore = create<WatchPartyState>((set, get) => ({
     const newRoom: Omit<WatchPartyRoomData, 'id'> = {
       title: roomData.title || 'Anime Birlikte İzleme Odası',
       animeTitle: roomData.animeTitle || 'Seçili Anime',
-      animeImage: roomData.animeImage || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&auto=format&fit=crop',
-      animeId: roomData.animeId || 58514,
+      animeImage: roomData.animeImage || FALLBACK_ANIME_COVER,
+      animeId: roomData.animeId ?? 0,
       videoUrl: roomData.videoUrl || 'https://www.youtube.com/watch?v=4d_Jd2zY3jY',
       youtubeId: youtubeId || '4d_Jd2zY3jY',
       hostId: user.uid,

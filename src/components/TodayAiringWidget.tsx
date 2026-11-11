@@ -4,12 +4,17 @@ import { fetchLiveScheduleForDay } from '../lib/airingService';
 import { Calendar, Clock, ChevronRight, Bell, BellRing } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getSafeImageUrl, cn } from '../lib/utils';
+import { animeDetailPath } from '../lib/mediaLinks';
 import { useReminderStore } from '../store/useReminderStore';
 import { useToastStore } from '../store/useToastStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
 export const TodayAiringWidget: React.FC = () => {
   const navigate = useNavigate();
+  const goToAnime = (anime: { mal_id?: number | null; anilist_id?: number | null }) => {
+    const path = animeDetailPath(anime);
+    if (path) navigate(path);
+  };
   const { t } = useAppTranslation();
   const { isReminderSet, addReminder, removeReminder, openScheduleModal, notificationPermission, requestPermission } = useReminderStore();
   const { addToast } = useToastStore();
@@ -100,7 +105,7 @@ export const TodayAiringWidget: React.FC = () => {
           return (
             <div 
               key={anime.id}
-              onClick={() => navigate(`/anime/${anime.mal_id}`)}
+              onClick={() => goToAnime(anime)}
               className={cn(
                 "flex items-center gap-3 p-2 bg-neutral-900 border transition-colors cursor-pointer group",
                 isSet ? "border-amber-400 bg-neutral-950" : "border-white/20 hover:border-amber-400"

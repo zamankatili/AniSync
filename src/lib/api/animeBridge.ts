@@ -46,6 +46,9 @@ export function toLegacyAnime(media: UnifiedMedia, fallbackMalId?: number): Anim
 
   return {
     mal_id: media.externalIds?.mal ?? fallbackMalId ?? 0,
+    anilist_id:
+      media.externalIds?.anilist ??
+      (Number.isFinite(Number(media.sourceId)) && Number(media.sourceId) > 0 ? Number(media.sourceId) : undefined),
     title: media.title.romaji || media.displayTitle,
     title_english: media.title.english ?? null,
     images: {

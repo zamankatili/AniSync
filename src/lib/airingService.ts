@@ -151,8 +151,9 @@ function mapAniListEntry(entry: any, day: DayOfWeek): AiringAnime | null {
   if (media.status && media.status !== 'RELEASING') return null;
   if (media.isAdult === true) return null;
 
-  const idMal = typeof media.idMal === 'number' ? media.idMal : Number(media.id) || 0;
-  if (!idMal) return null;
+  const idMal = typeof media.idMal === 'number' && media.idMal > 0 ? media.idMal : 0;
+  const aniListId = Number(media.id) || 0;
+  if (!idMal && !aniListId) return null;
 
   const airingAt: number = entry.airingAt;
   const synopsis = media.description ? stripHtml(media.description).slice(0, 220) : '';
@@ -161,6 +162,7 @@ function mapAniListEntry(entry: any, day: DayOfWeek): AiringAnime | null {
   return {
     id: `anilist_${media.id}_${entry.episode ?? 'x'}`,
     mal_id: idMal,
+    anilist_id: aniListId || undefined,
     title: media.title?.romaji || media.title?.english || 'Bilinmeyen Anime',
     title_english: media.title?.english || media.title?.romaji || 'Bilinmeyen Anime',
     day,

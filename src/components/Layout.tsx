@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight, Mic2 } from 'lucide-react';
 import { cn, getSafeImageUrl, handleImageError } from '../lib/utils';
+import { animeDetailPath } from '../lib/mediaLinks';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ToastContainer } from './Toast';
 import { useAnimeData } from '../hooks/useAnimeData';
@@ -21,6 +22,7 @@ import { useThemeStore, THEME_CONFIGS } from '../store/useThemeStore';
 import { GlobalSearchModal } from './GlobalSearchModal';
 import { ErrorConsoleModal } from './ErrorConsoleModal';
 import { AnimeErrorBoundary } from './AnimeErrorBoundary';
+import { Footer } from './Footer';
 
 // Sol kenarlık menüsü — gruplu ve ölçeklenebilir yapı.
 // Her grup bir bölüm başlığı (i18n) ve maddelerden oluşur; sıra mobil alt menüyle tutarlıdır.
@@ -136,12 +138,12 @@ export const Layout = () => {
           if (!notifiedMap.has(key)) {
             notifiedMap.add(key);
             if (rem.soundEnabled) playChimeSound();
-            addToast(`⏰ "${rem.title_english || rem.title}" yeni bölümü birazdan yayında! (${rem.timeTR} TR)`, 'info');
+            addToast(t('reminder_toast', { title: rem.title_english || rem.title, time: rem.timeTR }), 'info');
             if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && rem.browserNotify) {
-              new Notification(`📺 ${rem.title_english || rem.title} Yayınlanıyor!`, {
+              new Notification(t('reminder_notify_title', { title: rem.title_english || rem.title }), {
                 body: rem.currentEpisode
-                  ? `Bölüm ${rem.currentEpisode} saat ${rem.timeTR}'de yayında.`
-                  : `Saat ${rem.timeTR}'de yayında.`,
+                  ? t('reminder_notify_body_ep', { episode: rem.currentEpisode, time: rem.timeTR })
+                  : t('reminder_notify_body', { time: rem.timeTR }),
                 icon: rem.image,
               });
             }
@@ -218,7 +220,8 @@ export const Layout = () => {
         setIsSearchOpen(false);
         const topResult = searchResults[0];
         setSearchQuery('');
-        navigate(`/anime/${topResult.mal_id}`);
+        const path = animeDetailPath(topResult);
+        if (path) navigate(path);
       } else if (searchQuery.trim().length > 0) {
         searchAnime(searchQuery);
         setIsSearchOpen(true);
@@ -329,9 +332,9 @@ export const Layout = () => {
         />
 
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between p-4 border-b-2 border-white/20 bg-black/90 backdrop-blur-md sticky top-1.5 z-50">
+        <header className="md:hidden flex items-center justify-between gap-2 p-2 sm:p-4 border-b-2 border-white/20 bg-black/90 backdrop-blur-md sticky top-1.5 z-50">
            {isSearchOpen && window.innerWidth < 768 ? (
-             <div className="flex-1 flex gap-2 items-center relative" ref={searchRef}>
+             <div className="flex-1 min-w-0 flex gap-2 items-center relative" ref={searchRef}>
                <input 
                  type="text" 
                  placeholder={t('search_placeholder')} 
@@ -364,7 +367,8 @@ export const Layout = () => {
                              onClick={() => {
                                  setIsSearchOpen(false);
                                  setSearchQuery('');
-                                 navigate(`/anime/${anime.mal_id}`);
+                                 const path = animeDetailPath(anime);
+                                 if (path) navigate(path);
                              }}
                              className="flex gap-2 p-2 hover:bg-white/10 border-b border-white/10 last:border-0 transition-colors cursor-pointer group"
                            >
@@ -394,17 +398,19 @@ export const Layout = () => {
              <>
                <div className="flex items-center gap-2">
                  <div 
-                   className="w-8 h-8 border-2 border-white flex items-center justify-center text-white font-black uppercase transition-colors duration-500"
+                   className="w-8 h-8 border-2 border-white flex items-center justify-center text-white font-black uppercase transition-colors duration-500 shrink-0"
                    style={{ backgroundColor: activeConfig.accentColor }}
                  >
                    A
                  </div>
-                 <h1 className="font-black text-white uppercase tracking-tighter text-xl">AniSync</h1>
+                 <h1 className="font-black text-white uppercase tracking-tighter text-lg sm:text-xl truncate">AniSync</h1>
                </div>
 
                <div className="flex items-center gap-2">
-                 {/* Atmosphere Theme Switcher */}
+                 {/* Atmosphere Theme Switcher — çok dar ekranlarda taşmayı önlemek için gizli */}
+                 <div className="hidden min-[430px]:block">
                  <ThemeSwitcher />
+                 </div>
 
                  {/* Language Picker */}
                  <div className="relative">
@@ -414,7 +420,7 @@ export const Layout = () => {
                      aria-expanded={isLangMenuOpen}
                      aria-label={t('language')}
                      onClick={() => setIsLangMenuOpen((v) => !v)}
-                     className="touch-target px-2 text-white border-2 border-transparent hover:border-white/20 uppercase font-black text-xs"
+                     className="touch-target px-1.5 sm:px-2 text-white border-2 border-transparent hover:border-white/20 uppercase font-black text-xs"
                    >
                      {currentLang.toUpperCase()}
                    </button>
@@ -442,15 +448,15 @@ export const Layout = () => {
                  </div>
 
                  {/* Global Search Button */}
-                 <button onClick={() => setIsGlobalSearchOpen(true)} className="p-2 text-white border-2 border-transparent hover:border-white/20">
+                 <button onClick={() => setIsGlobalSearchOpen(true)} aria-label={t('search_placeholder')} className="p-1.5 sm:p-2 text-white border-2 border-transparent hover:border-white/20">
                    <Search size={20} strokeWidth={2.5} />
                  </button>
 
                  {/* Airing Schedule & Reminders Bell */}
                  <button 
                    onClick={() => openScheduleModal('reminders')} 
-                   className="p-2 text-white border-2 border-transparent hover:border-white/20 relative cursor-pointer"
-                   title="Hatırlatıcılar ve Yayın Akışı"
+                   className="p-1.5 sm:p-2 text-white border-2 border-transparent hover:border-white/20 relative cursor-pointer"
+                   title={t('reminders')}
                  >
                    <Bell size={20} strokeWidth={2.5} />
                    {reminders.length > 0 && (
@@ -461,7 +467,7 @@ export const Layout = () => {
                  {!authLoading && !currentUser && (
                    <button 
                      onClick={() => setIsAuthModalOpen(true)}
-                     className="p-1 px-3 bg-white text-black border-2 border-white font-black uppercase tracking-wide text-xs neo-shadow-white"
+                     className="px-2 py-1.5 bg-white text-black border-2 border-white font-black uppercase tracking-wide text-[10px] neo-shadow-white"
                    >
                      {t('login')}
                    </button>
@@ -469,7 +475,7 @@ export const Layout = () => {
                  {!authLoading && currentUser && (
                    <div 
                      onClick={() => navigate('/profile')}
-                     className="w-9 h-9 border-2 border-white p-[2px] cursor-pointer bg-white"
+                     className="w-9 h-9 shrink-0 border-2 border-white p-[2px] cursor-pointer bg-white"
                    >
                      <div className="w-full h-full bg-black flex items-center justify-center overflow-hidden">
                        <img src={resolveAvatar(currentUser.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" />
@@ -577,6 +583,7 @@ export const Layout = () => {
           <AnimeErrorBoundary>
             <Outlet />
           </AnimeErrorBoundary>
+          <Footer />
         </div>
       </main>
 

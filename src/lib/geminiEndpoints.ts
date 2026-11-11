@@ -5,6 +5,7 @@
  */
 import { GoogleGenAI } from '@google/genai';
 import { requireApiAuth } from './apiAuth';
+import { searchAniList } from './api/anilist';
 
 let ai: GoogleGenAI | null = null;
 let aiInit = false;
@@ -91,33 +92,27 @@ export async function handleAiRecommendations(body: any, headers: Record<string,
   if (!auth.ok) return { status: auth.status ?? 401, body: { error: auth.error ?? 'Unauthorized' } };
 
   try {
-    const { savedTitles, savedGenres } = body ?? {};
+    const { savedTitles, savedGenres, language } = body ?? {};
     const titlesList = Array.isArray(savedTitles) && savedTitles.length > 0 ? savedTitles.join(', ') : 'Attack on Titan, Demon Slayer, Jujutsu Kaisen';
     const genresList = Array.isArray(savedGenres) && savedGenres.length > 0 ? savedGenres.join(', ') : 'Aksiyon, Fantezi, Gizem';
+    const lang = typeof language === 'string' && language.trim() ? language.trim().slice(0, 5) : 'tr';
 
     const client = getGeminiClient();
     if (!client) {
       return { status: 200, body: { recommendations: [], fallback: true } };
     }
 
-    const prompt = `Kullanıcının kaydettiği izleme listesi anileleri: [${titlesList}] ve sevdiği türler: [${genresList}].
+    const prompt = `Kullanıcının kaydettiği izleme listesi animeleri: [${titlesList}] ve sevdiği türler: [${genresList}].
 Bu izleme profiline dayanarak kullanıcı için tam 4 adet kişiselleştirilmiş anime tavsiyesi üret.
 Çıktıyı SADECE aşağıdaki JSON dizisi formatında ver:
 [
   {
-    "id": 52991,
-    "title": "Anime Başlığı",
+    "title": "Anime Başlığı (resmi ad)",
     "englishTitle": "English Title",
-    "genres": ["Aksiyon", "Fantezi"],
-    "score": 8.9,
-    "episodes": 24,
-    "matchPercentage": 96,
-    "reason": "1-2 cümlelik Türkçe özel gerekçe (Kullanıcının izleme listesindeki serilere neden benziyor)",
-    "imageUrl": "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg",
-    "synopsis": "Kısa konu özeti (Türkçe)"
+    "reason": "1-2 cümlelik özel gerekçe (kullanıcının izleme listesindeki serilere neden benziyor)"
   }
 ]
-Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
+Kural: yalnızca gerçekten var olan animeler öner. Puan, bölüm sayısı, görsel URL'si veya kimlik UYDURMA; bu alanlar doğrulanmış katalogdan eklenecek. "reason" dili: ${lang}. Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
 
     const response = await client.models.generateContent({
       model: 'gemini-3.8-flash',
@@ -127,11 +122,57 @@ Açıklama veya markdown yazma, yalnızca geçerli JSON dizisi döndür.`;
     let rawText = response.text || '';
     rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
-    const parsedRecs = JSON.parse(rawText);
-    if (Array.isArray(parsedRecs) && parsedRecs.length > 0) {
-      return { status: 200, body: { recommendations: parsedRecs, aiGenerated: true } };
+    const parsed = JSON.parse(rawText);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { status: 200, body: { recommendations: [], fallback: true } };
     }
-    return { status: 200, body: { recommendations: [], fallback: true } };
+
+    const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const verified = await Promise.all(
+      parsed.slice(0, 4).map(async (rec: any) => {
+        const requested = typeof rec?.title === 'string' ? rec.title.trim() : '';
+        const requestedEn = typeof rec?.englishTitle === 'string' ? rec.englishTitle.trim() : '';
+        const query = requested || requestedEn;
+        if (!query) return null;
+
+        try {
+          const result = await searchAniList({ query, kind: 'anime', perPage: 3 });
+          const match = result.items.find((media) => {
+            const candidates = [media.title.romaji, media.title.english, media.title.native, media.displayTitle]
+              .filter((v): v is string => typeof v === 'string' && v.length > 0)
+              .map(normalize);
+            const target = normalize(query);
+            return candidates.some((candidate) => candidate === target || candidate.includes(target) || target.includes(candidate));
+          });
+          if (!match) return null;
+
+          if (!match.title?.romaji && !match.title?.english) return null;
+
+          return {
+            // LLM'in uydurduğu kimlik/puan/görsel yerine doğrulanmış katalog verisi.
+            id: match.externalIds?.mal ?? 0,
+            mediaId: match.id,
+            title: match.title.romaji || match.displayTitle,
+            englishTitle: match.title.english ?? undefined,
+            genres: match.genres.slice(0, 4),
+            score: match.averageScore != null ? Math.round(match.averageScore) / 10 : null,
+            episodes: match.episodes ?? null,
+            reason: typeof rec?.reason === 'string' ? rec.reason.trim() : '',
+            imageUrl: match.cover?.large ?? match.cover?.medium ?? undefined,
+            synopsis: match.synopsis ? match.synopsis.slice(0, 240) : ''
+          };
+        } catch (error) {
+          console.warn('[ai-recommendations] doğrulama başarısız:', error);
+          return null;
+        }
+      })
+    );
+
+    const recommendations = verified.filter((item): item is NonNullable<typeof item> => item !== null);
+    if (recommendations.length === 0) {
+      return { status: 200, body: { recommendations: [], fallback: true } };
+    }
+    return { status: 200, body: { recommendations, aiGenerated: true } };
   } catch (_err) {
     return { status: 200, body: { recommendations: [], fallback: true } };
   }

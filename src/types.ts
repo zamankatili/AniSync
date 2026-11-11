@@ -1,5 +1,7 @@
 export interface Anime {
   mal_id: number;
+  /** AniList kaydı MAL kimliği taşımıyorsa detay sayfasına gitmek için kullanılır. */
+  anilist_id?: number;
   title: string;
   title_english: string | null;
   images: {

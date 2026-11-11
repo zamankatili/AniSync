@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://anisync.app/</loc><lastmod>2026-11-06</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://anisync.app/discover</loc><lastmod>2026-11-06</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://anisync.app/challenge</loc><lastmod>2026-11-06</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://anisync.app/arcade</loc><lastmod>2026-11-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://anisync.app/music-quiz</loc><lastmod>2026-11-06</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-  <url><loc>https://anisync.app/dle</loc><lastmod>2026-11-06</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
-  <url><loc>https://anisync.app/calendar</loc><lastmod>2026-11-06</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://anisync-tau.vercel.app/</loc><lastmod>2026-11-11</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://anisync-tau.vercel.app/discover</loc><lastmod>2026-11-11</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://anisync-tau.vercel.app/challenge</loc><lastmod>2026-11-11</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://anisync-tau.vercel.app/arcade</loc><lastmod>2026-11-11</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://anisync-tau.vercel.app/music-quiz</loc><lastmod>2026-11-11</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://anisync-tau.vercel.app/dle</loc><lastmod>2026-11-11</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://anisync-tau.vercel.app/calendar</loc><lastmod>2026-11-11</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://anisync-tau.vercel.app/voice-duel</loc><lastmod>2026-11-11</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
 </urlset>

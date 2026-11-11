@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
+import { animeDetailPath } from '../lib/mediaLinks';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useNavigate } from 'react-router-dom';
 import { Anime, DayOfWeek } from '../types';
@@ -38,6 +39,11 @@ export const AiringCalendar: React.FC = () => {
   } = useReminderStore();
 
   const navigate = useNavigate();
+
+  const goToAnime = (anime: { mal_id?: number | null; anilist_id?: number | null }) => {
+    const path = animeDetailPath(anime);
+    if (path) navigate(path);
+  };
 
   useEffect(() => {
     initReminders();
@@ -413,7 +419,7 @@ export const AiringCalendar: React.FC = () => {
                       <div className="flex gap-4">
                         {/* Anime Poster */}
                         <div 
-                          onClick={() => navigate(`/anime/${anime.mal_id}`)}
+                          onClick={() => goToAnime(anime)}
                           className="w-24 h-34 shrink-0 border-2 border-white bg-neutral-900 cursor-pointer overflow-hidden relative"
                         >
                           <img 
@@ -446,7 +452,7 @@ export const AiringCalendar: React.FC = () => {
                           </div>
 
                           <h3 
-                            onClick={() => navigate(`/anime/${anime.mal_id}`)}
+                            onClick={() => goToAnime(anime)}
                             lang="en"
                             className="font-black text-base uppercase text-white tracking-tight line-clamp-1 cursor-pointer hover:text-rose-500 transition-colors"
                             title={anime.title_english || anime.title}
@@ -551,7 +557,7 @@ export const AiringCalendar: React.FC = () => {
                           )}
 
                           <button
-                            onClick={() => navigate(`/anime/${anime.mal_id}`)}
+                            onClick={() => goToAnime(anime)}
                             className="text-xs font-black uppercase text-neutral-400 hover:text-white flex items-center gap-1 transition-colors ml-1 cursor-pointer"
                           >
                             <ExternalLink size={12} />
@@ -610,7 +616,7 @@ export const AiringCalendar: React.FC = () => {
                       return (
                         <div
                           key={anime.id}
-                          onClick={() => navigate(`/anime/${anime.mal_id}`)}
+                          onClick={() => goToAnime(anime)}
                           className={cn(
                             "bg-neutral-900 border-2 p-3 flex gap-3 transition-all cursor-pointer group hover:bg-neutral-800",
                             isSet ? "border-amber-400" : "border-white/20 hover:border-white"

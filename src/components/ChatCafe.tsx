@@ -113,9 +113,9 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
       {/* ─── HEADER BANDI ───────────────────────────── */}
       <header className="relative border-b-4 border-white bg-black flex items-center justify-between gap-4 px-5 md:px-8 pt-3 md:pt-4 pb-3">
         <div className="flex items-center gap-4 min-w-0">
-          <a href="#" onClick={(e) => e.preventDefault()} className="font-mono font-black text-3xl md:text-4xl tracking-tighter leading-none select-none">
+          <div className="font-mono font-black text-3xl md:text-4xl tracking-tighter leading-none select-none">
             A<span className="text-amber-400">N</span>İ<span className="text-rose-600">SYNC</span>
-          </a>
+          </div>
           <div className="hidden sm:block h-10 w-px bg-white/20" />
           <div className="hidden sm:block">
             <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">İÇ MAHALLE</p>

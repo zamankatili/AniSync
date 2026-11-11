@@ -86,23 +86,27 @@ export const AnimeDetail = () => {
 
   const handleAdd = () => {
     if (!anime) return;
+    if (!(Number(anime.mal_id) > 0)) {
+      addToast(t('anime_card_missing_id'), 'error');
+      return;
+    }
     if (!inWatchlist) {
       addToWatchlist(anime, 'plan_to_watch');
-      addToast(`${anime.title_english || anime.title} listeye eklendi!`, 'success');
+      addToast(t('anime_card_added_to_list', { title: anime.title_english || anime.title }), 'success');
     }
   };
 
   const handleUpdateStatus = (status: any) => {
     if (anime && inWatchlist) {
       updateWatchlistItem(anime.mal_id, { status });
-      addToast(`Durum güncellendi!`, 'success');
+      addToast(t('status_updated'), 'success');
     }
   };
 
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center p-20">
-        <Loader2 size={48} className="animate-spin text-black" />
+        <Loader2 size={48} className="animate-spin text-rose-500" />
       </div>
     );
   }
@@ -126,7 +130,9 @@ export const AnimeDetail = () => {
     ? anime.synopsis.replace(/<[^>]*>?/gm, '').substring(0, 155).trim() + '...'
     : `${anime.title_english || anime.title} (${anime.year || 'Anime'}) detail page on AniSync. Track episodes, view ratings, reviews, and community recommendations.`;
   const pageImage = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1200';
-  const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://anisync.app/anime/${anime.mal_id}`;
+  const pageUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/anime/${anime.mal_id}`
+    : `https://anisync-tau.vercel.app/anime/${anime.mal_id}`;
 
   const schemaJsonLd = {
     '@context': 'https://schema.org',
@@ -247,11 +253,19 @@ export const AnimeDetail = () => {
               )}
 
               <button
-                onClick={() => navigate('/watch-party')}
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    anime: String(anime.mal_id),
+                    title: anime.title_english || anime.title
+                  });
+                  const cover = anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url;
+                  if (cover) params.set('img', cover);
+                  navigate(`/watch-party?${params.toString()}`);
+                }}
                 className="w-full py-4 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 border-4 border-black neo-shadow hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
               >
                 <Tv2 size={24} strokeWidth={2.5} />
-                <span>BİRLİKTE İZLE (WATCH PARTY)</span>
+                <span>{t('watch_party_cta')}</span>
               </button>
             </div>
             
@@ -282,7 +296,7 @@ export const AnimeDetail = () => {
                 {isPickedForYou && (
                   <div className="flex items-center gap-1.5 bg-emerald-400 text-black px-3.5 py-1 font-black text-xs uppercase tracking-wider border-2 border-black neo-shadow">
                     <Sparkles size={14} className="fill-black" />
-                    SENİN İÇİN SEÇİLDİ
+                    {t('pick_for_you')}
                   </div>
                 )}
                 {anime.score && (
@@ -312,29 +326,29 @@ export const AnimeDetail = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-black text-xs uppercase px-2 py-0.5 bg-black text-white border border-black tracking-widest">
-                          ✨ SENİN İÇİN SEÇİLDİ
+                          ✨ {t('pick_for_you')}
                         </span>
                         <span className="text-[11px] font-black uppercase text-black bg-white/80 px-2 py-0.5 border border-black">
-                          %{Math.min(99, 84 + matchedGenres.length * 6)} TÜR UYUMU
+                          {t('genre_match_count', { matched: matchedGenres.length, total: anime.genres?.length || matchedGenres.length })}
                         </span>
                       </div>
                       <p className="text-xs font-black uppercase text-black mt-1 leading-snug">
-                        Profilindeki favori türlerinle eşleşiyor: <span className="underline decoration-2">{matchedGenres.map(g => g.name).join(', ')}</span>
+                        {t('pick_reason', { genres: matchedGenres.map(g => g.name).join(', ') })}
                       </p>
                     </div>
                   </div>
 
                   <span className="text-[10px] font-black uppercase px-2.5 py-1 bg-white border-2 border-black text-black shrink-0 neo-shadow">
-                    KİŞİYE ÖZEL ÖNERİ
+                    {t('pick_personalized')}
                   </span>
                 </motion.div>
               )}
 
-              <h1 lang="en" className="text-4xl md:text-6xl font-black text-black mb-2 tracking-tighter uppercase leading-[1.1]">
+              <h1 lang="en" className="text-4xl md:text-6xl font-black text-white mb-2 tracking-tighter uppercase leading-[1.1]">
                 {anime.title_english || anime.title}
               </h1>
               {anime.title_english && (
-                <h2 lang="en" className="text-lg md:text-2xl text-black/60 font-bold uppercase tracking-wider mb-6">
+                <h2 lang="en" className="text-lg md:text-2xl text-white/60 font-bold uppercase tracking-wider mb-6">
                   {anime.title}
                 </h2>
               )}
@@ -353,7 +367,7 @@ export const AnimeDetail = () => {
             </div>
 
             <div>
-              <h3 className="text-2xl font-black text-black mb-4 uppercase tracking-tighter border-b-4 border-black pb-2 inline-block">{t('synopsis')}</h3>
+              <h3 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter border-b-4 border-white pb-2 inline-block">{t('synopsis')}</h3>
               <p lang="en" className="text-black font-bold uppercase tracking-wide leading-relaxed text-sm md:text-base whitespace-pre-line p-6 bg-white border-4 border-black neo-shadow">
                 {anime.synopsis || t('no_synopsis')}
               </p>
@@ -361,7 +375,7 @@ export const AnimeDetail = () => {
             
             {anime.background && (
               <div>
-                <h3 className="text-2xl font-black text-black mb-4 uppercase tracking-tighter border-b-4 border-black pb-2 inline-block">{t('background')}</h3>
+                <h3 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter border-b-4 border-white pb-2 inline-block">{t('background')}</h3>
                 <p lang="en" className="text-white font-bold uppercase tracking-wide leading-relaxed text-sm md:text-base italic bg-black p-6 border-4 border-black neo-shadow-white">
                   {anime.background}
                 </p>

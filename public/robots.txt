@@ -7,4 +7,4 @@ Disallow: /watch-party
 Disallow: /grid-maker
 Disallow: /api/
 
-Sitemap: https://anisync.app/sitemap.xml
+Sitemap: https://anisync-tau.vercel.app/sitemap.xml

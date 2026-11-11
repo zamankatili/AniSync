@@ -41,7 +41,8 @@ export const MyList = () => {
     incrementEpisode,
     userNamedLists,
     deleteUserNamedList,
-    toggleAnimeInNamedList
+    toggleAnimeInNamedList,
+    currentUser
   } = useAppStore();
   const { addToast } = useToastStore();
 
@@ -127,6 +128,17 @@ export const MyList = () => {
           </button>
         </div>
       </div>
+
+      {/* Misafir modu: liste yerelde kalır, giriş yapınca buluta senkronlanır. */}
+      {!currentUser && (
+        <div className="bg-amber-400 border-4 border-black neo-shadow p-4 flex items-start gap-3">
+          <Info size={20} strokeWidth={2.5} className="text-black shrink-0 mt-0.5" />
+          <div>
+            <p className="font-black text-black uppercase tracking-widest text-xs">{t('guest_list_title')}</p>
+            <p className="font-bold text-black/80 uppercase tracking-wide text-[11px] mt-1">{t('guest_list_desc')}</p>
+          </div>
+        </div>
+      )}
 
       {/* Recharts Watchlist Status Donut Chart Visualization */}
       <MyListStatusDonutChart

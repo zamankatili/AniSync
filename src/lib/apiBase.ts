@@ -14,7 +14,7 @@ const normalize = (value: string) => value.replace(/\/+$/, '');
 export const API_BASE = envBase
   ? normalize(envBase)
   : Capacitor.isNativePlatform()
-    ? 'https://anisync.app'
+    ? 'https://anisync-tau.vercel.app'
     : '';
 
 /** `/api/...` yolunu platforma göre tam adrese çevirir. */

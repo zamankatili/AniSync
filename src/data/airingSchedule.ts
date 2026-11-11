@@ -1,6 +1,8 @@
-﻿export interface AiringAnime {
+export interface AiringAnime {
   id: string;
   mal_id: number;
+  /** MAL kimliği yoksa AniList detayına yönlendirmek için. */
+  anilist_id?: number;
   title: string;
   title_english: string;
   day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';

@@ -55,6 +55,18 @@ export const SEOManager: React.FC = () => {
     '/challenge': {
       title: t('seo_challenge_title'),
       description: t('seo_challenge_desc')
+    },
+    '/privacy': {
+      title: `${t('privacy_title')} — AniSync`,
+      description: t('legal_privacy_p1')
+    },
+    '/terms': {
+      title: `${t('terms_title')} — AniSync`,
+      description: t('legal_terms_p1')
+    },
+    '/guidelines': {
+      title: `${t('guidelines_title')} — AniSync`,
+      description: t('legal_guidelines_p1')
     }
   };
 

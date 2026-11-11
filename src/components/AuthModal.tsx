@@ -19,8 +19,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleGoogleLogin = async () => {
+    if (!isLogin && !acceptedTerms) {
+      setError(t('auth_consent_required'));
+      return;
+    }
+    setError(null);
     try {
       await loginWithGoogle();
       onClose();
@@ -45,6 +51,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         await loginWithEmail(email, password);
         onClose();
       } else {
+        if (!acceptedTerms) {
+          setError(t('auth_consent_required'));
+          setLoading(false);
+          return;
+        }
         if (password.length < 6) {
           setError(t('password_min'));
           setLoading(false);
@@ -67,6 +78,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setIsResetMode(false);
     setError(null);
     setMessage(null);
+    setAcceptedTerms(false);
   };
 
   const handleResetModeToggle = () => {
@@ -209,6 +221,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                           </div>
                         )}
 
+                        {!isLogin && !isResetMode && (
+                          <label className="flex items-start gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={acceptedTerms}
+                              onChange={(e) => setAcceptedTerms(e.target.checked)}
+                              className="mt-0.5 h-4 w-4 shrink-0 accent-black"
+                            />
+                            <span className="text-[10px] text-black/70 font-bold uppercase tracking-wide leading-relaxed">
+                              {t('auth_consent_lead')}{' '}
+                              <a href="/terms" target="_blank" rel="noreferrer" className="underline text-black hover:text-rose-600">
+                                {t('terms')}
+                              </a>{' '}
+                              {t('and')}{' '}
+                              <a href="/privacy" target="_blank" rel="noreferrer" className="underline text-black hover:text-rose-600">
+                                {t('privacy')}
+                              </a>{' '}
+                              {t('auth_consent_age')}
+                            </span>
+                          </label>
+                        )}
+
                         <button
                           type="submit"
                           disabled={loading}
@@ -226,7 +260,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                      <div className="relative flex items-center py-2 mb-6">
                         <div className="flex-grow border-t-4 border-black"></div>
-                        <span className="flex-shrink-0 mx-4 text-black font-black uppercase tracking-widest text-sm">VEYA</span>
+                        <span className="flex-shrink-0 mx-4 text-black font-black uppercase tracking-widest text-sm">{t('or')}</span>
                         <div className="flex-grow border-t-4 border-black"></div>
                      </div>
 

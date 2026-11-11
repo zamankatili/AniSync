@@ -6,6 +6,7 @@ import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { useNavigate } from 'react-router-dom';
 import { getSafeImageUrl, handleImageError } from '../lib/utils';
+import { animeDetailPath } from '../lib/mediaLinks';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
 interface AnimeCardProps {
@@ -26,6 +27,11 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, compact = false }) 
   const handleAdd = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    if (!(Number(anime.mal_id) > 0)) {
+      // MAL kimliği olmayan kayıtları '0' anahtarıyla yazmak veriyi ezer.
+      addToast(t('anime_card_missing_id'), 'error');
+      return;
+    }
     if (!inWatchlist) {
       addToWatchlist(anime, 'watching');
       addToast(t('anime_card_added_to_list', { title: anime.title_english || anime.title }), 'success');
@@ -42,7 +48,12 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, compact = false }) 
   };
 
   const handleNavigate = () => {
-    navigate(`/anime/${anime.mal_id}`);
+    const path = animeDetailPath(anime);
+    if (!path) {
+      addToast(t('anime_card_missing_id'), 'error');
+      return;
+    }
+    navigate(path);
   };
 
   return (

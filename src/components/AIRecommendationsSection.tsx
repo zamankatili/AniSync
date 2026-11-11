@@ -17,12 +17,13 @@ import { fetchAnimeFallback } from '../lib/api/animeBridge';
 
 export interface AIRecommendationItem {
   id: number;
+  /** Doğrulanmış AniList birleşik kimliği (anilist:123). */
+  mediaId?: string;
   title: string;
   englishTitle?: string;
   genres: string[];
-  score: number;
-  episodes: number;
-  matchPercentage: number;
+  score: number | null;
+  episodes: number | null;
   reason: string;
   imageUrl: string;
   synopsis: string;
@@ -36,7 +37,6 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
     genres: ['Fantezi', 'Macera', 'Dram'],
     score: 9.32,
     episodes: 28,
-    matchPercentage: 98,
     reason: 'Editör seçkisi: yavaş tempolu fantezi, derin karakter gelişimi ve huzurlu atmosfer arayanlara.',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1015/138006l.jpg',
     synopsis: 'Büyük iblis kralı yenen kahraman kafilesinin büyücüsü Frieren, insan yaşamının kısalığını ve bağ kurmanın önemini anlıyor.'
@@ -48,7 +48,6 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
     genres: ['Aksiyon', 'Fantezi', 'Güçlenme'],
     score: 8.52,
     episodes: 12,
-    matchPercentage: 95,
     reason: 'Editör seçkisi: aksiyon ve seviye atlama temalı serileri sevenler için.',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1208/135328l.jpg',
     synopsis: 'En zayıf e-rütbe avcı Sung Jinwoo, gizemli bir zindan görevinde sistem tarafından seçilerek sınırsız seviye atlama yeteneği kazanır.'
@@ -60,7 +59,6 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
     genres: ['Aksiyon', 'Doğaüstü', 'Okul'],
     score: 8.81,
     episodes: 23,
-    matchPercentage: 94,
     reason: 'Editör seçkisi: hızlı dövüş koreografisi ve karanlık atmosfer sevenler için.',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1171/123961l.jpg',
     synopsis: 'Satoru Gojo ve Suguru Geto\'nun gençlik günleri ile unutulmaz Shibuya Olayı arkının nefes kesen mücadelesi.'
@@ -72,7 +70,6 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
     genres: ['Gizem', 'Tarihi', 'Dram'],
     score: 8.78,
     episodes: 24,
-    matchPercentage: 92,
     reason: 'Editör seçkisi: zeki bir protagonist ve saray entrikası/gizem sevenler için.',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1708/138033l.jpg',
     synopsis: 'Eczacı kız Maomao, imparatorluk sarayına hizmetçi olarak satılır ve tıbbi bilgileriyle gizemli zehirlenme vakalarını çözer.'
@@ -82,7 +79,7 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
 export const AIRecommendationsSection: React.FC = () => {
   const { watchlist, addToWatchlist } = useAppStore();
   const { addToast } = useToastStore();
-  const { t } = useAppTranslation();
+  const { t, i18n } = useAppTranslation();
   const navigate = useNavigate();
 
   const [recommendations, setRecommendations] = useState<AIRecommendationItem[]>(FALLBACK_RECOMMENDATIONS);
@@ -104,6 +101,7 @@ export const AIRecommendationsSection: React.FC = () => {
         body: JSON.stringify({
           savedTitles: userSavedTitles,
           savedGenres: userSavedGenres,
+          language: i18n.language,
           totalSaved: watchlist.length
         })
       });
@@ -137,6 +135,10 @@ export const AIRecommendationsSection: React.FC = () => {
   }, [watchlist.length]);
 
   const handleAddToList = async (rec: AIRecommendationItem) => {
+    if (!(rec.id > 0)) {
+      addToast(t('anime_card_missing_id'), 'error');
+      return;
+    }
     const anime = await fetchAnimeFallback(rec.id);
     if (!anime) {
       // Uydurma metadata ile listeye eklemek yerine dürüstçe hata ver.
@@ -146,6 +148,18 @@ export const AIRecommendationsSection: React.FC = () => {
     addToWatchlist(anime, 'plan_to_watch');
     setAddedIds((prev) => new Set(prev).add(rec.id));
     addToast(t('added_to_list_toast', { title: rec.title }), 'success');
+  };
+
+  const goToDetail = (rec: AIRecommendationItem) => {
+    if (rec.mediaId) {
+      navigate(`/media/${encodeURIComponent(rec.mediaId)}`);
+      return;
+    }
+    if (rec.id > 0) {
+      navigate(`/anime/${rec.id}`);
+      return;
+    }
+    addToast(t('anime_card_missing_id'), 'error');
   };
 
   return (
@@ -221,7 +235,7 @@ export const AIRecommendationsSection: React.FC = () => {
 
               {/* Cover Image */}
               <div 
-                onClick={() => navigate(`/anime/${rec.id}`)}
+                onClick={() => goToDetail(rec)}
                 className="w-full sm:w-32 h-44 bg-black border-2 border-white shrink-0 overflow-hidden relative cursor-pointer"
               >
                 <img
@@ -231,7 +245,7 @@ export const AIRecommendationsSection: React.FC = () => {
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute bottom-1 left-1 bg-black/90 text-amber-400 font-black text-[10px] px-1.5 py-0.5 border border-amber-400 flex items-center gap-1">
-                  <Star size={11} fill="currentColor" /> {rec.score}
+                  <Star size={11} fill="currentColor" /> {rec.score ?? '—'}
                 </div>
               </div>
 
@@ -247,7 +261,7 @@ export const AIRecommendationsSection: React.FC = () => {
                   </div>
 
                   <h3 
-                    onClick={() => navigate(`/anime/${rec.id}`)}
+                    onClick={() => goToDetail(rec)}
                     className="text-base font-black text-white uppercase tracking-tight leading-snug group-hover:text-amber-400 transition-colors line-clamp-1 cursor-pointer mb-1.5"
                   >
                     {rec.englishTitle || rec.title}
@@ -279,7 +293,7 @@ export const AIRecommendationsSection: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => navigate(`/anime/${rec.id}`)}
+                    onClick={() => goToDetail(rec)}
                     className="p-1.5 bg-neutral-900 hover:bg-neutral-800 text-white border border-white/30 text-xs font-black uppercase flex items-center justify-center cursor-pointer"
                     title={t('view_details')}
                   >

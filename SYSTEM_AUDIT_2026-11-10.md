@@ -8,11 +8,78 @@
 
 ---
 
+## Uzman İncelemesi — 11 Kasım 2026 (en güncel bölüm)
+
+> Bu bölüm, 10 Kasım raporunun üzerinden geçen **ikinci uzman turudur**. Aşağıdaki tablo, raporun iddialarını koda karşı tek tek doğrular; "düzeltildi" satırları bu depodaki mevcut kodla teyit edilmiştir.
+
+### Raporun değerlendirmesi
+
+**Doğru ve değerli olanlar:**
+- P0‑1…P0‑7'nin tamamı gerçekti; özellikle `email_verified` eksikliği, `watchPartyRooms` herkese açık update ve `isValidRoom` ↔ `approveRoomRequest` uyumsuzluğu doğru teşhislerdi.
+- P1‑1 (VideoPlayerDeck'in her saniye yeniden yüklenmesi) ve P1‑3 (%98 uyum mock'u) kanıtlı ve kritikti.
+- Dürüstlük ilkeleri (Bölüm 11) ürünün gerçek felsefesiyle uyumlu; korunmalı.
+
+**Eksik veya yanıltıcı olanlar (bu turda düzeltildi):**
+1. Rapor, P1‑3 için "mock'u gizle" diyordu; yeterli değil. **LLM'in ürettiği başlıkları doğrulamadan göstermek** de bir uydurma yoludur. Artık sunucu yalnızca başlık + gerekçe ister, her başlığı AniList aramasıyla doğrular ve MAL/AniList kimliği, kapak, puan, bölüm bilgisini **doğrulanmış katalogdan** döner (`src/lib/geminiEndpoints.ts`).
+2. Rapor "P1‑2 kaldırılsın" diyordu; bileşen kaldırılmadı ama **kullanıcının kendi izleme listesinden hesaplanan** gerçek tür dağılımına çevrildi (`GenreTrendingVisualization.tsx`); uydurma trend sayısı yok.
+3. Raporda **ölü bağlantılar** yoktu: AniList kayıtlarında `idMal` boş olabildiği için `/anime/0` üretiliyordu. `src/lib/mediaLinks.ts` eklendi; MAL yoksa `/media/anilist:<id>`, o da yoksa bağlantı gizlenir.
+4. Raporda **misafir listesi** yoktu: `/list` `PrivateRoute` arkasındaydı ama `AppStore` misafir listesini zaten localStorage'da tutuyordu → kullanıcı liste yapıyor, sayfayı açamıyordu. `/list` public yapıldı + açık "misafir modu" bandı eklendi.
+5. Raporda **mobil taşma** yoktu: 320–375 px'te header taşıyordu; tema düğmesi <430 px'te gizlendi, giriş düğmesi <360 px'te ikonlaştı, dokunma hedefleri korundu.
+6. Raporda **SEO/PWA çelişkisi** yoktu: `robots.txt`/`sitemap.xml`/`apiBase` eski `anisync.app` alan adını, `manifest` ise var olmayan `.webp` ikonları gösteriyordu; statik canonical/OG etiketleri `SEOManager` ile çakışıyordu. Hepsi tek host (`anisync-tau.vercel.app`) ve gerçek PNG ikonlara çekildi.
+7. Raporda **yasal sayfalar** yoktu (KVKK/GDPR için yayın öncesi şart): `/privacy`, `/terms`, `/guidelines` eklendi; footer'da veri kaynağı atfı var; kayıt formunda 13+ ve koşul onayı zorunlu.
+8. Raporda **sessiz hata yutma** yoktu: yorum yükleme hatası "yorum yok" gibi görünüyordu; artık hata + "tekrar dene" var. Sahte "şikayet edildi" toast'ı gerçek `ReportButton` ile değiştirildi (yorum, gönderi, profil).
+9. Raporda **sahte "Takip Et — yakında"** ve Watch Party'de uydurma MAL kimliği/kapak yoktu; ikisi de gerçek davranışa çevrildi.
+10. Raporda Watch Party'ye detay sayfasından gelirken **bağlam kaybı** yoktu; `?anime&title&img` derin bağlantısı oluşturma modalını ön dolduruyor.
+
+### Düzeltme durumu (kodla doğrulandı)
+
+| # | Sorun | Durum | Kanıt |
+|---|---|---|---|
+| P0‑1 | Misafir sohbeti beyaz sayfa | ✅ Düzeltildi | `GlobalChat` ErrorBoundary içinde; tarih normalizasyonu guard'lı |
+| P0‑2 | Onaylı oda asla açılmıyor | ✅ Düzeltildi | `isValidRoom`: `source == 'approved' && isAdmin()` |
+| P0‑3 | `animeRatings` kapalı | ✅ Düzeltildi | `firestore.rules:132-140` + tek oy/özet yolu |
+| P0‑4 | AdminRoute rol okumuyor | ✅ Düzeltildi | `AdminRoute.tsx` `users/{uid}.role` okuyor |
+| P0‑5 | Bootstrap admin + `email_verified` yok | ✅ Düzeltildi | `firestore.rules:9` doğrulama şartı |
+| P0‑6 | Watch Party odası herkese açık | ✅ Düzeltildi | host/admin veya kilit açıkken yalnız oynatma alanları |
+| P0‑7 | Anket oyu forge edilebilir | ✅ Düzeltildi | `DailyPollModal` `runTransaction` + `votes/{uid}` varlık kontrolü |
+| P1‑1 | VideoPlayerDeck her saniye reload | ✅ Düzeltildi | `embedSrc` `useMemo`, `postMessage` API, gerçek süre |
+| P1‑2 | Uydurma tür trendi | ✅ Düzeltildi | İzleme listesinden hesaplanan gerçek dağılım |
+| P1‑3 | "%98 uyum" mock'u | ✅ Düzeltildi | Sunucu tarafı AniList doğrulaması; `matchPercentage` kaldırıldı |
+| P1‑4 | Rozetlerde ham i18n anahtarı | ✅ Düzeltildi | 4 dilde anahtarlar + parity testi |
+| P1‑5 | Logout'ta profil sızıntısı | ✅ Düzeltildi | `anisync_profile`/`anisync_watchlist` temizliği |
+| P1‑6 | Review like sayacı | ⚠️ Kısmi | Delta zorlaması yok; kural bilinçli gevşek (düşük risk) |
+| P1‑7 | Admin i18n ja/fr eksik | ⚠️ Kısmi | Ana panel anahtarları var; admin özel anahtarları hâlâ seyrek |
+| P2‑4 | i18n parity | ✅ Düzeltildi | `locales.test.ts` 4 dilde anahtar eşitliğini zorluyor |
+| P2‑6 | `animeComments` index'i | ✅ Düzeltildi | `firestore.indexes.json` + kurallar deploy edildi |
+
+### Güncel kapılar (11 Kas 2026)
+
+| Kapı | Sonuç |
+|---|---|
+| `npx.cmd tsc --noEmit` | ✅ exit 0 |
+| `npm.cmd run lint:eslint` | ✅ 0 error |
+| `npm.cmd test -- --run` | ✅ **10 dosya / 65 test** |
+| `npm.cmd run build` | ✅ exit 0 |
+| Test dosyaları | `adminConfig`, `anonQuota`, `eventEngine`, `importList`, `level`, `rssIngest`, `utils`, `verifyIdToken`, `voiceDuelData`, `locales` |
+
+### Kalan dürüst backlog (öncelik sırasıyla)
+
+1. **Native hatırlatıcı boşluğu:** `@capacitor/local-notifications` yok; Capacitor WebView'de Web Notification çoğu cihazda çalışmaz. Native'de hatırlatıcı düğmesi sessizce başarısız olmamalı — ya eklenti entegre edilmeli ya da "native'de bildirim desteklenmiyor" uyarısı gösterilmeli.
+2. **Kalan hard-coded Türkçe:** `MemeZone`, `MonthlyActivityChart`, `ProfileAnalyticsDashboard`, `RecentActivityFeed` yedek liste adları ve bazı `FeedPost` kalıntıları. Tam i18n taraması bitmedi.
+3. **Auth'lu uçtan uca test:** Oda onayı (50 oy → moderatör), Kalfa doğrudan oda açma, Watch Party senkronu ve admin paneli yalnız kod/kural ile doğrulandı; imzalı tarayıcıda smoke şart.
+4. **AI fail-closed kararı:** Gemini anahtarı Vercel'de yok (402 kredi). Alternatif sağlayıcı (Groq/OpenRouter) veya AI Studio ücretsiz projesi kararı verilmedi; şu an öneri bölümü açıkça "editör seçkisi" gösteriyor.
+5. **KVKK otomasyonu:** Silme/dışa aktarma hâlâ e-posta + manuel; `dataRequests` kuyruğu var ama otomatik işleyici yok.
+6. **`FIREBASE_TOKEN`:** GitHub `deploy-rules.yml` için secret yok; kural/index deploy'u manuel.
+7. **ESLint uyarıları:** Hata 0, uyarı sayısı yüksek; `--max-warnings` kapısı hâlâ gevşek.
+8. **Bundle:** `recharts`/`charts` ağır; Life Sim ayrı chunk (~300 KB) kabul edilebilir ama izlenmeli.
+
+---
+
 ## 0. Yönetici Özeti
 
 **AniSync nedir?** Anime/manga/hafif roman/oyun takip platformu. Ana felsefe: *"İzleyecek yeni bir anime bulmayı kolaylaştırmak."* İkinci hedef: *aynı ilgi alanlarına sahip insanları kolay sosyalleştirmek* (KÖŞE café, global chat, Watch Party, forum, anketler).
 
-**Bugünkü durum:** Ürün uçtan uca **çalışıyor ve canlıda** (https://anisync-tau.vercel.app). 55/55 test yeşil, `tsc --noEmit` temiz, ESLint 0 **hata**, production build başarılı, GitHub CI (`build-test`) ve Vercel dağıtımı `success`. 354 izlenen dosya, ~51.000 satır uygulama kodu (186 `src/` dosyası).
+**Bugünkü durum (11 Kas 2026):** Ürün uçtan uca **çalışıyor ve canlıda** (https://anisync-tau.vercel.app). 65/65 test yeşil (10 dosya), `tsc --noEmit` temiz, ESLint 0 **hata**, production build başarılı, GitHub CI (`build-test`) ve Vercel dağıtımı `success`. ~354 izlenen dosya, ~51.000 satır uygulama kodu.
 
 **Ama:** "Çalışıyor" ≠ "Güvenli/dürüst". Bu denetim dört sınıf sorun buldu:
 
@@ -25,15 +92,15 @@
 
 ---
 
-## 1. Doğrulanan Durum (10 Kas 2026, bu oturumda tekrar koşturuldu)
+## 1. Doğrulanan Durum (10 Kas 2026 anlık görüntüsü; 11 Kas değerleri güncellendi)
 
 | Kapı | Sonuç |
 |---|---|
 | `npx tsc --noEmit` | ✅ exit 0 |
 | ESLint (hata seviyesi) | ✅ 0 error (~464 warning, çoğu `no-unused-vars` + a11y) |
-| `vitest run` | ✅ 7 dosya / **55 test** passed |
+| `vitest run` | ✅ 10 dosya / **65 test** passed |
 | `vite build` + `esbuild server.ts` | ✅ exit 0 |
-| GitHub Actions `build-test` (Node 20) | ✅ success (HEAD `983b998`) |
+| GitHub Actions `build-test` (Node 20) | ✅ success |
 | Vercel production deploy | ✅ success |
 | Canlı smoke test (`/voice-duel`, port 3000 & prod) | ✅ Sayfa + oyun akışı çalışıyor |
 
@@ -215,9 +282,9 @@ Ajan raporlarından derlendi (detay: Bölüm 9'teki "Ajan Çıktıları"). ✅ =
 | Firebase integration | `src/firebase.ts` (named DB) | ✅ | `(default)` DB kullanılmıyor — KARIŞIKLIK! `useWatchPartyStore` / `roomsDb` adlandırılmış DB adını taşır; client default DB'ye yazan kod KALMADI (grep doğrulandı, ama yeni kod ekleyenler dikkat) |
 | AnimeLifeSim concept doc | `ANIME_LIFE_SIM_CONCEPT.md` | ✅ | Tasarım belgesi, güncel |
 
-**i18n kapsamı:** TR/EN/FR ~1592 satır, JA 1590 (2 eksik). Hard-coded Türkçe dizeler kalan bileşenlerde var (ajan raporu: birkaç kart/buton). `useAppTranslation` + i18next; **dil değişimi tam reload gerektirir** (CJS bundle).
+**i18n kapsamı:** TR/EN/JA/FR anahtar eşitliği `locales.test.ts` ile zorunlu (parity ✅). Buna rağmen bazı bileşenlerde hâlâ gömülü Türkçe metin var (`MemeZone`, `MonthlyActivityChart`, `ProfileAnalyticsDashboard`, `RecentActivityFeed` yedek adları). `useAppTranslation` + i18next; **dil değişimi tam reload gerektirir** (CJS bundle).
 
-**Test kapsamı:** 55 test — `adminConfig`, `anonQuota`, `eventEngine`, `importList` (13), `level`, `rssIngest`, `verifyIdToken`. **UI bileşen testi sıfır, E2E sıfır** (önceki tarayıcı testi imzasızdı).
+**Test kapsamı (11 Kas 2026):** **65 test / 10 dosya** — `adminConfig`, `anonQuota`, `eventEngine`, `importList` (13), `level`, `rssIngest`, `utils`, `verifyIdToken`, `voiceDuelData`, `locales`. **UI bileşen testi sıfır, E2E sıfır** (tarayıcı testi imzasızdı).
 
 ---
 
@@ -301,11 +368,12 @@ $env:VITE_API_BASE_URL="https://anisync-tau.vercel.app"; npm.cmd run native:sync
 
 ## 12. DeepSeek — ilk 10 dakikanız
 
-1. `npm.cmd ci && npm.cmd run verify` → yeşil mi?
-2. `firestore.rules`'u `P0-2`/`P0-3`/`P0-5`/`P0-6`/`P0-7` için hedefli okuyun; kuralları emulator'da birim testleyin.
-3. İmzalı bir test kullanıcısı ile canlıda: misafir chat → beyaz sayfa mı? (engellemek için önce P0‑1)
-4. `docs/voice-sources.md` oluşturup Voice Duel yeni dataset'inin her klipini URL+erişim tarihiyle pin'leyin.
-5. Bu belgeyi güncelleyerek ilerleyin — her kapattığınız P satırını `[x]` yapın ve `SYSTEM_AUDIT_2026-11-11.md` olarak devam ettirin (yoksa belge çürür).
+1. En güncel durum için **en üstteki "Uzman İncelemesi — 11 Kasım 2026"** bölümünü okuyun; aşağıdaki 3–8 numaralı bölümler 10 Kasım anlık görüntüsüdür.
+2. `npm.cmd ci && npm.cmd run verify` → yeşil mi? (Beklenen: 65 test / 10 dosya, tsc 0, ESLint 0 hata, build 0.)
+3. Firestore kurallarını yalnız değiştirirken emulator'da test edin; mevcut P0 kuralları canlıda deploy edilmiş durumda.
+4. İmzalı bir test kullanıcısı ile canlıda uçtan uca smoke yapın: oda onayı (50 oy → moderatör), Kalfa oda açma, Watch Party senkronu, admin paneli.
+5. `docs/voice-sources.md` oluşturup Voice Duel dataset'inin her klipini URL+erişim tarihiyle pin'leyin.
+6. Bu belgeyi güncelleyerek ilerleyin — her kapattığınız satırı işaretleyin ve gerekiyorsa `SYSTEM_AUDIT_2026-11-12.md` olarak devam ettirin (yoksa belge çürür).
 
 ---
 

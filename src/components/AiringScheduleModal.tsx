@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
+import { animeDetailPath } from '../lib/mediaLinks';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useNavigate } from 'react-router-dom';
 import { Anime, DayOfWeek } from '../types';
@@ -27,6 +28,10 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
   initialTab = 'schedule'
 }) => {
   const navigate = useNavigate();
+  const goToAnime = (anime: { mal_id?: number | null; anilist_id?: number | null }) => {
+    const path = animeDetailPath(anime);
+    if (path) navigate(path);
+  };
   const { t } = useAppTranslation();
   const { watchlist, addToWatchlist, incrementEpisode } = useAppStore();
   const { addToast } = useToastStore();
@@ -378,7 +383,7 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
                           <div
                             onClick={() => {
                               onClose();
-                              navigate(`/anime/${anime.mal_id}`);
+                              goToAnime(anime);
                             }}
                             className="w-20 h-28 shrink-0 border border-white/40 bg-neutral-900 cursor-pointer overflow-hidden relative group"
                           >
@@ -414,7 +419,7 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
                             <h3
                               onClick={() => {
                                 onClose();
-                                navigate(`/anime/${anime.mal_id}`);
+                                goToAnime(anime);
                               }}
                               className="font-black text-sm uppercase text-white truncate cursor-pointer hover:text-amber-400 transition-colors"
                               title={anime.title_english || anime.title}
@@ -618,7 +623,7 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
                             <h4
                               onClick={() => {
                                 onClose();
-                                navigate(`/anime/${rem.mal_id}`);
+                                goToAnime(rem);
                               }}
                               className="font-black text-white uppercase text-base hover:text-amber-400 cursor-pointer"
                             >

@@ -9,6 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
+import { unifiedDetailPath } from '../lib/mediaLinks';
 import { resolveAvatar } from '../lib/avatar';
 import { useDailyPicks } from '../hooks/useDailyPicks';
 import { DailyPollModal } from '../components/DailyPollModal';
@@ -230,7 +231,16 @@ export const Home = () => {
                     <div className="text-sm text-rose-500 flex items-center gap-1 font-black mt-2"><Star size={16} strokeWidth={2.5} fill="currentColor" /> {todayPick.averageScore != null ? (todayPick.averageScore / 10).toFixed(1) : '—'}</div>
                  </div>
               </div>
-              <div className="flex gap-4 mt-6 relative z-10">
+              <div className="flex gap-4 mt-6 relative z-10 flex-wrap">
+                <button
+                  onClick={() => {
+                    const path = unifiedDetailPath(todayPick.id);
+                    if (path) navigate(path);
+                  }}
+                  className="flex items-center bg-black text-white px-4 py-2 gap-2 border-2 border-white font-black hover:bg-white hover:text-black transition-all uppercase tracking-wider"
+                >
+                  <ChevronRight size={18} strokeWidth={2.5} /> {t('view_details')}
+                </button>
                 <button
                   onClick={() => {
                     if (postInputRef.current) {

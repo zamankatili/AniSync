@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Tv2, Plus, Users, Search, Play, Pause, Flame, Sparkles, 
   ArrowLeft, Crown, Share2, Film, Check, ExternalLink, Bookmark 
@@ -12,11 +12,12 @@ import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { Anime } from '../types';
+import { fetchAnimeFallback } from '../lib/api/animeBridge';
 
 export const WatchParty: React.FC = () => {
   const { roomId } = useParams<{ roomId?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { currentUser, userProfile, addToWatchlist, watchlist } = useAppStore();
   const { addToast } = useToastStore();
   const { t } = useAppTranslation();
@@ -35,6 +36,35 @@ export const WatchParty: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [copiedRoomCode, setCopiedRoomCode] = useState(false);
+
+  // Detay sayfasındaki "Birlikte izle" butonundan gelen anime bilgisi.
+  const initialAnime = useMemo(() => {
+    const rawId = Number(searchParams.get('anime'));
+    const title = searchParams.get('title') || '';
+    if (!Number.isFinite(rawId) || rawId <= 0) return undefined;
+    return {
+      id: rawId,
+      title: title || `MAL #${rawId}`,
+      image: searchParams.get('img') || undefined
+    };
+  }, [searchParams]);
+
+  // Deep link ile gelindiyse oluşturma modalını ön doldurulmuş olarak aç.
+  useEffect(() => {
+    if (!initialAnime || roomId) return;
+    setIsCreateModalOpen(true);
+  }, [initialAnime, roomId]);
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    if (searchParams.has('anime')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('anime');
+      next.delete('title');
+      next.delete('img');
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   // Active user data
   const currentSafeUser = {
@@ -83,23 +113,19 @@ export const WatchParty: React.FC = () => {
     }
   };
 
-  const handleQuickAddWatchlist = (animeTitle: string, animeId: number, animeImage: string) => {
-    const mockAnime: Anime = {
-      mal_id: animeId,
-      title: animeTitle,
-      title_english: animeTitle,
-      images: {
-        jpg: { image_url: animeImage, large_image_url: animeImage },
-        webp: { image_url: animeImage, large_image_url: animeImage }
-      },
-      synopsis: 'Watch Party ile izleniyor.',
-      score: 8.8,
-      episodes: 12,
-      status: 'Currently Airing',
-      genres: [{ mal_id: 1, name: 'Aksiyon' }],
-      year: 2024
-    };
-    addToWatchlist(mockAnime, 'watching');
+  const handleQuickAddWatchlist = async (animeTitle: string, animeId: number) => {
+    if (!Number.isFinite(animeId) || animeId <= 0) {
+      // Uydurma MAL kimliği/metadata ile liste doldurma; gerçek kayıt yoksa dürüstçe uyar.
+      addToast(t('watch_party_add_needs_real_id'), 'error');
+      return;
+    }
+    // Listeye her zaman gerçek AniList/Jikan kaydını ekle; uydurma puan/bölüm yazma.
+    const anime = await fetchAnimeFallback(animeId);
+    if (!anime) {
+      addToast(t('watch_party_add_failed', { title: animeTitle }), 'error');
+      return;
+    }
+    addToWatchlist(anime, 'watching');
     addToast(t('watch_party_added_to_watchlist', { title: animeTitle }), 'success');
   };
 
@@ -203,7 +229,7 @@ export const WatchParty: React.FC = () => {
                     {currentRoom.animeTitle}
                   </h4>
                   <button
-                    onClick={() => handleQuickAddWatchlist(currentRoom.animeTitle, currentRoom.animeId, currentRoom.animeImage)}
+                    onClick={() => handleQuickAddWatchlist(currentRoom.animeTitle, currentRoom.animeId)}
                     className={cn(
                       "px-3 py-1.5 border-2 border-black font-black text-xs uppercase flex items-center gap-1.5 transition-transform active:translate-y-0.5 cursor-pointer shadow-[2px_2px_0px_0px_#000]",
                       isAlreadyInList
@@ -221,9 +247,11 @@ export const WatchParty: React.FC = () => {
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase text-neutral-600">
-                  <span className="bg-neutral-100 px-2 py-0.5 border border-black">
-                    {t('watch_party_mal_id', { id: currentRoom.animeId })}
-                  </span>
+                  {currentRoom.animeId > 0 && (
+                    <span className="bg-neutral-100 px-2 py-0.5 border border-black">
+                      {t('watch_party_mal_id', { id: currentRoom.animeId })}
+                    </span>
+                  )}
                   <span className="bg-amber-100 text-amber-900 px-2 py-0.5 border border-black">
                     {t('watch_party_live_viewers', { count: currentRoom.participantCount })}
                   </span>
@@ -436,9 +464,13 @@ export const WatchParty: React.FC = () => {
       {/* Create Watch Party Modal */}
       <CreateWatchPartyModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={closeCreateModal}
         currentUser={currentSafeUser}
-        onRoomCreated={(newId) => navigate(`/watch-party/${newId}`)}
+        initialAnime={initialAnime}
+        onRoomCreated={(newId) => {
+          closeCreateModal();
+          navigate(`/watch-party/${newId}`);
+        }}
       />
     </div>
   );

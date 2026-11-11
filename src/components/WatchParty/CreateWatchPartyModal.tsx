@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { WatchPartyRoomData, extractYouTubeId } from '../../data/watchPartySeed';
 import { useWatchPartyStore } from '../../store/useWatchPartyStore';
-import { cn } from '../../lib/utils';
+import { cn, FALLBACK_ANIME_COVER } from '../../lib/utils';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 
 interface CreateWatchPartyModalProps {
@@ -12,6 +12,8 @@ interface CreateWatchPartyModalProps {
   onClose: () => void;
   currentUser: { uid: string; displayName?: string | null; photoURL?: string | null };
   onRoomCreated: (roomId: string) => void;
+  /** Detay sayfasından "Birlikte izle" ile gelindiğinde başlık/kapak ön doldurulur. */
+  initialAnime?: { id: number; title: string; image?: string };
 }
 
 const PRESET_VIDEOS = [
@@ -42,7 +44,8 @@ export const CreateWatchPartyModal: React.FC<CreateWatchPartyModalProps> = ({
   isOpen,
   onClose,
   currentUser,
-  onRoomCreated
+  onRoomCreated,
+  initialAnime
 }) => {
   const { createRoom } = useWatchPartyStore();
   const { t } = useAppTranslation();
@@ -56,6 +59,16 @@ export const CreateWatchPartyModal: React.FC<CreateWatchPartyModalProps> = ({
   const [isPrivate, setIsPrivate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Detay sayfasından gelen anime bilgisiyle formu ön doldur.
+  React.useEffect(() => {
+    if (!isOpen || !initialAnime) return;
+    setAnimeTitle(initialAnime.title || '');
+    setAnimeImage(initialAnime.image || '');
+    setTitle((prev) => prev || `${initialAnime.title} — Watch Party`);
+    // initialAnime referansı her render'da değişebilir; alanlara göre bağla.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialAnime?.id, initialAnime?.title, initialAnime?.image]);
 
   if (!isOpen) return null;
 
@@ -87,7 +100,8 @@ export const CreateWatchPartyModal: React.FC<CreateWatchPartyModalProps> = ({
       const createdId = await createRoom({
         title: title.trim(),
         animeTitle: animeTitle.trim() || t('watch_party_modal_default_anime_title'),
-        animeImage: animeImage.trim() || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&auto=format&fit=crop',
+        animeId: initialAnime?.id,
+        animeImage: animeImage.trim() || FALLBACK_ANIME_COVER,
         videoUrl: videoUrl.trim(),
         category,
         isLocked,

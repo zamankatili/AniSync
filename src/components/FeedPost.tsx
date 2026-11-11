@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ReportButton } from './ReportButton';
 import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { MessageSquare, Heart, Share2, MoreHorizontal, Star, Globe, Loader2 } from 'lucide-react';
@@ -131,23 +132,20 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
                     <button 
                       onClick={() => {
                         deletePost(post.id);
-                        addToast('Gönderi silindi', 'success');
+                        addToast(t('post_deleted'), 'success');
                         setActiveDropdown(false);
                       }}
                       className="w-full text-left px-4 py-3 text-sm text-rose-500 hover:bg-white hover:text-black hover:font-black transition-all font-bold uppercase tracking-wider flex items-center gap-2"
                     >
-                      SİL
+                      {t('delete')}
                     </button>
                   ) : (
-                    <button 
-                      onClick={() => {
-                        addToast('Gönderi şikayet edildi', 'success');
-                        setActiveDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white hover:text-black hover:font-black transition-all font-bold uppercase tracking-wider"
-                    >
-                      ŞİKAYET ET
-                    </button>
+                    <div className="px-4 py-3">
+                      <ReportButton
+                        target={{ targetPath: `forumPosts/${post.id}`, targetLabel: post.title }}
+                        compact={false}
+                      />
+                    </div>
                   )}
                 </motion.div>
               )}
@@ -266,7 +264,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
                     ))
                   ) : (
                     <p className="text-neutral-500 border-2 border-dashed border-white/20 p-6 font-black uppercase tracking-widest text-sm text-center bg-black">
-                      HENÜZ YORUM YOK. İLK YORUMU SEN YAP!
+                      {t('no_comments_yet')}
                     </p>
                   )}
                 </div>

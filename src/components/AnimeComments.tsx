@@ -3,11 +3,12 @@ import { useAppStore } from '../context/AppStore';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { Loader2, MessageSquare, Send, Trash2 } from 'lucide-react';
+import { Loader2, MessageSquare, Send, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useToastStore } from '../store/useToastStore';
-import { formatRelativeTime } from '../lib/utils';
+import { formatRelativeTime, toDateSafe } from '../lib/utils';
 import { resolveAvatar, getDefaultAvatar } from '../lib/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ReportButton } from './ReportButton';
 
 interface AnimeComment {
   id: string;
@@ -27,11 +28,14 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
 
   useEffect(() => {
     if (!animeId) return;
 
     setLoading(true);
+    setLoadError(false);
     const q = query(
       collection(db, 'animeComments'),
       where('animeId', '==', animeId),
@@ -47,11 +51,13 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching comments: ", error);
+      // Sessizce "yorum yok" gösterme: kullanıcıya yükleme hatasını bildir.
+      setLoadError(true);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [animeId]);
+  }, [animeId, retryToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +74,7 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
         createdAt: serverTimestamp()
       });
       setNewComment('');
-      addToast('Yorum eklendi!', 'success');
+      addToast(t('comment_added'), 'success');
     } catch (err) {
       console.error(err);
       addToast(t('comment_error'), 'error');
@@ -80,7 +86,7 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
     if (window.confirm(t('delete_comment_confirm'))) {
       try {
         await deleteDoc(doc(db, 'animeComments', commentId));
-        addToast('Yorum silindi.', 'success');
+        addToast(t('comment_deleted'), 'success');
       } catch (err) {
         console.error(err);
         addToast(t('delete_comment_error'), 'error');
@@ -90,8 +96,8 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
 
   return (
     <div className="mt-12">
-      <h3 className="text-2xl font-black text-black mb-6 uppercase tracking-tighter border-b-4 border-black pb-2 inline-flex items-center gap-2">
-        <MessageSquare size={24} strokeWidth={3} /> YORUMLAR ({comments.length})
+      <h3 className="text-2xl font-black text-white mb-6 uppercase tracking-tighter border-b-4 border-white pb-2 inline-flex items-center gap-2">
+        <MessageSquare size={24} strokeWidth={3} /> {t('comments_title')} ({comments.length})
       </h3>
 
       {currentUser ? (
@@ -126,7 +132,19 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <Loader2 size={32} className="animate-spin text-black" />
+          <Loader2 size={32} className="animate-spin text-rose-500" />
+        </div>
+      ) : loadError ? (
+        <div className="p-8 text-center bg-white border-4 border-black neo-shadow">
+          <AlertTriangle size={40} strokeWidth={2} className="mx-auto text-rose-600 mb-3" />
+          <p className="font-black text-black uppercase tracking-widest mb-1">{t('comments_load_failed')}</p>
+          <button
+            type="button"
+            onClick={() => setRetryToken((v) => v + 1)}
+            className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-black text-white border-2 border-black font-black text-xs uppercase hover:bg-rose-600 transition-colors"
+          >
+            <RefreshCw size={14} /> {t('retry')}
+          </button>
         </div>
       ) : comments.length === 0 ? (
         <div className="p-8 text-center bg-white border-4 border-black neo-shadow">
@@ -155,18 +173,30 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
                     <div>
                       <span className="font-black text-black uppercase tracking-wider">{comment.userName}</span>
                       <span className="ml-2 text-[10px] font-bold text-neutral-500 uppercase">
-                        {comment.createdAt ? formatRelativeTime(comment.createdAt.toDate()) : t('just_now')}
+                        {toDateSafe(comment.createdAt) ? formatRelativeTime(toDateSafe(comment.createdAt) as Date) : t('just_now')}
                       </span>
                     </div>
-                    {currentUser?.uid === comment.userId && (
-                      <button 
-                        onClick={() => handleDelete(comment.id)}
-                        className="text-neutral-400 hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100"
-                        title="Yorumu Sil"
-                      >
-                        <Trash2 size={16} strokeWidth={3} />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {currentUser?.uid !== comment.userId && (
+                        <ReportButton
+                          target={{
+                            targetPath: `animeComments/${comment.id}`,
+                            targetLabel: `${comment.userName}: ${comment.content.slice(0, 60)}`
+                          }}
+                          compact
+                        />
+                      )}
+                      {currentUser?.uid === comment.userId && (
+                        <button 
+                          onClick={() => handleDelete(comment.id)}
+                          className="text-neutral-400 hover:text-rose-600 transition-colors sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+                          title={t('delete_comment_confirm')}
+                          aria-label={t('delete_comment_confirm')}
+                        >
+                          <Trash2 size={16} strokeWidth={3} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className="text-black font-bold uppercase tracking-wide text-sm whitespace-pre-wrap leading-relaxed">
                     {comment.content}

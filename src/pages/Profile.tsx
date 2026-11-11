@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
-import { Settings, Play, CheckCircle, Heart, Clock, BarChart3, Navigation as NavigationIcon, ChevronRight, LogOut, PieChart as PieChartIcon, UserPlus, Grid3X3, FileUp, Compass, Download, Trash2 } from 'lucide-react';
+import { Settings, Play, CheckCircle, Heart, Clock, BarChart3, Navigation as NavigationIcon, ChevronRight, LogOut, PieChart as PieChartIcon, Grid3X3, FileUp, Compass, Download, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
 import { resolveAvatar } from '../lib/avatar';
@@ -9,6 +9,7 @@ import { AnimeCard } from '../components/AnimeCard';
 import { MonthlyActivityChart } from '../components/MonthlyActivityChart';
 import { ProfileAnalyticsDashboard } from '../components/ProfileAnalyticsDashboard';
 import { EditProfileModal } from '../components/EditProfileModal';
+import { ReportButton } from '../components/ReportButton';
 import { ImportExportModal } from '../components/ImportExportModal';
 import { TasteProfileSurveyModal } from '../components/TasteProfileSurveyModal';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -276,13 +277,10 @@ export const Profile = () => {
                   </>
                 )}
                 {!isOwnProfile && (
-                  <button 
-                    onClick={() => addToast(t('coming_soon_toast'), 'info')} 
-                    className="flex items-center gap-2 bg-rose-600 hover:bg-black text-white hover:text-rose-500 transition-colors px-6 py-3 text-xs font-black w-fit border-2 border-black uppercase tracking-widest neo-shadow"
-                  >
-                    <UserPlus size={18} strokeWidth={2.5} />
-                    {t('follow')}
-                  </button>
+                  <ReportButton
+                    target={{ targetPath: `users/${uid}`, targetLabel: targetProfile?.name || myProfile.name }}
+                    className="bg-rose-600 hover:bg-black text-white hover:text-rose-500 px-6 py-3 border-2 border-black uppercase tracking-widest neo-shadow"
+                  />
                 )}
               </div>
             </div>

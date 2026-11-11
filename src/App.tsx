@@ -28,6 +28,7 @@ const Arcade = lazy(() => import('./pages/Arcade').then(m => ({ default: m.Arcad
 const AnimeLifeSim = lazy(() => import('./pages/AnimeLifeSim').then(m => ({ default: m.AnimeLifeSim })));
 const AdminPage = lazy(() => import('./pages/admin/AdminPage').then(m => ({ default: m.AdminPage })));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
+const LegalPage = lazy(() => import('./pages/Legal').then(m => ({ default: m.LegalPage })));
 
 export default function App() {
   return (
@@ -52,13 +53,16 @@ export default function App() {
               <Route path="discover" element={<Discover />} />
               <Route path="anime/:id" element={<AnimeDetail />} />
               <Route path="media/:id" element={<MediaDetail />} />
+              <Route path="privacy" element={<LegalPage kind="privacy" />} />
+              <Route path="terms" element={<LegalPage kind="terms" />} />
+              <Route path="guidelines" element={<LegalPage kind="guidelines" />} />
               
               {/* Private Routes Protected by PrivateRoute */}
               <Route path="onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
               <Route path="watch-party" element={<PrivateRoute><WatchParty /></PrivateRoute>} />
               <Route path="watch-party/:roomId" element={<PrivateRoute><WatchParty /></PrivateRoute>} />
               <Route path="grid-maker" element={<PrivateRoute><AnimeGridMaker /></PrivateRoute>} />
-              <Route path="list" element={<PrivateRoute><MyList /></PrivateRoute>} />
+              <Route path="list" element={<MyList />} />
               <Route path="lists" element={<PrivateRoute><ListsPage /></PrivateRoute>} />
               <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
               <Route path="profile/:uid" element={<Profile />} />
