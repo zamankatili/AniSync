@@ -1309,6 +1309,7 @@ export default {
       "rating_average": "ORTALAMA",
       "ratings": "OY",
       "rating_saved": "Puanın kaydedildi!",
+      "rating_error": "Puan kaydedilemedi. Bağlantını kontrol edip tekrar dene.",
       "login_required": "Giriş yapmalısın.",
       "top_lists": "TOP LİSTELER",
       "lists_page_title": "LİSTELER",

@@ -1309,6 +1309,7 @@ export default {
       "rating_average": "MOYENNE",
       "ratings": "NOTES",
       "rating_saved": "Ta note a été enregistrée !",
+      "rating_error": "Impossible d'enregistrer ta note. Vérifie ta connexion et réessaie.",
       "login_required": "Connexion requise.",
       "top_lists": "TOP LISTES",
       "lists_page_title": "LISTES",

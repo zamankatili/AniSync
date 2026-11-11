@@ -1309,6 +1309,7 @@ export default {
       "rating_average": "AVERAGE",
       "ratings": "RATINGS",
       "rating_saved": "Rating saved!",
+      "rating_error": "Rating could not be saved. Check your connection and try again.",
       "login_required": "You must login.",
       "top_lists": "TOP LISTS",
       "lists_page_title": "LISTS",

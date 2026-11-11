@@ -96,7 +96,7 @@ export const StarRating = ({ animeId }: { animeId: number }) => {
       setUserRating(oldRating); // Backtrack
       setAverageRating(oldAvg);
       setTotalRatings(oldTotal);
-      addToast('Error', 'error');
+      addToast(t('rating_error'), 'error');
     }
   };
 
@@ -104,7 +104,7 @@ export const StarRating = ({ animeId }: { animeId: number }) => {
     <div className="flex items-center gap-6 bg-white p-4 border-4 border-black neo-shadow">
       <div className="flex flex-col items-center justify-center min-w-[80px]">
         <span className="font-black uppercase tracking-widest text-[10px] text-neutral-500 mb-1">{t('rating_average')}</span>
-        <span className="font-black text-3xl leading-none">{loading ? '-' : averageRating.toFixed(1)}</span>
+        <span className="font-black text-3xl leading-none">{loading ? '-' : (totalRatings > 0 ? averageRating.toFixed(1) : '—')}</span>
         <span className="font-bold text-[10px] text-neutral-500 uppercase tracking-widest mt-1">{totalRatings} {t('ratings')}</span>
       </div>
       <div className="w-1 h-14 bg-black/10" />

@@ -1309,6 +1309,7 @@ export default {
       "rating_average": "平均",
       "ratings": "評価",
       "rating_saved": "評価が保存されました！",
+      "rating_error": "評価を保存できませんでした。接続を確認して再試行してください。",
       "login_required": "ログインが必要です。",
       "top_lists": "トップリスト",
       "lists_page_title": "リスト",
