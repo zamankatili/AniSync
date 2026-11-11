@@ -37,7 +37,7 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
     score: 9.32,
     episodes: 28,
     matchPercentage: 98,
-    reason: 'Kaydedilen fantastik ve derin hikayeli anilelerinle %98 uyumlu. Unutulmaz atmosferi ve karakter gelişimi tam zevkine göre.',
+    reason: 'Editör seçkisi: yavaş tempolu fantezi, derin karakter gelişimi ve huzurlu atmosfer arayanlara.',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1015/138006l.jpg',
     synopsis: 'Büyük iblis kralı yenen kahraman kafilesinin büyücüsü Frieren, insan yaşamının kısalığını ve bağ kurmanın önemini anlıyor.'
   },
@@ -49,7 +49,7 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
     score: 8.52,
     episodes: 12,
     matchPercentage: 95,
-    reason: 'İzleme listenizdeki aksiyon ve seviye atlama temalı serilerden yola çıkarak AI tarafından yüksek öncelikle önerildi.',
+    reason: 'Editör seçkisi: aksiyon ve seviye atlama temalı serileri sevenler için.',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1208/135328l.jpg',
     synopsis: 'En zayıf e-rütbe avcı Sung Jinwoo, gizemli bir zindan görevinde sistem tarafından seçilerek sınırsız seviye atlama yeteneği kazanır.'
   },
@@ -61,7 +61,7 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
     score: 8.81,
     episodes: 23,
     matchPercentage: 94,
-    reason: 'Tempolu dövüş koreografileri ve büyüleyici atmosfer seven izleme profilinizle kusursuz eşleşme.',
+    reason: 'Editör seçkisi: hızlı dövüş koreografisi ve karanlık atmosfer sevenler için.',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1171/123961l.jpg',
     synopsis: 'Satoru Gojo ve Suguru Geto\'nun gençlik günleri ile unutulmaz Shibuya Olayı arkının nefes kesen mücadelesi.'
   },
@@ -73,7 +73,7 @@ const FALLBACK_RECOMMENDATIONS: AIRecommendationItem[] = [
     score: 8.78,
     episodes: 24,
     matchPercentage: 92,
-    reason: 'Zeka küpü ana karakteri ve saray içi gizem çözme dinamikleriyle listeniz için özel seçilmiş yapım.',
+    reason: 'Editör seçkisi: zeki bir protagonist ve saray entrikası/gizem sevenler için.',
     imageUrl: 'https://cdn.myanimelist.net/images/anime/1708/138033l.jpg',
     synopsis: 'Eczacı kız Maomao, imparatorluk sarayına hizmetçi olarak satılır ve tıbbi bilgileriyle gizemli zehirlenme vakalarını çözer.'
   }
@@ -211,11 +211,11 @@ export const AIRecommendationsSection: React.FC = () => {
               transition={{ delay: index * 0.08 }}
               className="bg-neutral-950 border-2 border-amber-400/50 hover:border-amber-400 p-4 transition-all duration-200 group flex flex-col sm:flex-row gap-4 relative overflow-hidden"
             >
-              {/* Match Percentage Badge — yalnızca AI üretimi eşleşmeler için gösterilir */}
+              {/* AI üretimi işaret — sayısal "uyum %" gösterilmez (hesaplanmış değil) */}
               {isAiGenerated && (
                 <div className="absolute top-2 right-2 bg-amber-400 text-black font-black text-[10px] px-2 py-0.5 border border-black uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_#000] z-10">
                   <Zap size={10} fill="currentColor" />
-                  <span>{t('ai_match', { percent: rec.matchPercentage })}</span>
+                  <span>{t('ai_pick_badge', { defaultValue: 'AI PICK' })}</span>
                 </div>
               )}
 
@@ -256,7 +256,7 @@ export const AIRecommendationsSection: React.FC = () => {
                   {/* AI Reason Box */}
                   <div className="p-2 bg-amber-950/60 border border-amber-500/40 text-[11px] font-bold text-amber-200 leading-snug mb-3">
                     <span className="text-amber-400 font-black uppercase block mb-0.5 flex items-center gap-1">
-                      <Sparkles size={11} /> {t('ai_why_this')}
+                      <Sparkles size={11} /> {isAiGenerated ? t('ai_why_this') : t('ai_editor_note', { defaultValue: 'EDİTÖR NOTU' })}
                     </span>
                     {pickLocalized(AI_FALLBACK_REASONS[rec.id], rec.reason)}
                   </div>

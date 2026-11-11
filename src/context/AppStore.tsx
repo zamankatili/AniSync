@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { WatchlistItem, WatchStatus, Anime, ForumPost, Friend, UserProfile, UserNamedList } from '../types';
 import { auth, googleProvider, db } from '../firebase';
 import { useDailyPoll } from '../hooks/useDailyPoll';
@@ -286,14 +286,85 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem('anisync_profile', JSON.stringify(userProfile));
   }, [userProfile]);
 
+  // ── Named lists: çoklu cihaz senkronu ────────────────────────────────
+  // Eski davranış: her state değişiminde dokümanın tamamı yazılıyordu
+  // (yarışta veri kaybı) ve girişte uzak veri hiç okunmuyordu (push-only).
+  // Yeni davranış: girişte uzak listeler bir kez okunur + id bazında birleşir;
+  // yazımlar 700 ms debounce edilir ve değişmeyen içerik tekrar yazılmaz.
+  const namedListsRef = useRef<UserNamedList[]>(userNamedLists);
+  const namedListsLastSyncedRef = useRef<string>('');
+  const namedListsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    namedListsRef.current = userNamedLists;
+  }, [userNamedLists]);
+
+  useEffect(() => {
+    const uid = currentUser?.uid;
+    if (!uid) {
+      namedListsLastSyncedRef.current = '';
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, `users/${uid}/customData`, 'namedLists'));
+        if (!alive || !snap.exists()) return;
+        const remoteRaw = (snap.data() as { lists?: unknown }).lists;
+        const remote = Array.isArray(remoteRaw) ? (remoteRaw as UserNamedList[]) : [];
+        if (remote.length === 0) return;
+
+        // Yerel (misafirken oluşturulmuş) listeler kaybolmasın: id bazında birleştir,
+        // aynı id'de yerel kazanır (çevrimdışı düzenlemeler korunur).
+        const merged = [...remote];
+        namedListsRef.current.forEach((localList) => {
+          const idx = merged.findIndex((entry) => entry.id === localList.id);
+          if (idx >= 0) merged[idx] = localList;
+          else merged.push(localList);
+        });
+
+        const serialized = JSON.stringify(merged);
+        namedListsLastSyncedRef.current = serialized;
+        if (serialized !== JSON.stringify(namedListsRef.current)) {
+          setUserNamedLists(merged);
+        }
+      } catch (err) {
+        console.warn('Could not hydrate namedLists from Firestore:', err);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [currentUser?.uid]);
+
   useEffect(() => {
     localStorage.setItem('anisync_user_named_lists', JSON.stringify(userNamedLists));
-    if (currentUser) {
-      setDoc(doc(db, `users/${currentUser.uid}/customData`, 'namedLists'), {
-        lists: userNamedLists,
+
+    if (!currentUser || !currentUser.uid) return;
+    const serialized = JSON.stringify(userNamedLists);
+    if (serialized === namedListsLastSyncedRef.current) return;
+
+    if (namedListsTimerRef.current) clearTimeout(namedListsTimerRef.current);
+    const uid = currentUser.uid;
+    namedListsTimerRef.current = setTimeout(() => {
+      namedListsTimerRef.current = null;
+      const payload = namedListsRef.current;
+      setDoc(doc(db, `users/${uid}/customData`, 'namedLists'), {
+        lists: payload,
         updatedAt: serverTimestamp()
-      }, { merge: true }).catch(err => console.warn('Could not sync namedLists to Firestore:', err));
-    }
+      }, { merge: true })
+        .then(() => {
+          namedListsLastSyncedRef.current = JSON.stringify(payload);
+        })
+        .catch(err => console.warn('Could not sync namedLists to Firestore:', err));
+    }, 700);
+
+    return () => {
+      if (namedListsTimerRef.current) {
+        clearTimeout(namedListsTimerRef.current);
+        namedListsTimerRef.current = null;
+      }
+    };
   }, [userNamedLists, currentUser]);
 
   const createUserNamedList = (data: { name: string; description?: string; emoji?: string; color?: string; animeIds?: number[] }) => {

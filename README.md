@@ -3,7 +3,8 @@
 Anime, manga, light novel ve oyun sevenler için hepsi bir arada platform:
 izleme/okuma listeleri, **canlı sezon takvimi**, güncel haberler, topluluk
 (sosyal akış, yorumlar, Watch Party), oyunlar (ANISYNCDLE, Müzik Quizi,
-Arcade, Life Sim), XP/seviye sistemi ve zevkine göre öneriler.
+**KİM BU KARAKTER?** ses tahmin oyunu, Arcade, Life Sim), XP/seviye sistemi
+ve zevkine göre öneriler.
 
 > Bu repo uygulamanın üretime giden tek kaynağıdır. Deploy hedefi Vercel
 > (bkz. **Dağıtım**). Eski `main` geçmişi arşivde `legacy-v2` dalında saklanır.
@@ -41,7 +42,7 @@ Arcade, Life Sim), XP/seviye sistemi ve zevkine göre öneriler.
 
 **Oyunlar & Eğlence**
 
-- ANISYNCDLE, Müzik Quizi (günlük), Arcade (Breakout / Memory / Snake)
+- ANISYNCDLE, Müzik Quizi (günlük), **KİM BU KARAKTER?** (resmî karakter PV'lerinden ses tahmini), Arcade (Breakout / Memory / Snake)
 - Anime Life Sim — 4 dilli evrenler & olay motoru
 - Otaku DNA — 3 adımlı zevk anketi
 
@@ -70,7 +71,7 @@ anilist istekleri için hız sınırlayıcısı ve bellek-içi önbellek ile kor
 | Backend | Firebase Auth (Google + e-posta), **named Firestore DB**, Storage |
 | Backend (ops) | Vercel serverless: `/api/anime-news` (RSS), `/api/games/*` (Steam proxy'ler), `/api/refresh-news` (cron) |
 | Mobil | Capacitor 8 — Android / iOS / Web (`capacitor.config.ts`) |
-| Test | Vitest (50 test) |
+| Test | Vitest (65 test, 10 dosya) |
 | İ18n | TR, EN, JA, FR — dil detektörü + dil-bazlı route parçalama |
 
 ## Başlangıç
@@ -131,15 +132,17 @@ public/                PWA, og ikonları, chibi avatarlar (public/avatars/)
 - **Google News RSS (sunucu)** — `/api/anime-news` üzerinden, `/api/refresh-news`
   cron'u günde bir tazeler — Hobby plan üst limiti (`Authorization: Bearer CRON_SECRET`)
 - **Steam** — `/api/games/search`, `/api/games/[appid]` keyless proxy
-- **Firebase** — auth, sosyal, takip edilen içerik, KVKK/GDPR veri dışa/ekle-sil
+- **Firebase** — auth, sosyal, takip edilen içerik, KVKK/GDPR veri **dışa aktarma** ve **silme talebi kuyruğu** (talep admin tarafından 30 gün içinde işlenir; tam otomatik silme henüz yok)
 
 ## Dağıtım
 
 1. Repoyu Vercel'e bağla (framework: Vite, output: `dist`).
-2. Vercel ortam değişkenleri: `GEMINI_API_KEY` (AI sohbet), `CRON_SECRET`,
+2. Vercel ortam değişkenleri: `GEMINI_API_KEY` (opsiyonel — yoksa AI özellikleri
+   kapalı kalır ve arayüz açıkça "editör seçkisi" gösterir), `CRON_SECRET`,
    `FIREBASE_PROJECT_ID`.
-3. Firebase: `firestore.rules` ve `firestore.indexes.json` `firebase deploy --only firestore` ile yayında (named DB).
+3. Firebase: `firestore.rules` ve `firestore.indexes.json` `firebase deploy --only firestore:rules,firestore:indexes` ile yayında (named DB).
 4. Native: `./android` ve `./ios` Capacitor kabuklarında `npm run native:sync`.
+   Native derlemede `/api/*` için `VITE_API_BASE_URL=https://anisync-tau.vercel.app` verin.
 
 ## Admin & roller
 
@@ -149,7 +152,7 @@ test/hata odaları.
 
 ## Gizlilik & güvenlik
 
-- Kullanıcı kendi verisini (profil, liste, yorumlar) dışa aktarabilir / silebilir.
+- Kullanıcı kendi verisini (profil, liste, yorumlar) dışa aktarabilir; hesap silme talebi oluşturabilir (talep kuyruğa düşer ve admin tarafından 30 gün içinde işlenir — tam otomatik silme henüz yok).
 - ID token doğrulaması `api/` uçlarında sunucu tarafında yapılır; Firestore rules
   minimum yetki ile yaşar.
 - Firebase web API anahtarı istemciye görünürdür (tasarım gereği); veri erişimi

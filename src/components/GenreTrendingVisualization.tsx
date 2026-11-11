@@ -1,47 +1,43 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  Cell, 
-  PieChart, 
-  Pie, 
-  RadarChart, 
-  Radar, 
-  PolarGrid, 
-  PolarAngleAxis, 
-  PolarRadiusAxis 
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Cell,
+  PieChart,
+  Pie,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis
 } from 'recharts';
-import { BarChart3, PieChart as PieChartIcon, Activity, Flame, Award, TrendingUp, Sparkles, Filter } from 'lucide-react';
+import { BarChart3, PieChart as PieChartIcon, Activity, Flame, Award, Sparkles, TrendingUp, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { motion } from 'framer-motion';
+import { localizeGenre } from '../lib/genreNames';
 
-const GENRE_COLORS: Record<string, string> = {
-  'Aksiyon': '#f43f5e',     // Rose 500
-  'Macera': '#f97316',      // Orange 500
-  'Fantezi': '#a855f7',     // Purple 500
-  'Komedi': '#eab308',      // Amber 500
-  'Dram': '#06b6d4',        // Cyan 500
-  'Bilim Kurgu': '#3b82f6', // Blue 500
-  'Romantik': '#ec4899',    // Pink 500
-  'Gizem': '#10b981',      // Emerald 500
-  'Slice of Life': '#84cc16' // Lime 500
-};
-
-const DEFAULT_GENRE_STATS = [
-  { genre: 'Aksiyon', score: 94, count: 420, growth: '+28%', color: '#f43f5e' },
-  { genre: 'Fantezi', score: 88, count: 380, growth: '+22%', color: '#a855f7' },
-  { genre: 'Dram', score: 76, count: 290, growth: '+15%', color: '#06b6d4' },
-  { genre: 'Komedi', score: 72, count: 260, growth: '+12%', color: '#eab308' },
-  { genre: 'Macera', score: 68, count: 240, growth: '+18%', color: '#f97316' },
-  { genre: 'Bilim Kurgu', score: 58, count: 190, growth: '+8%', color: '#3b82f6' },
-  { genre: 'Romantik', score: 52, count: 170, growth: '+14%', color: '#ec4899' },
-  { genre: 'Gizem', score: 46, count: 140, growth: '+9%', color: '#10b981' },
+/**
+ * Palette for the (dynamic) genre series. Colors are assigned by rank so we do
+ * not depend on a hard-coded Turkish genre list.
+ */
+const GENRE_COLORS = [
+  '#f43f5e', '#a855f7', '#06b6d4', '#eab308', '#f97316',
+  '#3b82f6', '#ec4899', '#10b981', '#84cc16', '#8b5cf6',
 ];
+
+interface GenreDatum {
+  genre: string;      // localized display name
+  rawGenre: string;   // source name used for aggregation
+  titles: number;     // number of watchlist titles in this genre
+  episodes: number;   // total episodes watched in this genre
+  share: number;      // % of the user's list
+  color: string;
+}
 
 interface GenreTrendingVisualizationProps {
   onSelectGenre?: (genreId: number) => void;
@@ -51,69 +47,104 @@ interface GenreTrendingVisualizationProps {
 const CustomTooltip = ({ active, payload }: any) => {
   const { t } = useAppTranslation();
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
+    const data = payload[0].payload as GenreDatum;
     return (
       <div className="bg-white border-4 border-black p-3 neo-shadow text-black font-black uppercase text-xs space-y-1">
         <div className="flex items-center gap-2 border-b-2 border-black pb-1">
-          <span className="w-3 h-3 border border-black inline-block" style={{ backgroundColor: data.color || '#f43f5e' }} />
-          <p className="text-sm tracking-tight">{data.genre || data.name}</p>
+          <span className="w-3 h-3 border border-black inline-block" style={{ backgroundColor: data.color }} />
+          <p className="text-sm tracking-tight">{data.genre}</p>
         </div>
-        <p className="text-neutral-700">{t('index_label')}: <span className="text-rose-600 font-extrabold">{data.score || data.value} {t('points_unit')}</span></p>
-        {data.count && <p className="text-neutral-600">{t('watch_count')}: {data.count}</p>}
-        {data.growth && <p className="text-emerald-600">{t('trend_growth')}: {data.growth}</p>}
+        <p className="text-neutral-700">
+          {t('genre_titles_label', { defaultValue: 'TITLES' })}: <span className="text-rose-600 font-extrabold">{data.titles}</span>
+        </p>
+        <p className="text-neutral-600">
+          {t('genre_episodes_label', { defaultValue: 'EPISODES WATCHED' })}: <span className="font-extrabold">{data.episodes}</span>
+        </p>
+        <p className="text-neutral-600">
+          {t('genre_share_label', { defaultValue: 'SHARE' })}: <span className="font-extrabold">{data.share.toFixed(1)}%</span>
+        </p>
       </div>
     );
   }
   return null;
 };
 
-export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProps> = ({
-  onSelectGenre,
-  selectedGenreId
-}) => {
+export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProps> = () => {
   const { watchlist } = useAppStore();
-  const { t } = useAppTranslation();
+  const { t, i18n } = useAppTranslation();
+  const navigate = useNavigate();
   const [chartType, setChartType] = useState<'bar' | 'pie' | 'radar'>('bar');
-  const [selectedGenreName, setSelectedGenreName] = useState<string | null>(null);
 
-  // Calculate actual genre distribution from user watchlist if available
-  const genreData = useMemo(() => {
-    if (!watchlist || watchlist.length === 0) {
-      return DEFAULT_GENRE_STATS;
-    }
+  /**
+   * Honest data only: every number below is derived from the user's own
+   * watchlist. When the list is empty we render an explicit empty state —
+   * we never show fabricated "trend" figures.
+   */
+  const { genreData, totalTitles, totalEpisodes } = useMemo(() => {
+    const counts = new Map<string, { titles: number; episodes: number }>();
 
-    const counts: Record<string, number> = {};
-    watchlist.forEach(item => {
+    (watchlist || []).forEach((item) => {
       const genres = item.anime?.genres || [];
-      genres.forEach(g => {
-        const name = g.name;
-        counts[name] = (counts[name] || 0) + (item.episodesWatched || 1);
+      genres.forEach((g) => {
+        const key = g.name;
+        const entry = counts.get(key) || { titles: 0, episodes: 0 };
+        entry.titles += 1;
+        entry.episodes += Math.max(0, item.episodesWatched || 0);
+        counts.set(key, entry);
       });
     });
 
-    const entries = Object.entries(counts);
-    if (entries.length === 0) return DEFAULT_GENRE_STATS;
+    const titles = (watchlist || []).length;
+    const episodes = (watchlist || []).reduce((acc, item) => acc + Math.max(0, item.episodesWatched || 0), 0);
 
-    return DEFAULT_GENRE_STATS.map(stat => {
-      const userVal = counts[stat.genre] || counts[stat.genre.replace('Aksiyon', 'Action')];
-      if (userVal) {
-        return {
-          ...stat,
-          score: Math.min(100, stat.score + userVal * 2),
-          count: stat.count + userVal * 5
-        };
-      }
-      return stat;
-    });
-  }, [watchlist]);
+    const data: GenreDatum[] = [...counts.entries()]
+      .map(([rawGenre, value], index) => ({
+        rawGenre,
+        genre: localizeGenre(rawGenre, i18n.language),
+        titles: value.titles,
+        episodes: value.episodes,
+        share: 0,
+        color: GENRE_COLORS[index % GENRE_COLORS.length],
+      }))
+      .sort((a, b) => b.titles - a.titles)
+      .map((datum, index) => ({
+        ...datum,
+        color: GENRE_COLORS[index % GENRE_COLORS.length],
+        share: titles > 0 ? (datum.titles / titles) * 100 : 0,
+      }));
 
-  const topGenre = useMemo(() => {
-    return [...genreData].sort((a, b) => b.score - a.score)[0];
-  }, [genreData]);
+    return { genreData: data, totalTitles: titles, totalEpisodes: episodes };
+  }, [watchlist, i18n.language]);
 
-  const totalScoreSum = useMemo(() => {
-    return genreData.reduce((acc, curr) => acc + curr.score, 0);
-  }, [genreData]);
+  // Empty state: no watchlist (or no genres) → tell the truth, invite to add.
+  if (genreData.length === 0) {
+    return (
+      <div className="bg-black border-4 border-black p-8 neo-shadow-white text-center space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-800 text-neutral-300 text-xs font-black tracking-widest uppercase border-2 border-white/20">
+          <TrendingUp size={14} />
+          {t('genre_watchlist_badge', { defaultValue: 'YOUR TASTE PROFILE' })}
+        </div>
+        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
+          {t('genre_empty_title', { defaultValue: 'NO GENRE DATA YET' })}
+        </h2>
+        <p className="text-neutral-400 font-bold text-xs uppercase tracking-wider max-w-md mx-auto">
+          {t('genre_empty_desc', {
+            defaultValue: 'Add anime to your list and this chart will show your real genre distribution — no estimates.',
+          })}
+        </p>
+        <button
+          onClick={() => navigate('/discover')}
+          className="inline-flex items-center gap-2 bg-white text-black font-black px-6 py-3 uppercase tracking-widest border-4 border-white hover:bg-rose-600 hover:border-rose-600 hover:text-white transition-all neo-shadow-white cursor-pointer"
+        >
+          <Plus size={18} strokeWidth={2.5} />
+          {t('genre_empty_cta', { defaultValue: 'BROWSE ANIME' })}
+        </button>
+      </div>
+    );
+  }
+
+  const topGenre = genreData[0];
+  const chartDataKey = totalEpisodes > 0 ? 'episodes' : 'titles';
 
   return (
     <div className="bg-black border-4 border-black p-6 md:p-8 neo-shadow-white space-y-6">
@@ -122,13 +153,15 @@ export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProp
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-600 text-white text-xs font-black tracking-widest uppercase mb-2 border-2 border-black neo-shadow-white">
             <TrendingUp size={14} />
-            {t('genre_badge')}
+            {t('genre_watchlist_badge', { defaultValue: 'YOUR TASTE PROFILE' })}
           </div>
           <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">
-            {t('genre_title')}
+            {t('genre_watchlist_title', { defaultValue: 'WATCHLIST GENRE BREAKDOWN' })}
           </h2>
           <p className="text-neutral-400 font-bold text-xs uppercase tracking-wider mt-1">
-            {t('genre_subtitle')}
+            {t('genre_watchlist_subtitle', {
+              defaultValue: 'Calculated from the anime in your own list — no estimated or fabricated metrics.',
+            })}
           </p>
         </div>
 
@@ -167,16 +200,18 @@ export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProp
         </div>
       </div>
 
-      {/* KPI Highlights Bar */}
+      {/* KPI Highlights Bar — all values are real aggregates */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-neutral-900 border-2 border-rose-500 p-4 neo-shadow flex items-center gap-4">
           <div className="p-3 bg-rose-600 border-2 border-black text-white">
             <Flame size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">{t('top_genre')}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              {t('genre_top_genre', { defaultValue: 'YOUR TOP GENRE' })}
+            </span>
             <h4 className="text-xl font-black uppercase text-white tracking-tight">{topGenre.genre}</h4>
-            <p className="text-xs font-bold text-rose-400 uppercase">{t('market_share', { share: (((topGenre.score / totalScoreSum) * 100)).toFixed(1) })}</p>
+            <p className="text-xs font-bold text-rose-400 uppercase">{topGenre.share.toFixed(1)}%</p>
           </div>
         </div>
 
@@ -185,9 +220,10 @@ export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProp
             <Award size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">{t('fastest_rising')}</span>
-            <h4 className="text-xl font-black uppercase text-white tracking-tight">FANTEZİ</h4>
-            <p className="text-xs font-bold text-cyan-400 uppercase">{t('this_week')}</p>
+            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              {t('genre_total_titles', { defaultValue: 'TITLES IN LIST' })}
+            </span>
+            <h4 className="text-xl font-black uppercase text-white tracking-tight">{totalTitles}</h4>
           </div>
         </div>
 
@@ -196,9 +232,10 @@ export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProp
             <Sparkles size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">{t('total_engagement')}</span>
-            <h4 className="text-xl font-black uppercase text-white tracking-tight">{t('total_episodes')}</h4>
-            <p className="text-xs font-bold text-amber-400 uppercase">{t('active_community')}</p>
+            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              {t('genre_total_episodes', { defaultValue: 'EPISODES WATCHED' })}
+            </span>
+            <h4 className="text-xl font-black uppercase text-white tracking-tight">{totalEpisodes}</h4>
           </div>
         </div>
       </div>
@@ -208,31 +245,25 @@ export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProp
         <ResponsiveContainer width="100%" height="100%">
           {chartType === 'bar' ? (
             <BarChart data={genreData} margin={{ top: 20, right: 20, left: -10, bottom: 25 }}>
-              <XAxis 
-                dataKey="genre" 
-                tick={{ fill: '#000000', fontWeight: 900, fontSize: 11 }} 
+              <XAxis
+                dataKey="genre"
+                tick={{ fill: '#000000', fontWeight: 900, fontSize: 11 }}
                 axisLine={{ stroke: '#000000', strokeWidth: 3 }}
                 tickLine={{ stroke: '#000000', strokeWidth: 2 }}
                 interval={0}
               />
-              <YAxis 
-                tick={{ fill: '#000000', fontWeight: 900, fontSize: 11 }} 
+              <YAxis
+                tick={{ fill: '#000000', fontWeight: 900, fontSize: 11 }}
                 axisLine={{ stroke: '#000000', strokeWidth: 3 }}
                 tickLine={{ stroke: '#000000', strokeWidth: 2 }}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.08)' }} />
-              <Bar 
-                dataKey="score" 
-                radius={[0, 0, 0, 0]}
-                onClick={(data: any) => {
-                  if (data && data.genre) setSelectedGenreName(data.genre);
-                }}
-              >
+              <Bar dataKey={chartDataKey} radius={[0, 0, 0, 0]}>
                 {genreData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={entry.color} 
-                    stroke="#000000" 
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    stroke="#000000"
                     strokeWidth={3}
                     className="cursor-pointer hover:opacity-80 transition-opacity"
                   />
@@ -244,7 +275,7 @@ export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProp
               <Tooltip content={<CustomTooltip />} />
               <Pie
                 data={genreData}
-                dataKey="score"
+                dataKey="titles"
                 nameKey="genre"
                 cx="50%"
                 cy="50%"
@@ -265,10 +296,10 @@ export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProp
             <RadarChart cx="50%" cy="50%" outerRadius={120} data={genreData}>
               <PolarGrid stroke="#000000" strokeWidth={2} />
               <PolarAngleAxis dataKey="genre" tick={{ fill: '#000000', fontWeight: 900, fontSize: 12 }} />
-              <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#000000', fontWeight: 700 }} />
+              <PolarRadiusAxis angle={30} tick={{ fill: '#000000', fontWeight: 700 }} />
               <Radar
-                name="Tür Popülerliği"
-                dataKey="score"
+                name={t('genre_watchlist_title', { defaultValue: 'WATCHLIST GENRE BREAKDOWN' })}
+                dataKey="titles"
                 stroke="#f43f5e"
                 fill="#f43f5e"
                 fillOpacity={0.6}
@@ -282,19 +313,14 @@ export const GenreTrendingVisualization: React.FC<GenreTrendingVisualizationProp
 
       {/* Legend Badges */}
       <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-        {genreData.map(item => (
-          <button
-            key={item.genre}
-            onClick={() => setSelectedGenreName(item.genre === selectedGenreName ? null : item.genre)}
-            className={`px-3 py-1.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 border-2 transition-all ${
-              selectedGenreName === item.genre
-                ? 'bg-white text-black border-white neo-shadow-white scale-105'
-                : 'bg-neutral-900 text-white border-black hover:border-white'
-            }`}
+        {genreData.map((item) => (
+          <span
+            key={item.rawGenre}
+            className="px-3 py-1.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 border-2 bg-neutral-900 text-white border-black"
           >
             <span className="w-3 h-3 border border-black" style={{ backgroundColor: item.color }} />
-            {item.genre} ({item.score} Pt)
-          </button>
+            {item.genre} ({item.titles})
+          </span>
         ))}
       </div>
     </div>

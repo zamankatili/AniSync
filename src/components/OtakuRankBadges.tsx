@@ -8,6 +8,7 @@ import {
   Badge, UserBadgeProgress, LevelInfo, LEVELS, BADGES,
   getLevelForKarma, evaluateBadges, calculateKarma 
 } from '../data/badgeData';
+import { MAX_LEVEL } from '../lib/level';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useQuizStore } from '../store/useQuizStore';
@@ -75,7 +76,7 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
   const handleSelectFeatured = (badge: Badge) => {
     if (onSelectFeaturedBadge) {
       onSelectFeaturedBadge(badge.id);
-      addToast(t('otaku_badge_featured_set', { title: badge.titleTr }), 'success');
+      addToast(t('otaku_badge_featured_set', { title: localizeBadgeTitle(badge.id, badge.titleTr) }), 'success');
       setSelectedBadgeModal(null);
     }
   };
@@ -90,7 +91,7 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
               <Crown size={12} /> {t('otaku_badge_header_banner')}
             </span>
             <span className="bg-amber-400 text-black font-black text-[10px] px-2 py-0.5 border border-black uppercase">
-              {t('otaku_badge_level', { level: levelInfo.currentLevel.level, max: 5 })}
+              {t('otaku_badge_level', { level: levelInfo.currentLevel.level, max: MAX_LEVEL })}
             </span>
           </div>
           <h2 className="text-2xl font-black uppercase tracking-tight text-black flex items-center gap-2">
@@ -121,10 +122,10 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[10px] font-black uppercase tracking-widest bg-amber-400 text-black px-1.5 py-0.2 border border-black">
-                  {t('otaku_badge_level', { level: levelInfo.currentLevel.level, max: 5 })}
+                  {t('otaku_badge_level', { level: levelInfo.currentLevel.level, max: MAX_LEVEL })}
                 </span>
                 <span className="text-xs font-black uppercase text-rose-400 tracking-wider">
-                  {levelInfo.currentLevel.title}
+                  {localizeLevelTitle(levelInfo.currentLevel.level, levelInfo.currentLevel.title)}
                 </span>
               </div>
               <h3 className="text-3xl font-black uppercase tracking-tight text-white">
@@ -207,7 +208,7 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
                     </span>
                   )}
                   <div className="text-2xl mb-1">{lvl.badge}</div>
-                  <div className="font-black text-xs uppercase mb-1">{lvl.title}</div>
+                  <div className="font-black text-xs uppercase mb-1">{localizeLevelTitle(lvl.level, lvl.title)}</div>
                   <div className="text-[10px] font-mono font-bold opacity-80">
                     {lvl.minKarma} - {lvl.maxKarma > 9999 ? '∞' : lvl.maxKarma} XP
                   </div>
@@ -256,7 +257,7 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
               onChange={(e) => setOnlyUnlocked(e.target.checked)}
               className="accent-rose-600 w-3.5 h-3.5"
             />
-            <span>t('otaku_badge_filter_unlocked')</span>
+            <span>{t('otaku_badge_filter_unlocked')}</span>
           </label>
         </div>
       </div>
@@ -279,7 +280,7 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
               {/* Featured Crown Tag */}
               {isFeatured && (
                 <div className="absolute top-1 right-1 bg-amber-400 text-black text-[8px] font-black px-1 border border-black flex items-center gap-0.5">
-                  <Star size={8} fill="currentColor" /> t('otaku_badge_featured_tag')
+                  <Star size={8} fill="currentColor" /> {t('otaku_badge_featured_tag')}
                 </div>
               )}
 
@@ -297,7 +298,7 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
               {/* Title & XP */}
               <div className="w-full">
                 <h4 className="font-black text-xs uppercase text-black truncate">
-                  {bp.badge.titleTr}
+                  {localizeBadgeTitle(bp.badge.id, bp.badge.titleTr)}
                 </h4>
                 <span className="text-[9px] font-mono font-bold text-neutral-500 block">
                   +{bp.badge.karmaReward} XP
@@ -308,7 +309,7 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
               <div className="w-full mt-2 pt-1.5 border-t border-neutral-200">
                 {bp.isUnlocked ? (
                   <span className="text-[9px] font-black uppercase text-emerald-600 flex items-center justify-center gap-0.5">
-                    <CheckCircle2 size={10} /> t('otaku_badge_unlocked')
+                    <CheckCircle2 size={10} /> {t('otaku_badge_unlocked')}
                   </span>
                 ) : (
                   <div className="space-y-0.5">
@@ -356,28 +357,30 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
                   {selectedBadgeModal.badge.category.toUpperCase()} {t('otaku_badge_modal_category')}
                 </span>
                 <h3 className="text-xl font-black uppercase tracking-tight text-black mt-1">
-                  {selectedBadgeModal.badge.titleTr}
+                  {localizeBadgeTitle(selectedBadgeModal.badge.id, selectedBadgeModal.badge.titleTr)}
                 </h3>
                 <span className="text-xs font-bold text-rose-600 font-mono">
-                  +{selectedBadgeModal.badge.karmaReward} t('otaku_badge_modal_karma_xp')
+                  +{selectedBadgeModal.badge.karmaReward} {t('otaku_badge_modal_karma_xp')}
                 </span>
               </div>
 
               <p className="text-xs text-neutral-700 font-bold leading-relaxed px-4">
-                {selectedBadgeModal.badge.description}
+                {localizeBadgeDescription(selectedBadgeModal.badge.id, selectedBadgeModal.badge.description)}
               </p>
 
               <div className="w-full p-3 bg-neutral-100 border-2 border-black text-left space-y-1">
                 <span className="text-[10px] font-black uppercase text-neutral-500 block">
-                  t('otaku_badge_modal_requirement')
+                  {t('otaku_badge_modal_requirement')}
                 </span>
                 <p className="text-xs font-bold text-black">
-                  {selectedBadgeModal.badge.requirement}
+                  {localizeBadgeRequirement(selectedBadgeModal.badge.id, selectedBadgeModal.badge.requirement)}
                 </p>
                 <div className="pt-2 flex items-center justify-between text-[11px] font-black uppercase">
-                  <span>t('otaku_badge_modal_status')</span>
+                  <span>{t('otaku_badge_modal_status')}</span>
                   <span className={selectedBadgeModal.isUnlocked ? "text-emerald-600" : "text-neutral-500"}>
-                    {selectedBadgeModal.isUnlocked ? "t('otaku_badge_modal_unlocked')" : `%${selectedBadgeModal.progressPercent} t('otaku_badge_modal_completed')`}
+                    {selectedBadgeModal.isUnlocked
+                      ? t('otaku_badge_modal_unlocked')
+                      : `${selectedBadgeModal.progressPercent}% ${t('otaku_badge_modal_completed')}`}
                   </span>
                 </div>
               </div>
@@ -390,14 +393,14 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
                     className="flex-1 py-2 bg-amber-400 hover:bg-amber-300 text-black border-2 border-black font-black text-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_0px_#000]"
                   >
                     <Star size={14} />
-                    <span>t('otaku_badge_modal_set_featured')</span>
+                    <span>{t('otaku_badge_modal_set_featured')}</span>
                   </button>
                 )}
                 <button
                   onClick={() => setSelectedBadgeModal(null)}
                   className="px-4 py-2 border-2 border-black font-black text-xs uppercase bg-neutral-200 hover:bg-neutral-300 cursor-pointer"
                 >
-                  t('otaku_badge_modal_close')
+                  {t('otaku_badge_modal_close')}
                 </button>
               </div>
             </div>

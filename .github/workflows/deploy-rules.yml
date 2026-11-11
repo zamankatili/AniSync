@@ -5,6 +5,7 @@ on:
     branches: [master, main]
     paths:
       - 'firestore.rules'
+      - 'firestore.indexes.json'
       - 'firebase.json'
   workflow_dispatch: # elle de tetiklenebilir
 
@@ -18,7 +19,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Deploy rules to Firebase
+      - name: Deploy rules and indexes to Firebase
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
@@ -26,4 +27,4 @@ jobs:
             echo "::error::FIREBASE_TOKEN secret is not set. Run 'firebase login:ci' and add the token as a repository secret."
             exit 1
           fi
-          npx --yes firebase-tools deploy --only firestore:rules --token "$FIREBASE_TOKEN" --project folkloric-centaur-q6tp2
+          npx --yes firebase-tools deploy --only firestore:rules,firestore:indexes --token "$FIREBASE_TOKEN" --project folkloric-centaur-q6tp2
