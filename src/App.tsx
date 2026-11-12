@@ -51,6 +51,7 @@ export default function App() {
               <Route path="anime-life-sim" element={<AnimeLifeSim />} />
               <Route path="calendar" element={<AiringCalendar />} />
               <Route path="discover" element={<Discover />} />
+              <Route path="lists" element={<ListsPage />} />
               <Route path="anime/:id" element={<AnimeDetail />} />
               <Route path="media/:id" element={<MediaDetail />} />
               <Route path="privacy" element={<LegalPage kind="privacy" />} />
@@ -63,7 +64,6 @@ export default function App() {
               <Route path="watch-party/:roomId" element={<PrivateRoute><WatchParty /></PrivateRoute>} />
               <Route path="grid-maker" element={<PrivateRoute><AnimeGridMaker /></PrivateRoute>} />
               <Route path="list" element={<MyList />} />
-              <Route path="lists" element={<PrivateRoute><ListsPage /></PrivateRoute>} />
               <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
               <Route path="profile/:uid" element={<Profile />} />
 
