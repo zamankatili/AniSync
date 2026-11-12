@@ -377,4 +377,30 @@ $env:VITE_API_BASE_URL="https://anisync-tau.vercel.app"; npm.cmd run native:sync
 
 ---
 
+## 13. 12 Kasım 2026 — Kapanış turu (i18n + dürüstlük)
+
+**Commit'ler:** `c5e7d25`, `61cbc52`, `b01687f` (+ bu tur).
+
+**Kapanan işler:**
+- Profil analitiği: boş listede uydurma radar türleri/sayılar kaldırıldı; bilinmeyen bölüm sayısı 12 varsayılmıyor; "tahmini" ve "bilinmeyen seriler hariç" notları eklendi.
+- Aylık aktivite grafiği: ay adları aktif dile göre; bilinmeyen bölümlerde 12 uydurulmuyor; eksen, legend ve tooltip yerelleşti.
+- Voice Duel: TR/EN/JA/FR arayüz ve dört dilli ipuçları; resmî kanal atfı; şık isimleri `lang="en"` ile Türkçe büyük harf bozulmasından korunuyor.
+- Liste oluşturma, akış kartı, KÖŞE kafe, haber arama, yanıt alanı ve Snake yön etiketleri yerelleşti.
+- Zevk anketi: tüm adımlar ve sonuçlar dört dilde; eksik `taste_header_*` anahtarları eklendi. Üç öneri artık "sabit editör seçkisi" olarak etiketli; MAL skorları "seçki tarihinde" olarak işaretli.
+- Zevk anketi hızlı ekleme: uydurma 24 bölüm / 2024 / Finished Airing / tür yazımı kaldırıldı. Önce AniList, sonra Jikan'dan gerçek veri çekiliyor; ikisi de yoksa açık hata gösteriliyor.
+- Hatırlatıcılar: bildirim testi, kalan süre metni, Google Takvim ve ICS içerikleri dört dilde; mobilde arka plan bildirimi olmadığı arayüzde açıkça yazılı.
+
+**Kapılar:** 65 test / 10 dosya, `tsc` 0, ESLint 0 hata, build 0; GitHub CI `build-test` yeşil; Vercel deploy yeşil.
+
+**Açık kalanlar (dürüst liste):**
+1. Oturum açmış kullanıcıyla uçtan uca smoke yapılmadı: oda onayı, Kalfa oda açma, Watch Party senkronu, admin paneli.
+2. `FIREBASE_TOKEN` GitHub secret yok → `deploy` işi kırmızı; Firestore kuralları/index'leri elle deploy edildi.
+3. Gemini anahtarı yok/kotası bitmiş → AI önerileri fail-closed; arayüz "editör seçkisi" demeli, "AI eşleşmesi" dememeli.
+4. KVKK otomatik silme/dışa aktarma yok; e-posta + manuel kuyruk.
+5. Native arka plan bildirimi yok (Capacitor local notifications eklenmedi).
+6. Voice Duel klip kaynak pinleme dokümanı (`docs/voice-sources.md`) yok.
+7. Kalan gömülü metinler ağırlıklı olarak admin paneli ve marka adları; yeni ekranlarda önce `t()` kullanılmalı.
+
+---
+
 *Belge sonu · AniSync MVP → Consumer Product · 2026‑11‑10 · İletişim: repo sahibi (zamankatili).*

@@ -3,6 +3,10 @@ import { AnimeReminder, DayOfWeek } from '../types';
 import { AiringAnime } from '../data/airingSchedule';
 import { db, auth } from '../firebase';
 import { doc, setDoc, deleteDoc, getDocs, collection } from 'firebase/firestore';
+import i18n from '../i18n';
+
+const tr = (key: string, options?: Record<string, unknown>): string =>
+  String(i18n.t(key, options));
 
 interface ReminderState {
   reminders: AnimeReminder[];
@@ -172,8 +176,8 @@ export const useReminderStore = create<ReminderState>((set, get) => {
       playToneChime();
 
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('AniSync Hatırlatıcı Testi 🔔', {
-          body: 'Yayın takvimi bildirimleri başarıyla aktif! Yeni bölümler yayınlandığında seni haberdar edeceğiz.',
+        new Notification(tr('reminder_test_title'), {
+          body: tr('reminder_test_body'),
           icon: '/favicon.ico',
         });
       }
@@ -303,14 +307,14 @@ export const useReminderStore = create<ReminderState>((set, get) => {
       let text = '';
       if (isToday) {
         if (hours === 0) {
-          text = `${minutes} dakika sonra`;
+          text = tr('reminder_time_minutes', { minutes });
         } else {
-          text = `Bugün, ${hours} sa ${minutes} dk sonra`;
+          text = tr('reminder_time_today', { hours, minutes });
         }
       } else if (days === 1) {
-        text = `Yarın ${timeTR}'de`;
+        text = tr('reminder_time_tomorrow', { time: timeTR });
       } else {
-        text = `${days} gün ${hours} saat sonra`;
+        text = tr('reminder_time_days', { days, hours });
       }
 
       return { days, hours, minutes, text, isToday };
@@ -330,14 +334,18 @@ export const useReminderStore = create<ReminderState>((set, get) => {
 
       const dates = `${formatGCalDate(targetDate)}/${formatGCalDate(endDate)}`;
       const details = encodeURIComponent(
-        `AniSync Yayın Akışı Hatırlatıcısı:\n` +
-        `Anime: ${title}\n` +
-        (anime.currentEpisode ? `Bölüm: ${anime.currentEpisode}\n` : '') +
-        `Yayın Saati: ${anime.timeTR} (TR)\n` +
-        (anime.streamingOn && anime.streamingOn.length > 0 ? `Platformlar: ${anime.streamingOn.join(', ')}\n` : '') +
-        `\nAniSync uygulamasından oluşturuldu.`
+        `${tr('reminder_calendar_title')}:\n` +
+        `${tr('reminder_calendar_anime', { title })}\n` +
+        (anime.currentEpisode ? `${tr('reminder_calendar_episode', { episode: anime.currentEpisode })}\n` : '') +
+        `${tr('reminder_calendar_time', { time: anime.timeTR })}\n` +
+        (anime.streamingOn && anime.streamingOn.length > 0 ? `${tr('reminder_calendar_platforms', { platforms: anime.streamingOn.join(', ') })}\n` : '') +
+        `\n${tr('reminder_calendar_created')}`
       );
-      const summary = encodeURIComponent(`📺 [Anime] ${title} - Yeni Bölüm${anime.currentEpisode ? ` (#${anime.currentEpisode})` : ''}`);
+      const summary = encodeURIComponent(
+        anime.currentEpisode
+          ? tr('reminder_calendar_summary_episode', { title, episode: anime.currentEpisode })
+          : tr('reminder_calendar_summary', { title })
+      );
       const recur = encodeURIComponent(`RRULE:FREQ=WEEKLY;BYDAY=${ICS_BY_DAY[anime.day]}`);
 
       return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${summary}&dates=${dates}&details=${details}&recur=${recur}`;
@@ -365,13 +373,13 @@ export const useReminderStore = create<ReminderState>((set, get) => {
         `DTSTART:${formatIcsDate(targetDate)}`,
         `DTEND:${formatIcsDate(endDate)}`,
         `RRULE:FREQ=WEEKLY;BYDAY=${ICS_BY_DAY[anime.day]}`,
-        `SUMMARY:📺 ${title}${anime.currentEpisode ? ` - Bölüm ${anime.currentEpisode}` : ''}`,
-        `DESCRIPTION:AniSync Anime Yayını: ${title} yeni bölümü yayınlandı!${anime.streamingOn && anime.streamingOn.length > 0 ? ` Platformlar: ${anime.streamingOn.join(', ')}` : ''}`,
+        `SUMMARY:${anime.currentEpisode ? tr('reminder_ics_summary_episode', { title, episode: anime.currentEpisode }) : tr('reminder_ics_summary', { title })}`,
+        `DESCRIPTION:${tr('reminder_ics_description', { title })}${anime.streamingOn && anime.streamingOn.length > 0 ? tr('reminder_ics_description_platforms', { platforms: anime.streamingOn.join(', ') }) : ''}`,
         'STATUS:CONFIRMED',
         'BEGIN:VALARM',
         'TRIGGER:-PT15M',
         'ACTION:DISPLAY',
-        `DESCRIPTION:${title} 15 dakika içinde yayınlanıyor!`,
+        `DESCRIPTION:${tr('reminder_ics_alarm', { title })}`,
         'END:VALARM',
         'END:VEVENT',
         'END:VCALENDAR'
@@ -380,7 +388,7 @@ export const useReminderStore = create<ReminderState>((set, get) => {
       const blob = new Blob([icsLines], { type: 'text/calendar;charset=utf-8' });
       const link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
-      link.setAttribute('download', `${title.replace(/[^a-zA-Z0-9]/g, '_')}_hatirlatici.ics`);
+      link.setAttribute('download', `${title.replace(/[^a-zA-Z0-9]/g, '_')}_${tr('reminder_ics_filename')}.ics`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

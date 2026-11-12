@@ -14,6 +14,7 @@ import { cn, getSafeImageUrl } from '../lib/utils';
 import { animeDetailPath } from '../lib/mediaLinks';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useNavigate } from 'react-router-dom';
+import { isNativeApp } from '../lib/apiBase';
 import { Anime, DayOfWeek } from '../types';
 
 interface AiringScheduleModalProps {
@@ -539,6 +540,11 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
                       ? t('airing_perm_granted')
                       : t('airing_perm_denied')}
                   </p>
+                  {isNativeApp() && (
+                    <p className="text-[10px] text-amber-400 font-bold uppercase mt-1.5">
+                      {t('airing_native_notice')}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3">
