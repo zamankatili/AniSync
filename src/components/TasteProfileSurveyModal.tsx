@@ -8,6 +8,8 @@ import { useAppStore } from '../context/AppStore';
 import { useToastStore } from '../store/useToastStore';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { fetchAnimeFallback, toLegacyAnime } from '../lib/api/animeBridge';
+import { getJikanMedia } from '../lib/api/jikan';
 import { Anime } from '../types';
 
 interface TasteProfileSurveyModalProps {
@@ -33,27 +35,56 @@ export interface TasteProfileResult {
 }
 
 const GENRE_OPTIONS = [
-  { id: 'Action', label: 'Aksiyon & Dövüş', icon: '⚔️' },
-  { id: 'Fantasy', label: 'Karanlık Fantezi & Büyü', icon: '🧙' },
-  { id: 'Psychological', label: 'Psikolojik & Zeka', icon: '🧠' },
-  { id: 'Sci-Fi', label: 'Bilim Kurgu & Mecha', icon: '🚀' },
-  { id: 'Romance', label: 'Romantizm & Dram', icon: '💖' },
-  { id: 'Comedy', label: 'Komedi & Parodi', icon: '😂' },
-  { id: 'Mystery', label: 'Gizem & Gerilim', icon: '🕵️' },
-  { id: 'Slice of Life', label: 'Huzurlu Yaşam (Iyashikei)', icon: '🍵' },
+  { id: 'Action', labelKey: 'taste_genre_action', icon: '⚔️' },
+  { id: 'Fantasy', labelKey: 'taste_genre_fantasy', icon: '🧙' },
+  { id: 'Psychological', labelKey: 'taste_genre_psychological', icon: '🧠' },
+  { id: 'Sci-Fi', labelKey: 'taste_genre_scifi', icon: '🚀' },
+  { id: 'Romance', labelKey: 'taste_genre_romance', icon: '💖' },
+  { id: 'Comedy', labelKey: 'taste_genre_comedy', icon: '😂' },
+  { id: 'Mystery', labelKey: 'taste_genre_mystery', icon: '🕵️' },
+  { id: 'Slice of Life', labelKey: 'taste_genre_slice', icon: '🍵' },
 ];
 
 const PACING_OPTIONS = [
-  { id: 'fast', title: 'Yüksek Adrenalin', desc: 'Sürekli tempolu savaşlar, şok edici ters köşeler ve hızlı ilerleyen olaylar.' },
-  { id: 'deep', title: 'Derin Felsefi / Ağır', desc: 'Dünya inşasına, karakter monologlarına ve ahlaki ikilemlere zaman ayıran yapımlar.' },
-  { id: 'chill', title: 'Rahatlatıcı & Dingin', desc: 'Günün yorgunluğunu unutturan, iç ısıtan atmosferik sahneler.' }
+  { id: 'fast', titleKey: 'taste_pacing_fast_title', descKey: 'taste_pacing_fast_desc' },
+  { id: 'deep', titleKey: 'taste_pacing_deep_title', descKey: 'taste_pacing_deep_desc' },
+  { id: 'chill', titleKey: 'taste_pacing_chill_title', descKey: 'taste_pacing_chill_desc' }
 ];
 
 const ARCHETYPE_OPTIONS = [
-  { id: 'strategist', title: 'Gölge Dahi / Stratejist', desc: 'Zekasıyla satranç oynar gibi düşmanlarını alt eden karakterler (Lelouch, L, Aizen).' },
-  { id: 'grit', title: 'Sarsılmaz İrade & Azim', desc: 'Asla pes etmeyen, dostları için sınırları zorlayan kahramanlar (Luffy, Naruto).' },
-  { id: 'antihero', title: 'Bedel Ödeyen Anti-Kahraman', desc: 'Ahlaki gri alanda yürüyen, acı ve fedakarlıkla yoğrulmuş karakterler (Guts, Eren).' },
-  { id: 'sage', title: 'Esrarengiz Usta / Sakin Güç', desc: 'Gevşek görünen ama kritik anda efsaneleşen mentorlar (Gojo, Kisuke, Reigen).' }
+  { id: 'strategist', titleKey: 'taste_arch_strategist_title', descKey: 'taste_arch_strategist_desc' },
+  { id: 'grit', titleKey: 'taste_arch_grit_title', descKey: 'taste_arch_grit_desc' },
+  { id: 'antihero', titleKey: 'taste_arch_antihero_title', descKey: 'taste_arch_antihero_desc' },
+  { id: 'sage', titleKey: 'taste_arch_sage_title', descKey: 'taste_arch_sage_desc' }
+];
+
+/**
+ * Sabit editör seçkisi. Bu liste kişiselleştirilmiş bir AI eşleştirmesi
+ * değildir; sonuç ekranında bu açıkça belirtilir. Skorlar seçkinin
+ * yayınlandığı tarihteki MAL değerleridir, canlı veri değildir.
+ */
+const CURATED_RECOMMENDATIONS = [
+  {
+    mal_id: 52991,
+    title: "Frieren: Beyond Journey's End",
+    image: "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg",
+    score: 9.32,
+    reasonKey: 'taste_rec_frieren'
+  },
+  {
+    mal_id: 52299,
+    title: "Solo Leveling",
+    image: "https://cdn.myanimelist.net/images/anime/1208/135328l.jpg",
+    score: 8.52,
+    reasonKey: 'taste_rec_solo'
+  },
+  {
+    mal_id: 1535,
+    title: "Death Note",
+    image: "https://cdn.myanimelist.net/images/anime/9/9453l.jpg",
+    score: 8.62,
+    reasonKey: 'taste_rec_death_note'
+  }
 ];
 
 export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = ({ 
@@ -70,6 +101,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
   const [selectedPacing, setSelectedPacing] = useState<string>('fast');
   const [selectedArchetype, setSelectedArchetype] = useState<string>('strategist');
   const [result, setResult] = useState<TasteProfileResult | null>(null);
+  const [addingId, setAddingId] = useState<number | null>(null);
 
   if (!isOpen) return null;
 
@@ -86,53 +118,30 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
   };
 
   const calculateProfileResult = (): TasteProfileResult => {
-    // 1. Calculate DNA Title
-    let dnaTitle = "Gölge Stratejisti";
-    let dnaBadge = "🧠";
-    let desc = "Akıl oyunları, zekice hamleler ve derin kurgular senin için vazgeçilmez.";
+    // 1. Archetype → Otaku DNA (localized copy; no AI claim)
+    const dnaByArchetype: Record<string, { titleKey: string; badge: string; descKey: string }> = {
+      strategist: { titleKey: 'taste_dna_strategist_title', badge: '🧠', descKey: 'taste_dna_strategist_desc' },
+      grit: { titleKey: 'taste_dna_grit_title', badge: '🔥', descKey: 'taste_dna_grit_desc' },
+      antihero: { titleKey: 'taste_dna_antihero_title', badge: '⚔️', descKey: 'taste_dna_antihero_desc' },
+      sage: { titleKey: 'taste_dna_sage_title', badge: '🌌', descKey: 'taste_dna_sage_desc' }
+    };
 
-    if (selectedArchetype === 'grit') {
-      dnaTitle = "Azimli Şafak Savaşçısı";
-      dnaBadge = "🔥";
-      desc = "Saf tutku, dostluk bağları ve sınırlara meydan okuyan epik savaşlar ruhunu besliyor.";
-    } else if (selectedArchetype === 'antihero') {
-      dnaTitle = "Karanlık Kader Yolcusu";
-      dnaBadge = "⚔️";
-      desc = "Ahlaki grilikleri, gerçekçi acıları ve fedakarlık gerektiren karanlık fantezileri seviyorsun.";
-    } else if (selectedArchetype === 'sage') {
-      dnaTitle = "Zen Kozmos Bilgesi";
-      dnaBadge = "🌌";
-      desc = "Esrarengiz güçler, derin felsefi dünya inşası ve estetik sahneler senin odağın.";
-    }
+    const dna = dnaByArchetype[selectedArchetype] ?? dnaByArchetype.strategist;
+    const dnaTitle = t(dna.titleKey);
+    const desc = t(dna.descKey);
 
-    // 2. Select matching curated series
-    const recs = [
-      {
-        mal_id: 52991,
-        title: "Frieren: Beyond Journey's End",
-        image: "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg",
-        score: 9.32,
-        reason: "Felsefi derinliği ve büyüleyici dünyasıyla izleme zevkine tam oturuyor."
-      },
-      {
-        mal_id: 52299,
-        title: "Solo Leveling",
-        image: "https://cdn.myanimelist.net/images/anime/1208/135328l.jpg",
-        score: 8.52,
-        reason: "Yüksek adrenalin temposu ve güçlenme dinamiği aradığın heyecanı veriyor."
-      },
-      {
-        mal_id: 1535,
-        title: "Death Note",
-        image: "https://cdn.myanimelist.net/images/anime/9/9453l.jpg",
-        score: 8.62,
-        reason: "Gölge stratejist profiline uygun kusursuz bir kedi-fare oyunu."
-      }
-    ];
+    // 2. Fixed editor picks (explicitly labelled on the result screen)
+    const recs = CURATED_RECOMMENDATIONS.map((rec) => ({
+      mal_id: rec.mal_id,
+      title: rec.title,
+      image: rec.image,
+      score: rec.score,
+      reason: t(rec.reasonKey)
+    }));
 
     return {
       dnaTitle,
-      dnaBadge,
+      dnaBadge: dna.badge,
       description: desc,
       primaryGenres: selectedGenres,
       preferredPacing: selectedPacing,
@@ -144,39 +153,44 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
   const handleFinishSurvey = () => {
     const computedResult = calculateProfileResult();
     setResult(computedResult);
-    
+
     // Save to AppStore userProfile
     updateUserProfile({
       favoriteGenres: selectedGenres,
-      bio: `Otaku DNA: ${computedResult.dnaBadge} ${computedResult.dnaTitle}`
+      bio: t('taste_bio_prefix', { badge: computedResult.dnaBadge, title: computedResult.dnaTitle })
     });
 
     localStorage.setItem('anisync_user_taste_dna', JSON.stringify(computedResult));
-    addToast(`Zevk profilin oluşturuldu: ${computedResult.dnaTitle}!`, 'success');
+    addToast(t('taste_profile_created', { title: computedResult.dnaTitle }), 'success');
 
     if (onCompleted) {
       onCompleted(computedResult);
     }
   };
 
-  const handleQuickAdd = (animeData: TasteProfileResult['recommendedAnimes'][0]) => {
-    const mockAnime: Anime = {
-      mal_id: animeData.mal_id,
-      title: animeData.title,
-      title_english: animeData.title,
-      images: {
-        jpg: { image_url: animeData.image, large_image_url: animeData.image },
-        webp: { image_url: animeData.image, large_image_url: animeData.image }
-      },
-      synopsis: animeData.reason,
-      score: animeData.score,
-      episodes: 24,
-      status: 'Finished Airing',
-      genres: [{ mal_id: 1, name: selectedGenres[0] || 'Aksiyon' }],
-      year: 2024
-    };
-    addToWatchlist(mockAnime, 'plan_to_watch');
-    addToast(`${animeData.title} izleme listenize eklendi!`, 'success');
+  /**
+   * Watchlist'e eklemeden önce gerçek medya verisini çeker. Kaynak
+   * erişilemezse uydurma bölüm/yıl/tür bilgisi yazmak yerine hata gösterir.
+   */
+  const handleQuickAdd = async (animeData: TasteProfileResult['recommendedAnimes'][0]) => {
+    if (addingId !== null) return;
+    setAddingId(animeData.mal_id);
+
+    let anime: Anime | null = await fetchAnimeFallback(animeData.mal_id);
+    if (!anime) {
+      const jikanMedia = await getJikanMedia('anime', animeData.mal_id).catch(() => null);
+      if (jikanMedia) anime = toLegacyAnime(jikanMedia, animeData.mal_id);
+    }
+
+    if (!anime) {
+      addToast(t('taste_add_error'), 'error');
+      setAddingId(null);
+      return;
+    }
+
+    addToWatchlist(anime, 'plan_to_watch');
+    addToast(t('taste_added_toast', { title: anime.title }), 'success');
+    setAddingId(null);
   };
 
   return (
@@ -217,10 +231,10 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-base font-black text-black uppercase tracking-tight">
-                      1. HANGİ TÜR VE TEMALARDAN HOŞLANIRSIN?
+                      {t('taste_step1_title')}
                     </h4>
                     <p className="text-xs text-neutral-600 font-bold uppercase mt-0.5">
-                      En çok ilgini çeken 1 ila 4 türü seç (Seçili: {selectedGenres.length}/4)
+                      {t('taste_step1_desc', { count: selectedGenres.length })}
                     </p>
                   </div>
 
@@ -239,7 +253,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                         >
                           <span className="flex items-center gap-1.5">
                             <span>{g.icon}</span>
-                            <span>{g.label}</span>
+                            <span>{t(g.labelKey)}</span>
                           </span>
                           {isSelected && <Check size={14} strokeWidth={3} />}
                         </button>
@@ -254,10 +268,10 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-base font-black text-black uppercase tracking-tight">
-                      2. İDEAL İZLEME TEMPON VE MODUN NASILDIR?
+                      {t('taste_step2_title')}
                     </h4>
                     <p className="text-xs text-neutral-600 font-bold uppercase mt-0.5">
-                      Bir anime izlerken seni en çok içine çeken atmosferi seç
+                      {t('taste_step2_desc')}
                     </p>
                   </div>
 
@@ -275,11 +289,11 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                           )}
                         >
                           <div className="text-xs uppercase mb-1 flex items-center justify-between">
-                            <span>{p.title}</span>
+                            <span>{t(p.titleKey)}</span>
                             {isSelected && <Check size={14} strokeWidth={3} />}
                           </div>
                           <p className={cn("text-[11px] font-bold leading-relaxed", isSelected ? "text-rose-100" : "text-neutral-600")}>
-                            {p.desc}
+                            {t(p.descKey)}
                           </p>
                         </button>
                       );
@@ -293,10 +307,10 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-base font-black text-black uppercase tracking-tight">
-                      3. EN ÇOK HANGİ KARAKTER ARKETİPİNE ÇEKİLİRSİN?
+                      {t('taste_step3_title')}
                     </h4>
                     <p className="text-xs text-neutral-600 font-bold uppercase mt-0.5">
-                      Başrolde veya kilit noktada görmeyi sevdiğin kişilik tarzı
+                      {t('taste_step3_desc')}
                     </p>
                   </div>
 
@@ -314,11 +328,11 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                           )}
                         >
                           <div className="text-xs uppercase mb-1 flex items-center justify-between">
-                            <span>{a.title}</span>
+                            <span>{t(a.titleKey)}</span>
                             {isSelected && <Check size={14} strokeWidth={3} />}
                           </div>
                           <p className="text-[11px] font-bold text-neutral-700 leading-relaxed">
-                            {a.desc}
+                            {t(a.descKey)}
                           </p>
                         </button>
                       );
@@ -335,7 +349,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-2xl">{result.dnaBadge}</span>
                   <span className="font-black text-xs uppercase bg-black text-amber-400 px-2 py-0.5">
-                    SENİN OTAKU DNA&apos;N
+                    {t('taste_dna_label')}
                   </span>
                 </div>
                 <h3 className="text-2xl font-black uppercase tracking-tight mb-2">
@@ -350,8 +364,11 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
               <div>
                 <h4 className="font-black text-xs uppercase text-black tracking-wider mb-2 flex items-center gap-1.5">
                   <Sparkles size={14} className="text-rose-600" />
-                  BU PROFİLE ÖZEL DERLENEN 3 BAŞYAPIT:
+                  {t('taste_curated_title')}
                 </h4>
+                <p className="text-[10px] font-bold text-neutral-600 uppercase mb-2">
+                  {t('taste_curated_note')}
+                </p>
 
                 <div className="space-y-2.5">
                   {result.recommendedAnimes.map((rec) => {
@@ -371,7 +388,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                             {rec.title}
                           </h5>
                           <span className="text-[10px] text-amber-400 font-bold block mb-1">
-                            ★ MAL Skoru: {rec.score}
+                            {t('taste_mal_score_snapshot', { score: rec.score })}
                           </span>
                           <p className="text-[10px] text-neutral-300 font-bold line-clamp-1">
                             {rec.reason}
@@ -380,14 +397,20 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
 
                         <button
                           onClick={() => handleQuickAdd(rec)}
-                          disabled={isAlreadySaved}
+                          disabled={isAlreadySaved || addingId === rec.mal_id}
                           className={cn(
-                            "px-3 py-1.5 border border-black font-black text-[10px] uppercase flex items-center gap-1 shrink-0 cursor-pointer",
+                            "px-3 py-1.5 border border-black font-black text-[10px] uppercase flex items-center gap-1 shrink-0 cursor-pointer disabled:cursor-wait",
                             isAlreadySaved ? "bg-emerald-400 text-black" : "bg-white text-black hover:bg-amber-400"
                           )}
                         >
                           {isAlreadySaved ? <Check size={12} /> : <Bookmark size={12} />}
-                          <span>{isAlreadySaved ? "LİSTEDE" : "EKLE"}</span>
+                          <span>
+                            {isAlreadySaved
+                              ? t('taste_in_list')
+                              : addingId === rec.mal_id
+                                ? t('taste_add_loading')
+                                : t('taste_add')}
+                          </span>
                         </button>
                       </div>
                     );
@@ -400,7 +423,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                   onClick={onClose}
                   className="px-6 py-2.5 bg-black text-white hover:bg-neutral-800 border-2 border-black font-black text-xs uppercase cursor-pointer neo-shadow"
                 >
-                  PROFİLİME KAYDET VE TAMAMLA
+                  {t('taste_save_complete')}
                 </button>
               </div>
             </div>
@@ -417,7 +440,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                 className="px-4 py-2 bg-white hover:bg-neutral-200 border-2 border-black font-black text-xs uppercase flex items-center gap-1 cursor-pointer"
               >
                 <ArrowLeft size={14} />
-                <span>GERİ</span>
+                <span>{t('taste_back')}</span>
               </button>
             ) : <div />}
 
@@ -427,7 +450,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                 onClick={() => setStep(prev => prev + 1)}
                 className="px-5 py-2 bg-black hover:bg-neutral-800 text-white border-2 border-black font-black text-xs uppercase flex items-center gap-1.5 cursor-pointer neo-shadow"
               >
-                <span>İLERİ</span>
+                <span>{t('taste_next')}</span>
                 <ArrowRight size={14} />
               </button>
             ) : (
@@ -437,7 +460,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                 className="px-6 py-2 bg-amber-400 hover:bg-amber-300 text-black border-2 border-black font-black text-xs uppercase flex items-center gap-1.5 cursor-pointer neo-shadow shadow-[2px_2px_0px_0px_#000]"
               >
                 <Sparkles size={14} />
-                <span>PROFİLİMİ OLUŞTUR</span>
+                <span>{t('taste_create')}</span>
               </button>
             )}
           </div>

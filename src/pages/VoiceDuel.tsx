@@ -259,7 +259,7 @@ export const VoiceDuel = () => {
                     classes,
                   )}
                 >
-                  <span>{name}</span>
+                  <span lang="en">{name}</span>
                   {isLocked && isCorrect && <CheckCircle2 size={18} strokeWidth={3} />}
                   {isLocked && isSelected && !isCorrect && <XCircle size={18} strokeWidth={3} />}
                 </button>

@@ -152,7 +152,7 @@ export const AnimeNewsFeed: React.FC = () => {
             type="text"
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            placeholder="Haberlerde ara..."
+            placeholder={t('news_search_placeholder')}
             className="w-full px-3 py-1.5 pl-8 border-2 border-white font-bold text-xs bg-black text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-400 uppercase"
           />
           <Search size={14} className="absolute left-2.5 top-2.5 text-neutral-400" />

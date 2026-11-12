@@ -17,6 +17,7 @@ import type { UnifiedMedia } from '../types/unified';
 
 const MiniAnimeList = ({ title, icon: Icon, path }: { title: string, icon: any, path: string }) => {
   const { fetchAnimeList } = useAnimeData();
+  const { t } = useAppTranslation();
   const [data, setData] = useState<Anime[] | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -42,15 +43,15 @@ const MiniAnimeList = ({ title, icon: Icon, path }: { title: string, icon: any, 
       
       <div className="bg-white border-4 border-black p-1 neo-shadow h-[400px] overflow-y-auto">
         {loading ? (
-          <div className="p-8 text-center text-black font-black uppercase tracking-widest">YÜKLENİYOR...</div>
+          <div className="p-8 text-center text-black font-black uppercase tracking-widest">{t('loading')}</div>
         ) : !data || data.length === 0 ? (
           <div className="p-8 text-center text-black font-black uppercase tracking-widest text-sm flex flex-col items-center gap-3">
-            <span>YÜKLENEMEDİ.</span>
+            <span>{t('load_failed')}</span>
             <button 
               onClick={loadData}
               className="px-4 py-2 bg-black text-white text-xs font-black uppercase border-2 border-black hover:bg-rose-600 transition-colors"
             >
-              YENİDEN DENE
+              {t('retry')}
             </button>
           </div>
         ) : (
@@ -90,6 +91,7 @@ const MiniAnimeList = ({ title, icon: Icon, path }: { title: string, icon: any, 
  * Kartlar birleşik medya detayına (`/media/anilist:...`) gider.
  */
 const MiniMangaList = ({ title, icon: Icon, kind }: { title: string; icon: any; kind: 'manga' | 'light_novel' }) => {
+  const { t } = useAppTranslation();
   const [data, setData] = useState<UnifiedMedia[] | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -115,15 +117,15 @@ const MiniMangaList = ({ title, icon: Icon, kind }: { title: string; icon: any; 
 
       <div className="bg-white border-4 border-black p-1 neo-shadow h-[400px] overflow-y-auto">
         {loading ? (
-          <div className="p-8 text-center text-black font-black uppercase tracking-widest">YÜKLENİYOR...</div>
+          <div className="p-8 text-center text-black font-black uppercase tracking-widest">{t('loading')}</div>
         ) : !data || data.length === 0 ? (
           <div className="p-8 text-center text-black font-black uppercase tracking-widest text-sm flex flex-col items-center gap-3">
-            <span>YÜKLENEMEDİ.</span>
+            <span>{t('load_failed')}</span>
             <button
               onClick={loadData}
               className="px-4 py-2 bg-black text-white text-xs font-black uppercase border-2 border-black hover:bg-rose-600 transition-colors"
             >
-              YENİDEN DENE
+              {t('retry')}
             </button>
           </div>
         ) : (
@@ -292,10 +294,10 @@ export const ListsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {listsLoading ? (
-                 <div className="col-span-1 md:col-span-2 p-8 text-center text-white font-black uppercase tracking-widest">LİSTELER YÜKLENİYOR...</div>
+                 <div className="col-span-1 md:col-span-2 p-8 text-center text-white font-black uppercase tracking-widest">{t('lists_loading')}</div>
               ) : customLists.length === 0 ? (
                  <div className="col-span-1 md:col-span-2 p-8 text-center bg-black border-4 border-white neo-shadow-white">
-                   <p className="text-white font-black uppercase tracking-widest">HENÜZ LİSTE YOK.</p>
+                   <p className="text-white font-black uppercase tracking-widest">{t('no_lists_yet')}</p>
                  </div>
               ) : (
                  customLists.map((list) => {

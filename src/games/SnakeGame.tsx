@@ -239,7 +239,7 @@ export const SnakeGame = () => {
         <span />
         <button
           type="button"
-          aria-label="Yukarı"
+          aria-label={t('direction_up')}
           onPointerDown={() => queueDir(0, -1)}
           className="touch-target border-2 border-white/30 active:bg-white active:text-black"
         >
@@ -248,7 +248,7 @@ export const SnakeGame = () => {
         <span />
         <button
           type="button"
-          aria-label="Sol"
+          aria-label={t('direction_left')}
           onPointerDown={() => queueDir(-1, 0)}
           className="touch-target border-2 border-white/30 active:bg-white active:text-black"
         >
@@ -256,7 +256,7 @@ export const SnakeGame = () => {
         </button>
         <button
           type="button"
-          aria-label="Aşağı"
+          aria-label={t('direction_down')}
           onPointerDown={() => queueDir(0, 1)}
           className="touch-target border-2 border-white/30 active:bg-white active:text-black"
         >
@@ -264,7 +264,7 @@ export const SnakeGame = () => {
         </button>
         <button
           type="button"
-          aria-label="Sağ"
+          aria-label={t('direction_right')}
           onPointerDown={() => queueDir(1, 0)}
           className="touch-target border-2 border-white/30 active:bg-white active:text-black"
         >

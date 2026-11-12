@@ -9,7 +9,7 @@ import { useAppTranslation } from '../hooks/useAppTranslation';
  */
 export const AnnouncementBanner: React.FC = () => {
   const { config } = useRemoteConfig();
-  const { currentLang } = useAppTranslation();
+  const { t, currentLang } = useAppTranslation();
   const [dismissed, setDismissed] = useState(false);
 
   const announcement = config?.announcement;
@@ -28,7 +28,7 @@ export const AnnouncementBanner: React.FC = () => {
   return (
     <div className={`${color} text-black w-full py-2 px-4 flex items-center justify-center gap-3 border-b-2 border-white/50`} role="status" aria-live="polite">
       <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[90%]">{message}</span>
-      <button onClick={() => setDismissed(true)} aria-label="Kapat" className="text-[10px] font-black border-2 border-black px-1.5 py-0.5 bg-black text-white shrink-0 cursor-pointer">✕</button>
+      <button onClick={() => setDismissed(true)} aria-label={t('close')} className="text-[10px] font-black border-2 border-black px-1.5 py-0.5 bg-black text-white shrink-0 cursor-pointer">✕</button>
     </div>
   );
 };

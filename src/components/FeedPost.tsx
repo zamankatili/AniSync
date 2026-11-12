@@ -281,7 +281,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
                   <img src={resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed)} alt="Me" className="w-10 h-10 border-2 border-white bg-white shrink-0 object-cover grayscale" />
                   <input 
                     type="text" 
-                    placeholder="YANITINI YAZ..."
+                    placeholder={t('reply_placeholder')}
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     className="flex-1 bg-black border-2 border-white/20 p-3 text-sm font-bold uppercase tracking-wider text-white placeholder-neutral-600 focus:outline-none focus:border-white transition-colors"
