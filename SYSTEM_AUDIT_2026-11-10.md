@@ -372,8 +372,9 @@ $env:VITE_API_BASE_URL="https://anisync-tau.vercel.app"; npm.cmd run native:sync
 2. `npm.cmd ci && npm.cmd run verify` → yeşil mi? (Beklenen: 66 test / 10 dosya, tsc 0, ESLint 0 hata, build 0.)
 3. Firestore kurallarını yalnız değiştirirken emulator'da test edin; mevcut P0 kuralları canlıda deploy edilmiş durumda.
 4. İmzalı bir test kullanıcısı ile canlıda uçtan uca smoke yapın: oda onayı (50 oy → moderatör), Kalfa oda açma, Watch Party senkronu, admin paneli.
-5. `docs/voice-sources.md` oluşturup Voice Duel dataset'inin her klipini URL+erişim tarihiyle pin'leyin.
-6. Bu belgeyi güncelleyerek ilerleyin — her kapattığınız satırı işaretleyin ve gerekiyorsa `SYSTEM_AUDIT_2026-11-12.md` olarak devam ettirin (yoksa belge çürür).
+5. ~~`docs/voice-sources.md` oluşturup Voice Duel dataset'inin her klipini URL+erişim tarihiyle pin'leyin.~~ **Yapıldı** — `docs/voice-sources.md` 10 klibin kanalını, segmentini ve doğrulama kurallarını listeliyor.
+6. PWA service worker (`public/sw.js`, `anisync-shell-v2`) deploy sonrası kısa süre eski kabuğu sunabilir. Şüpheli bir "eski sürüm" gözleminde önce SW'yi ve cache'i temizleyin; navigasyon network-first, hash'li asset'ler cache-first.
+7. Bu belgeyi güncelleyerek ilerleyin — her kapattığınız satırı işaretleyin ve gerekiyorsa `SYSTEM_AUDIT_2026-11-12.md` olarak devam ettirin (yoksa belge çürür).
 
 ---
 
@@ -398,8 +399,9 @@ $env:VITE_API_BASE_URL="https://anisync-tau.vercel.app"; npm.cmd run native:sync
 3. Gemini anahtarı yok/kotası bitmiş → AI önerileri fail-closed; arayüz "editör seçkisi" demeli, "AI eşleşmesi" dememeli.
 4. KVKK otomatik silme/dışa aktarma yok; e-posta + manuel kuyruk.
 5. Native arka plan bildirimi yok (Capacitor local notifications eklenmedi).
-6. Voice Duel klip kaynak pinleme dokümanı (`docs/voice-sources.md`) yok.
+6. ~~Voice Duel klip kaynak pinleme dokümanı (`docs/voice-sources.md`) yok.~~ **Kapandı** — `docs/voice-sources.md` eklendi.
 7. Kalan gömülü metinler ağırlıklı olarak admin paneli ve marka adları; yeni ekranlarda önce `t()` kullanılmalı.
+8. PWA service worker deploy sonrası kısa süre eski kabuğu gösterebilir; operasyon notu runbook'ta (bölüm 12, madde 6).
 
 ---
 
