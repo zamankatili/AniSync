@@ -392,6 +392,7 @@ $env:VITE_API_BASE_URL="https://anisync-tau.vercel.app"; npm.cmd run native:sync
 - Hatırlatıcılar: bildirim testi, kalan süre metni, Google Takvim ve ICS içerikleri dört dilde; mobilde arka plan bildirimi olmadığı arayüzde açıkça yazılı.
 - Top Listeler (`/lists`) misafirlere açıldı; resmî AniList/MAL sıralamaları giriş duvarı olmadan görünüyor, liste oluşturma hâlâ giriş istiyor.
 - Liste başlıkları, sezon etiketi (“2026年秋” / “AUTOMNE 2026”) ve detay 404 kartı dört dilde. Türkçe gömülü metin ve `t('key', 'Türkçe')` varsayılanları için guard testi eklendi.
+- Top Listeler kartları artık AniList birincil kaynağından besleniyor; 8 kart aynı anda Jikan'ın 3 istek/sn sınırını aştığında “YÜKLENEMEDİ” kalan kartlar gerçek veriyle doluyor. Jikan yalnızca AniList boş dönerse yedek. AniList'te MAL kimliği olmayan kayıtlar `/media/anilist:<id>` adresine gidiyor.
 
 **Kapılar:** 67 test / 10 dosya, `tsc` 0, ESLint 0 hata, build 0; GitHub CI `build-test` yeşil; Vercel deploy yeşil.
 
