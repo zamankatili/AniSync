@@ -48,6 +48,21 @@ export function getSeasonSlug(date: Date = new Date()): AnimeSeasonInfo['slug'] 
   return getAnimeSeason(date).slug;
 }
 
+/** Aktif dile göre sezon etiketi (ör. “Sonbahar 2026”, “Fall 2026”, “2026年秋”). */
+export function getAnimeSeasonLabel(lang: string | undefined, date: Date = new Date()): string {
+  const info = getAnimeSeason(date);
+  switch ((lang || 'tr').slice(0, 2).toLowerCase()) {
+    case 'ja':
+      return info.labelJA;
+    case 'fr':
+      return info.labelFR;
+    case 'en':
+      return info.labelEN;
+    default:
+      return info.labelTR;
+  }
+}
+
 export interface DataEnvelope<T> {
   items: T[];
   source: string;

@@ -5,7 +5,7 @@ import { useAnimeData } from '../hooks/useAnimeData';
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, getDocs, updateDoc, doc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
 import { CustomList, Anime } from '../types';
-import { getAnimeSeason } from '../lib/season';
+import { getAnimeSeasonLabel } from '../lib/season';
 import { useAppStore } from '../context/AppStore';
 import { getSafeImageUrl, handleImageError } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
@@ -162,7 +162,7 @@ const MiniMangaList = ({ title, icon: Icon, kind }: { title: string; icon: any; 
 };
 
 export const ListsPage = () => {
-  const { t } = useAppTranslation();
+  const { t, currentLang } = useAppTranslation();
   const { addToast } = useToastStore();
   const { currentUser, userProfile } = useAppStore();
   const [activeTab, setActiveTab] = useState<'official' | 'community'>('official');
@@ -262,15 +262,15 @@ export const ListsPage = () => {
             exit={{ opacity: 0, y: -20 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
-            <MiniAnimeList title="TOP GÜNCEL" icon={Flame} path="/top/anime?filter=airing&limit=10&sfw=true" />
-            <MiniAnimeList title="YAKLAŞAN EFSANELER" icon={Calendar} path="/seasons/upcoming?limit=10&sfw=true" />
-            <MiniAnimeList title="TÜM ZAMANLAR POPÜLER" icon={Trophy} path="/top/anime?filter=bypopularity&limit=10" />
-            
-            <MiniAnimeList title={getAnimeSeason().labelTR.toUpperCase()} icon={TrendingUp} path="/seasons/now?limit=10&sfw=true" />
-            <MiniAnimeList title="FİLM BAŞYAPITLARI" icon={Clapperboard} path="/top/anime?type=movie&limit=10" />
-            <MiniAnimeList title="AKSİYON DOLU" icon={Compass} path="/anime?genres=1&order_by=score&sort=desc&limit=10&sfw=true" />
-            <MiniMangaList title="TOP MANGA (ANILIST)" icon={BookOpen} kind="manga" />
-            <MiniMangaList title="TOP LIGHT NOVEL (ANILIST)" icon={BookOpen} kind="light_novel" />
+            <MiniAnimeList title={t('lists_top_airing')} icon={Flame} path="/top/anime?filter=airing&limit=10&sfw=true" />
+            <MiniAnimeList title={t('lists_upcoming')} icon={Calendar} path="/seasons/upcoming?limit=10&sfw=true" />
+            <MiniAnimeList title={t('lists_all_time_popular')} icon={Trophy} path="/top/anime?filter=bypopularity&limit=10" />
+
+            <MiniAnimeList title={getAnimeSeasonLabel(currentLang).toUpperCase()} icon={TrendingUp} path="/seasons/now?limit=10&sfw=true" />
+            <MiniAnimeList title={t('lists_movies')} icon={Clapperboard} path="/top/anime?type=movie&limit=10" />
+            <MiniAnimeList title={t('lists_action')} icon={Compass} path="/anime?genres=1&order_by=score&sort=desc&limit=10&sfw=true" />
+            <MiniMangaList title={t('lists_top_manga')} icon={BookOpen} kind="manga" />
+            <MiniMangaList title={t('lists_top_light_novel')} icon={BookOpen} kind="light_novel" />
           </motion.div>
         ) : (
           <motion.div

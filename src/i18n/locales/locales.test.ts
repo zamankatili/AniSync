@@ -29,6 +29,26 @@ const merged: Record<(typeof langs)[number], Record<string, string>> = {
   fr: { ...fr.translation, ...(animeLifeSimTranslations.fr as Record<string, string>), ...adminTranslations.fr },
 };
 
+const srcRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+
+const collectSourceFiles = (): string[] => {
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const full = join(dir, name);
+      const stat = statSync(full);
+      if (stat.isDirectory()) {
+        if (name === 'locales') continue;
+        walk(full);
+      } else if (/\.(ts|tsx)$/.test(name) && !/\.test\./.test(name)) {
+        files.push(full);
+      }
+    }
+  };
+  walk(srcRoot);
+  return files;
+};
+
 describe('i18n parity', () => {
   const baseKeys = Object.keys(merged.en).sort();
 
@@ -51,22 +71,7 @@ describe('i18n parity', () => {
   });
 
   it('has a translation for every literal t() key used in src', () => {
-    const srcRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-    const files: string[] = [];
-
-    const walk = (dir: string) => {
-      for (const name of readdirSync(dir)) {
-        const full = join(dir, name);
-        const stat = statSync(full);
-        if (stat.isDirectory()) {
-          if (name === 'locales') continue;
-          walk(full);
-        } else if (/\.(ts|tsx)$/.test(name) && !/\.test\./.test(name)) {
-          files.push(full);
-        }
-      }
-    };
-    walk(srcRoot);
+    const files = collectSourceFiles();
 
     const missing = new Map<string, Set<string>>();
     for (const file of files) {
@@ -82,5 +87,40 @@ describe('i18n parity', () => {
 
     const report = [...missing.entries()].map(([key, where]) => `${key} (${[...where].join(', ')})`);
     expect(report).toEqual([]);
+  });
+
+  it('does not hardcode Turkish UI text in non-admin components', () => {
+    const turkish = /[çğıöşüÇĞİÖŞÜ]/;
+    const allow = /AN[İI]SYNC|SH[İI]NJUKU/i;
+    const violations: string[] = [];
+
+    for (const file of collectSourceFiles()) {
+      const rel = file.slice(srcRoot.length + 1).replace(/\\/g, '/');
+      if (rel.startsWith('pages/admin/')) continue;
+
+      const raw = readFileSync(file, 'utf8');
+      const text = raw
+        .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+        .replace(/(^|[^:])\/\/[^\n]*/g, (m, p1) => p1 + ' '.repeat(Math.max(0, m.length - p1.length)));
+
+      const candidates: Array<{ value: string; index: number }> = [];
+      for (const m of text.matchAll(/(?:placeholder|aria-label|title|alt)=(["'])([^"'\n]*)\1/g)) {
+        if (m[2]) candidates.push({ value: m[2], index: m.index ?? 0 });
+      }
+      if (file.endsWith('.tsx')) {
+        for (const m of text.matchAll(/>([^<>{}\n]{3,})</g)) {
+          candidates.push({ value: m[1], index: m.index ?? 0 });
+        }
+      }
+
+      for (const candidate of candidates) {
+        const value = candidate.value.trim();
+        if (!turkish.test(value) || allow.test(value)) continue;
+        const line = text.slice(0, candidate.index).split('\n').length;
+        violations.push(`${rel}:${line} ${value.slice(0, 70)}`);
+      }
+    }
+
+    expect(violations).toEqual([]);
   });
 });

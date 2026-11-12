@@ -116,8 +116,6 @@ export const AnimeDetail = () => {
       <div className="max-w-4xl mx-auto my-12">
         <AnimeErrorCard
           code="NOT_FOUND"
-          title="Aranan Anime Bulunamadı"
-          message="Belirtilen ID ile anime kaydına erişilemedi veya sunucu yanıt vermedi."
           onRetry={() => { if (id) loadAnime(parseInt(id)); }}
           onUseFallback={() => navigate('/discover')}
         />

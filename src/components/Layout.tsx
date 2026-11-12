@@ -547,7 +547,7 @@ export const Layout = () => {
              <button 
                onClick={() => openScheduleModal('reminders')} 
                className="w-12 h-12 flex items-center justify-center border-2 border-white/20 hover:border-amber-400 hover:bg-amber-400 hover:text-black text-white transition-all bg-black relative cursor-pointer"
-               title="Yayın Hatırlatıcıları & Takvim"
+               title={t('airing_title')}
              >
                <Bell size={20} strokeWidth={2.5} />
                {reminders.length > 0 && (
