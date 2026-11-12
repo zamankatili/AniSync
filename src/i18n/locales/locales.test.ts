@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import tr from './tr';
 import en from './en';
 import ja from './ja';
@@ -45,5 +48,39 @@ describe('i18n parity', () => {
         .map(([key]) => key);
       expect(empties, `${lang} has empty strings`).toEqual([]);
     }
+  });
+
+  it('has a translation for every literal t() key used in src', () => {
+    const srcRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+    const files: string[] = [];
+
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const full = join(dir, name);
+        const stat = statSync(full);
+        if (stat.isDirectory()) {
+          if (name === 'locales') continue;
+          walk(full);
+        } else if (/\.(ts|tsx)$/.test(name) && !/\.test\./.test(name)) {
+          files.push(full);
+        }
+      }
+    };
+    walk(srcRoot);
+
+    const missing = new Map<string, Set<string>>();
+    for (const file of files) {
+      const text = readFileSync(file, 'utf8');
+      for (const match of text.matchAll(/\bt\(\s*['"]([A-Za-z0-9_]+)['"]/g)) {
+        const key = match[1];
+        if (!(key in merged.en)) {
+          if (!missing.has(key)) missing.set(key, new Set());
+          missing.get(key)!.add(file.slice(srcRoot.length + 1));
+        }
+      }
+    }
+
+    const report = [...missing.entries()].map(([key, where]) => `${key} (${[...where].join(', ')})`);
+    expect(report).toEqual([]);
   });
 });

@@ -1,4 +1,4 @@
-# AniSync — Sistem Denetimi (2026‑11‑10)
+﻿# AniSync — Sistem Denetimi (2026‑11‑10)
 
 > **Hedef okuyucu:** DeepSeek (ve sonraki geliştiriciler). Bu belge, 10 Kasım 2026 itibarıyla AniSync kod tabanının **dürüst, doğrulanmış** durumunu ve yapılmamış kalan işleri anlatır. Yeni bir şey uydurulmamıştır; her bulgunun dosya ve satır referansı vardır veya "ajan raporu — doğrulanamadı" olarak işaretlenmiştir.
 >
@@ -58,7 +58,7 @@
 |---|---|
 | `npx.cmd tsc --noEmit` | ✅ exit 0 |
 | `npm.cmd run lint:eslint` | ✅ 0 error |
-| `npm.cmd test -- --run` | ✅ **10 dosya / 65 test** |
+| `npm.cmd test -- --run` | ✅ **10 dosya / 66 test** |
 | `npm.cmd run build` | ✅ exit 0 |
 | Test dosyaları | `adminConfig`, `anonQuota`, `eventEngine`, `importList`, `level`, `rssIngest`, `utils`, `verifyIdToken`, `voiceDuelData`, `locales` |
 
@@ -79,7 +79,7 @@
 
 **AniSync nedir?** Anime/manga/hafif roman/oyun takip platformu. Ana felsefe: *"İzleyecek yeni bir anime bulmayı kolaylaştırmak."* İkinci hedef: *aynı ilgi alanlarına sahip insanları kolay sosyalleştirmek* (KÖŞE café, global chat, Watch Party, forum, anketler).
 
-**Bugünkü durum (11 Kas 2026):** Ürün uçtan uca **çalışıyor ve canlıda** (https://anisync-tau.vercel.app). 65/65 test yeşil (10 dosya), `tsc --noEmit` temiz, ESLint 0 **hata**, production build başarılı, GitHub CI (`build-test`) ve Vercel dağıtımı `success`. ~354 izlenen dosya, ~51.000 satır uygulama kodu.
+**Bugünkü durum (11 Kas 2026):** Ürün uçtan uca **çalışıyor ve canlıda** (https://anisync-tau.vercel.app). 66/66 test yeşil (10 dosya), `tsc --noEmit` temiz, ESLint 0 **hata**, production build başarılı, GitHub CI (`build-test`) ve Vercel dağıtımı `success`. ~354 izlenen dosya, ~51.000 satır uygulama kodu.
 
 **Ama:** "Çalışıyor" ≠ "Güvenli/dürüst". Bu denetim dört sınıf sorun buldu:
 
@@ -98,7 +98,7 @@
 |---|---|
 | `npx tsc --noEmit` | ✅ exit 0 |
 | ESLint (hata seviyesi) | ✅ 0 error (~464 warning, çoğu `no-unused-vars` + a11y) |
-| `vitest run` | ✅ 10 dosya / **65 test** passed |
+| `vitest run` | ✅ 10 dosya / **66 test** passed |
 | `vite build` + `esbuild server.ts` | ✅ exit 0 |
 | GitHub Actions `build-test` (Node 20) | ✅ success |
 | Vercel production deploy | ✅ success |
@@ -284,7 +284,7 @@ Ajan raporlarından derlendi (detay: Bölüm 9'teki "Ajan Çıktıları"). ✅ =
 
 **i18n kapsamı:** TR/EN/JA/FR anahtar eşitliği `locales.test.ts` ile zorunlu (parity ✅). Buna rağmen bazı bileşenlerde hâlâ gömülü Türkçe metin var (`MemeZone`, `MonthlyActivityChart`, `ProfileAnalyticsDashboard`, `RecentActivityFeed` yedek adları). `useAppTranslation` + i18next; **dil değişimi tam reload gerektirir** (CJS bundle).
 
-**Test kapsamı (11 Kas 2026):** **65 test / 10 dosya** — `adminConfig`, `anonQuota`, `eventEngine`, `importList` (13), `level`, `rssIngest`, `utils`, `verifyIdToken`, `voiceDuelData`, `locales`. **UI bileşen testi sıfır, E2E sıfır** (tarayıcı testi imzasızdı).
+**Test kapsamı (11 Kas 2026):** **66 test / 10 dosya** — `adminConfig`, `anonQuota`, `eventEngine`, `importList` (13), `level`, `rssIngest`, `utils`, `verifyIdToken`, `voiceDuelData`, `locales`. **UI bileşen testi sıfır, E2E sıfır** (tarayıcı testi imzasızdı).
 
 ---
 
@@ -369,7 +369,7 @@ $env:VITE_API_BASE_URL="https://anisync-tau.vercel.app"; npm.cmd run native:sync
 ## 12. DeepSeek — ilk 10 dakikanız
 
 1. En güncel durum için **en üstteki "Uzman İncelemesi — 11 Kasım 2026"** bölümünü okuyun; aşağıdaki 3–8 numaralı bölümler 10 Kasım anlık görüntüsüdür.
-2. `npm.cmd ci && npm.cmd run verify` → yeşil mi? (Beklenen: 65 test / 10 dosya, tsc 0, ESLint 0 hata, build 0.)
+2. `npm.cmd ci && npm.cmd run verify` → yeşil mi? (Beklenen: 66 test / 10 dosya, tsc 0, ESLint 0 hata, build 0.)
 3. Firestore kurallarını yalnız değiştirirken emulator'da test edin; mevcut P0 kuralları canlıda deploy edilmiş durumda.
 4. İmzalı bir test kullanıcısı ile canlıda uçtan uca smoke yapın: oda onayı (50 oy → moderatör), Kalfa oda açma, Watch Party senkronu, admin paneli.
 5. `docs/voice-sources.md` oluşturup Voice Duel dataset'inin her klipini URL+erişim tarihiyle pin'leyin.
@@ -390,7 +390,7 @@ $env:VITE_API_BASE_URL="https://anisync-tau.vercel.app"; npm.cmd run native:sync
 - Zevk anketi hızlı ekleme: uydurma 24 bölüm / 2024 / Finished Airing / tür yazımı kaldırıldı. Önce AniList, sonra Jikan'dan gerçek veri çekiliyor; ikisi de yoksa açık hata gösteriliyor.
 - Hatırlatıcılar: bildirim testi, kalan süre metni, Google Takvim ve ICS içerikleri dört dilde; mobilde arka plan bildirimi olmadığı arayüzde açıkça yazılı.
 
-**Kapılar:** 65 test / 10 dosya, `tsc` 0, ESLint 0 hata, build 0; GitHub CI `build-test` yeşil; Vercel deploy yeşil.
+**Kapılar:** 66 test / 10 dosya, `tsc` 0, ESLint 0 hata, build 0; GitHub CI `build-test` yeşil; Vercel deploy yeşil.
 
 **Açık kalanlar (dürüst liste):**
 1. Oturum açmış kullanıcıyla uçtan uca smoke yapılmadı: oda onayı, Kalfa oda açma, Watch Party senkronu, admin paneli.
