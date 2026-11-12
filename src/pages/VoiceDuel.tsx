@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Play, RotateCcw, ArrowLeft, CheckCircle2, XCircle, Sparkles, Trophy, HelpCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { scoreFor, getRound, VOICE_CLIPS } from '../data/voiceDuelData';
+import { scoreFor, getRound } from '../data/voiceDuelData';
 
 
 const BEST_SCORE_KEY = 'anisync_voice_duel_best';
@@ -20,7 +20,7 @@ interface AnsweredRecord {
 }
 
 export const VoiceDuel = () => {
-  const { t } = useAppTranslation();
+  const { t, currentLang } = useAppTranslation();
 
   const [stage, setStage] = useState<'idle' | 'playing' | 'finished'>('idle');
   const [round, setRound] = useState<ReturnType<typeof getRound>>([]);
@@ -116,20 +116,19 @@ export const VoiceDuel = () => {
       <div className="min-h-full bg-black text-white p-6 md:p-10">
         <div className="max-w-4xl mx-auto">
           <div className="border-4 border-white bg-neutral-950 p-6 md:p-10 neo-shadow-white">
-            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">ANİSYNC · VOICE DUEL</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">{t('voice_duel_brand')}</p>
             <h1 className="font-serif font-black text-5xl md:text-7xl leading-[0.92] mt-2">
-              KİM BU<br />
-              <span className="text-amber-400">KARAKTER?</span>
+              {t('voice_duel_title_1')}<br />
+              <span className="text-amber-400">{t('voice_duel_title_2')}</span>
             </h1>
             <p className="text-neutral-300 font-bold mt-4 max-w-xl text-sm md:text-base leading-snug">
-              Madoka Magica: Magia Exedra karakterlerinin <strong>resmi kliplerinden</strong> seslerini duyup
-              karakterlerini tahmin et. 10 klip · 2 dakika · ipuçları ve seri kontrolü.
+              {t('voice_duel_desc')}
             </p>
 
             <div className="mt-6 grid sm:grid-cols-3 gap-3 text-xs font-black uppercase">
-              <div className="border-2 border-white/20 p-3"><span className="text-amber-400 block text-lg">10</span>Klip</div>
-              <div className="border-2 border-white/20 p-3"><span className="text-amber-400 block text-lg">2:00</span>Süre</div>
-              <div className="border-2 border-white/20 p-3"><span className="text-amber-400 block text-lg">4</span>Şık</div>
+              <div className="border-2 border-white/20 p-3"><span className="text-amber-400 block text-lg">10</span>{t('voice_duel_clips')}</div>
+              <div className="border-2 border-white/20 p-3"><span className="text-amber-400 block text-lg">2:00</span>{t('voice_duel_duration')}</div>
+              <div className="border-2 border-white/20 p-3"><span className="text-amber-400 block text-lg">4</span>{t('voice_duel_options')}</div>
             </div>
 
             <button
@@ -137,12 +136,12 @@ export const VoiceDuel = () => {
               className="mt-8 px-8 py-4 bg-amber-400 hover:bg-white text-black font-black uppercase tracking-widest text-base border-4 border-black neo-shadow transition-colors flex items-center gap-3"
             >
               <Play size={22} strokeWidth={3} fill="currentColor" />
-              OYNA
+              {t('voice_duel_play')}
             </button>
 
             {bestScore > 0 && (
               <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-neutral-500">
-                <Trophy size={12} className="inline" /> EN İYİ SKOR: {bestScore.toLocaleString()} XP
+                <Trophy size={12} className="inline" /> {t('voice_duel_best_score', { score: bestScore.toLocaleString() })}
               </p>
             )}
           </div>
@@ -156,18 +155,18 @@ export const VoiceDuel = () => {
     return (
       <div className="min-h-full bg-black text-white p-6 md:p-10">
         <div className="max-w-3xl mx-auto border-4 border-white bg-neutral-950 p-6 md:p-10 neo-shadow-white text-center">
-          <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">TUR TAMAMLANDI</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">{t('voice_duel_round_complete')}</p>
           <h1 className="font-serif font-black text-5xl md:text-6xl mt-3">{score.toLocaleString()} <span className="text-amber-400">XP</span></h1>
           <div className="mt-6 flex items-center justify-center gap-4 text-xs font-black uppercase">
-            <div className="border-2 border-white/20 px-4 py-3"><span className="text-amber-400 block text-2xl">{correct}/10</span>DOĞRU</div>
-            <div className="border-2 border-white/20 px-4 py-3"><span className="text-amber-400 block text-2xl">{accuracy}%</span>İSABET</div>
-            <div className="border-2 border-white/20 px-4 py-3"><span className="text-amber-400 block text-2xl">{answered.length}</span>OYNANAN</div>
+            <div className="border-2 border-white/20 px-4 py-3"><span className="text-amber-400 block text-2xl">{correct}/10</span>{t('voice_duel_correct')}</div>
+            <div className="border-2 border-white/20 px-4 py-3"><span className="text-amber-400 block text-2xl">{accuracy}%</span>{t('voice_duel_accuracy')}</div>
+            <div className="border-2 border-white/20 px-4 py-3"><span className="text-amber-400 block text-2xl">{answered.length}</span>{t('voice_duel_played')}</div>
           </div>
           {score > bestScore && (
-            <p className="mt-5 text-emerald-400 font-black uppercase inline-flex items-center gap-2"><Sparkles size={16} /> Yeni rekor!</p>
+            <p className="mt-5 text-emerald-400 font-black uppercase inline-flex items-center gap-2"><Sparkles size={16} /> {t('voice_duel_new_record')}</p>
           )}
           <button onClick={startRound} className="mt-8 px-8 py-4 bg-amber-400 hover:bg-white text-black font-black uppercase tracking-widest text-base border-4 border-black neo-shadow transition-colors inline-flex items-center gap-3">
-            <RotateCcw size={20} strokeWidth={3} /> TEKRAR OYNA
+            <RotateCcw size={20} strokeWidth={3} /> {t('voice_duel_play_again')}
           </button>
         </div>
       </div>
@@ -183,15 +182,15 @@ export const VoiceDuel = () => {
             <ArrowLeft size={18} strokeWidth={3} />
           </button>
           <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">KİM BU KARAKTER?</p>
-            <p className="font-serif font-bold text-lg leading-none">Tur {clipIndex + 1}/{round.length}</p>
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">{t('voice_duel_hud_title')}</p>
+            <p className="font-serif font-bold text-lg leading-none">{t('voice_duel_round_label', { current: clipIndex + 1, total: round.length })}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">SÜRE</span><span className={cn('font-serif font-bold text-2xl tabular-nums', timeLeft <= 10 ? 'text-rose-500' : 'text-white')}>{formatTime(timeLeft)}</span></div>
-          <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">SKOR</span><span className="font-serif font-bold text-2xl tabular-nums text-amber-400">{score.toLocaleString()}</span></div>
-          {streak > 1 && <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">SERİ</span><span className="font-serif font-bold text-2xl text-emerald-400">×{streak}</span></div>}
+          <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">{t('voice_duel_time')}</span><span className={cn('font-serif font-bold text-2xl tabular-nums', timeLeft <= 10 ? 'text-rose-500' : 'text-white')}>{formatTime(timeLeft)}</span></div>
+          <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">{t('voice_duel_score')}</span><span className="font-serif font-bold text-2xl tabular-nums text-amber-400">{score.toLocaleString()}</span></div>
+          {streak > 1 && <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">{t('voice_duel_streak')}</span><span className="font-serif font-bold text-2xl text-emerald-400">×{streak}</span></div>}
         </div>
       </div>
 
@@ -214,31 +213,31 @@ export const VoiceDuel = () => {
               {iframeSrc && selected === null && (
                 <div className="absolute inset-0 z-10 bg-black pointer-events-none flex flex-col items-center justify-center">
                   <span className="font-serif font-black text-7xl text-amber-400 leading-none">?</span>
-                  <span className="mt-3 font-mono text-[10px] uppercase tracking-[0.3em] text-neutral-400">Ses ile tahmin et</span>
+                  <span className="mt-3 font-mono text-[10px] uppercase tracking-[0.3em] text-neutral-400">{t('voice_duel_listen_hint')}</span>
                 </div>
               )}
             </div>
 
             <div className="flex items-center justify-between gap-3">
-              <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">Kaynak: Madoka Exedra [Official]</span>
+              <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">{t('voice_duel_source')}</span>
               <button onClick={() => setAutoplayKey((k) => k + 1)} className="text-[10px] font-black uppercase text-amber-400 hover:text-white flex items-center gap-1">
-                <RotateCcw size={11} /> TEKRAR
+                <RotateCcw size={11} /> {t('voice_duel_replay')}
               </button>
             </div>
 
             <div className="border-t-2 border-white/20 pt-3">
               <button onClick={() => setShowHint((v) => !v)} className="flex items-center gap-2 text-[11px] font-black uppercase text-amber-400 hover:text-white">
-                <HelpCircle size={13} /> İPUCU {showHint ? 'GİZLE' : 'GÖSTER'}
+                <HelpCircle size={13} /> {t('voice_duel_hint')} {showHint ? t('voice_duel_hide') : t('voice_duel_show')}
               </button>
               {showHint && (
-                <p className="mt-1.5 text-[11px] text-neutral-300 leading-snug font-medium">{currentClip.hint}</p>
+                <p className="mt-1.5 text-[11px] text-neutral-300 leading-snug font-medium">{currentClip.hint[currentLang as keyof typeof currentClip.hint] || currentClip.hint.en}</p>
               )}
             </div>
           </div>
 
           {/* Sağ: şıklar */}
           <div className="md:col-span-2 flex flex-col gap-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">BU KİM?</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">{t('voice_duel_who')}</p>
             {currentClip.options.map((name, i) => {
               const isSelected = selected === i;
               const isCorrect = i === correctIndex;

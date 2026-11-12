@@ -96,7 +96,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
               userName: data.userName || 'Otaku',
               animeTitle: data.animeTitle || 'Anime',
               animeImage: data.animeImage || '',
-              listName: data.listName || 'İzleme Listesi',
+              listName: data.listName || t('watchlist_default_name'),
               time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
             });
 
@@ -203,7 +203,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
     if (activity.actionType === 'added_to_custom_list') {
       return (
         <span className="inline-flex items-center gap-1 bg-purple-600 text-white text-[10px] font-black px-2 py-0.5 border-2 border-black uppercase tracking-wider neo-shadow-sm">
-          <Layers size={11} strokeWidth={3} /> {activity.listName || 'Özel Liste'}
+          <Layers size={11} strokeWidth={3} /> {activity.listName || t('custom_list_default_name')}
         </span>
       );
     }
@@ -254,16 +254,16 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
 
     switch (activity.status) {
       case 'watching':
-        return <span>serisini <span className="text-emerald-400 font-black">{t('recent_activity_started_watching')}</span></span>;
+        return <span className="text-emerald-400 font-black">{t('activity_sentence_watching')}</span>;
       case 'completed':
-        return <span>serisini <span className="text-blue-400 font-black">{t('recent_activity_completed_verb')}</span></span>;
+        return <span className="text-blue-400 font-black">{t('activity_sentence_completed')}</span>;
       case 'on_hold':
-        return <span>serisini <span className="text-amber-400 font-black">{t('recent_activity_on_hold_verb')}</span></span>;
+        return <span className="text-amber-400 font-black">{t('activity_sentence_on_hold')}</span>;
       case 'dropped':
-        return <span>serisini <span className="text-rose-400 font-black">{t('recent_activity_dropped_verb')}</span></span>;
+        return <span className="text-rose-400 font-black">{t('activity_sentence_dropped')}</span>;
       case 'plan_to_watch':
       default:
-        return <span>serisini <span className="text-yellow-400 font-black">{t('recent_activity_added_to_plan')}</span> ekledi</span>;
+        return <span className="text-yellow-400 font-black">{t('activity_sentence_plan')}</span>;
     }
   };
 

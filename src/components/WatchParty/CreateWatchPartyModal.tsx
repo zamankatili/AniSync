@@ -18,14 +18,14 @@ interface CreateWatchPartyModalProps {
 
 const PRESET_VIDEOS = [
   {
-    title: 'Demon Slayer: Infinity Castle Fragmanı',
+    title: 'Demon Slayer: Infinity Castle – Official Trailer',
     animeTitle: 'Kimetsu no Yaiba: Infinity Castle',
     animeImage: 'https://cdn.myanimelist.net/images/anime/1792/138022l.jpg',
     url: 'https://www.youtube.com/watch?v=4d_Jd2zY3jY',
     category: 'fragman' as const
   },
   {
-    title: 'Attack on Titan Final Sezon Son Savaş',
+    title: 'Attack on Titan Final Season – The Final Chapters',
     animeTitle: 'Shingeki no Kyojin',
     animeImage: 'https://cdn.myanimelist.net/images/anime/1000/110531l.jpg',
     url: 'https://www.youtube.com/watch?v=E7WytQMFlSF',

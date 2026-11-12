@@ -57,7 +57,7 @@ export const MemeZone = () => {
   }, []);
 
   const handleShareToFeed = (meme: RedditPost) => {
-    if (!currentUser) return addToast('Giriş yapmalısın.', 'error');
+    if (!currentUser) return addToast(t('login_required'), 'error');
     
     addForumPost({
       title: 'Hahaha!',
@@ -69,7 +69,7 @@ export const MemeZone = () => {
       memeUrl: meme.url
     });
     
-    addToast('Meme akışa eklendi!', 'success');
+    addToast(t('meme_shared_to_feed'), 'success');
   };
 
   return (
@@ -77,7 +77,7 @@ export const MemeZone = () => {
       <div className="flex justify-between items-end border-b-4 border-black pb-4">
          <div>
            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">MEME ZONE</h2>
-           <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest mt-1">GÜNLÜK ANIME MEMELERİ (R/ANIMEMES)</p>
+           <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest mt-1">{t('meme_subtitle')}</p>
          </div>
          <button 
            onClick={fetchMemes} 
@@ -85,14 +85,14 @@ export const MemeZone = () => {
            className="bg-cyan-500 text-white border-2 border-white p-2 hover:bg-white hover:text-black transition-colors disabled:opacity-50 relative group"
          >
            <RefreshCw size={20} strokeWidth={3} className={loading ? "animate-spin" : ""} />
-           <span className="absolute top-full right-0 mt-2 bg-black border-2 border-white text-white text-[10px] uppercase font-black px-2 py-1 opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none">Yenile</span>
+           <span className="absolute top-full right-0 mt-2 bg-black border-2 border-white text-white text-[10px] uppercase font-black px-2 py-1 opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none">{t('refresh')}</span>
          </button>
       </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <Loader2 size={48} className="animate-spin text-white" />
-          <p className="font-black text-white tracking-widest uppercase">MEMELER YÜKLENİYOR...</p>
+          <p className="font-black text-white tracking-widest uppercase">{t('meme_loading')}</p>
         </div>
       ) : fetchError || memes.length === 0 ? (
         <div className="border-4 border-white/20 bg-black p-12 text-center">
@@ -133,7 +133,7 @@ export const MemeZone = () => {
                    onClick={() => handleShareToFeed(meme)}
                    className="w-full max-w-[200px] flex items-center justify-center gap-2 bg-rose-600 text-white font-black uppercase tracking-widest py-3 border-2 border-white hover:bg-white hover:text-rose-600 transition-colors neo-shadow"
                  >
-                   <Share2 size={20} strokeWidth={2.5} /> PAYLAŞ
+                   <Share2 size={20} strokeWidth={2.5} /> {t('share')}
                  </button>
                  <a 
                    href={meme.permalink}
@@ -141,7 +141,7 @@ export const MemeZone = () => {
                    rel="noopener noreferrer"
                    className="w-full max-w-[200px] flex items-center justify-center gap-2 bg-cyan-500 text-white font-black uppercase tracking-widest py-3 border-2 border-white hover:bg-white hover:text-cyan-600 transition-colors"
                  >
-                   <ExternalLink size={20} strokeWidth={2.5} /> REDDIT'TE AÇ
+                   <ExternalLink size={20} strokeWidth={2.5} /> {t('open_on_reddit')}
                  </a>
               </div>
               <div className="absolute bottom-2 left-2 bg-black text-white text-[10px] font-black uppercase px-2 py-1 border-2 border-white flex items-center gap-1">

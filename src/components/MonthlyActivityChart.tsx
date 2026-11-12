@@ -40,17 +40,11 @@ interface MonthDataPoint {
   animeTitles: string[];  // Sample of titles watched
 }
 
-const MONTH_NAMES_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-const FULL_MONTHS_TR = [
-  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
-  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-];
-
 export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({ 
   watchlist, 
   isOwnProfile = true 
 }) => {
-  const { t } = useAppTranslation();
+  const { t, currentLang } = useAppTranslation();
   const [timeRange, setTimeRange] = useState<'6m' | '12m'>('12m');
   const [chartType, setChartType] = useState<'bar' | 'area'>('bar');
   const [useSampleData, setUseSampleData] = useState<boolean>(() => watchlist.length === 0);
@@ -78,6 +72,9 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
     const monthsCount = timeRange === '6m' ? 6 : 12;
     const now = new Date();
     const result: MonthDataPoint[] = [];
+    // Ay adlarını sabit Türkçe listeyle değil, geçerli dile göre üret.
+    const shortMonthFmt = new Intl.DateTimeFormat(currentLang, { month: 'short' });
+    const longMonthFmt = new Intl.DateTimeFormat(currentLang, { month: 'long' });
 
     // Group actual watchlist by "YYYY-MM"
     const actualMonthlyMap: Record<string, { completed: number; watching: number; episodes: number; titles: string[] }> = {};
@@ -99,7 +96,9 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
         actualMonthlyMap[key].watching += 1;
       }
 
-      actualMonthlyMap[key].episodes += item.episodesWatched || (isCompleted ? (item.anime.episodes || 12) : 1);
+      actualMonthlyMap[key].episodes += item.episodesWatched > 0
+        ? item.episodesWatched
+        : (isCompleted && item.anime.episodes ? item.anime.episodes : 0);
       const title = item.anime.title_english || item.anime.title;
       if (title && !actualMonthlyMap[key].titles.includes(title)) {
         actualMonthlyMap[key].titles.push(title);
@@ -114,8 +113,8 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
       const monthIdx = d.getMonth();
       const key = `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
       const shortYear = String(year).slice(-2);
-      const label = `${MONTH_NAMES_TR[monthIdx]} '${shortYear}`;
-      const fullLabel = `${FULL_MONTHS_TR[monthIdx]} ${year}`;
+      const label = `${shortMonthFmt.format(d)} '${shortYear}`;
+      const fullLabel = `${longMonthFmt.format(d)} ${year}`;
 
       if (useSampleData || !hasActualData) {
         // Use realistic distributed sample data
@@ -151,7 +150,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
     }
 
     return result;
-  }, [watchlist, timeRange, useSampleData, sampleHistoricalData]);
+  }, [watchlist, timeRange, useSampleData, sampleHistoricalData, currentLang]);
 
   // Aggregate stats
   const totalCompleted = chartData.reduce((acc, d) => acc + d.completed, 0);
@@ -180,7 +179,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
               {dataPoint?.fullLabel || label}
             </span>
             <span className="bg-white text-black text-[10px] font-black px-1.5 py-0.5 border border-black uppercase">
-              {dataPoint?.total || 0} Anime
+              {dataPoint?.total || 0} {t('chart_anime_unit')}
             </span>
           </div>
 
@@ -188,7 +187,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             <div className="flex items-center justify-between text-rose-400">
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 bg-rose-500 border border-black inline-block" />
-                Tamamlanan:
+                {t('chart_completed_label')}
               </span>
               <span className="font-black text-white">{dataPoint?.completed || 0}</span>
             </div>
@@ -196,7 +195,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             <div className="flex items-center justify-between text-amber-300">
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 bg-amber-400 border border-black inline-block" />
-                İzleniyor:
+                {t('chart_watching_label')}
               </span>
               <span className="font-black text-white">{dataPoint?.watching || 0}</span>
             </div>
@@ -204,16 +203,16 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             <div className="flex items-center justify-between text-cyan-300 pt-1 border-t border-white/10">
               <span className="flex items-center gap-1.5">
                 <Film size={12} strokeWidth={2.5} />
-                Toplam Bölüm:
+                {t('chart_total_episodes_label')}
               </span>
-              <span className="font-black text-white">{dataPoint?.episodes || 0} Bölüm</span>
+              <span className="font-black text-white">{dataPoint?.episodes || 0} {t('chart_episodes_unit')}</span>
             </div>
           </div>
 
           {dataPoint && dataPoint.animeTitles.length > 0 && (
             <div className="mt-3 pt-2 border-t border-white/20">
               <div className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">
-                İzlenen Başlıklar:
+                {t('chart_titles_watched')}
               </div>
               <div className="space-y-0.5">
                 {dataPoint.animeTitles.slice(0, 3).map((title, idx) => (
@@ -223,7 +222,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
                 ))}
                 {dataPoint.animeTitles.length > 3 && (
                   <div className="text-[10px] text-rose-400 font-black">
-                    +{dataPoint.animeTitles.length - 3} anime daha
+                    {t('chart_more_anime', { count: dataPoint.animeTitles.length - 3 })}
                   </div>
                 )}
               </div>
@@ -265,7 +264,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
           {/* Sample / Real Data Toggle */}
           <button
             onClick={() => setUseSampleData(!useSampleData)}
-            title={useSampleData ? "Kendi verilerine geç" : "Örnek verilerle grafiği test et"}
+            title={useSampleData ? t('chart_toggle_to_real_title') : t('chart_toggle_to_sample_title')}
             className={`px-3 py-1.5 text-xs font-black uppercase tracking-wider border-2 border-black transition-colors flex items-center gap-1.5 ${
               useSampleData 
                 ? 'bg-amber-400 text-black shadow-[2px_2px_0px_0px_#000]' 
@@ -300,7 +299,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
           <div className="flex border-2 border-black bg-white shadow-[2px_2px_0px_0px_#000]">
             <button
               onClick={() => setChartType('bar')}
-              title="Sütun Grafiği"
+              title={t('chart_bar_title')}
               className={`p-1.5 text-xs font-black uppercase transition-colors ${
                 chartType === 'bar' ? 'bg-rose-500 text-white' : 'text-black hover:bg-neutral-100'
               }`}
@@ -309,7 +308,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             </button>
             <button
               onClick={() => setChartType('area')}
-              title="Alan Grafiği"
+              title={t('chart_area_title')}
               className={`p-1.5 text-xs font-black uppercase transition-colors border-l-2 border-black ${
                 chartType === 'area' ? 'bg-rose-500 text-white' : 'text-black hover:bg-neutral-100'
               }`}
@@ -328,7 +327,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             {t('total_period_anime', 'İzlenen Anime')}
           </div>
           <div className="text-2xl font-black text-black uppercase tracking-tight">
-            {totalWatchedAnime} <span className="text-xs font-bold text-black/60">SERİ</span>
+            {totalWatchedAnime} <span className="text-xs font-bold text-black/60">{t('series_count')}</span>
           </div>
         </div>
 
@@ -338,7 +337,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             {t('completed_anime', 'Tamamlanan')}
           </div>
           <div className="text-2xl font-black text-black uppercase tracking-tight">
-            {totalCompleted} <span className="text-xs font-bold text-black/60">({totalWatching} AKTİF)</span>
+            {totalCompleted} <span className="text-xs font-bold text-black/60">({totalWatching} {t('active')})</span>
           </div>
         </div>
 
@@ -358,7 +357,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             {t('monthly_avg', 'Aylık Ortalama')}
           </div>
           <div className="text-2xl font-black text-black uppercase tracking-tight">
-            {monthlyAvg} <span className="text-xs font-bold text-black/60">ANİME/AY</span>
+            {monthlyAvg} <span className="text-xs font-bold text-black/60">{t('anime_per_month')}</span>
           </div>
         </div>
       </div>
@@ -394,7 +393,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
               />
               <Bar 
                 dataKey="completed" 
-                name="Tamamlanan Anime" 
+                name={t('chart_legend_completed')} 
                 fill="#f43f5e" 
                 stroke="#000000" 
                 strokeWidth={2}
@@ -402,7 +401,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
               />
               <Bar 
                 dataKey="watching" 
-                name="İzlenmekte Olan" 
+                name={t('chart_legend_watching')} 
                 fill="#fbbf24" 
                 stroke="#000000" 
                 strokeWidth={2}
@@ -448,7 +447,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
               <Area 
                 type="monotone" 
                 dataKey="completed" 
-                name="Tamamlanan Anime" 
+                name={t('chart_legend_completed')} 
                 stroke="#f43f5e" 
                 strokeWidth={3} 
                 fillOpacity={1} 
@@ -457,7 +456,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
               <Area 
                 type="monotone" 
                 dataKey="watching" 
-                name="İzlenmekte Olan" 
+                name={t('chart_legend_watching')} 
                 stroke="#d97706" 
                 strokeWidth={3} 
                 fillOpacity={1} 
@@ -472,10 +471,10 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
       <div className="mt-4 pt-3 border-t-2 border-black/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] font-bold text-black/60 uppercase">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Toplam {totalEpisodes} bölüm loglandı</span>
+          <span>{t('chart_logged_episodes', { count: totalEpisodes })}</span>
         </div>
         <div className="text-black/50">
-          İzleme listesi ve bölüm ilerlemelerine göre otomatik hesaplanır
+          {t('chart_auto_calc_note')}
         </div>
       </div>
     </div>

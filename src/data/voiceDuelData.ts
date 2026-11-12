@@ -7,6 +7,8 @@
  * YouTube iframe API'siyle yalnızca ilgili klip, başlangıç/bitiş zamanlarıyla oynatılır.
  * Görüntü/puanlar AniList/MAL'den alınmaz (hot-link); yalnız metin gösterilir.
  */
+export type VoiceHint = Record<'tr' | 'en' | 'ja' | 'fr', string>;
+
 export interface VoiceClip {
     id: string;
     name: string;
@@ -16,7 +18,7 @@ export interface VoiceClip {
     endSeconds: number;
     options: [string, string, string, string];
     difficulty: 'kolay' | 'orta' | 'zor';
-    hint: string;
+    hint: VoiceHint;
 }
 
 export const VOICE_CLIPS: VoiceClip[] = [
@@ -29,7 +31,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 18,
         options: ['Madoka Kaname', 'Sayaka Miki', 'Mami Tomoe', 'Kyoko Sakura'],
         difficulty: 'kolay',
-        hint: 'Ana karakter. Umut dolu, istifini bozmayan bir kız — kermesteyi kabul ediyor olabilir.'
+        hint: {
+            tr: 'Ana karakter. Umut dolu, nazik ve başkaları için dilek dilemeye hazır.',
+            en: 'The main character. Hopeful, gentle, and willing to make a wish for others.',
+            ja: '主人公。希望に満ちた優しい少女で、他人のために願いを捧げようとします。',
+            fr: "L'héroïne. Pleine d'espoir, douce et prête à faire un vœu pour les autres."
+        }
     },
     {
         id: 'sayaka-miki-pv',
@@ -40,7 +47,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 20,
         options: ['Sayaka Miki', 'Madoka Kaname', 'Kyoko Sakura', 'Iroha Tamaki'],
         difficulty: 'kolay',
-        hint: 'Güç ve adalet — "şunu ekiplerim doyursun" diyen kızıl tırtıl.'
+        hint: {
+            tr: 'Adalet için savaşan ve doğru olanı yapmaya inanan bir kız.',
+            en: 'A girl who fights for justice and believes in doing what is right.',
+            ja: '正義のために戦い、正しいことを信じる少女。',
+            fr: 'Une fille qui se bat pour la justice et croit faire ce qui est juste.'
+        }
     },
     {
         id: 'mami-tomoe-pv',
@@ -51,7 +63,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 25,
         options: ['Mami Tomoe', 'Madoka Kaname', 'Sana Futaba', 'Oriko Mikuni'],
         difficulty: 'orta',
-        hint: 'Karamel sarı saçlı alveter reenak — mahallenin muhafızı, sizi kurtaran sesi.'
+        hint: {
+            tr: 'Altın sarısı bukleleri olan, sakin ve koruyucu sesli deneyimli bir büyü kızı.',
+            en: 'A composed senior magical girl with golden curls and a warm, protective voice.',
+            ja: '金色の巻き毛を持つ、落ち着いた保護的な声の先輩魔法少女。',
+            fr: 'Une magical girl expérimentée aux boucles dorées, calme et protectrice.'
+        }
     },
     {
         id: 'kyoko-sakura-pv',
@@ -62,7 +79,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 20,
         options: ['Kyoko Sakura', 'Iroha Tamaki', 'Sayaka Miki', 'Oriko Mikuni'],
         difficulty: 'orta',
-        hint: 'Alevli delici kız — yiyecek dilencilikliği, sade gaya da karsın.'
+        hint: {
+            tr: 'Ateşli, yemeyi seven, sivri dilli ve sert görünüşlü bir savaşçı.',
+            en: 'A fiery, food-loving fighter with a sharp tongue and a tough exterior.',
+            ja: '炎のように熱く、食べることが好きな、毒舌で強気な戦士。',
+            fr: 'Une combattante ardente et gourmande, à la langue acérée et au caractère dur.'
+        }
     },
     {
         id: 'homura-akemi-pv',
@@ -73,7 +95,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 25,
         options: ['Homura Akemi', 'Oriko Mikuni', 'Mami Tomoe', 'Madoka Kaname'],
         difficulty: 'zor',
-        hint: 'Beyaz cilt, mor saç — geçmişe dönüşüm, tasiye bir kuvvetin sesi.'
+        hint: {
+            tr: 'Uzun koyu saçlı, soğukkanlı ve sesinde kayıp izleri taşıyan bir kız.',
+            en: 'A cool, quiet girl with long dark hair and a voice tinged with loss.',
+            ja: '長い黒髪のクールで静かな少女。声には喪失感が漂う。',
+            fr: 'Une fille calme aux longs cheveux sombres, dont la voix trahit la perte.'
+        }
     },
     {
         id: 'iroha-tamaki-pv',
@@ -84,7 +111,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 25,
         options: ['Iroha Tamaki', 'Sana Futaba', 'Sayaka Miki', 'Madoka Kaname'],
         difficulty: 'zor',
-        hint: 'Ne olduğunu kaybetmiş bir kız — ama kardeşleri için bir şeyler parlak tutuyor.'
+        hint: {
+            tr: 'Kaybettiğini arayan, kız kardeşlerini koruyan nazik bir kız.',
+            en: 'A gentle girl searching for what she has lost, protecting her younger sisters.',
+            ja: '失ったものを探しながら妹たちを守る優しい少女。',
+            fr: "Une fille douce qui cherche ce qu'elle a perdu et protège ses petites sœurs."
+        }
     },
     {
         id: 'sana-futaba-pv',
@@ -95,7 +127,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 24,
         options: ['Sana Futaba', 'Iroha Tamaki', 'Kyoko Sakura', 'Mami Tomoe'],
         difficulty: 'zor',
-        hint: 'Becerikli, gözden kaçan küçük bir kız — sesi yumuşak ama sözleri keskin.'
+        hint: {
+            tr: 'Utangaç, gözlemci; sesi yumuşak ama sözleri keskin bir kız.',
+            en: 'A shy, observant girl with a soft voice but sharp words.',
+            ja: '内気で観察力のある少女。声は柔らかいが言葉は鋭い。',
+            fr: 'Une fille timide et observatrice, à la voix douce mais aux mots acérés.'
+        }
     },
     {
         id: 'oriko-mikuni-pv',
@@ -106,7 +143,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 22,
         options: ['Oriko Mikuni', 'Madoka Kaname', 'Mami Tomoe', 'Sayaka Miki'],
         difficulty: 'zor',
-        hint: 'Bu karakterin adı sorulur, her cevaplar da böyle kazanır: anlamları sıkı, ulvi, kader ve fedakârlık.'
+        hint: {
+            tr: 'Kader ve fedakârlık hissi taşıyan, sakin ve aristokratik bir ses.',
+            en: 'A calm, aristocratic voice with a sense of fate and sacrifice.',
+            ja: '運命と犠牲を感じさせる、落ち着いた気品ある声。',
+            fr: 'Une voix calme et aristocratique, marquée par le destin et le sacrifice.'
+        }
     },
     {
         id: 'sayaka-miki-pv-jp',
@@ -117,7 +159,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 18,
         options: ['Sayaka Miki', 'Kyoko Sakura', 'Iroha Tamaki', 'Mami Tomoe'],
         difficulty: 'kolay',
-        hint: 'Sesi coşkulu, çocuğun cesuru bir kalp.'
+        hint: {
+            tr: 'Güçlü bir adalet duygusu taşıyan coşkulu bir ses.',
+            en: 'An enthusiastic voice with a strong sense of justice.',
+            ja: '強い正義感を感じさせる、熱意のある声。',
+            fr: "Une voix enthousiaste portée par un fort sens de la justice."
+        }
     },
     {
         id: 'madoka-kaname-pv-2',
@@ -128,7 +175,12 @@ export const VOICE_CLIPS: VoiceClip[] = [
         endSeconds: 18,
         options: ['Madoka Kaname', 'Homura Akemi', 'Sana Futaba', 'Mami Tomoe'],
         difficulty: 'kolay',
-        hint: 'Bu dizinin yıldızı—yukarıda, yeterince parlak.'
+        hint: {
+            tr: 'Serinin merkezindeki parlak ve umut dolu ses.',
+            en: 'The bright, hopeful voice at the heart of the series.',
+            ja: '物語の中心にいる、明るく希望に満ちた声。',
+            fr: "La voix lumineuse et pleine d'espoir au cœur de la série."
+        }
     },
 ];
 
