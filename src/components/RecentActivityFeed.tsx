@@ -7,6 +7,7 @@ import { RecentActivity, Anime } from '../types';
 import { getSafeImageUrl, formatRelativeTime, cn } from '../lib/utils';
 import { getDefaultAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { playUiTap } from '../lib/gentleAudio';
 import { 
   Activity, BookmarkPlus, Check, Star, ExternalLink, Filter, 
   Layers, Clock, Film, Sparkles, RefreshCw, Plus,
@@ -15,29 +16,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Web Audio API Neo-Brutalist chime generator for real-time drop notifications
+// Gentle shared chime (see lib/gentleAudio.ts). The old hand-rolled triangle
+// sweep at 0.1 gain felt like an alarm; this respects the global SFX setting.
 const playNeoChime = () => {
-  try {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const audioCtx = new AudioContextClass();
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-    osc.frequency.exponentialRampToValueAtTime(783.99, audioCtx.currentTime + 0.12); // G5
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.22);
-  } catch {
-    // Audio restricted or uninitialized, fail silently
-  }
+  playUiTap();
 };
 
 interface RecentActivityFeedProps {

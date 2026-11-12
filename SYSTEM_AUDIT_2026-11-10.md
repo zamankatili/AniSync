@@ -6,6 +6,8 @@
 > **Kapsam:** `C:\Users\semih\Documents\Qoder\anisync\app` — `main` dalının HEAD'i `983b998`.
 > **Çalışma dizini bir Vite + React 19 + TypeScript (strict) + Tailwind SPA'sıdır; Capacitor ile native paketlenir. Backend yok — Firestore (adlandırılmış DB) + Vercel serverless `/api/*` fonksiyonları + Vercel Edge rewrites.**
 
+> **Güncel ek (12 Kasım 2026):** Bu turdaki ürünleşme geçişi, kapatılan boşluklar, 78 testlik kapı durumu ve dürüst backlog için `PRODUCT_GAP_ANALYSIS_2026-11-12.md` dosyasına bakın. Aşağıdaki bölümler 10–11 Kasım anlık görüntüsüdür.
+
 ---
 
 ## Uzman İncelemesi — 11 Kasım 2026 (en güncel bölüm)

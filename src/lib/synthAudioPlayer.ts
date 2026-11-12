@@ -1,27 +1,25 @@
 /**
  * Web Audio API Synth Fallback Engine for AniSync Music Quiz
  * Guarantees audio playback even if remote audio files fail, offline, or get blocked by browser CORS.
+ *
+ * Deliberately uses a soft sine/triangle timbre and a low ceiling: the previous
+ * square-wave + 0.18 master gain combination sounded like an alarm rather than
+ * a melody.
  */
 
-let audioCtx: AudioContext | null = null;
-let activeOscillators: OscillatorNode[] = [];
-let synthTimeout: NodeJS.Timeout | null = null;
+import { getSoundContext } from './gentleAudio';
+import { currentSfxLevel } from '../store/useSoundStore';
 
-const getAudioContext = (): AudioContext => {
-  if (!audioCtx) {
-    const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-    audioCtx = new AudioCtxClass();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-  return audioCtx;
-};
+let activeOscillators: OscillatorNode[] = [];
+let synthTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Anime-style upbeat melody pentatonic frequencies (C4, D4, E4, G4, A4, C5, D5, E5, G5)
-const ANIME_PENTATONIC_FREQS = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99];
+const ANIME_PENTATONIC_FREQS = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99];
 
-export const stopSynthMelody = () => {
+/** Master ceiling for the quiz fallback, before the user volume multiplier. */
+const SYNTH_CEILING = 0.07;
+
+export const stopSynthMelody = (): void => {
   if (synthTimeout) {
     clearTimeout(synthTimeout);
     synthTimeout = null;
@@ -39,15 +37,19 @@ export const stopSynthMelody = () => {
 
 export const playSynthAnimeMelody = (durationSeconds: number = 5): Promise<void> => {
   stopSynthMelody();
-  const ctx = getAudioContext();
+  const level = currentSfxLevel();
+  if (level <= 0) return Promise.resolve();
+
+  const ctx = getSoundContext();
+  if (!ctx) return Promise.resolve();
 
   return new Promise((resolve) => {
     const startTime = ctx.currentTime;
-    const noteDuration = 0.22;
-    const totalNotes = Math.floor(durationSeconds / noteDuration);
+    const noteDuration = 0.3;
+    const totalNotes = Math.max(1, Math.floor(durationSeconds / noteDuration));
 
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.18, startTime);
+    masterGain.gain.setValueAtTime(SYNTH_CEILING * level, startTime);
     masterGain.connect(ctx.destination);
 
     for (let i = 0; i < totalNotes; i++) {
@@ -57,13 +59,14 @@ export const playSynthAnimeMelody = (durationSeconds: number = 5): Promise<void>
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      osc.type = i % 2 === 0 ? 'triangle' : 'sine';
+      // Sine only — no square/triangle edge in the quiz fallback.
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, noteTime);
 
-      // Envelope
-      gain.gain.setValueAtTime(0.01, noteTime);
-      gain.gain.exponentialRampToValueAtTime(0.3, noteTime + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.001, noteTime + noteDuration - 0.02);
+      // Soft attack, long tail
+      gain.gain.setValueAtTime(0.0001, noteTime);
+      gain.gain.exponentialRampToValueAtTime(0.55, noteTime + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + noteDuration - 0.02);
 
       osc.connect(gain);
       gain.connect(masterGain);

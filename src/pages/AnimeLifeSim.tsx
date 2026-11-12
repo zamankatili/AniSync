@@ -6,6 +6,7 @@ import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
 import { ANIME_REGIONS, getRegionsByWorld, getRegionById } from '../data/animeRegions';
 import type { AnimeRegion } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
+import { computePathProgress, getRankSnapshot } from '../data/universePaths';
 import {
   generateLife,
   LifeResult,
@@ -22,6 +23,8 @@ import { cn } from '../lib/utils';
 import { useToastStore } from '../store/useToastStore';
 import { MemorialBoardModal } from '../components/MemorialBoardModal';
 import { exportLifeCode, importLifeCode, collectSavedLifePayload, applyLifePayload } from '../lib/lifeTransfer';
+import { playBirth, playChoiceMade, playMemorial, playNextEvent, playUiTap } from '../lib/gentleAudio';
+import { useSoundStore } from '../store/useSoundStore';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -66,7 +69,6 @@ export const AnimeLifeSim: React.FC = () => {
   });
   const [parallelLives, setParallelLives] = useState<LifeResult[]>([]);
   const [savedLifeIndex, setSavedLifeIndex] = useState(0);
-  const [muted, setMuted] = useState(false);
   const [showEvent, setShowEvent] = useState(true);
   const [showBirthSummary, setShowBirthSummary] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
@@ -82,11 +84,14 @@ export const AnimeLifeSim: React.FC = () => {
   const [transferInput, setTransferInput] = useState('');
   const [transferBusy, setTransferBusy] = useState(false);
   const [pastLives, setPastLives] = useState<PastLife[]>([]);
-  const audioCtxRef = useRef<AudioContext | null>(null);
   const recordedLifeRef = useRef<string | null>(null);
   const sessionStartRef = useRef(Date.now());
   const lastBreakRef = useRef(0);
   const addToast = useToastStore((s) => s.addToast);
+  const soundEnabled = useSoundStore((s) => s.enabled);
+  const soundVolume = useSoundStore((s) => s.volume);
+  const setSoundEnabled = useSoundStore((s) => s.setEnabled);
+  const setSoundVolume = useSoundStore((s) => s.setVolume);
 
   const DURATION_MS: Record<'30min' | '1h' | '1.5h', number> = {
     '30min': 30 * 60 * 1000,
@@ -99,6 +104,8 @@ export const AnimeLifeSim: React.FC = () => {
   const region = selectedRegion ? regions.find(r => r.id === selectedRegion) : null;
 
   const isTr = currentLang === 'tr';
+  const langKey = (currentLang.slice(0, 2) as 'tr' | 'en' | 'ja' | 'fr');
+  const pathLang: 'tr' | 'en' | 'ja' | 'fr' = (['tr', 'en', 'ja', 'fr'] as const).includes(langKey) ? langKey : 'en';
   const pick4 = (tr: string, en: string, ja: string | undefined, fr: string | undefined) =>
     currentLang.startsWith('tr') ? tr : currentLang.startsWith('ja') ? (ja || en) : currentLang.startsWith('fr') ? (fr || en) : en;
   const worldName = (w: { nameTR: string; nameEN: string }) => (isTr ? w.nameTR : w.nameEN);
@@ -129,7 +136,7 @@ export const AnimeLifeSim: React.FC = () => {
     setLife(main);
     setParallelLives([main, ...parallels]);
     setPhase('playing');
-    playSound(440, 200, 'sine');
+    playBirth();
     setCurrentEventIndex(0);
     setChoicesMade({});
     setLifeAge(0);
@@ -168,20 +175,20 @@ export const AnimeLifeSim: React.FC = () => {
 
   const handleChoice = (eventId: string, choiceId: string) => {
     setChoicesMade(prev => ({ ...prev, [eventId]: choiceId }));
-    playSound(660, 150, 'square');
+    playChoiceMade();
   };
 
   const handleNextEvent = () => {
     if (!life) return;
     if (currentEventIndex >= life.events.length - 1) {
       setPhase('memorial');
-      playSound(330, 500, 'sine');
+      playMemorial();
       return;
     }
     setLifeAge(prev => Math.max(prev, life.events[currentEventIndex].age));
     setShowEvent(false);
     setIsPaused(false);
-    playSound(550, 100, 'triangle');
+    playNextEvent();
   };
 
   const handleSkipToNext = () => {
@@ -208,8 +215,14 @@ export const AnimeLifeSim: React.FC = () => {
 
   const currentEvent = life?.events[currentEventIndex];
   const currentStats = life ? computeStatsAt(life, currentEventIndex, choicesMade) : null;
+  const rankSnapshot = life && currentStats
+    ? getRankSnapshot(life.worldId, computePathProgress(lifeAge, life.deathAge, currentStats))
+    : null;
   const currentAssets = life && currentStats ? computeAssetsAt(life, currentStats) : life?.assets ?? 0;
   const finalLifeStats = life ? computeStatsAt(life, life.events.length - 1, choicesMade) : null;
+  const finalRankSnapshot = life && finalLifeStats
+    ? getRankSnapshot(life.worldId, computePathProgress(life.deathAge, life.deathAge, finalLifeStats))
+    : null;
   const worldFidelity = life ? computeWorldFidelity(life) : 0;
 
   // Anma metni, oyuncu seçimlerinin etkisini de yansıtsın.
@@ -231,28 +244,6 @@ export const AnimeLifeSim: React.FC = () => {
       computeAssetsAt(life, finalLifeStats)
     );
   }, [life, world, region, finalLifeStats, displayName]);
-
-  const playSound = (freq: number, duration: number, type: OscillatorType = 'square') => {
-    if (muted) return;
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = audioCtxRef.current ?? new AudioCtx();
-      audioCtxRef.current = ctx;
-      if (ctx.state === 'suspended') ctx.resume();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.value = freq;
-      gain.gain.value = 0.1;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + duration / 1000);
-    } catch {
-      // ignore
-    }
-  };
 
   // ── Yaşam saati: seçilen süre gerçek oynanış süresini belirler ──
   // Olaylar arasında yaş otomatik ilerler; olay kartı açıkken saat durur.
@@ -280,7 +271,7 @@ export const AnimeLifeSim: React.FC = () => {
       setCurrentEventIndex(currentEventIndex + 1);
       setLifeAge(next.age);
       setShowEvent(true);
-      playSound(550, 100, 'triangle');
+      playNextEvent();
     }
   }, [lifeAge, phase, life, showEvent, currentEventIndex]);
 
@@ -314,7 +305,7 @@ export const AnimeLifeSim: React.FC = () => {
           }
           return pick ? { ...prevChoices, [event.id]: pick } : prevChoices;
         });
-        if (typeof window !== 'undefined') playSound(660, 150, 'square');
+        if (typeof window !== 'undefined') playChoiceMade();
       } else {
         setAutoSecondsLeft(seconds);
       }
@@ -1054,6 +1045,28 @@ export const AnimeLifeSim: React.FC = () => {
             <div className="mt-2 text-[10px] text-neutral-500 font-mono">
               {t('als_progress_events', { current: currentEventIndex + 1, total: life.events.length })}
             </div>
+            {rankSnapshot && (
+              <div className="mt-3 border-2 border-amber-400/40 bg-amber-400/5 p-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">
+                    {rankSnapshot.path.arcName[pathLang]} · {t('als_path_rank')}: {rankSnapshot.current.name[pathLang]}
+                  </span>
+                  {rankSnapshot.next ? (
+                    <span className="text-[9px] font-mono text-neutral-400">
+                      {t('als_path_next', { rank: rankSnapshot.next.name[pathLang] })} · {rankSnapshot.nextPercent}%
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-mono text-emerald-400">{t('als_path_max')}</span>
+                  )}
+                </div>
+                <div className="mt-1 h-1.5 bg-neutral-900 border border-white/20 overflow-hidden">
+                  <div className="h-full bg-amber-400 transition-all duration-500" style={{ width: `${rankSnapshot.nextPercent}%` }} />
+                </div>
+                <p className="mt-1 text-[9px] text-neutral-500 font-mono leading-snug">
+                  {rankSnapshot.current.note[pathLang]}
+                </p>
+              </div>
+            )}
             <div className="mt-3 flex items-center gap-2">
               <span className="text-[10px] text-neutral-400 font-black uppercase">{t('als_speed')}</span>
               {[1, 2, 4, 8, 16].map((s) => (
@@ -1090,12 +1103,32 @@ export const AnimeLifeSim: React.FC = () => {
                 📜 {t('als_timeline')}
               </button>
               <button
-                onClick={() => setMuted(m => !m)}
-                className="ml-auto px-2 py-1 text-[10px] font-black border cursor-pointer bg-black text-neutral-300 border-white/20 hover:border-white"
-                aria-label={muted ? t('als_unmute') : t('als_mute')}
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={cn(
+                  "ml-auto px-2 py-1 text-[10px] font-black border cursor-pointer",
+                  soundEnabled
+                    ? "bg-black text-neutral-300 border-white/20 hover:border-white"
+                    : "bg-rose-600 text-white border-rose-400"
+                )}
+                aria-label={soundEnabled ? t('als_mute') : t('als_unmute')}
+                aria-pressed={!soundEnabled}
               >
-                {muted ? `🔇 ${t('als_unmute')}` : `🔊 ${t('als_mute')}`}
+                {soundEnabled ? `🔊 ${t('als_mute')}` : `🔇 ${t('als_unmute')}`}
               </button>
+              <label className="flex items-center gap-1.5" title={t('als_volume')}>
+                <span className="sr-only">{t('als_volume')}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={soundVolume}
+                  onChange={(e) => setSoundVolume(Number(e.target.value))}
+                  disabled={!soundEnabled}
+                  className="w-16 h-1 appearance-none bg-neutral-800 accent-amber-400 disabled:opacity-40 cursor-pointer"
+                  aria-label={t('als_volume')}
+                />
+              </label>
               <button
                 onClick={() => setAutoDecide(v => {
                   const next = !v;
@@ -1365,6 +1398,26 @@ export const AnimeLifeSim: React.FC = () => {
               </div>
             </div>
 
+            {/* Universe path — final rank */}
+            {finalRankSnapshot && (
+              <div className="mt-4 bg-neutral-900 border-2 border-rose-500/60 p-4">
+                <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest block">
+                  {finalRankSnapshot.path.arcName[pathLang]} · {t('als_path_final')}
+                </span>
+                <div className="mt-1 flex items-baseline justify-between gap-2 flex-wrap">
+                  <span className="text-xl font-black text-white uppercase tracking-tight">
+                    {finalRankSnapshot.current.name[pathLang]}
+                  </span>
+                  <span className="text-[10px] font-mono text-neutral-400">
+                    {t('als_path_rank')} {finalRankSnapshot.index + 1}/{finalRankSnapshot.path.ranks.length} · {finalRankSnapshot.progressPercent}%
+                  </span>
+                </div>
+                <p className="mt-1 text-[10px] text-neutral-400 font-medium leading-snug">
+                  {finalRankSnapshot.path.arcNote[pathLang]}
+                </p>
+              </div>
+            )}
+
             {/* Canon Encounters */}
             {life.isCanonEncountered && (
               <div className="mt-6 bg-amber-400/20 border-2 border-amber-400 p-4">
@@ -1593,7 +1646,7 @@ export const AnimeLifeSim: React.FC = () => {
             <button
               onClick={() => {
                 setShowBirthSummary(false);
-                playSound(440, 200, 'sine');
+                playUiTap();
               }}
               className="w-full py-4 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase text-sm tracking-widest border-4 border-white cursor-pointer neo-shadow-white transition-all"
             >

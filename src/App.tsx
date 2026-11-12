@@ -26,6 +26,7 @@ const WeeklyChallengePage = lazy(() => import('./pages/WeeklyChallengePage').the
 const AniSyncDle = lazy(() => import('./pages/AniSyncDle').then(m => ({ default: m.AniSyncDle })));
 const Arcade = lazy(() => import('./pages/Arcade').then(m => ({ default: m.Arcade })));
 const AnimeLifeSim = lazy(() => import('./pages/AnimeLifeSim').then(m => ({ default: m.AnimeLifeSim })));
+const FanLore = lazy(() => import('./pages/FanLore').then(m => ({ default: m.FanLore })));
 const AdminPage = lazy(() => import('./pages/admin/AdminPage').then(m => ({ default: m.AdminPage })));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const LegalPage = lazy(() => import('./pages/Legal').then(m => ({ default: m.LegalPage })));
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="anime-life-sim" element={<AnimeLifeSim />} />
               <Route path="calendar" element={<AiringCalendar />} />
               <Route path="discover" element={<Discover />} />
+              <Route path="lore" element={<FanLore />} />
               <Route path="lists" element={<ListsPage />} />
               <Route path="anime/:id" element={<AnimeDetail />} />
               <Route path="media/:id" element={<MediaDetail />} />

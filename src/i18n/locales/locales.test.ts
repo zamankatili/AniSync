@@ -8,6 +8,7 @@ import ja from './ja';
 import fr from './fr';
 import { adminTranslations } from '../../i18nAdmin';
 import { animeLifeSimTranslations } from '../../i18nAnimeLifeSim';
+import { productPassTranslations } from '../../i18nProductPass';
 
 /**
  * i18n parity gate.
@@ -23,10 +24,10 @@ import { animeLifeSimTranslations } from '../../i18nAnimeLifeSim';
 const langs = ['tr', 'en', 'ja', 'fr'] as const;
 
 const merged: Record<(typeof langs)[number], Record<string, string>> = {
-  tr: { ...tr.translation, ...(animeLifeSimTranslations.tr as Record<string, string>), ...adminTranslations.tr },
-  en: { ...en.translation, ...(animeLifeSimTranslations.en as Record<string, string>), ...adminTranslations.en },
-  ja: { ...ja.translation, ...(animeLifeSimTranslations.ja as Record<string, string>), ...adminTranslations.ja },
-  fr: { ...fr.translation, ...(animeLifeSimTranslations.fr as Record<string, string>), ...adminTranslations.fr },
+  tr: { ...tr.translation, ...(animeLifeSimTranslations.tr as Record<string, string>), ...adminTranslations.tr, ...productPassTranslations.tr },
+  en: { ...en.translation, ...(animeLifeSimTranslations.en as Record<string, string>), ...adminTranslations.en, ...productPassTranslations.en },
+  ja: { ...ja.translation, ...(animeLifeSimTranslations.ja as Record<string, string>), ...adminTranslations.ja, ...productPassTranslations.ja },
+  fr: { ...fr.translation, ...(animeLifeSimTranslations.fr as Record<string, string>), ...adminTranslations.fr, ...productPassTranslations.fr },
 };
 
 const srcRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');

@@ -14,6 +14,8 @@
 import { AnimeWorld } from '../data/animeWorlds';
 import { AnimeRegion } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
+import { getUniversePath } from '../data/universePaths';
+import type { Localized } from '../data/universePaths';
 import i18n from '../i18n';
 
 /** İçerik motoru dili. TR → Türkçe, JA → Japonca, FR → Fransızca, diğerleri → İngilizce. */
@@ -903,6 +905,35 @@ function createTimeLoopEvent(world: AnimeWorld, region: AnimeRegion, age: number
       { id: 'embrace', label: 'Döngüyü Kabul Et', description: 'Zamanı kullan', statChanges: { luck: 15, health: -10 }, consequences: ['Şans', 'Travma'], risk: 'extreme' }
     ],
     isCanonEncounter: false
+  };
+}
+
+// ─── Evrene Özgü İmza İkilemi (Universe Path) ───────────
+// Her evrenin kendi rütbe merdiveni vardır; bu olay o merdivenin ilk gerçek
+// sorusudur. Metinler `data/universePaths.ts` içinde 4 dilde tutulur.
+function createUniverseDilemmaEvent(world: AnimeWorld, age: number, year: number): LifeEvent | null {
+  const path = getUniversePath(world.id);
+  if (!path) return null;
+  const dilemma = path.dilemma;
+  const lang = lifeLang();
+  const pick = (value: Localized): string => value[lang] || value.en;
+
+  return {
+    id: dilemma.id,
+    age,
+    year,
+    title: pick(dilemma.title),
+    description: pick(dilemma.description),
+    type: 'special',
+    choices: dilemma.choices.map((choice) => ({
+      id: choice.id,
+      label: pick(choice.label),
+      description: pick(choice.description),
+      statChanges: choice.statChanges,
+      consequences: choice.consequences.map(pick),
+      risk: choice.risk,
+    })),
+    isCanonEncounter: false,
   };
 }
 
@@ -2014,6 +2045,13 @@ export function generateLife(
       const uniqueEvent = createWorldUniqueEvent(world, region, uniqueAge, birthYear + uniqueAge, stats);
       if (uniqueEvent) events.push(uniqueEvent);
     }
+  }
+
+  // Evrenin imza ikilemi — rütbe merdiveninin ilk gerçek sorusu.
+  const universePath = getUniversePath(world.id);
+  if (universePath && universePath.dilemma.age < deathAge) {
+    const dilemma = createUniverseDilemmaEvent(world, universePath.dilemma.age, birthYear + universePath.dilemma.age);
+    if (dilemma) events.push(dilemma);
   }
 
   // Milestone events at key ages (15 fraksiyonla, 5 yukarıda kapsandı)

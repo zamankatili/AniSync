@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { animeLifeSimTranslations } from './i18nAnimeLifeSim';
 import { adminTranslations } from './i18nAdmin';
+import { productPassTranslations } from './i18nProductPass';
 
 /**
  * Locale kaynakları route-level bölme için dinamik yüklenir:
@@ -31,6 +32,7 @@ async function loadLocale(lng: string) {
     ...mod.default.translation,
     ...(animeLifeSimTranslations as any)[base],
     ...(adminTranslations as any)[base],
+    ...(productPassTranslations as any)[base],
   };
   i18n.addResourceBundle(base, 'translation', translation, true, true);
   loadedBase.add(base);

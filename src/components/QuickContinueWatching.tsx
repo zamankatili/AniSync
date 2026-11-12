@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { playChoiceMade, playUiTap } from '../lib/gentleAudio';
 
 export const QuickContinueWatching: React.FC = () => {
   const { watchlist, incrementEpisode, decrementEpisode, setEpisodeCount } = useAppStore();
@@ -20,41 +21,9 @@ export const QuickContinueWatching: React.FC = () => {
   const watchingItems = watchlist.filter(item => item.status === 'watching');
 
   const playSuccessSound = (isCompleted: boolean) => {
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const now = ctx.currentTime;
-      if (isCompleted) {
-        // Grand fanfare chord (C5 - E5 - G5 - C6)
-        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + i * 0.08);
-          gain.gain.setValueAtTime(0.001, now + i * 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.2, now + i * 0.08 + 0.02);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 0.5);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now + i * 0.08);
-          osc.stop(now + i * 0.08 + 0.6);
-        });
-      } else {
-        // Quick cheerful pop chime
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, now); // D5
-        osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
-        gain.gain.setValueAtTime(0.18, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.22);
-      }
-    } catch {
-      // AudioContext unavailable
-    }
+    // Tamamlama ve artırma için paylaşılan yumuşak motifler.
+    if (isCompleted) playChoiceMade();
+    else playUiTap();
   };
 
   const handleQuickIncrement = async (mal_id: number) => {
