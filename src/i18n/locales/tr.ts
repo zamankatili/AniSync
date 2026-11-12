@@ -465,6 +465,8 @@ export default {
       "lists_action": "AKSİYON DOLU",
       "lists_top_manga": "TOP MANGA (ANILIST)",
       "lists_top_light_novel": "TOP LIGHT NOVEL (ANILIST)",
+      "lists_tab_official": "RESMİ LİSTELER",
+      "lists_tab_community": "TOPLULUK LİSTELERİ",
       "share_community": "Topluluk Akışında Paylaş",
       "share_on_x_short": "X (Twitter)'da Paylaş",
       "no_results_title": "Sonuç Bulunamadı",

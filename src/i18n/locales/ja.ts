@@ -465,6 +465,8 @@ export default {
       "lists_action": "アクション満載",
       "lists_top_manga": "トップ漫画 (ANILIST)",
       "lists_top_light_novel": "トップライトノベル (ANILIST)",
+      "lists_tab_official": "公式リスト",
+      "lists_tab_community": "コミュニティリスト",
       "share_community": "コミュニティフィードにシェア",
       "share_on_x_short": "X (Twitter)でシェア",
       "no_results_title": "結果なし",

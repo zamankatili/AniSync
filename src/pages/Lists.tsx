@@ -194,7 +194,7 @@ export const ListsPage = () => {
   };
 
   const handleVote = async (list: CustomList) => {
-    if (!currentUser) return addToast(t('login_required', 'Giriş yapmalısın.'), 'error');
+    if (!currentUser) return addToast(t('login_required'), 'error');
     
     const isVoted = list.votedBy.includes(currentUser.uid);
     const listRef = doc(db, 'customLists', list.id);
@@ -232,9 +232,9 @@ export const ListsPage = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div>
-        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 uppercase">{t('lists_page_title', 'LİSTELER')}</h1>
+        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 uppercase">{t('lists_page_title')}</h1>
         <p className="text-white bg-black border-4 border-black inline-block px-4 py-2 font-black uppercase tracking-widest text-sm neo-shadow-white mb-6">
-          {t('lists_page_desc', 'TOPLULUĞUN VE DÜNYANIN EN İYİLERİ.')}
+          {t('lists_page_desc')}
         </p>
 
         <div className="flex gap-4 border-b-4 border-black pb-4 overflow-x-auto">
@@ -242,13 +242,13 @@ export const ListsPage = () => {
             onClick={() => setActiveTab('official')}
             className={`px-6 py-3 font-black uppercase tracking-widest transition-all border-4 ${activeTab === 'official' ? 'bg-rose-600 border-black text-white neo-shadow-white' : 'bg-black border-black text-white/50 hover:text-white hover:bg-neutral-900 border-transparent'}`}
           >
-            RESMİ LİSTELER
+            {t('lists_tab_official')}
           </button>
           <button 
             onClick={() => setActiveTab('community')}
             className={`px-6 py-3 font-black uppercase tracking-widest transition-all border-4 ${activeTab === 'community' ? 'bg-cyan-600 border-black text-white neo-shadow-white' : 'bg-black border-black text-white/50 hover:text-white hover:bg-neutral-900 border-transparent'}`}
           >
-            TOPLULUK LİSTELERİ
+            {t('lists_tab_community')}
           </button>
         </div>
       </div>
@@ -283,12 +283,12 @@ export const ListsPage = () => {
             <div className="flex justify-end">
               <button 
                 onClick={() => {
-                  if (!currentUser) return addToast(t('login_required', 'Giriş yapmalısın.'), 'error');
+                  if (!currentUser) return addToast(t('login_required'), 'error');
                   setIsCreateModalOpen(true);
                 }}
                 className="bg-white text-black border-4 border-black px-4 py-2 font-black uppercase text-sm flex items-center gap-2 hover:bg-cyan-400 transition-colors neo-shadow block"
               >
-                <Plus size={18} strokeWidth={3} /> {t('create_list', 'LİSTE OLUŞTUR')}
+                <Plus size={18} strokeWidth={3} /> {t('create_list')}
               </button>
             </div>
 

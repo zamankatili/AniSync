@@ -91,7 +91,7 @@ describe('i18n parity', () => {
 
   it('does not hardcode Turkish UI text in non-admin components', () => {
     const turkish = /[çğıöşüÇĞİÖŞÜ]/;
-    const allow = /AN[İI]SYNC|SH[İI]NJUKU/i;
+    const allow = /AN[İI]SYNC|SH[İI]NJUKU|KÖŞE/i;
     const violations: string[] = [];
 
     for (const file of collectSourceFiles()) {
@@ -107,14 +107,19 @@ describe('i18n parity', () => {
       for (const m of text.matchAll(/(?:placeholder|aria-label|title|alt)=(["'])([^"'\n]*)\1/g)) {
         if (m[2]) candidates.push({ value: m[2], index: m.index ?? 0 });
       }
+      // t('key', 'Turkish fallback') — a fallback is still a hardcoded user-facing string.
+      for (const m of text.matchAll(/\bt\(\s*['"][A-Za-z0-9_]+['"]\s*,\s*(['"])([^"'\n]*)\1/g)) {
+        if (m[2]) candidates.push({ value: m[2], index: m.index ?? 0 });
+      }
       if (file.endsWith('.tsx')) {
-        for (const m of text.matchAll(/>([^<>{}\n]{3,})</g)) {
-          candidates.push({ value: m[1], index: m.index ?? 0 });
+        for (const m of text.matchAll(/>([^<>{}]+)</g)) {
+          candidates.push({ value: m[1].replace(/\s+/g, ' '), index: m.index ?? 0 });
         }
       }
 
       for (const candidate of candidates) {
         const value = candidate.value.trim();
+        if (value.length < 3) continue;
         if (!turkish.test(value) || allow.test(value)) continue;
         const line = text.slice(0, candidate.index).split('\n').length;
         violations.push(`${rel}:${line} ${value.slice(0, 70)}`);

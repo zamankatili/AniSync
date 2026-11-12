@@ -465,6 +465,8 @@ export default {
       "lists_action": "PACKED WITH ACTION",
       "lists_top_manga": "TOP MANGA (ANILIST)",
       "lists_top_light_novel": "TOP LIGHT NOVEL (ANILIST)",
+      "lists_tab_official": "OFFICIAL LISTS",
+      "lists_tab_community": "COMMUNITY LISTS",
       "share_community": "Share to Community Feed",
       "share_on_x_short": "Share on X (Twitter)",
       "no_results_title": "No Results",

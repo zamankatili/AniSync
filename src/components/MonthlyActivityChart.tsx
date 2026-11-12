@@ -250,10 +250,10 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             </div>
             <div>
               <h2 className="text-xl md:text-2xl font-black text-black uppercase tracking-tight">
-                {t('monthly_activity', 'Aylık Aktivite Takibi')}
+                {t('monthly_activity')}
               </h2>
               <p className="text-xs text-black/60 font-bold uppercase tracking-wider mt-0.5">
-                {t('monthly_activity_desc', 'Aylara göre izlenen anime ve bölüm sayılarının görsel dökümü')}
+                {t('monthly_activity_desc')}
               </p>
             </div>
           </div>
@@ -272,7 +272,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
             }`}
           >
             <Sparkles size={13} strokeWidth={2.5} />
-            {useSampleData ? t('view_real_data', 'Örnek Mod Aktif') : t('view_demo_data', 'Örnek Görünüm')}
+            {useSampleData ? t('view_real_data') : t('view_demo_data')}
           </button>
 
           {/* Time range: 6m vs 12m */}
@@ -324,7 +324,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
         <div className="border-2 border-black p-3.5 bg-neutral-50 shadow-[3px_3px_0px_0px_#000]">
           <div className="text-[10px] font-black text-black/60 uppercase tracking-widest flex items-center gap-1 mb-1">
             <Film size={12} strokeWidth={2.5} className="text-rose-500" />
-            {t('total_period_anime', 'İzlenen Anime')}
+            {t('total_period_anime')}
           </div>
           <div className="text-2xl font-black text-black uppercase tracking-tight">
             {totalWatchedAnime} <span className="text-xs font-bold text-black/60">{t('series_count')}</span>
@@ -354,7 +354,7 @@ export const MonthlyActivityChart: React.FC<MonthlyActivityChartProps> = ({
         <div className="border-2 border-black p-3.5 bg-neutral-50 shadow-[3px_3px_0px_0px_#000]">
           <div className="text-[10px] font-black text-black/60 uppercase tracking-widest flex items-center gap-1 mb-1">
             <TrendingUp size={12} strokeWidth={2.5} className="text-blue-600" />
-            {t('monthly_avg', 'Aylık Ortalama')}
+            {t('monthly_avg')}
           </div>
           <div className="text-2xl font-black text-black uppercase tracking-tight">
             {monthlyAvg} <span className="text-xs font-bold text-black/60">{t('anime_per_month')}</span>
