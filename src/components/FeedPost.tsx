@@ -107,9 +107,9 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
                   post.author.uid && "cursor-pointer hover:text-rose-500 transition-colors"
                 )}
               >{post.author.name}</h4>
-              {post.author.isFriend && <span className="bg-rose-600 text-white text-[10px] px-2 py-0.5 font-black uppercase tracking-wider border border-rose-600">Takip Ediliyor</span>}
+              {post.author.isFriend && <span className="bg-rose-600 text-white text-[10px] px-2 py-0.5 font-black uppercase tracking-wider border border-rose-600">{t('following_badge')}</span>}
               <span className="text-xs text-neutral-500 font-bold uppercase tracking-wider">
-                • {post.createdAt ? formatRelativeTime(post.createdAt) : 'AZ ÖNCE'}
+                • {post.createdAt ? formatRelativeTime(post.createdAt) : t('just_now')}
               </span>
             </div>
             
@@ -191,7 +191,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
             >
               <img src={getSafeImageUrl(post.animeRef.image)} alt={post.animeRef.title} className="w-16 h-24 object-cover border-2 border-black transition-all" referrerPolicy="no-referrer" />
               <div className="flex flex-col justify-center flex-1 min-w-0">
-                <div className="text-[10px] text-black font-black mb-1 uppercase tracking-widest border-b-2 border-black/20 pb-1">Hakkında Konuşulan Anime</div>
+                <div className="text-[10px] text-black font-black mb-1 uppercase tracking-widest border-b-2 border-black/20 pb-1">{t('about_anime')}</div>
                 <div className="font-black text-black mb-1 truncate text-lg uppercase tracking-tight leading-tight mt-1 group-hover/anime:text-white">{post.animeRef.title}</div>
                 <div className="text-xs flex items-center gap-1 font-black text-black group-hover/anime:text-white"><Star size={14} strokeWidth={2.5} fill="currentColor" /> {post.animeRef.score || 'N/A'}</div>
               </div>
@@ -232,7 +232,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
               <span>{post.replies}</span>
             </button>
             <button 
-              onClick={() => { navigator.clipboard.writeText(window.location.href); addToast('Bağlantı kopyalandı!', 'success'); }} 
+              onClick={() => { navigator.clipboard.writeText(window.location.href); addToast(t('feed_link_copied'), 'success'); }} 
               className="flex items-center gap-2 px-3 py-2 border-2 border-transparent text-neutral-400 hover:border-white hover:text-white transition-all ml-auto"
             >
               <Share2 size={18} strokeWidth={2.5} className="transition-transform" />
@@ -256,7 +256,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
                         <div className="flex-1 bg-black p-3 border-2 border-white/20">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-black text-white text-xs uppercase tracking-widest">{comment.author.name}</span>
-                            <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">• {comment.createdAt ? formatRelativeTime(comment.createdAt) : 'AZ ÖNCE'}</span>
+                            <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">• {comment.createdAt ? formatRelativeTime(comment.createdAt) : t('just_now')}</span>
                           </div>
                           <p className="text-neutral-300 text-xs font-bold uppercase tracking-wide leading-relaxed whitespace-pre-wrap">{comment.content}</p>
                         </div>

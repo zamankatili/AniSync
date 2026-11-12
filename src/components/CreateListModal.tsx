@@ -46,7 +46,7 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
       setSelectedAnimes(prev => prev.filter(a => a.mal_id !== anime.mal_id));
     } else {
       if (selectedAnimes.length >= 20) {
-        return addToast('En fazla 20 anime ekleyebilirsin.', 'error');
+        return addToast(t('create_list_too_many'), 'error');
       }
       setSelectedAnimes(prev => [...prev, { mal_id: anime.mal_id, title: anime.title, image_url: anime.images.jpg.image_url }]);
     }
@@ -54,8 +54,8 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return addToast('Başlık gerekli.', 'error');
-    if (selectedAnimes.length < 3) return addToast('En az 3 anime seçmelisin.', 'error');
+    if (!title.trim()) return addToast(t('create_list_title_required'), 'error');
+    if (selectedAnimes.length < 3) return addToast(t('create_list_min_three'), 'error');
     if (!currentUser || !userProfile) return;
 
     setLoading(true);
@@ -92,7 +92,7 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
         console.warn('Could not log list creation activity:', actErr);
       }
 
-      addToast('Liste oluşturuldu!', 'success');
+      addToast(t('create_list_created'), 'success');
       onSuccess();
       onClose();
       setTitle('');
@@ -100,7 +100,7 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
       setSelectedAnimes([]);
     } catch (err) {
       console.error(err);
-      addToast('Bir hata oluştu.', 'error');
+      addToast(t('create_list_error'), 'error');
     }
     setLoading(false);
   };
@@ -123,7 +123,7 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
           className="relative bg-white border-4 border-black p-6 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col neo-shadow"
         >
           <div className="flex items-center justify-between mb-6 pb-4 border-b-4 border-black">
-            <h2 className="text-3xl font-black text-black uppercase tracking-tighter">YENİ LİSTE</h2>
+            <h2 className="text-3xl font-black text-black uppercase tracking-tighter">{t('create_list_title')}</h2>
             <button onClick={onClose} className="text-black hover:text-rose-600 transition-colors">
               <X size={32} strokeWidth={3} />
             </button>
@@ -132,24 +132,24 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-2 space-y-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-black font-black uppercase tracking-widest text-sm mb-2">LİSTE BAŞLIĞI</label>
+                <label className="block text-black font-black uppercase tracking-widest text-sm mb-2">{t('create_list_name_label')}</label>
                 <input
                   type="text"
                   required
                   maxLength={60}
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  placeholder="Örn: En İyi 10 Isekai Macerası..."
+                  placeholder={t('create_list_name_placeholder')}
                   className="w-full bg-neutral-100 border-4 border-black px-4 py-3 text-black font-black placeholder-neutral-400 focus:outline-none focus:border-rose-500 transition-colors uppercase"
                 />
               </div>
               <div>
-                <label className="block text-black font-black uppercase tracking-widest text-sm mb-2">AÇIKLAMA (OPSİYONEL)</label>
+                <label className="block text-black font-black uppercase tracking-widest text-sm mb-2">{t('create_list_desc_label')}</label>
                 <textarea
                   maxLength={200}
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  placeholder="Bu listeyi neden yaptığını kısaca anlat..."
+                  placeholder={t('create_list_desc_placeholder')}
                   className="w-full bg-neutral-100 border-4 border-black px-4 py-3 text-black font-bold placeholder-neutral-400 focus:outline-none focus:border-rose-500 transition-colors min-h-[80px]"
                 />
               </div>
@@ -158,14 +158,14 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
             <div className="border-t-4 border-black pt-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                 <div>
-                  <label className="block text-black font-black uppercase tracking-widest text-sm">ANİMELERİ SEÇ ({selectedAnimes.length}/20)</label>
-                  <span className="text-xs font-bold text-neutral-500 uppercase">{searchQuery ? 'Arama Sonuçları' : 'Kişisel Listenden'}</span>
+                  <label className="block text-black font-black uppercase tracking-widest text-sm">{t('create_list_select_label', { count: selectedAnimes.length })}</label>
+                  <span className="text-xs font-bold text-neutral-500 uppercase">{searchQuery ? t('create_list_search_results') : t('create_list_from_watchlist')}</span>
                 </div>
                 <div className="relative w-full md:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
                   <input
                     type="text"
-                    placeholder="Anime Ara..."
+                    placeholder={t('create_list_search_placeholder')}
                     value={searchQuery}
                     onChange={handleSearch}
                     className="w-full bg-neutral-100 border-4 border-black pl-10 pr-4 py-2 text-black font-bold focus:outline-none focus:border-rose-500 uppercase text-sm"
@@ -188,16 +188,16 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
 
               {isSearching ? (
                 <div className="p-6 bg-neutral-100 border-4 border-black text-center">
-                  <p className="font-black uppercase text-neutral-500">ARANIYOR...</p>
+                  <p className="font-black uppercase text-neutral-500">{t('create_list_searching')}</p>
                 </div>
               ) : searchQuery && searchResults.length === 0 ? (
                 <div className="p-6 bg-neutral-100 border-4 border-black text-center">
-                  <p className="font-black uppercase text-neutral-500">SONUÇ BULUNAMADI.</p>
+                  <p className="font-black uppercase text-neutral-500">{t('create_list_no_results')}</p>
                 </div>
               ) : !searchQuery && watchlist.length === 0 ? (
                 <div className="p-6 bg-neutral-100 border-4 border-black text-center flex flex-col gap-2">
-                  <p className="font-black uppercase text-neutral-500">LİSTEN BOŞ.</p>
-                  <p className="text-xs font-bold uppercase text-neutral-400">YUKARIDAN ANİME ARAYABİLİRSİN.</p>
+                  <p className="font-black uppercase text-neutral-500">{t('create_list_empty')}</p>
+                  <p className="text-xs font-bold uppercase text-neutral-400">{t('create_list_empty_hint')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -227,7 +227,7 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
                onClick={handleSubmit}
                className="bg-black text-white border-4 border-black font-black px-8 py-4 uppercase tracking-widest hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed neo-shadow-white"
             >
-               {loading ? 'KAYDEDİLİYOR...' : 'LİSTEYİ YAYINLA'}
+               {loading ? t('create_list_saving') : t('create_list_publish')}
             </button>
           </div>
         </motion.div>

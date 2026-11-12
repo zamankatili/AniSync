@@ -63,8 +63,8 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
     return () => window.clearInterval(id);
   }, []);
 
-  const clockText = clock.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dayText = clock.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const clockText = clock.toLocaleTimeString(currentLang, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dayText = clock.toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
 
   const lang = (currentLang as 'tr' | 'en' | 'ja' | 'fr' | string) || 'tr';
   const L = (entry: Record<string, string>) => entry[lang] || entry.tr || entry.en || '';
@@ -118,7 +118,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
           </div>
           <div className="hidden sm:block h-10 w-px bg-white/20" />
           <div className="hidden sm:block">
-            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">İÇ MAHALLE</p>
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">{t('chat_cafe_neighborhood')}</p>
             <h1 className="font-serif font-black text-[40px] md:text-[56px] leading-none tracking-tight">
               KÖŞE<span className="text-amber-400">.</span>
             </h1>
@@ -147,7 +147,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
         {/* ── SOL — MASALAR ─────────────────────── */}
         <aside className="hidden lg:flex flex-col border-r-4 border-white bg-black overflow-y-auto">
           <div className="p-4 md:p-5 border-b-4 border-white/20">
-            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">MASALAR</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">{t('chat_cafe_tables')}</p>
             <p className="text-neutral-500 font-bold text-[10px] uppercase tracking-wider mt-1">{t('chat_cafe_subtitle')}</p>
           </div>
           <div className="flex-1 p-3 md:p-4 space-y-2">
@@ -178,7 +178,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                   <span className="flex-1 min-w-0">
                     <span className="block text-[12px] font-black uppercase tracking-tight truncate">{L(table.label)}</span>
                     <span className={cn('block font-mono text-[9px] uppercase tracking-wider mt-0.5', active ? 'text-black/70' : 'text-neutral-500')}>
-                      {count} gönderi
+                      {t('chat_cafe_post_count', { count })}
                     </span>
                   </span>
                   <span className="text-xl">{active ? '◉' : '○'}</span>
@@ -225,7 +225,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                 <textarea
                   value={composerText}
                   onChange={(e) => setComposerText(e.target.value)}
-                  placeholder={isSignedIn ? (lang === 'tr' ? 'Kafanda ne var? Bir sahne, bir düşünce, bir öneri...' : 'What\'s on your mind? A scene, a thought, a recommendation...') : (lang === 'tr' ? 'Giriş yaparak masaya otur...' : 'Sign in to take a seat...')}
+                  placeholder={isSignedIn ? t('chat_cafe_composer_placeholder') : t('chat_cafe_composer_signed_out')}
                   maxLength={280}
                   rows={2}
                   className="flex-1 min-w-0 bg-black border-2 border-white/30 focus:border-amber-400 outline-none text-white font-bold p-3 text-sm resize-none placeholder-neutral-700"
@@ -257,12 +257,12 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                   disabled={!isSignedIn || !composerText.trim()}
                   className="px-6 py-2 bg-amber-400 hover:bg-white disabled:opacity-40 text-black font-black uppercase text-xs tracking-widest border-4 border-black flex items-center gap-2 neo-shadow transition-colors"
                 >
-                  {currentUser ? (lang === 'tr' ? 'YAZ →' : 'POST →') : (lang === 'tr' ? 'GİRİŞ' : 'SIGN IN')}
+                  {currentUser ? t('chat_cafe_post_button') : t('chat_cafe_signin_button')}
                 </button>
               </div>
               {!isSignedIn && (
                 <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                  {lang === 'tr' ? 'Masaya oturmak için Google ile giriş yap.' : 'Sign in with Google to take a seat.'}
+                  {t('chat_cafe_signin_hint')}
                 </p>
               )}
             </form>
@@ -273,13 +273,13 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
             <div className="flex items-center justify-between pb-2 border-b-2 border-white/20">
               <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-400">{t('chat_cafe_feed_label')}</p>
               <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">
-                {posts.length} {lang === 'tr' ? 'gönderi' : lang === 'ja' ? '件' : 'posts'}
+                {t('chat_cafe_post_count', { count: posts.length })}
               </p>
             </div>
             {posts.length === 0 ? (
               <div className="mt-8 border-2 border-white/20 p-10 text-center">
-                <p className="font-serif font-black text-3xl text-white">{lang === 'tr' ? 'İlk cümleyi sen yaz.' : 'Write the first sentence.'}</p>
-                <p className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest mt-2">{lang === 'tr' ? 'Kimse yargılamasın — bu masada yargı yok.' : 'No judgment at this table.'}</p>
+                <p className="font-serif font-black text-3xl text-white">{t('chat_cafe_first_sentence')}</p>
+                <p className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest mt-2">{t('chat_cafe_no_judgment')}</p>
               </div>
             ) : (
               <div className="mt-4 space-y-3">
@@ -296,7 +296,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                       <img src={avatar} alt={post.author?.name} className="w-11 h-11 border-2 border-white/40 bg-white/10 object-cover shrink-0" referrerPolicy="no-referrer" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span lang="en" className="font-black text-white text-[13px] uppercase tracking-tight">{post.author?.name ?? 'Anonim'}</span>
+                          <span lang="en" className="font-black text-white text-[13px] uppercase tracking-tight">{post.author?.name ?? t('chat_cafe_anonymous')}</span>
                           <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">{formatRelativeTime(post.createdAt)}</span>
                           <span
                             className="font-mono text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 border"
@@ -304,7 +304,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                           >
                             {kindMeta.icon} {L(kindMeta.label)}
                           </span>
-                          {isOwn && <span className="font-mono text-[8px] font-black uppercase px-1 py-0.5 border border-rose-600 text-rose-400">SEN</span>}
+                          {isOwn && <span className="font-mono text-[8px] font-black uppercase px-1 py-0.5 border border-rose-600 text-rose-400">{t('chat_cafe_you')}</span>}
                         </div>
                         <p lang="en" className="text-[13px] leading-snug text-neutral-100 mt-1 whitespace-pre-wrap break-words">{post.content}</p>
                         <div className="flex items-center gap-4 mt-2 text-neutral-400">
@@ -337,10 +337,10 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                 <Radio size={18} className={cn('text-amber-400', isPlaying && 'animate-pulse')} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">ANİME RADYOSU</p>
-                <p className="font-mono text-[8px] uppercase tracking-widest text-neutral-500">CANLI YAYIN</p>
+                <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">{t('chat_cafe_radio')}</p>
+                <p className="font-mono text-[8px] uppercase tracking-widest text-neutral-500">{t('chat_cafe_live')}</p>
               </div>
-              <button onClick={nextStation} className="ml-auto p-1.5 text-white hover:text-amber-400 transition-colors" aria-label="Next station">
+              <button onClick={nextStation} className="ml-auto p-1.5 text-white hover:text-amber-400 transition-colors" aria-label={t('radio_next')}>
                 <SkipForward size={18} strokeWidth={2.5} />
               </button>
             </div>
@@ -373,14 +373,14 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                 </span>
               </div>
               <div className="mt-3 flex items-center justify-center gap-4">
-                <button onClick={prevStation} className="p-1.5 text-white hover:text-amber-400" aria-label="Previous station"><SkipBack size={18} strokeWidth={2.5} /></button>
-                <button onClick={togglePlay} className="w-12 h-12 border-4 border-amber-400 bg-black flex items-center justify-center hover:bg-amber-400 hover:text-black transition-colors text-amber-400" aria-label={isPlaying ? 'Pause' : 'Play'}>
+                <button onClick={prevStation} className="p-1.5 text-white hover:text-amber-400" aria-label={t('radio_prev')}><SkipBack size={18} strokeWidth={2.5} /></button>
+                <button onClick={togglePlay} className="w-12 h-12 border-4 border-amber-400 bg-black flex items-center justify-center hover:bg-amber-400 hover:text-black transition-colors text-amber-400" aria-label={isPlaying ? t('radio_pause') : t('radio_play')}>
                   {isPlaying ? <Pause size={20} strokeWidth={3} fill="currentColor" /> : <Play size={20} strokeWidth={3} fill="currentColor" className="translate-x-[2px]" />}
                 </button>
-                <button onClick={nextStation} className="p-1.5 text-white hover:text-amber-400" aria-label="Next station"><SkipForward size={18} strokeWidth={2.5} /></button>
+                <button onClick={nextStation} className="p-1.5 text-white hover:text-amber-400" aria-label={t('radio_next')}><SkipForward size={18} strokeWidth={2.5} /></button>
               </div>
               <div className="mt-2.5 flex items-center gap-2">
-                <button onClick={toggleMute} className="text-neutral-400 hover:text-white" aria-label="mute">{isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}</button>
+                <button onClick={toggleMute} className="text-neutral-400 hover:text-white" aria-label={t('radio_mute')}>{isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}</button>
                 <input
                   type="range"
                   min={0}
@@ -389,7 +389,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                   value={isMuted ? 0 : volume}
                   onChange={(e) => setVolume(parseFloat(e.target.value))}
                   className="flex-1 h-1 appearance-none bg-neutral-800 accent-amber-400"
-                  aria-label="Volume"
+                  aria-label={t('radio_volume')}
                 />
               </div>
             </div>
@@ -397,28 +397,28 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
 
           {/* LV / KALFA */}
           <div className="p-4 md:p-5 border-b-4 border-white/20">
-            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">SEVİYEN</p>
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-amber-400">{t('chat_cafe_your_level')}</p>
             <div className="mt-2 flex items-center gap-3">
               <div className="w-14 h-14 border-4 border-white bg-amber-400 flex items-center justify-center">
                 <span className="font-black text-black text-2xl leading-none">{levelInfo?.level ?? 0}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-white text-base uppercase leading-none">{levelInfo?.title ?? 'Misafir'}</p>
+                <p className="font-black text-white text-base uppercase leading-none">{levelInfo?.title ?? t('chat_cafe_guest')}</p>
                 <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mt-1">{myKarma.toLocaleString()} XP</p>
               </div>
             </div>
             <div className="mt-2.5 h-2 w-full bg-neutral-800 border border-white/30 overflow-hidden"><div className="h-full bg-gradient-to-r from-amber-400 to-rose-500 transition-all duration-500" style={{ width: `${Math.round(progressPercent)}%` }} /></div>
-            <p className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 mt-1">KALFA olmak için 500 XP</p>
+            <p className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 mt-1">{t('chat_cafe_kalfa_hint')}</p>
           </div>
 
           {/* KURALLAR */}
           <div className="p-4 md:p-5 flex-1">
-            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-neutral-500">KÖŞE KURALLARI</p>
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-neutral-500">{t('chat_cafe_rules_title')}</p>
             <ul className="mt-2 space-y-1.5 text-[11px] text-neutral-400 leading-snug">
-              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> Küfre tahammül yok.</li>
-              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> Spoiler olsa bile kaba konuşma.</li>
-              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> Reklam, link, kanal yasak.</li>
-              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> Kalfa (Lv5, 500 XP) ve üzeri masa açar.</li>
+              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> {t('chat_cafe_house_rule_1')}</li>
+              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> {t('chat_cafe_house_rule_2')}</li>
+              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> {t('chat_cafe_house_rule_3')}</li>
+              <li className="flex gap-2"><span className="text-amber-400 shrink-0">▸</span> {t('chat_cafe_house_rule_4')}</li>
             </ul>
           </div>
 
