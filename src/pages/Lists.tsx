@@ -5,29 +5,39 @@ import { useAnimeData } from '../hooks/useAnimeData';
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, getDocs, updateDoc, doc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
 import { CustomList, Anime } from '../types';
-import { getAnimeSeasonLabel } from '../lib/season';
+import { getAnimeSeason, getAnimeSeasonLabel } from '../lib/season';
 import { useAppStore } from '../context/AppStore';
 import { getSafeImageUrl, handleImageError } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useToastStore } from '../store/useToastStore';
 import { CreateListModal } from '../components/CreateListModal';
 import { useNavigate } from 'react-router-dom';
-import { getAniListTrending } from '../lib/api/anilist';
+import { getAniListTrending, fetchAniListList } from '../lib/api/anilist';
+import type { AniListListSpec } from '../lib/api/anilist';
+import { toLegacyAnime } from '../lib/api/animeBridge';
+import { animeDetailPath } from '../lib/mediaLinks';
 import type { UnifiedMedia } from '../types/unified';
 
-const MiniAnimeList = ({ title, icon: Icon, path }: { title: string, icon: any, path: string }) => {
+const MiniAnimeList = ({ title, icon: Icon, spec, path }: { title: string; icon: any; spec: AniListListSpec; path: string }) => {
   const { fetchAnimeList } = useAnimeData();
   const { t } = useAppTranslation();
   const [data, setData] = useState<Anime[] | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const loadData = () => {
+  const loadData = async () => {
     setLoading(true);
-    fetchAnimeList(path).then(res => {
-      setData(res);
+    try {
+      // AniList birincil: aynı anda 8 kart Jikan'ın 3 istek/sn sınırını aşıyordu.
+      const media = await fetchAniListList(spec).catch(() => []);
+      if (media.length > 0) {
+        setData(media.map((item) => toLegacyAnime(item)));
+        return;
+      }
+      setData(await fetchAnimeList(path));
+    } finally {
       setLoading(false);
-    });
+    }
   };
 
   useEffect(() => {
@@ -58,8 +68,11 @@ const MiniAnimeList = ({ title, icon: Icon, path }: { title: string, icon: any, 
           <div className="flex flex-col space-y-1">
             {data.slice(0, 10).map((anime, idx) => (
               <div 
-                key={anime.mal_id} 
-                onClick={() => navigate(`/anime/${anime.mal_id}`)}
+                key={anime.anilist_id ?? anime.mal_id} 
+                onClick={() => {
+                  const detailPath = animeDetailPath(anime);
+                  if (detailPath) navigate(detailPath);
+                }}
                 className="flex items-center gap-3 bg-black text-white p-2 group hover:bg-rose-600 transition-colors cursor-pointer"
               >
                 <span className="font-black text-xl w-6 text-center text-white/50 group-hover:text-white">{idx + 1}</span>
@@ -163,6 +176,7 @@ const MiniMangaList = ({ title, icon: Icon, kind }: { title: string; icon: any; 
 
 export const ListsPage = () => {
   const { t, currentLang } = useAppTranslation();
+  const seasonInfo = getAnimeSeason();
   const { addToast } = useToastStore();
   const { currentUser, userProfile } = useAppStore();
   const [activeTab, setActiveTab] = useState<'official' | 'community'>('official');
@@ -262,13 +276,13 @@ export const ListsPage = () => {
             exit={{ opacity: 0, y: -20 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
-            <MiniAnimeList title={t('lists_top_airing')} icon={Flame} path="/top/anime?filter=airing&limit=10&sfw=true" />
-            <MiniAnimeList title={t('lists_upcoming')} icon={Calendar} path="/seasons/upcoming?limit=10&sfw=true" />
-            <MiniAnimeList title={t('lists_all_time_popular')} icon={Trophy} path="/top/anime?filter=bypopularity&limit=10" />
+            <MiniAnimeList title={t('lists_top_airing')} icon={Flame} spec={{ sort: 'TRENDING_DESC', status: 'RELEASING' }} path="/top/anime?filter=airing&limit=10&sfw=true" />
+            <MiniAnimeList title={t('lists_upcoming')} icon={Calendar} spec={{ sort: 'POPULARITY_DESC', status: 'NOT_YET_RELEASED' }} path="/seasons/upcoming?limit=10&sfw=true" />
+            <MiniAnimeList title={t('lists_all_time_popular')} icon={Trophy} spec={{ sort: 'POPULARITY_DESC' }} path="/top/anime?filter=bypopularity&limit=10" />
 
-            <MiniAnimeList title={getAnimeSeasonLabel(currentLang).toUpperCase()} icon={TrendingUp} path="/seasons/now?limit=10&sfw=true" />
-            <MiniAnimeList title={t('lists_movies')} icon={Clapperboard} path="/top/anime?type=movie&limit=10" />
-            <MiniAnimeList title={t('lists_action')} icon={Compass} path="/anime?genres=1&order_by=score&sort=desc&limit=10&sfw=true" />
+            <MiniAnimeList title={getAnimeSeasonLabel(currentLang).toUpperCase()} icon={TrendingUp} spec={{ sort: 'POPULARITY_DESC', season: seasonInfo.season, seasonYear: seasonInfo.seasonYear }} path="/seasons/now?limit=10&sfw=true" />
+            <MiniAnimeList title={t('lists_movies')} icon={Clapperboard} spec={{ sort: 'SCORE_DESC', format: 'MOVIE' }} path="/top/anime?type=movie&limit=10" />
+            <MiniAnimeList title={t('lists_action')} icon={Compass} spec={{ sort: 'SCORE_DESC', genreIn: ['Action'] }} path="/anime?genres=1&order_by=score&sort=desc&limit=10&sfw=true" />
             <MiniMangaList title={t('lists_top_manga')} icon={BookOpen} kind="manga" />
             <MiniMangaList title={t('lists_top_light_novel')} icon={BookOpen} kind="light_novel" />
           </motion.div>

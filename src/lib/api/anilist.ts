@@ -435,6 +435,82 @@ export async function fetchRecommendationsByGenres(
   return [];
 }
 
+export type AniListListSort = 'TRENDING_DESC' | 'POPULARITY_DESC' | 'SCORE_DESC';
+
+export interface AniListListSpec {
+  sort: AniListListSort;
+  status?: 'RELEASING' | 'NOT_YET_RELEASED' | 'FINISHED';
+  season?: 'WINTER' | 'SPRING' | 'SUMMER' | 'FALL';
+  seasonYear?: number;
+  format?: 'TV' | 'MOVIE';
+  genreIn?: string[];
+  perPage?: number;
+}
+
+/**
+ * Ana sayfa / Top Listeler kartları için AniList listesi.
+ *
+ * Jikan dakikada 60 istek ve saniyede 3 istek sınırı koyuyor; sayfa aynı anda
+ * 8 kart yüklediğinde bazıları 429 alıp boş kalıyordu. AniList birincil
+ * kaynak olduğu için önce buradan okuyoruz; sonuç yoksa çağıran taraf Jikan'a
+ * düşebilir. Boş sonuç uydurma veriyle doldurulmaz.
+ */
+export async function fetchAniListList(spec: AniListListSpec, signal?: AbortSignal): Promise<UnifiedMedia[]> {
+  const {
+    sort,
+    status,
+    season,
+    seasonYear,
+    format,
+    genreIn = [],
+    perPage = 10,
+  } = spec;
+
+  const genres = Array.from(new Set(genreIn.map((g) => g.trim()).filter(Boolean)));
+  const cacheKey = `list:${sort}:${status ?? ''}:${season ?? ''}:${seasonYear ?? ''}:${format ?? ''}:${genres.join('|')}:${perPage}`;
+
+  return dedupe(cacheKey, async () => {
+    const cached = cache.get(cacheKey) as UnifiedMedia[] | null;
+    if (cached) return cached;
+
+    const payload = await graphql<AniListPageResponse>(
+      `
+        query ($perPage: Int, $sort: [MediaSort], $status: MediaStatus, $season: MediaSeason, $seasonYear: Int, $format: MediaFormat, $genres: [String]) {
+          Page(page: 1, perPage: $perPage) {
+            media(
+              type: ANIME
+              isAdult: false
+              sort: $sort
+              status: $status
+              season: $season
+              seasonYear: $seasonYear
+              format: $format
+              genre_in: $genres
+            ) {
+              ...MediaCore
+            }
+          }
+        }
+      `,
+      {
+        perPage,
+        sort: [sort],
+        status,
+        season,
+        seasonYear,
+        format,
+        genres: genres.length > 0 ? genres : undefined,
+      },
+      `liste (${sort})`,
+      signal
+    );
+
+    const media = (payload.data?.Page?.media ?? []).map(mapAniListMedia);
+    cache.set(cacheKey, media);
+    return media;
+  });
+}
+
 export interface AniListRecommendationEntry {
   /** AniList topluluğu tarafından verilen öneri oyu (gerçek sayı). */
   rating: number;
