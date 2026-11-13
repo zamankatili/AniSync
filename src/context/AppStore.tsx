@@ -2,7 +2,7 @@
 import { WatchlistItem, WatchStatus, Anime, ForumPost, Friend, UserProfile, UserNamedList } from '../types';
 import { auth, googleProvider, db } from '../firebase';
 import { useDailyPoll } from '../hooks/useDailyPoll';
-import { onAuthStateChanged, signInWithPopup, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, getAdditionalUserInfo } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, getAdditionalUserInfo } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { resolveAvatar } from '../lib/avatar';
 
@@ -235,10 +235,45 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         markOnboardingPending();
       }
     } catch (error) {
-      console.error("Login failed:", error);
+      const code = (error as { code?: string })?.code ?? '';
+      // Popup engellendiğinde (mobil tarayıcı, katı gizlilik ayarı, gömülü
+      // WebView) tam sayfa yönlendirmesine düş. Kullanıcı popup'ı kendisi
+      // kapattıysa yönlendirme başlatmayız — bu bir hata değil, vazgeçmedir.
+      const redirectable = new Set([
+        'auth/popup-blocked',
+        'auth/operation-not-supported-in-this-environment',
+        'auth/web-storage-unsupported',
+      ]);
+      if (redirectable.has(code)) {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirectError) {
+          console.error('Google redirect login failed:', redirectError);
+          throw redirectError;
+        }
+      }
+      console.error('Login failed:', error);
       throw error;
     }
   };
+
+  // Yönlendirme akışından dönüşte Firebase sonucu burada tamamlanır.
+  // Popup kullanılabilen tarayıcılarda credential null olur; sessiz geçilir.
+  useEffect(() => {
+    let alive = true;
+    getRedirectResult(auth)
+      .then((credential) => {
+        if (!alive || !credential) return;
+        if (getAdditionalUserInfo(credential)?.isNewUser) markOnboardingPending();
+      })
+      .catch((error) => {
+        console.warn('Google redirect result could not be completed:', error);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const loginWithEmail = async (email: string, pass: string) => {
     try {

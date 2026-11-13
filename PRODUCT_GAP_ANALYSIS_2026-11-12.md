@@ -31,26 +31,50 @@ Bu belge, 10 Kasım denetiminin (`SYSTEM_AUDIT_2026-11-10.md`) üzerine **12 Kas
 
 ---
 
-## 2. Doğrulama kapıları (12 Kasım 2026, bu çalışma ağacı)
+## 1b. 13 Kasım ek turu — "Kayıp Bölüm" + giriş sağlamlaştırma
+
+Bu turda iki iş yapıldı: (a) tür araştırması yapılıp **özgün** bir metin macera oyunu eklendi, (b) Google girişinde popup engellenen ortamlar için yönlendirme yedeği eklendi.
+
+| # | Boşluk | Çözüm | Dosya |
+|---|---|---|---|
+| 9 | "Zork gibi metin macera oyunlarını araştır, entegre et" isteği karşılanmamıştı. | **"Kayıp Bölüm"** — 7 odalı, 8 eşyalı, 3 sonlu, dört dilde özgün parser macera. Zork/Infocom metni, haritası veya bulmacası kopyalanmadı; yalnızca türün tasarım dersleri uygulandı. | `src/data/textAdventure.ts`, `src/lib/textAdventureEngine.ts`, `src/pages/TextAdventure.tsx`, `docs/text-adventure-research.md` |
+| 10 | Parser oyunları yeni başlayanı kaybediyor (görünmez fiiller, ceza veren hata mesajları, çıkmaz). | Ekranda **komut çipleri** + yön çipleri, dört dilli eşanlamlılar ve Türkçe ek eşleşmesi ("feneri", "sandığa"), bağlama duyarlı **iki kademeli ipucu**, suçlamayan hata metni, `kaydet`/`yükle`/`yeniden`, klavye geçmişi (↑/↓), `aria-live` günlük, harita/envanter/ilerleme panelleri. | `src/pages/TextAdventure.tsx`, `src/lib/textAdventureEngine.ts` |
+| 11 | Mobilde sabit alt gezinme + radyo paneli komut alanını kapatabiliyordu; komut çipleri 31 px'di (44 px dokunma hedefi altında). | Çipler **44 px**, sayfaya alt boşluk (`pb-32`), günlük yüksekliği `38dvh`, odaklanınca komut alanı ekran ortasına kayıyor. 390 ve 320 px'de yatay taşma yok, çipler yatay kayıyor. | `src/pages/TextAdventure.tsx` |
+| 12 | Google girişi yalnızca popup ile çalışıyordu; popup engelleyen tarayıcı/WebView'de giriş tamamen düşüyordu. | `auth/popup-blocked`, `operation-not-supported-in-this-environment`, `web-storage-unsupported` hatalarında `signInWithRedirect` + dönüşte `getRedirectResult`. Kullanıcı popup'ı kendisi kapatırsa yönlendirme başlatılmaz. | `src/context/AppStore.tsx` |
+
+### Metin macera — doğrulanan davranışlar
+
+- Uçtan uca oynanış (tarayıcıda, TR): fener → tornavida → otomat → sandık/dolap → arşiv (karanlık → pil) → kaset+not → projektör → bant → merdiven → `şifre 471` → çıkış holü → **üç son** (`sakla`, `sil`, `bırak`). İlerleme %100, son kartı çiziliyor, konsol hatası yok.
+- Karanlık arşivde ışık yokken `al kaset` reddediliyor; merdiven eski anahtar olmadan, kuzey kapısı kod olmadan açılmıyor.
+- `kaydet` → başka odaya git → `yükle` odayı/envanteri geri getiriyor; bozuk kayıt çökme yerine "kayıt yok" diyor.
+- Dört dilde aynı içerik: TR/EN/JA/FR komutlar ve eşanlamlılar tek motorda birleşiyor (`textAdventureEngine.test.ts`).
+- Zorluk dengesi: küçük harita, sınırlı fiil seti, ilerlemeli ipucu — Zork'un "tahmin etme, keşfet" dersinin uygulanabilir kısmı. Araştırma notu: `docs/text-adventure-research.md`.
+
+---
+
+## 2. Doğrulama kapıları (12–13 Kasım 2026, bu çalışma ağacı)
 
 | Kapı | Komut | Sonuç |
 |---|---|---|
 | TypeScript (strict) | `npx.cmd tsc --noEmit` | ✅ exit 0 |
-| Testler | `npm.cmd test -- --run` | ✅ **13 dosya / 78 test** |
+| Testler | `npm.cmd test -- --run` | ✅ **15 dosya / 100 test** |
 | Üretim derlemesi | `npm.cmd run build` | ✅ exit 0 (route-level code splitting korunuyor) |
-| ESLint | `npx.cmd eslint src` | ✅ 0 error (uyarılar önceden var olan stil uyarıları) |
+| ESLint | `npx.cmd eslint src --quiet` | ✅ 0 error (uyarılar önceden var olan stil uyarıları) |
 
 Yeni test dosyaları:
 
 - `src/data/universePaths.test.ts` — 8 dünya, 5 rütbe, ikilem önekleri, ilerleme kırpma.
 - `src/data/characterGuessData.test.ts` — 30+ karakter, 12+ seri, 4 benzersiz şık, dört dilde ipucu/not.
 - `src/data/fanLore.test.ts` — 24+ kayıt, kategori/kaynak/çeviri bütünlüğü, üç dilde arama, spoiler dağılımı.
+- `src/data/textAdventure.test.ts` — 7 test: dört dilde oda/eşya/son/ipucu bütünlüğü, tekil kimlikler, ulaşılabilir harita, eşyaların yerleşimi, fiil eşlemesi.
+- `src/lib/textAdventureEngine.test.ts` — 15 test: üç sona giden tam yürüyüş, karanlık arşiv, kilitli kapılar, yanlış kod, dört dilde komut, kaydet/yükle ve bozuk kayıt, ipucu kademeleri, durum değişmezliği.
 
 Tarayıcı dumanı (localhost, TR):
 
 - `/lore` → 27 kayıt, spoiler cevapları gizli, "CEVABI GÖSTER" çalışıyor, konsol hatası yok.
 - `/voice-duel` → mod seçici görünüyor; **İpucu Tanıma** ile 10 turluk oyun başlıyor, dört dilli ipucu ve dört şık geliyor, konsol hatası yok.
 - KÖŞE paneli → oda sekmeleri ve besteci çiziliyor, konsol hatası yok.
+- `/text-adventure` → tam yürüyüş sona ulaşıyor (%100), son kartı ve "BAŞTAN BAŞLA" çalışıyor, kaydet/yükle turu doğrulandı; 390 ve 320 px genişlikte yatay taşma yok, çipler yatay kayıyor, odaklanınca komut alanı sabit çubukların üstüne geliyor; konsol hatası yok.
 
 ---
 
@@ -67,6 +91,9 @@ Tarayıcı dumanı (localhost, TR):
 7. **ESLint uyarıları.** Hata 0; uyarı sayısı yüksek ve `--max-warnings` kapısı gevşek.
 8. **Bundle izleme.** `recharts` ağır; Life Sim ayrı chunk (~300 KB) kabul edilebilir ama izlenmeli.
 9. **Fan Bilgisi büyüme hızı.** 27 kayıt elle seçildi; yeni kayıt eklemek kaynak doğrulaması gerektirir. Otomatik üretim yok — bu bilinçli bir karar.
+10. **Metin macera tek bölüm.** "Kayıp Bölüm" 7 oda / 15–25 dakika; ikinci bölüm, `undo` komutu, başarım ve oyuncu yazımı editörü yok. İçerik dört dilde elle yazıldığı için büyüme hızı düşük — bu bilinçli.
+11. **Yönlendirmeli Google girişi gerçek cihazda test edilmedi.** Kod yolu (`signInWithRedirect` + `getRedirectResult`) eklendi ve popup kapatma hatadan sayılmıyor; ancak popup engelleyen bir tarayıcıda ve Capacitor WebView'de uçtan uca denenmedi. WebView için hâlâ yerel auth eklentisi gerekebilir.
+12. **Dokunma hedefleri sayfa sayfa eşit değil.** Oyun sayfasında tüm düğmeler ≥44 px; uygulamanın geri kalanında hâlâ 32–36 px kontroller var. Sistematik bir erişilebilirlik taraması yapılmadı.
 
 ---
 
@@ -78,6 +105,7 @@ Tarayıcı dumanı (localhost, TR):
 - Voice Duel klipleri yalnızca resmî Madoka Exedra kanalından; atıf `docs/voice-sources.md` içinde.
 - Life Sim senaryoları kurgudur; kanon değildir ve ekranda böyle yazar.
 - Fan Bilgisi küratörlüdür; canlı haber değildir ve sayfada böyle yazar.
+- "Kayıp Bölüm" tamamen özgündür: Zork veya başka bir oyundan metin, harita, eşya ya da bulmaca alınmadı. Sayfada bu açıkça yazar; Zork yalnızca `docs/text-adventure-research.md` içinde tür örneği olarak anılır.
 
 ---
 
