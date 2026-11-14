@@ -29,9 +29,7 @@ jobs:
         run: npm test
 
       - name: Generated serverless bundles are fresh
-        run: |
-          npm run build:api
-          git diff --exit-code -- api
+        run: npm run verify:api
 
       - name: Production build
         run: npm run build

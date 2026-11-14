@@ -147,6 +147,7 @@ Tarayıcı dumanı (localhost, TR):
 - SEO tek kaynak turu (localhost, TR): `/anime/16498` tek canonical/description/og:title ve AoT başlığı; `/arcade`, `/lore`, `/text-adventure`, `/challenge`, `/dle` tek meta; `/profile` noindex; `/anisyncdle` → `/dle`.
 - Bot önizleme turu (localhost): `/api/og?kind=anime&id=16498` ve yol tabanlı `/api/og/anime/16498` doğru başlık/kapak/canonical; `/api/og/media/anilist:154587` + `Accept-Language: fr` → Fransızca kart; geçersiz kimlik 200 + genel kart (`X-Og-Fallback: 1`); tüm yanıtlar `no-store` ve `noindex`.
 - Vercel fonksiyon yönlendirmesi: canlıda `/api/games/123` ve `/api/og/...` SPA `index.html` döndürüyordu; dinamik dosya adları yerine statik fonksiyon + rewrite'a geçildi. `/api/games/search` statik dosya olduğu için etkilenmedi (canlıda JSON doğrulandı).
+- **Canlı üretim doğrulaması (14 Kasım, `5b9a441`):** `/api/og?kind=anime&id=16498` → 200, `X-Og-Fallback: 0`, `Cache-Control: no-store`, `Vary: User-Agent, Accept-Language`, `X-Robots-Tag: noindex, nofollow`; `/anime/16498` + Twitterbot → doğru OG HTML; `/media/anilist:154587` + Discordbot + `Accept-Language: fr` → `<html lang="fr">`, `og:locale fr_FR`; tarayıcı ve Googlebot UA → SPA `index.html` (cloaking yok). `/api/anime-news`, `/api/games/620`, `/api/games/search` → 200 JSON (önceden hepsi 500'dü). `/api/translate` GET → 405 (auth kapısı; 500 değil).
 
 ---
 
@@ -173,6 +174,7 @@ Tarayıcı dumanı (localhost, TR):
 17. **Moderatör paneli yok.** Moderasyon KÖŞE paneli + admin sekmelerine dağılmış; şikayet bağlamı, atama, durum akışı ve süreli ban (7 gün sabit) hâlâ eksik.
 18. **Performans/erişilebilirlik borcu.** `loading="lazy"` yalnızca 3/77 görselde; `charts` her rotada modulepreload; ortak Modal/focus-trap ve skip-link yok; Sentry/GA4 yok.
 19. **Bot önizlemesi yalnızca iki rota.** `/anime/:id` ve `/media/:id` kapsandı; `/lore`, `/text-adventure`, `/dle` gibi statik sayfaların paylaşım kartı hâlâ istemci meta'sına bağlı (sayfa başlığı doğru, bot kartı genel). Gerekirse aynı fonksiyona statik rota modu eklenir.
+20. **Üretilen paketler bakım yükü.** `api/**/*.js` commit'leniyor (Vercel `api/` içindeki göreli import'ları paketlemediği için zorunlu). Kaynağa dokunup `npm run build:api` çalıştırmamak `npm run verify` ve CI'daki `verify:api` adımını kırar. Alternatif: Vercel'de build komutuna `build:api` eklenip `api/` git'ten çıkarılabilir — Vercel ayarlarına erişim gerektirir.
 
 ---
 
