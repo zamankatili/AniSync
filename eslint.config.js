@@ -62,5 +62,12 @@ export default tseslint.config(
       'no-empty': ['warn', { allowEmptyCatch: true }],
       'react-hooks/exhaustive-deps': 'warn',
     },
+  },
+  {
+    // Derleme betikleri Node'da çalışır; `process`/`console` global'leri gerekir.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
   }
 );
