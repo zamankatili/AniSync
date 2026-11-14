@@ -135,3 +135,23 @@ export const formatRelativeTime = (dateString: string | number | Date) => {
   const diffInYears = Math.floor(diffInDays / 365);
   return `${diffInYears}y önce`;
 };
+
+/**
+ * Accent renkle yeterince kontrast veren okunabilir metin rengi seçer.
+ * WCAG kontrast oranını (siyah/beyaz) hesaplayıp daha iyi olanı döndürür.
+ * time-of-day temaların parlak accent'leri (amber/cyan/fuchsia) üzerinde
+ * beyaz metin 2.x:1 seviyesine düşebiliyor; neo-brutalist vurgularda AA için gerekli.
+ */
+export const getReadableTextColor = (hex: string): '#000000' | '#ffffff' => {
+  const match = /^#?([0-9a-fA-F]{6})$/.exec(hex.trim());
+  if (!match) return '#ffffff';
+  const int = parseInt(match[1], 16);
+  const channel = (v: number) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  const r = (int >> 16) & 255, g = (int >> 8) & 255, b = int & 255;
+  const L = 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+  const contrast = (other: number) => (Math.max(L, other) + 0.05) / (Math.min(L, other) + 0.05);
+  return contrast(1) >= contrast(0) ? '#ffffff' : '#000000';
+};

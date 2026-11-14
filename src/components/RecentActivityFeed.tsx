@@ -361,9 +361,9 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
                           {formatRelativeTime(act.createdAt)}
                         </span>
                       </div>
-                      <h4 className="font-black text-white text-xs truncate uppercase tracking-tight group-hover:text-amber-400 transition-colors">
+                      <h3 className="font-black text-white text-xs truncate uppercase tracking-tight group-hover:text-amber-400 transition-colors">
                         {act.animeTitle}
-                      </h4>
+                      </h3>
                     </div>
                     
                     <div className="flex items-center justify-between mt-2 pt-1 border-t border-white/10">

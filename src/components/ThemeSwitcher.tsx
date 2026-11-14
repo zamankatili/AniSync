@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useThemeStore, THEME_CONFIGS, TimeThemeId } from '../store/useThemeStore';
 import { useToastStore } from '../store/useToastStore';
 import { Sparkles, Clock, Check, ChevronDown } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn, getReadableTextColor } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
 export const ThemeSwitcher: React.FC = () => {
@@ -70,7 +70,7 @@ export const ThemeSwitcher: React.FC = () => {
         ) : (
           <span 
             className="hidden sm:inline-block text-[9px] px-1 font-black uppercase border border-black"
-            style={{ backgroundColor: activeConfig.accentColor, color: activeConfig.id === 'dawn' || activeConfig.id === 'midnight' ? '#000' : '#fff' }}
+            style={{ backgroundColor: activeConfig.accentColor, color: getReadableTextColor(activeConfig.accentColor) }}
           >
             {t('theme_pinned')}
           </span>
@@ -164,7 +164,7 @@ export const ThemeSwitcher: React.FC = () => {
                   {isSelected && (
                     <div 
                       className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 border border-black"
-                      style={{ backgroundColor: cfg.accentColor, color: cfg.id === 'dawn' || cfg.id === 'midnight' ? '#000' : '#fff' }}
+                      style={{ backgroundColor: cfg.accentColor, color: getReadableTextColor(cfg.accentColor) }}
                     >
                       <Check size={12} strokeWidth={3} />
                     </div>

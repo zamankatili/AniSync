@@ -78,9 +78,9 @@ export const TodayAiringWidget: React.FC = () => {
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Calendar size={18} className="text-amber-400" strokeWidth={2.5} />
-          <h3 className="font-black tracking-widest uppercase text-white text-sm">
+          <h2 className="font-black tracking-widest uppercase text-white text-sm">
             {t('today_airing_title', { day: todayLabel })}
-          </h3>
+          </h2>
           <span className="bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.2 border border-black uppercase">
             {t('season_2026_badge')}
           </span>
@@ -123,9 +123,9 @@ export const TodayAiringWidget: React.FC = () => {
                     <> • {t('airing_ep_watched', { count: anime.currentEpisode })}</>
                   )}
                 </span>
-                <h4 lang="en" className="text-xs font-black uppercase text-white truncate group-hover:text-amber-400 transition-colors mt-0.5">
+                <h3 lang="en" className="text-xs font-black uppercase text-white truncate group-hover:text-amber-400 transition-colors mt-0.5">
                   {anime.title_english || anime.title}
-                </h4>
+                </h3>
                 <p lang="en" className="text-[10px] text-neutral-400 font-bold uppercase truncate mt-0.5">
                   {anime.studio}
                 </p>

@@ -62,7 +62,7 @@ export const QuickContinueWatching: React.FC = () => {
               <Tv size={20} strokeWidth={2.5} />
             </div>
             <div>
-              <h3 className="font-black text-white uppercase text-base tracking-tight">{t('quick_track_bar')}</h3>
+              <h2 className="font-black text-white uppercase text-base tracking-tight">{t('quick_track_bar')}</h2>
               <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider">{t('quick_track_empty')}</p>
             </div>
           </div>
@@ -87,7 +87,7 @@ export const QuickContinueWatching: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-black text-white uppercase text-base tracking-tight">{t('continuing_header')}</h3>
+              <h2 className="font-black text-white uppercase text-base tracking-tight">{t('continuing_header')}</h2>
               <span className="text-[10px] font-black uppercase bg-amber-400 text-black px-2 py-0.5 border border-white">
                 {t('active_count', { count: watchingItems.length })}
               </span>

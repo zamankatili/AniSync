@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight, Mic2, BookOpen, Terminal, ShieldAlert, Clapperboard } from 'lucide-react';
-import { cn, getSafeImageUrl, handleImageError } from '../lib/utils';
+import { cn, getSafeImageUrl, handleImageError, getReadableTextColor } from '../lib/utils';
 import { animeDetailPath } from '../lib/mediaLinks';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ToastContainer } from './Toast';
@@ -255,8 +255,8 @@ export const Layout = () => {
       <aside className="hidden md:flex flex-col w-64 xl:w-72 border-r-2 border-white/20 bg-black/85 backdrop-blur-md p-5 safe-area-top overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent]">
         <div className="flex items-center gap-3 mb-6 px-1">
           <div
-            className="w-10 h-10 border-2 border-white flex items-center justify-center text-white font-black text-xl neo-shadow-white transition-colors duration-500 shrink-0"
-            style={{ backgroundColor: activeConfig.accentColor }}
+            className="w-10 h-10 border-2 border-white flex items-center justify-center font-black text-xl neo-shadow-white transition-colors duration-500 shrink-0"
+            style={{ backgroundColor: activeConfig.accentColor, color: getReadableTextColor(activeConfig.accentColor) }}
           >
             A
           </div>
@@ -290,13 +290,12 @@ export const Layout = () => {
                     style={({ isActive }) => isActive ? {
                       backgroundColor: activeConfig.accentColor,
                       borderColor: activeConfig.accentColor,
-                      boxShadow: `4px 4px 0px 0px ${activeConfig.secondaryColor}`
+                      boxShadow: `4px 4px 0px 0px ${activeConfig.secondaryColor}`,
+                      color: getReadableTextColor(activeConfig.accentColor)
                     } : undefined}
                     className={({ isActive }) => cn(
                       "flex items-center gap-3 px-3 py-2.5 border-2 transition-all font-bold uppercase tracking-wide text-[13px] whitespace-nowrap min-h-[44px]",
-                      isActive
-                        ? "text-white"
-                        : "border-transparent text-neutral-300 hover:text-white hover:border-white/20 hover:bg-white/5"
+                      !isActive && "border-transparent text-neutral-300 hover:text-white hover:border-white/20 hover:bg-white/5"
                     )}
                   >
                     <item.icon size={19} strokeWidth={2.25} className="shrink-0" />
@@ -407,8 +406,8 @@ export const Layout = () => {
              <>
                <div className="flex items-center gap-2">
                  <div 
-                   className="w-8 h-8 border-2 border-white flex items-center justify-center text-white font-black uppercase transition-colors duration-500 shrink-0"
-                   style={{ backgroundColor: activeConfig.accentColor }}
+                   className="w-8 h-8 border-2 border-white flex items-center justify-center font-black uppercase transition-colors duration-500 shrink-0"
+                   style={{ backgroundColor: activeConfig.accentColor, color: getReadableTextColor(activeConfig.accentColor) }}
                  >
                    A
                  </div>
@@ -652,8 +651,8 @@ export const Layout = () => {
                     style={{ backgroundColor: activeConfig.accentColor, borderColor: activeConfig.accentColor }}
                   />
                 )}
-                <item.icon size={22} strokeWidth={2.5} className={cn('transition-colors', isActive ? 'text-white' : 'text-neutral-500')} />
-                <span className={cn('text-[9px] font-black uppercase tracking-wider', isActive ? 'text-white' : 'text-neutral-500')}>
+                <item.icon size={22} strokeWidth={2.5} className={cn('transition-colors', !isActive && 'text-neutral-500')} style={isActive ? { color: getReadableTextColor(activeConfig.accentColor) } : undefined} />
+                <span className={cn('text-[9px] font-black uppercase tracking-wider', !isActive && 'text-neutral-500')} style={isActive ? { color: getReadableTextColor(activeConfig.accentColor) } : undefined}>
                   {t(item.labelKey)}
                 </span>
               </NavLink>

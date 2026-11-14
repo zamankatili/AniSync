@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toDateSafe } from './utils';
+import { toDateSafe, getReadableTextColor } from './utils';
 
 describe('toDateSafe', () => {
   it('reads a Firestore-like Timestamp via toDate()', () => {
@@ -26,5 +26,20 @@ describe('toDateSafe', () => {
     expect(toDateSafe({})).toBeNull();
     expect(toDateSafe({ toDate: () => { throw new Error('boom'); } })).toBeNull();
     expect(toDateSafe({ toDate: () => new Date('invalid') })).toBeNull();
+  });
+});
+
+
+describe('getReadableTextColor', () => {
+  it('returns black on bright accents and white on dark accents', () => {
+    expect(getReadableTextColor('#f59e0b')).toBe('#000000'); // amber dawn
+    expect(getReadableTextColor('#d946ef')).toBe('#000000'); // fuchsia twilight
+    expect(getReadableTextColor('#06b6d4')).toBe('#000000'); // cyan midnight
+    expect(getReadableTextColor('#e11d48')).toBe('#ffffff'); // rose noon
+  });
+
+  it('handles missing hash prefix and odd input gracefully', () => {
+    expect(getReadableTextColor('06b6d4')).toBe('#000000');
+    expect(getReadableTextColor('not-a-color')).toBe('#ffffff');
   });
 });

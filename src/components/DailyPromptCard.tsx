@@ -19,7 +19,7 @@ export const DailyPromptCard: React.FC<DailyPromptCardProps> = ({ onAnswer }) =>
       <div className="flex items-center justify-between mb-2 border-b border-white/20 pb-2">
         <div className="flex items-center gap-2">
           <MessageCircle size={16} className="text-cyan-400" strokeWidth={2.5} />
-          <h3 className="font-black text-white text-xs tracking-widest uppercase">{t('daily_question_title')}</h3>
+          <h2 className="font-black text-white text-xs tracking-widest uppercase">{t('daily_question_title')}</h2>
         </div>
         <span className="text-[9px] font-black text-cyan-400 font-mono border border-cyan-400/60 px-1.5 py-0.5">
           {index + 1}/{DAILY_PROMPTS.length}
