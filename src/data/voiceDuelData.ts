@@ -3,6 +3,7 @@
  *
  * Tüm klipler **resmi** kanallardan gelir:
  *   Madoka Exedra [Official] — https://www.youtube.com/@madoka_exedra
+ *   MAPPA CHANNEL — https://www.youtube.com/@MAPPACHANNEL
  *
  * YouTube iframe API'siyle yalnızca ilgili klip, başlangıç/bitiş zamanlarıyla oynatılır.
  * Görüntü/puanlar AniList/MAL'den alınmaz (hot-link); yalnız metin gösterilir.
@@ -180,6 +181,118 @@ export const VOICE_CLIPS: VoiceClip[] = [
             en: 'The bright, hopeful voice at the heart of the series.',
             ja: '物語の中心にいる、明るく希望に満ちた声。',
             fr: "La voix lumineuse et pleine d'espoir au cœur de la série."
+        }
+    },
+    {
+        id: 'denji-pv',
+        name: 'Denji',
+        series: 'Chainsaw Man',
+        videoId: 'j7L9BA7JJ-E',
+        startSeconds: 0,
+        endSeconds: 18,
+        options: ['Denji', 'Power', 'Aki Hayakawa', 'Himeno'],
+        difficulty: 'kolay',
+        hint: {
+            tr: 'Çoğu zaman naif ve komik ama gerektiğinde en tehlikeli şeylere gülümseyen genç bir erkek.',
+            en: 'A young man who is naive and funny, but smiles in the face of the most dangerous things.',
+            ja: '普段は素朴でおどけた少年だが、最も恐ろしいものにも笑みを浮かべる。',
+            fr: "Un jeune homme naïf et drôle, qui sourit même face aux choses les plus dangereuses."
+        }
+    },
+    {
+        id: 'power-pv',
+        name: 'Power',
+        series: 'Chainsaw Man',
+        videoId: 'hUA2Evb8pHw',
+        startSeconds: 0,
+        endSeconds: 18,
+        options: ['Power', 'Denji', 'Makima', 'Aki Hayakawa'],
+        difficulty: 'kolay',
+        hint: {
+            tr: 'Kendini zeki sanan, bağırarak konuşan ve kan dolu kimliğini hiçbir zaman gizlemeyen bir Blood Fiend.',
+            en: 'The Blood Fiend who shouts, thinks she is a genius, and hides nothing of her chaotic nature.',
+            ja: '叫び声を上げ、自分を天才だと思い、血の悪魔であることを隠さない。',
+            fr: "Le démon du sang qui crie, se croit un génie et cache complètement son chaos."
+        }
+    },
+    {
+        id: 'pochita-pv',
+        name: 'Pochita',
+        series: 'Chainsaw Man',
+        videoId: '6IyGq0pLxRo',
+        startSeconds: 0,
+        endSeconds: 18,
+        options: ['Pochita', 'Denji', 'Makima', 'Power'],
+        difficulty: 'kolay',
+        hint: {
+            tr: 'Testere burnuna çıkardığı, Denji ile bütünleşmiş yaşlımsı ve köpek gibi yakın bir dost olan Chainsaw Devil.',
+            en: 'The Chainsaw Devil himself — the loyal, saw-nosed companion of Denji.',
+            ja: 'デンジと一体化した、ノコギリの鼻を持つチェンソーの悪魔本人。',
+            fr: "Le Démon-tronçonneuse lui-même — le compagnon fidèle au nez de tronçonneuse de Denji."
+        }
+    },
+    {
+        id: 'aki-pv',
+        name: 'Aki Hayakawa',
+        series: 'Chainsaw Man',
+        videoId: 'EuSHpwcU1yg',
+        startSeconds: 0,
+        endSeconds: 18,
+        options: ['Aki Hayakawa', 'Denji', 'Kishibe', 'Power'],
+        difficulty: 'orta',
+        hint: {
+            tr: 'Her şeyi ciddiye alan, yüzü hep katı duran, kayıpları onu en sessiz intikamcıya dönüştüren bir genç.',
+            en: 'The straight-faced young man with a cold attitude, disciplined and carrying heavy losses.',
+            ja: '表情の硬い青年で、多くの喪失を経験してきた冷静沈着な復讐者。',
+            fr: "Le jeune homme au visage austère, discipliné et droit, qui cache de profondes pertes."
+        }
+    },
+    {
+        id: 'himeno-pv',
+        name: 'Himeno',
+        series: 'Chainsaw Man',
+        videoId: 'Xa8c3ZQLAec',
+        startSeconds: 0,
+        endSeconds: 18,
+        options: ['Himeno', 'Aki Hayakawa', 'Kobeni Higashiyama', 'Makima'],
+        difficulty: 'orta',
+        hint: {
+            tr: 'Sigarasını ağzından hiç eksik etmeyen, kardeşi gibi gördüğü Aki için her şeyi yapan Ghost Devil.',
+            en: 'The Ghost Devil who never leaves her cigarette and does everything for Aki, whom she sees as a brother.',
+            ja: 'タバコを離さず、自分より弱い存在を守る幽霊の悪魔。アキのためには何でもする。',
+            fr: "Le Démon-esprit qui ne quitte jamais sa cigarette et serait prêt à tout pour Aki, qu'elle considère comme un frère."
+        }
+    },
+    {
+        id: 'kobeni-pv',
+        name: 'Kobeni Higashiyama',
+        series: 'Chainsaw Man',
+        videoId: 'oU2mU8H-M5A',
+        startSeconds: 0,
+        endSeconds: 18,
+        options: ['Kobeni Higashiyama', 'Himeno', 'Aki Hayakawa', 'Power'],
+        difficulty: 'zor',
+        hint: {
+            tr: 'Sürekli ağlayan ama devasa yıllık dürtüye sahip, hayatını korumak için her şeyi yapan devil hunter.',
+            en: 'The salary-man devil hunter who cries constantly but survives in impossible situations.',
+            ja: '常に泣き続けるサラリーマン悪魔ハンター。極限状態でも生き残る。',
+            fr: "Le tueur de démons en costume qui pleure tout le temps mais survit à toutes les situations."
+        }
+    },
+    {
+        id: 'makima-pv',
+        name: 'Makima',
+        series: 'Chainsaw Man',
+        videoId: 'UOsl9kTJK6k',
+        startSeconds: 0,
+        endSeconds: 18,
+        options: ['Makima', 'Power', 'Himeno', 'Kobeni Higashiyama'],
+        difficulty: 'zor',
+        hint: {
+            tr: 'Gülümsemesi hiç yüzünden eksik olmayan, herkese çok sevecen davranan ama içinden dehşet yayan bir kadın.',
+            en: 'The terrifyingly calm woman who always smiles but hides something unspeakable behind it.',
+            ja: '常に微笑みを絶やさないが、瞳の中に決して語れぬ何かを持つ女性。',
+            fr: "La femme à l'éternel sourire qui semble si douce, mais au fond de ses yeux se cache quelque chose d'inimaginable."
         }
     },
 ];

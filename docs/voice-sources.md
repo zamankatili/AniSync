@@ -1,18 +1,21 @@
 # Voice Duel — clip sources and attribution
 
-Last verified: **2026-11-12**
+Last verified: **2026-11-14**
 
-All clips used by **KİM BU KARAKTER? / VOICE DUEL** come from the official
-*Madoka Exedra* YouTube channel:
+All clips used by **KİM BU KARAKTER? / VOICE DUEL** come from official
+channels only:
 
-- Channel: <https://www.youtube.com/@madoka_exedra>
-- Clips are embedded with the YouTube IFrame player and trimmed with
-  `startSeconds` / `endSeconds`; no audio is downloaded, re-hosted or extracted.
-- Character names, series names and hint text are original UI copy. No frames,
-  thumbnails or official artwork are hot-linked from YouTube.
-- If an official video is removed or made private, replace that entry with
-  another **official** clip. Do **not** substitute a fan re-upload, mirror or
-  audio-only copy.
+- Madoka Exedra [Official] — <https://www.youtube.com/@madoka_exedra>
+- MAPPA CHANNEL — <https://www.youtube.com/@MAPPACHANNEL>
+
+Clips are embedded with the YouTube IFrame player and trimmed with
+`startSeconds` / `endSeconds`; no audio is downloaded, re-hosted or extracted.
+Character names, series names and hint text are original UI copy. No frames,
+thumbnails or official artwork are hot-linked from YouTube.
+
+If an official video is removed or made private, replace that entry with
+another **official** clip. Do **not** substitute a fan re-upload, mirror or
+audio-only copy.
 
 ## Clip inventory
 
@@ -28,6 +31,13 @@ All clips used by **KİM BU KARAKTER? / VOICE DUEL** come from the official
 | `oriko-mikuni-pv` | Oriko Mikuni | Puella Magi Magia Exedra | <https://www.youtube.com/watch?v=3fanVonPjfo> | 00:00–00:22 | zor |
 | `sayaka-miki-pv-jp` | Sayaka Miki | Puella Magi Madoka Magica | <https://www.youtube.com/watch?v=3TLWNypt9_g> | 00:01–00:18 | kolay |
 | `madoka-kaname-pv-2` | Madoka Kaname | Puella Magi Madoka Magica | <https://www.youtube.com/watch?v=bLy6AExK2VE> | 00:00–00:18 | kolay |
+| `denji-pv` | Denji | Chainsaw Man | <https://www.youtube.com/watch?v=j7L9BA7JJ-E> | 00:00–00:18 | kolay |
+| `power-pv` | Power | Chainsaw Man | <https://www.youtube.com/watch?v=hUA2Evb8pHw> | 00:00–00:18 | kolay |
+| `pochita-pv` | Pochita | Chainsaw Man | <https://www.youtube.com/watch?v=6IyGq0pLxRo> | 00:00–00:18 | kolay |
+| `aki-pv` | Aki Hayakawa | Chainsaw Man | <https://www.youtube.com/watch?v=EuSHpwcU1yg> | 00:00–00:18 | orta |
+| `himeno-pv` | Himeno | Chainsaw Man | <https://www.youtube.com/watch?v=Xa8c3ZQLAec> | 00:00–00:18 | orta |
+| `kobeni-pv` | Kobeni Higashiyama | Chainsaw Man | <https://www.youtube.com/watch?v=oU2mU8H-M5A> | 00:00–00:18 | zor |
+| `makima-pv` | Makima | Chainsaw Man | <https://www.youtube.com/watch?v=UOsl9kTJK6k> | 00:00–00:18 | zor |
 
 ## Rules for adding a clip
 
@@ -42,5 +52,5 @@ All clips used by **KİM BU KARAKTER? / VOICE DUEL** come from the official
 ## Attribution in the UI
 
 The game screen shows `voice_duel_source` in the active language, e.g.
-“Kaynak: Madoka Exedra resmî kanalı”. The footer attribution also lists the
-data providers used by the rest of AniSync.
+“Kaynak: Madoka Exedra ve MAPPA resmî kanalları”. The footer attribution also
+lists the data providers used by the rest of AniSync.

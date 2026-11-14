@@ -1474,7 +1474,7 @@ export default {
       "voice_duel_score": "スコア",
       "voice_duel_streak": "連続",
       "voice_duel_listen_hint": "声だけで当てよう",
-      "voice_duel_source": "出典: Madoka Exedra 公式チャンネル",
+      "voice_duel_source": "出典：Madoka Exedra・MAPPA公式チャンネル",
       "voice_duel_replay": "もう一度再生",
       "voice_duel_hint": "ヒント",
       "voice_duel_hide": "隠す",

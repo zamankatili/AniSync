@@ -1474,7 +1474,7 @@ export default {
       "voice_duel_score": "SKOR",
       "voice_duel_streak": "SERİ",
       "voice_duel_listen_hint": "Ses ile tahmin et",
-      "voice_duel_source": "Kaynak: Madoka Exedra resmî kanalı",
+      "voice_duel_source": "Kaynak: Madoka Exedra ve MAPPA resmî kanalları",
       "voice_duel_replay": "TEKRAR",
       "voice_duel_hint": "İPUCU",
       "voice_duel_hide": "GİZLE",

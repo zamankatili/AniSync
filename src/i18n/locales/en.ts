@@ -1474,7 +1474,7 @@ export default {
       "voice_duel_score": "SCORE",
       "voice_duel_streak": "STREAK",
       "voice_duel_listen_hint": "Guess from the voice",
-      "voice_duel_source": "Source: Madoka Exedra official channel",
+      "voice_duel_source": "Source: official Madoka Exedra and MAPPA channels",
       "voice_duel_replay": "REPLAY",
       "voice_duel_hint": "HINT",
       "voice_duel_hide": "HIDE",

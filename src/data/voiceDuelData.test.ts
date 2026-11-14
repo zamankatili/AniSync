@@ -22,4 +22,27 @@ describe('voiceDuel getRound', () => {
     expect(positions.size).toBeGreaterThan(1);
     expect([...positions].every((p) => p >= 0 && p <= 3)).toBe(true);
   });
+
+  it('keeps unique ids and sane segments for every clip', () => {
+    const ids = new Set(VOICE_CLIPS.map((clip) => clip.id));
+    expect(ids.size).toBe(VOICE_CLIPS.length);
+
+    for (const clip of VOICE_CLIPS) {
+      expect(clip.startSeconds).toBeGreaterThanOrEqual(0);
+      expect(clip.endSeconds).toBeGreaterThan(clip.startSeconds);
+      expect(clip.endSeconds).toBeLessThanOrEqual(45);
+      expect(clip.videoId).toMatch(/^[A-Za-z0-9_-]{6,20}$/);
+      expect(new Set(clip.options).size).toBe(4);
+      expect(clip.options).toContain(clip.name);
+      expect(clip.hint).toEqual(
+        expect.objectContaining({ tr: expect.any(String), en: expect.any(String), ja: expect.any(String), fr: expect.any(String) }),
+      );
+    }
+  });
+
+  it('documents at least two official sourcing channels', () => {
+    const series = new Set(VOICE_CLIPS.map((clip) => clip.series));
+    expect(series.has('Chainsaw Man')).toBe(true);
+    expect(series.has('Puella Magi Madoka Magica') || series.has('Puella Magi Magia Exedra')).toBe(true);
+  });
 });

@@ -89,7 +89,7 @@ Bu turda üç P0 açığı kapatıldı: çift meta etiketi, kozmetik ban ve izsi
 - `GET /api/og?kind=media&id=anilist:154587` (`Accept-Language: en`) → `Frieren: Beyond Journey's End`, `<html lang="en">`, `og:locale en_US`, canonical `/media/anilist:154587`.
 - `GET /api/og/anime/zzz` → 200, `X-Og-Fallback: 1`, genel İngilizce kart, canonical `/` (ölü bağlantı önizlemesi boş kalmıyor).
 - Birim testleri: 34 yeni test (27 OG biçimlendirme/çözümleme + 7 SEO/Vercel yönlendirme: rewrite sırası, arama motoru botlarının hariç tutulması, yerel/uzak sitemap tek kaynağı, dinamik `api/[param]` dosya yasağı ve Steam detay rewrite'ı).
-- Kapılar: `tsc` temiz, ESLint 0 hata, **17 dosya / 141 test**, üretim derlemesi başarılı.
+- Kapılar: `tsc` temiz, ESLint 0 hata, **17 dosya / 143 test**, üretim derlemesi başarılı.
 
 ---
 
@@ -114,7 +114,16 @@ Yani `api/anime-news`, `api/refresh-news`, `api/translate`, `api/moderate-room`,
 
 - `node api/og.js` doğrudan çalıştırıldı: `anime/16498` → `fallback=0`, `Attack on Titan - AniSync`; yol tabanlı `media/anilist:154587` + `ja` → `葬送のフリーレン`; geçersiz kimlik → `fallback=1`; tüm yanıtlarda `Cache-Control: no-store, max-age=0`.
 - Üretilen 8 pakette göreli `import`/`require` kalmadığı `Select-String` ile doğrulandı.
-- Kapılar: `tsc` temiz, `eslint src server/api server.ts --quiet` 0 hata, **17 dosya / 141 test**, `npm run build` exit 0.
+- Kapılar: `tsc` temiz, `eslint src server/api server.ts --quiet` 0 hata, **17 dosya / 141 → 143 test**, `npm run build` exit 0.
+
+---
+
+## 1f. 14 Kasım oturumu — "Kim Bu Karakter?" içeriği büyüdü
+
+- **İpucu Tanıma** 37 → **86 karakter**; öne çıkan seriler artık Naruto / One Piece / Attack on Titan / Jujutsu Kaisen / Demon Slayer / My Hero Academia / Dragon Ball / Death Note / FMA / Frieren / Spy×Family / Re:Zero vb. Zorluklar AniList popülerliğini izler; dört dilli ipucu + dört şık; `characterGuessData.test.ts` yeşil.
+- **Ses Düellosu (resmî klipler)** 11 → **18 klip**: MAPPA CHANNEL resmî Chainsaw Man “Character PV” dizisi (Denji, Power, Pochita, Aki, Himeno, Kobeni, Makima) eklendi; Madoka karakter klipleri korunur. Her klip `docs/voice-sources.md` tablosunda kanal + videoId + segment (00:00–00:18) + zorlukla belgeli. Not: isimli resmî karakter-PV formatı (tek karakteri odaklayan, kısa) ses kesimlerinin en başta olmasını pratikte garanti ediyor; yine de kesim seçimi oynanışta teyit edilmedi — bu nedenle her çeyrekte yeniden doğrulama ve gerekirse düzeltme zorunludur.
+- UI atfı (`voice_duel_source` tr/en/ja/fr) artık "Madoka Exedra ve MAPPA resmî kanalları" diyor. `voiceDuelData.test.ts` klip bütünlüğünü (tekil id, segment aralığı, 4 dilli ipucu, resmi kanal kapsamı) kilitliyor.
+- **Kalan iş**: One Piece / Naruto / Jujutsu Kaisen / Demon Slayer resmî karakter-PV klipleri; biri HATA yaparsa canlı doğrulama yapılmadan commit'lenmeyecek. Yapay ses üretimi/yeniden barındırma asla yok.
 
 ---
 
@@ -123,7 +132,7 @@ Yani `api/anime-news`, `api/refresh-news`, `api/translate`, `api/moderate-room`,
 | Kapı | Komut | Sonuç |
 |---|---|---|
 | TypeScript (strict) | `npx.cmd tsc --noEmit` | ✅ exit 0 |
-| Testler | `npm.cmd test -- --run` | ✅ **17 dosya / 141 test** |
+| Testler | `npm.cmd test -- --run` | ✅ **17 dosya / 143 test** |
 | Üretim derlemesi | `npm.cmd run build` | ✅ exit 0 (route-level code splitting korunuyor) |
 | ESLint | `npx.cmd eslint src --quiet` | ✅ 0 error (uyarılar önceden var olan stil uyarıları) |
 | Firestore kuralları | `firebase.cmd deploy --only firestore:rules --project folkloric-centaur-q6tp2` | ✅ derlendi ve yayınlandı (14 Kasım 2026) |
@@ -131,7 +140,7 @@ Yani `api/anime-news`, `api/refresh-news`, `api/translate`, `api/moderate-room`,
 Yeni test dosyaları:
 
 - `src/data/universePaths.test.ts` — 8 dünya, 5 rütbe, ikilem önekleri, ilerleme kırpma.
-- `src/data/characterGuessData.test.ts` — 30+ karakter, 12+ seri, 4 benzersiz şık, dört dilde ipucu/not.
+- `src/data/characterGuessData.test.ts` — 86 karakter, 20+ seri, 4 benzersiz şık, dört dilde ipucu/not.
 - `src/data/fanLore.test.ts` — 24+ kayıt, kategori/kaynak/çeviri bütünlüğü, üç dilde arama, spoiler dağılımı.
 - `src/data/textAdventure.test.ts` — 7 test: dört dilde oda/eşya/son/ipucu bütünlüğü, tekil kimlikler, ulaşılabilir harita, eşyaların yerleşimi, fiil eşlemesi.
 - `src/lib/textAdventureEngine.test.ts` — 15 test: üç sona giden tam yürüyüş, karanlık arşiv, kilitli kapılar, yanlış kod, dört dilde komut, kaydet/yükle ve bozuk kayıt, ipucu kademeleri, durum değişmezliği.

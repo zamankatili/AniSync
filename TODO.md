@@ -21,7 +21,7 @@
 - [ ] **Voice Duel (/voice-duel) fix list** (Sebastian'dan istek):
   - [ ] Doğru cevap her zaman A — şıklar rastgele karışıklmalı (`shuffleList` lokasyonda, değilse klip başına shuffle)
   - [ ] **Karakterler ekranda görünüyor** — official PV'lerdeki görselleri kapatarak yalnızca ses oynat (ör. iframe'in üstüne `position:absolute; background:#000; display:flex; align center "?"` overlay; YouTube iframe arka planda ses oynatmaya devam eder)
-  - [ ] Madoka Exedra dışına genişlet (kullanıcı seriyi tanımıyor; dahil edilen seslendirmeler daha yaygın anime/karakterlere kaydır: One Piece, Naruto, Jujutsu Kaisen, Demon Slayer…) — official channel klipleriyle fresh dataset
+  - [x] Madoka Exedra dışına genişlet (kısmi): MAPPA CHANNEL resmî Chainsaw Man “Character PV” klipleri eklendi (Denji, Power, Pochita, Aki, Himeno, Kobeni, Makima); 11 → 18 klip, 2 resmî kanal (`docs/voice-sources.md`). Kalan: One Piece / Naruto / JJK / Demon Slayer (karakter-PV doğrulanmış klipler gerekiyor).
   - [ ] Yanlışlar puan kırılmasın? (karar) + skor kalıcı localStorage’da en iyi skorla yüzleşme
 - [ ] **AIRecommendationsSection mock verisi**: "%98 uyumlu" `AI_FALLBACK_REASONS` gösteriliyor; Vercel'de `GEMINI_API_KEY` boş olduğu için gerçek API yerine user'lar mock görüyor.
   - [ ] Seçim: (a) dürüstçe "AI kapalı" kartı + mock gizlenir, ya da (b) ücretsiz alternatif (Groq/OpenRouter — llama) ile gerçek API'ye geçilir; (c) AI Studio ücretsiz proje (kart yok) ile aynı kod → Vercel env'e koyulması.
