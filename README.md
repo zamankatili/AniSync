@@ -69,9 +69,9 @@ anilist istekleri için hız sınırlayıcısı ve bellek-içi önbellek ile kor
 | Durum | React state + Zustand (quiz / watch party / haftalık challenge / hata yakalama) |
 | Yönlendirme | React Router 7, `React.lazy` rotlar, route-level kod bölme |
 | Backend | Firebase Auth (Google + e-posta), **named Firestore DB**, Storage |
-| Backend (ops) | Vercel serverless: `/api/anime-news` (RSS), `/api/games/*` (Steam proxy'ler), `/api/refresh-news` (cron) |
+| Backend (ops) | Vercel serverless: `/api/og` (bot önizleme), `/api/anime-news` (RSS), `/api/games/*` (Steam proxy'ler), `/api/refresh-news` (cron). Kaynak `server/api/**`, çıktı `api/**/*.js` (`npm run build:api`). |
 | Mobil | Capacitor 8 — Android / iOS / Web (`capacitor.config.ts`) |
-| Test | Vitest (65 test, 10 dosya) |
+| Test | Vitest (141 test, 17 dosya) |
 | İ18n | TR, EN, JA, FR — dil detektörü + dil-bazlı route parçalama |
 
 ## Başlangıç

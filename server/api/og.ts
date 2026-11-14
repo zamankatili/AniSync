@@ -13,8 +13,8 @@
  * Yanlış önbelleklenirse bot HTML'i gerçek kullanıcıya servis edileceği
  * için `no-store` + `Vary` zorunludur.
  */
-import { pickLocaleFromHeader } from '../src/lib/ogMeta';
-import { renderOgPage } from '../src/lib/ogRender';
+import { pickLocaleFromHeader } from '../../src/lib/ogMeta';
+import { renderOgPage } from '../../src/lib/ogRender';
 
 /** Query yoksa yol tabanlı çağrıyı da kabul et (`/api/og/anime/16498`). */
 function readParams(req: any): { kind: string; id: string } {

@@ -124,19 +124,41 @@ describe('bot OG preview rewrites', () => {
 /**
  * Vercel, Next.js olmayan projelerde `api/**\/[param].ts` dosyalarını
  * yönlendirmez; istek SPA catch-all'ına düşer (canlıda `/api/games/123`
- * index.html döndürüyordu). Bu test gelecekte aynı tuzağa düşmeyi engeller.
+ * index.html döndürüyordu). Ayrıca bu kurulumda `api/` altındaki TypeScript
+ * dosyalarının göreli import'ları paketlenmiyor (`FUNCTION_INVOCATION_FAILED`).
+ * Bu yüzden `api/` yalnızca `scripts/build-api.mjs` ile üretilmiş, kendi
+ * kendine yeten `.js` paketlerini içerir; kaynaklar `server/api` altındadır.
  */
 describe('Vercel function routing', () => {
   const vercel = JSON.parse(read('vercel.json')) as {
     rewrites: Array<{ source: string; destination: string }>;
   };
 
-  it('never uses dynamic [param] file names under api/', () => {
-    const files = readdirSync(resolve(process.cwd(), 'api'), { recursive: true })
+  const apiFiles = () =>
+    readdirSync(resolve(process.cwd(), 'api'), { recursive: true })
       .map((entry) => String(entry).replace(/\\/g, '/'))
-      .filter((entry) => entry.endsWith('.ts'));
-    const dynamic = files.filter((file) => /\[[^\]]+\]/.test(file));
+      .filter((entry) => entry.includes('.'))
+      .sort();
+
+  it('ships only generated JavaScript under api/', () => {
+    const files = apiFiles();
+    expect(files.length).toBeGreaterThan(0);
+    const notJs = files.filter((file) => !file.endsWith('.js'));
+    expect(notJs, `api/ may only contain generated .js bundles: ${notJs.join(', ')}`).toEqual([]);
+  });
+
+  it('never uses dynamic [param] file names under api/', () => {
+    const dynamic = apiFiles().filter((file) => /\[[^\]]+\]/.test(file));
     expect(dynamic, `dynamic Vercel function names are not routed: ${dynamic.join(', ')}`).toEqual([]);
+  });
+
+  it('keeps every generated function source in server/api', () => {
+    const sources = readdirSync(resolve(process.cwd(), 'server/api'), { recursive: true })
+      .map((entry) => String(entry).replace(/\\/g, '/'))
+      .filter((entry) => entry.endsWith('.ts'))
+      .map((entry) => entry.replace(/\.ts$/, '.js'))
+      .sort();
+    expect(apiFiles()).toEqual(sources);
   });
 
   it('routes /api/games/:appid to the static games function', () => {
@@ -154,7 +176,8 @@ describe('local server parity', () => {
   it('serves OG previews from the same renderer as the Vercel function', () => {
     expect(server).toContain('/api/og/:kind/:id');
     expect(server).toContain('renderOgPage');
-    expect(read('api/og.ts')).toContain('renderOgPage');
+    expect(read('server/api/og.ts')).toContain('renderOgPage');
+    expect(read('api/og.js')).toContain('renderOgPage');
   });
 
   it('generates /sitemap.xml from the shared route map instead of a stale copy', () => {

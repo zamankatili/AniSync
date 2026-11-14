@@ -6,7 +6,7 @@
  * "sezon takvimi" kartlarına düşüyordu. Bu uç nokta `rssIngest` hattını
  * (ANN + Google News) sunar; CDN'de 15 dk önbelleklenir.
  */
-import { ingestAnimeNews } from '../src/lib/rssIngest';
+import { ingestAnimeNews } from '../../src/lib/rssIngest';
 
 export default async function handler(req: any, res: any) {
   const forceRefresh = String(req?.query?.refresh ?? '') === 'true';

@@ -19,12 +19,14 @@ export default tseslint.config(
       '**/*.config.ts',
       'eslint.config.js',
       'public/**',
+      // `api/**` üretilen (esbuild) Vercel paketleridir; kaynak `server/api`.
+      'api/**',
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.{ts,tsx}', 'api/**/*.ts', 'server.ts'],
+    files: ['src/**/*.{ts,tsx}', 'server/api/**/*.ts', 'server.ts'],
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
     },

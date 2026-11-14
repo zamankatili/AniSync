@@ -1,5 +1,5 @@
 /** Vercel Serverless Function — Gemini çevirisi (server.ts ile aynı çekirdek). */
-import { handleTranslate } from '../src/lib/geminiEndpoints';
+import { handleTranslate } from '../../src/lib/geminiEndpoints';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
