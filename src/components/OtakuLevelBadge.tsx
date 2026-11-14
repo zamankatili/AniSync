@@ -65,7 +65,7 @@ export const OtakuLevelBadge: React.FC = () => {
       <div className="flex items-center justify-between mb-3 border-b border-white/20 pb-2.5">
         <div className="flex items-center gap-2">
           <Star size={15} className="text-amber-400" fill="currentColor" strokeWidth={2.5} />
-          <h3 className="font-black text-white text-xs tracking-widest uppercase">{t('otaku_rank_title')}</h3>
+          <h2 className="font-black text-white text-xs tracking-widest uppercase">{t('otaku_rank_title')}</h2>
         </div>
         <ChevronRight size={18} className="text-amber-400 group-hover:translate-x-1 transition-transform" strokeWidth={3} />
       </div>

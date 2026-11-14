@@ -103,8 +103,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                     <img 
                       src={resolveAvatar(currentUser?.photoURL, avatarSeed)} 
                       alt="Preview" 
-                      className={`w-24 h-24 bg-white border-4 border-black object-cover ${!currentUser?.photoURL ? 'grayscale' : ''}`}
-                    />
+                      className={`w-24 h-24 bg-white border-4 border-black object-cover ${!currentUser?.photoURL ? 'grayscale' : ''}`} loading="lazy" decoding="async" />
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {isUploading ? <Loader2 size={24} className="text-white animate-spin" /> : <Upload size={24} className="text-white" />}
                     </div>

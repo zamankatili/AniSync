@@ -185,8 +185,7 @@ export const AnimeNewsFeed: React.FC = () => {
                     src={getSafeImageUrl(item.imageUrl)}
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    referrerPolicy="no-referrer"
-                  />
+                    referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   <div className="absolute bottom-1 left-1 bg-black/90 text-white px-1.5 py-0.5 border border-white/50 font-black text-[9px] uppercase">
                     {item.category}
                   </div>

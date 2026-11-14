@@ -231,8 +231,7 @@ export const WatchParty: React.FC = () => {
               <img
                 src={currentRoom.animeImage}
                 alt={currentRoom.animeTitle}
-                className="w-24 h-34 object-cover border-2 border-black shadow-[3px_3px_0px_0px_#000] shrink-0"
-              />
+                className="w-24 h-34 object-cover border-2 border-black shadow-[3px_3px_0px_0px_#000] shrink-0" loading="lazy" decoding="async" />
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                   <h4 className="font-black text-base uppercase text-black">
@@ -397,8 +396,7 @@ export const WatchParty: React.FC = () => {
               <img
                 src={r.animeImage}
                 alt={r.animeTitle}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
 
               {/* Status Pill Top Left */}

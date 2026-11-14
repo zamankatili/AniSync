@@ -718,8 +718,7 @@ export const MusicQuiz: React.FC = () => {
                   alt={dailySong.animeTitle}
                   className="w-24 h-34 object-cover border-2 border-white shrink-0 mx-auto sm:mx-0"
                   referrerPolicy="no-referrer"
-                  onError={handleImageError}
-                />
+                  onError={handleImageError} loading="lazy" decoding="async" />
 
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-1">

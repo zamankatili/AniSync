@@ -284,8 +284,7 @@ export const AnimeCommunityReviews: React.FC<AnimeCommunityReviewsProps> = ({
                     <img 
                       src={rev.userAvatar || getDefaultAvatar(rev.userName)} 
                       alt={rev.userName} 
-                      className="w-9 h-9 border border-white bg-white object-cover"
-                    />
+                      className="w-9 h-9 border border-white bg-white object-cover" loading="lazy" decoding="async" />
                     <div>
                       <span className="font-black text-xs uppercase text-white block leading-snug">
                         {rev.userName}

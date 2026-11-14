@@ -392,8 +392,7 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
                               src={getSafeImageUrl(anime.image)}
                               alt={anime.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                              referrerPolicy="no-referrer"
-                            />
+                              referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                             <div className="absolute top-1 left-1 bg-black/90 text-amber-400 text-[9px] font-black px-1 py-0.2 border border-white flex items-center gap-0.5">
                               <Star size={9} fill="currentColor" /> {anime.score}
                             </div>
@@ -611,8 +610,7 @@ export const AiringScheduleModal: React.FC<AiringScheduleModalProps> = ({
                             src={getSafeImageUrl(rem.image)}
                             alt={rem.title}
                             className="w-14 h-20 object-cover border border-white/30 shrink-0"
-                            referrerPolicy="no-referrer"
-                          />
+                            referrerPolicy="no-referrer" loading="lazy" decoding="async" />
 
                           <div>
                             <div className="flex items-center gap-2 mb-1">

@@ -426,8 +426,7 @@ export const AiringCalendar: React.FC = () => {
                             src={getSafeImageUrl(anime.image)} 
                             alt={anime.title} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            referrerPolicy="no-referrer"
-                          />
+                            referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                           <div className="absolute top-1 left-1 bg-black/90 text-amber-400 text-[10px] font-black px-1.5 py-0.5 border border-white flex items-center gap-0.5">
                             <Star size={10} fill="currentColor" /> {anime.score}
                           </div>
@@ -626,8 +625,7 @@ export const AiringCalendar: React.FC = () => {
                             src={getSafeImageUrl(anime.image)}
                             alt={anime.title}
                             className="w-16 h-22 object-cover border border-white shrink-0 group-hover:scale-105 transition-transform"
-                            referrerPolicy="no-referrer"
-                          />
+                            referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                           <div className="flex-1 min-w-0 flex flex-col justify-between">
                             <div>
                               <div className="flex items-center justify-between text-[10px] font-black uppercase text-amber-400 mb-0.5">

@@ -162,8 +162,7 @@ export const UnifiedRecommendationHub: React.FC = () => {
                   alt={randomAnime.title}
                   className="w-28 h-36 object-cover border-2 border-white shrink-0 cursor-pointer"
                   onClick={() => navigate(`/anime/${randomAnime.mal_id}`)}
-                  referrerPolicy="no-referrer"
-                />
+                  referrerPolicy="no-referrer" loading="lazy" decoding="async" />
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">

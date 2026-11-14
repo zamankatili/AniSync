@@ -94,8 +94,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onGuess, disabled }) => 
                 <img
                   src={item.imageUrl}
                   alt={item.name}
-                  className="w-8 h-8 rounded-none border border-white object-cover"
-                />
+                  className="w-8 h-8 rounded-none border border-white object-cover" loading="lazy" decoding="async" />
                 <div>
                   <div lang="en" className="text-white font-black text-sm uppercase">{item.name}</div>
                   <div lang="en" className="text-neutral-400 text-xs font-bold">{item.series}</div>

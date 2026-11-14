@@ -96,8 +96,7 @@ export const XpLeaderboard: React.FC = () => {
                       alt=""
                       loading="lazy"
                       referrerPolicy="no-referrer"
-                      className="w-8 h-8 shrink-0 border-2 border-white/40 object-cover"
-                    />
+                      className="w-8 h-8 shrink-0 border-2 border-white/40 object-cover" decoding="async" />
                   ) : (
                     <span className="w-8 h-8 shrink-0 border-2 border-white/40 bg-neutral-800 flex items-center justify-center font-black text-white text-xs">
                       {row.name.charAt(0).toUpperCase()}

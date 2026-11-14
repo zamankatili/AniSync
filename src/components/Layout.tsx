@@ -296,7 +296,7 @@ export const Layout = () => {
                       "flex items-center gap-3 px-3 py-2.5 border-2 transition-all font-bold uppercase tracking-wide text-[13px] whitespace-nowrap min-h-[44px]",
                       isActive
                         ? "text-white"
-                        : "border-transparent text-neutral-400 hover:text-white hover:border-white/20 hover:bg-white/5"
+                        : "border-transparent text-neutral-300 hover:text-white hover:border-white/20 hover:bg-white/5"
                     )}
                   >
                     <item.icon size={19} strokeWidth={2.25} className="shrink-0" />
@@ -387,8 +387,7 @@ export const Layout = () => {
                                alt={anime.title} 
                                className="w-10 h-14 object-cover border border-white/20" 
                                referrerPolicy="no-referrer" 
-                               onError={handleImageError}
-                             />
+                               onError={handleImageError} loading="lazy" decoding="async" />
                              <div className="flex-1 flex flex-col justify-center">
                                <h4 className="text-xs font-black uppercase text-white line-clamp-1">{anime.title_english || anime.title}</h4>
                              </div>
@@ -428,7 +427,7 @@ export const Layout = () => {
                      type="button"
                      aria-haspopup="menu"
                      aria-expanded={isLangMenuOpen}
-                     aria-label={t('language')}
+                     aria-label={`${t('language')}: ${currentLang.toUpperCase()}`}
                      onClick={() => setIsLangMenuOpen((v) => !v)}
                      className="touch-target px-1.5 sm:px-2 text-white border-2 border-transparent hover:border-white/20 uppercase font-black text-xs"
                    >
@@ -488,7 +487,7 @@ export const Layout = () => {
                      className="w-9 h-9 shrink-0 border-2 border-white p-[2px] cursor-pointer bg-white"
                    >
                      <div className="w-full h-full bg-black flex items-center justify-center overflow-hidden">
-                       <img src={resolveAvatar(currentUser.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" />
+                       <img src={resolveAvatar(currentUser.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" loading="lazy" decoding="async" />
                      </div>
                    </div>
                  )}
@@ -524,7 +523,7 @@ export const Layout = () => {
                  type="button"
                  aria-haspopup="menu"
                  aria-expanded={isLangMenuOpen}
-                 aria-label={t('language')}
+                 aria-label={`${t('language')}: ${currentLang.toUpperCase()}`}
                  onClick={() => setIsLangMenuOpen((v) => !v)}
                  className="flex items-center gap-1 w-12 h-12 justify-center border-2 border-white/20 hover:border-white hover:bg-white hover:text-black text-white transition-all bg-black font-black uppercase text-xs"
                >
@@ -575,7 +574,7 @@ export const Layout = () => {
                  className="w-12 h-12 border-2 border-white cursor-pointer bg-white p-[2px]"
                >
                  <div className="w-full h-full bg-black flex items-center justify-center overflow-hidden">
-                   <img src={resolveAvatar(currentUser.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" />
+                   <img src={resolveAvatar(currentUser.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full grayscale hover:grayscale-0 transition-all" loading="lazy" decoding="async" />
                  </div>
                </div>
              ) : (

@@ -147,8 +147,7 @@ export const SimilarAnimeFinder: React.FC = () => {
                     src={getSafeImageUrl(item.images?.jpg?.image_url)}
                     alt={item.title}
                     className="w-8 h-11 object-cover border border-white"
-                    referrerPolicy="no-referrer"
-                  />
+                    referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   <div className="flex-1 min-w-0">
                     <h5 className="font-black text-xs uppercase truncate">{item.title_english || item.title}</h5>
                     <p className="text-[10px] font-bold text-neutral-400 uppercase">{item.year || 'Series'} • Puan: {item.score || 'N/A'}</p>
@@ -192,8 +191,7 @@ export const SimilarAnimeFinder: React.FC = () => {
                   src={getSafeImageUrl(item.image_url)}
                   alt="cover"
                   className="w-6 h-8 object-cover border border-black"
-                  referrerPolicy="no-referrer"
-                />
+                  referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                 <div className="text-left">
                   <div className="truncate max-w-[120px]">{item.title}</div>
                   <div className="text-[9px] text-amber-700 font-extrabold">{item.tag}</div>
@@ -219,8 +217,7 @@ export const SimilarAnimeFinder: React.FC = () => {
                   src={getSafeImageUrl(preset.image_url)}
                   alt="cover"
                   className="w-6 h-8 object-cover border border-black"
-                  referrerPolicy="no-referrer"
-                />
+                  referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                 <div className="text-left">
                   <div className="truncate max-w-[130px]">{preset.title}</div>
                   <div className="text-[9px] text-neutral-400 font-normal">{pickLocalized(POPULAR_PRESET_TAGS[preset.mal_id], preset.tag)}</div>
@@ -237,8 +234,7 @@ export const SimilarAnimeFinder: React.FC = () => {
           src={getSafeImageUrl(selectedAnime.image_url)}
           alt={selectedAnime.title}
           className="w-24 h-32 md:w-28 md:h-36 object-cover border-4 border-black neo-shadow-white flex-shrink-0"
-          referrerPolicy="no-referrer"
-        />
+          referrerPolicy="no-referrer" loading="lazy" decoding="async" />
         <div className="flex-1 text-center sm:text-left space-y-2">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-black text-amber-400 text-[10px] font-black uppercase tracking-widest border border-amber-400">
             <CheckCircle2 size={12} />

@@ -273,8 +273,7 @@ export const SocialFeedSection: React.FC = () => {
                       src={getSafeImageUrl(selectedAnime.image_url)} 
                       alt={selectedAnime.title} 
                       className="w-7 h-10 object-cover border border-black flex-shrink-0"
-                      referrerPolicy="no-referrer"
-                    />
+                      referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                     <span className="font-black text-xs uppercase truncate text-black">{selectedAnime.title}</span>
                   </div>
                   <button 
@@ -317,8 +316,7 @@ export const SocialFeedSection: React.FC = () => {
                             src={getSafeImageUrl(item.images?.jpg?.image_url)}
                             alt={item.title}
                             className="w-6 h-8 object-cover border border-black flex-shrink-0"
-                            referrerPolicy="no-referrer"
-                          />
+                            referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                           <span className="text-xs font-black uppercase truncate">{item.title_english || item.title}</span>
                         </div>
                       ))}
@@ -460,8 +458,7 @@ export const SocialFeedSection: React.FC = () => {
                     <img
                       src={post.userAvatar || getDefaultAvatar(post.userAvatarSeed || 'Otaku')}
                       alt={post.userName}
-                      className="w-9 h-9 border-2 border-white object-cover bg-neutral-800"
-                    />
+                      className="w-9 h-9 border-2 border-white object-cover bg-neutral-800" loading="lazy" decoding="async" />
                     <div>
                       <h5 className="font-black text-xs uppercase text-white truncate max-w-[140px] leading-tight">
                         {post.userName}
@@ -489,8 +486,7 @@ export const SocialFeedSection: React.FC = () => {
                     src={getSafeImageUrl(post.animeImage)}
                     alt={post.animeTitle}
                     className="w-12 h-16 object-cover border border-white flex-shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
+                    referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   <div className="min-w-0 flex-1">
                     <span className="text-[9px] font-black uppercase text-amber-400 px-1.5 py-0.5 bg-neutral-900 border border-neutral-700 inline-block mb-1">
                       {post.episodeNote || t('social_feed_episode_update')}

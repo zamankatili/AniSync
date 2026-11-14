@@ -115,8 +115,7 @@ export const TodayAiringWidget: React.FC = () => {
                 src={getSafeImageUrl(anime.image)} 
                 alt={anime.title} 
                 className="w-12 h-16 object-cover border border-white/30 shrink-0 group-hover:scale-105 transition-transform" 
-                referrerPolicy="no-referrer"
-              />
+                referrerPolicy="no-referrer" loading="lazy" decoding="async" />
               <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <span className="text-[10px] font-black uppercase text-amber-400 flex items-center gap-1">
                   <Clock size={10} /> {anime.timeTR} {t('airing_timezone_suffix')}

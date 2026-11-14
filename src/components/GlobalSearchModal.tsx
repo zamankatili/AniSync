@@ -360,8 +360,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                                   item.kind === 'game' ? 'w-16 h-10' : 'w-12 h-16'
                                 )}
                                 referrerPolicy="no-referrer"
-                                onError={handleImageError}
-                              />
+                                onError={handleImageError} loading="lazy" decoding="async" />
 
                               <div className="min-w-0">
                                 <h4 lang="en" className="font-black text-sm uppercase text-white truncate">{title}</h4>

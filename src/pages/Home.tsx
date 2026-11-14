@@ -172,7 +172,7 @@ export const Home = () => {
             {/* Create Post (Twitter/X style) */}
             <div className="bg-black p-4 md:p-6 border-2 border-white/20 neo-shadow-white mb-8">
               <div className="flex gap-4">
-                <img src={resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed)} alt="Me" className="w-12 h-12 border-2 border-white bg-white shrink-0 grayscale hover:grayscale-0 transition-all" />
+                <img src={resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed)} alt="Me" className="w-12 h-12 border-2 border-white bg-white shrink-0 grayscale hover:grayscale-0 transition-all" loading="lazy" decoding="async" />
                 <form onSubmit={handlePost} className="flex-1">
                   <textarea 
                     ref={postInputRef}
@@ -183,10 +183,10 @@ export const Home = () => {
                   />
                   <div className="flex items-center justify-between pt-4 mt-2">
                     <div className="flex items-center gap-3">
-                      <button onClick={() => addToast(t('image_feature_soon'), 'info')} type="button" className="text-white hover:text-rose-500 transition-colors">
+                      <button onClick={() => addToast(t('image_feature_soon'), 'info')} type="button" aria-label={t('image_feature_soon')} className="text-white hover:text-rose-500 transition-colors">
                         <ImageIcon size={24} strokeWidth={2.5} />
                       </button>
-                      <button onClick={() => addToast(t('tag_feature_soon'), 'info')} type="button" className="text-white hover:text-rose-500 transition-colors">
+                      <button onClick={() => addToast(t('tag_feature_soon'), 'info')} type="button" aria-label={t('tag_feature_soon')} className="text-white hover:text-rose-500 transition-colors">
                         <SearchIcon size={24} strokeWidth={2.5} />
                       </button>
                     </div>
@@ -221,7 +221,7 @@ export const Home = () => {
                 <Sparkles size={20} className="text-white" strokeWidth={2.5} />
                 <span className="font-black tracking-widest text-white uppercase">{t('daily_pick')}{picksPersonalized ? ` · ${t('picks_personalized')}` : ''}</span>
               </div>
-              <h3 lang="en" className="text-3xl font-black text-white mb-2 uppercase tracking-tight relative z-10">{todayPick.title.english || todayPick.title.romaji || todayPick.displayTitle}</h3>
+              <h2 lang="en" className="text-3xl font-black text-white mb-2 uppercase tracking-tight relative z-10">{todayPick.title.english || todayPick.title.romaji || todayPick.displayTitle}</h2>
               <p lang="en" className="text-rose-100 font-bold mb-5 relative z-10 max-w-[90%] line-clamp-2">{todayPick.synopsis}</p>
               <div className="bg-black p-4 flex gap-4 border-2 border-white relative z-10 group">
                  <img src={getSafeImageUrl(todayPick.cover?.large ?? todayPick.cover?.medium)} alt={todayPick.displayTitle} className="w-20 h-28 object-cover border-2 border-white transition-all" referrerPolicy="no-referrer" />
@@ -306,9 +306,9 @@ export const Home = () => {
         {/* Recent Community Activity Widget */}
         <div className="bg-black p-6 border-2 border-white/30 neo-shadow-white relative overflow-hidden group">
           <div className="flex items-center justify-between mb-3 border-b-2 border-white/10 pb-3">
-            <h3 className="font-black text-white uppercase tracking-widest text-sm flex items-center gap-2">
+            <h2 className="font-black text-white uppercase tracking-widest text-sm flex items-center gap-2">
               <Activity size={18} className="text-amber-400" strokeWidth={2.5} /> {t('live_stream')}
-            </h3>
+            </h2>
             <span className="px-2 py-0.5 bg-red-600 text-white font-black text-[10px] uppercase tracking-wider flex items-center gap-1 border border-white">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> {t('live_badge')}
             </span>
@@ -327,9 +327,9 @@ export const Home = () => {
         {/* Daily Poll Widget */}
         {activePoll ? (
           <div className="bg-black p-6 border-2 border-white neo-shadow-white relative overflow-hidden group">
-            <h3 className="font-black text-white mb-2 flex items-center gap-2 relative z-10 uppercase tracking-widest text-lg">
+            <h2 className="font-black text-white mb-2 flex items-center gap-2 relative z-10 uppercase tracking-widest text-lg">
               <Flame size={24} strokeWidth={2.5} className="text-orange-500" /> {t('daily_poll')}
-            </h3>
+            </h2>
             <p className="font-bold text-neutral-400 mb-6 relative z-10 uppercase tracking-wider text-sm mt-3">
               {activePoll.question} <span className="text-orange-500">{activePoll.highlight}</span>{activePoll.questionEnd || ''} {t('decide')}
             </p>
@@ -342,9 +342,9 @@ export const Home = () => {
           </div>
         ) : (
           <div className="bg-black p-6 border-2 border-white/20 relative overflow-hidden">
-            <h3 className="font-black text-white mb-2 flex items-center gap-2 relative z-10 uppercase tracking-widest text-md">
+            <h2 className="font-black text-white mb-2 flex items-center gap-2 relative z-10 uppercase tracking-widest text-md">
               <Flame size={20} strokeWidth={2.5} className="text-neutral-500" /> {t('poll_empty_title')}
-            </h3>
+            </h2>
             <p className="text-sm text-neutral-400 font-bold mb-2 relative z-10 uppercase tracking-wider mt-3">
               {t('poll_empty_desc')}
             </p>
@@ -361,9 +361,9 @@ export const Home = () => {
                 <Music size={18} strokeWidth={2.5} />
               </div>
               <div>
-                <h3 className="font-black text-white text-sm uppercase tracking-wider">
+                <h2 className="font-black text-white text-sm uppercase tracking-wider">
                   {t('anime_music_quiz')}
-                </h3>
+                </h2>
                 <span className="text-[10px] text-amber-400 font-bold uppercase">
                   {t('quiz_sub')}
                 </span>
@@ -395,9 +395,9 @@ export const Home = () => {
                 <Tv2 size={18} strokeWidth={2.5} />
               </div>
               <div>
-                <h3 className="font-black text-white text-sm uppercase tracking-wider">
+                <h2 className="font-black text-white text-sm uppercase tracking-wider">
                   {t('watch_party_title')}
-                </h3>
+                </h2>
                 <span className="text-[10px] text-amber-400 font-bold uppercase flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                   {t('live_synced')}
@@ -435,9 +435,9 @@ export const Home = () => {
               {t('challenge_progress', { done: challengeProgress.completedCount, percent: challengeProgress.percent })}
             </span>
           </div>
-          <h3 className="font-black text-white text-sm uppercase tracking-wider mb-1">
+          <h2 className="font-black text-white text-sm uppercase tracking-wider mb-1">
             {t('challenge_title')}
-          </h3>
+          </h2>
           <p className="text-xs text-neutral-300 font-medium leading-relaxed mb-3">
             {t('challenge_desc', { xp: totalChallengeXp })}
           </p>
@@ -474,9 +474,9 @@ export const Home = () => {
               OTAKU DNA
             </span>
           </div>
-          <h3 className="font-black text-white text-sm uppercase tracking-wider mb-1">
+          <h2 className="font-black text-white text-sm uppercase tracking-wider mb-1">
             {t('taste_title')}
-          </h3>
+          </h2>
           <p className="text-xs text-neutral-300 font-medium leading-relaxed mb-4">
             {t('taste_desc')}
           </p>

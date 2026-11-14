@@ -208,7 +208,7 @@ export const MediaDetail = () => {
         <div className="relative">
           {media.banner ? (
             <div className="h-32 sm:h-48 w-full overflow-hidden border-b-2 border-white/20">
-              <img src={getSafeImageUrl(media.banner)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={handleImageError} />
+              <img src={getSafeImageUrl(media.banner)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={handleImageError} loading="lazy" decoding="async" />
             </div>
           ) : (
             <div
@@ -228,8 +228,7 @@ export const MediaDetail = () => {
                 media.kind === 'game' ? 'w-full sm:w-72 aspect-video' : 'w-40 sm:w-48 aspect-[2/3]'
               )}
               referrerPolicy="no-referrer"
-              onError={handleImageError}
-            />
+              onError={handleImageError} loading="lazy" decoding="async" />
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -320,7 +319,7 @@ export const MediaDetail = () => {
                   >
                     <div className="aspect-[2/3] w-full overflow-hidden border border-white/10 mb-2 bg-neutral-900">
                       {relation.cover ? (
-                        <img src={getSafeImageUrl(relation.cover)} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" referrerPolicy="no-referrer" onError={handleImageError} />
+                        <img src={getSafeImageUrl(relation.cover)} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" referrerPolicy="no-referrer" onError={handleImageError} loading="lazy" decoding="async" />
                       ) : null}
                     </div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-rose-400">{relation.relationType.replace(/_/g, ' ')}</p>

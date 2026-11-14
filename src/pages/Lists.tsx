@@ -81,8 +81,7 @@ const MiniAnimeList = ({ title, icon: Icon, spec, path }: { title: string; icon:
                   alt="cover" 
                   className="w-10 h-14 object-cover border-2 border-white" 
                   referrerPolicy="no-referrer" 
-                  onError={handleImageError}
-                />
+                  onError={handleImageError} loading="lazy" decoding="async" />
                 <div className="flex-1 min-w-0">
                   <h4 lang="en" className="font-black uppercase truncate text-sm">{anime.title}</h4>
                   <p className="text-[10px] uppercase font-bold text-neutral-400 group-hover:text-rose-200">
@@ -155,8 +154,7 @@ const MiniMangaList = ({ title, icon: Icon, kind }: { title: string; icon: any; 
                   alt="cover"
                   className="w-10 h-14 object-cover border-2 border-white"
                   referrerPolicy="no-referrer"
-                  onError={handleImageError}
-                />
+                  onError={handleImageError} loading="lazy" decoding="async" />
                 <div className="flex-1 min-w-0">
                   <h4 lang="en" className="font-black uppercase truncate text-sm">{item.displayTitle}</h4>
                   <p className="text-[10px] uppercase font-bold text-neutral-400 group-hover:text-cyan-100">
@@ -346,8 +344,7 @@ export const ListsPage = () => {
                                alt="cover" 
                                className="w-full h-full object-cover border-2 border-white/20 group-hover:border-white transition-colors" 
                                referrerPolicy="no-referrer" 
-                               onError={handleImageError}
-                             />
+                               onError={handleImageError} loading="lazy" decoding="async" />
                              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center pointer-events-none">
                                <span lang="en" className="text-[8px] font-black text-white uppercase">{anime.title}</span>
                              </div>

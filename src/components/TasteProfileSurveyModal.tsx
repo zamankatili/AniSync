@@ -381,8 +381,7 @@ export const TasteProfileSurveyModal: React.FC<TasteProfileSurveyModalProps> = (
                         <img 
                           src={rec.image} 
                           alt={rec.title} 
-                          className="w-12 h-16 object-cover border border-white shrink-0" 
-                        />
+                          className="w-12 h-16 object-cover border border-white shrink-0" loading="lazy" decoding="async" />
                         <div className="flex-1 min-w-0">
                           <h5 className="font-black text-xs uppercase truncate text-white">
                             {rec.title}

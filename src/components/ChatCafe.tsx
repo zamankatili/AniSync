@@ -220,8 +220,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                   src={resolveAvatar(currentUserAvatar ?? null, isSignedIn ? currentUserName : 'misafir')}
                   alt={currentUserName}
                   className="w-12 h-12 border-2 border-white bg-white shrink-0 object-cover"
-                  referrerPolicy="no-referrer"
-                />
+                  referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                 <textarea
                   value={composerText}
                   onChange={(e) => setComposerText(e.target.value)}
@@ -293,7 +292,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                       key={post.id}
                       className="relative bg-black border-2 border-white/20 hover:border-amber-400 transition-colors p-3 md:p-4 flex gap-3 group"
                     >
-                      <img src={avatar} alt={post.author?.name} className="w-11 h-11 border-2 border-white/40 bg-white/10 object-cover shrink-0" referrerPolicy="no-referrer" />
+                      <img src={avatar} alt={post.author?.name} className="w-11 h-11 border-2 border-white/40 bg-white/10 object-cover shrink-0" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span lang="en" className="font-black text-white text-[13px] uppercase tracking-tight">{post.author?.name ?? t('chat_cafe_anonymous')}</span>

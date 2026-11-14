@@ -442,8 +442,7 @@ export const AnimeGridMaker: React.FC = () => {
                           src={getSafeImageUrl(anime.image_url)} 
                           alt={anime.title} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          referrerPolicy="no-referrer"
-                        />
+                          referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                         {showTitlesOnCards && (
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-1.5 pt-4 text-center">
                             <p className="text-[10px] font-black text-white uppercase tracking-tight line-clamp-1">
@@ -677,8 +676,7 @@ export const AnimeGridMaker: React.FC = () => {
                             src={getSafeImageUrl(item.anime.images.webp?.image_url)} 
                             alt={item.anime.title} 
                             className="w-10 h-14 object-cover border border-white/20 shrink-0"
-                            referrerPolicy="no-referrer"
-                          />
+                            referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             <h4 className="text-xs font-black uppercase text-white truncate group-hover:text-amber-400">
                               {item.anime.title_english || item.anime.title}
@@ -717,8 +715,7 @@ export const AnimeGridMaker: React.FC = () => {
                                   src={getSafeImageUrl(anime.image_url)} 
                                   alt={anime.title} 
                                   className="w-8 h-12 object-cover border border-white/20 shrink-0"
-                                  referrerPolicy="no-referrer"
-                                />
+                                  referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                                   <h5 className="text-[11px] font-black uppercase text-white truncate group-hover:text-amber-400">
                                     {anime.title}
@@ -753,8 +750,7 @@ export const AnimeGridMaker: React.FC = () => {
                                 src={getSafeImageUrl(anime.image_url)} 
                                 alt={anime.title} 
                                 className="w-12 h-16 object-cover border-2 border-white/30 shrink-0 shadow"
-                                referrerPolicy="no-referrer"
-                              />
+                                referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                               <div className="flex-1 min-w-0 flex flex-col justify-center">
                                 <h4 className="text-xs font-black uppercase text-white truncate group-hover:text-amber-400">
                                   {anime.title}
@@ -783,8 +779,7 @@ export const AnimeGridMaker: React.FC = () => {
                           src={getSafeImageUrl(anime.image_url)} 
                           alt={anime.title} 
                           className="w-10 h-14 object-cover border border-white/20 shrink-0"
-                          referrerPolicy="no-referrer"
-                        />
+                          referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <h4 className="text-xs font-black uppercase text-white truncate group-hover:text-amber-400">
                             {anime.title}

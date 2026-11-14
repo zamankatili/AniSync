@@ -93,8 +93,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
           className={cn(
             "w-12 h-12 border-2 border-white bg-white shrink-0 object-cover grayscale group-hover/post:grayscale-0 transition-all",
             post.author.uid && "cursor-pointer hover:border-rose-500"
-          )} 
-        />
+          )} loading="lazy" decoding="async" />
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start mb-2 relative">
             <div className="flex items-center gap-2 flex-wrap">
@@ -176,7 +175,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
           {/* Attached Meme */}
           {post.type === 'meme_share' && post.memeUrl && (
             <div className="mt-2 mb-4 border-4 border-black bg-white p-2 neo-shadow-white relative group/meme">
-              <img src={post.memeUrl} alt="Meme" className="w-full h-auto max-h-[500px] object-contain" referrerPolicy="no-referrer" />
+              <img src={post.memeUrl} alt="Meme" className="w-full h-auto max-h-[500px] object-contain" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
               <div className="absolute top-4 left-4 bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-2 py-1 neo-shadow">
                 ANIME MEME
               </div>
@@ -189,7 +188,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
               onClick={() => navigate(`/anime/${post.animeRef!.id}`)}
               className="bg-white p-3 flex gap-4 mt-2 mb-4 border-2 border-black neo-shadow-white hover:bg-rose-600 transition-all cursor-pointer group/anime"
             >
-              <img src={getSafeImageUrl(post.animeRef.image)} alt={post.animeRef.title} className="w-16 h-24 object-cover border-2 border-black transition-all" referrerPolicy="no-referrer" />
+              <img src={getSafeImageUrl(post.animeRef.image)} alt={post.animeRef.title} className="w-16 h-24 object-cover border-2 border-black transition-all" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
               <div className="flex flex-col justify-center flex-1 min-w-0">
                 <div className="text-[10px] text-black font-black mb-1 uppercase tracking-widest border-b-2 border-black/20 pb-1">{t('about_anime')}</div>
                 <div className="font-black text-black mb-1 truncate text-lg uppercase tracking-tight leading-tight mt-1 group-hover/anime:text-white">{post.animeRef.title}</div>
@@ -208,7 +207,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
               <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
                 {post.listRef.animes.slice(0, 5).map(anime => ( // Sadece ilk 5 kalsın görüntü kirliliği olmasın
                   <div key={anime.id} className="relative overflow-hidden w-16 h-24 border-2 border-black bg-black">
-                    <img src={getSafeImageUrl(anime.image)} alt={anime.title} className="w-full h-full object-cover transition-all hover:scale-105" referrerPolicy="no-referrer" />
+                    <img src={getSafeImageUrl(anime.image)} alt={anime.title} className="w-full h-full object-cover transition-all hover:scale-105" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   </div>
                 ))}
               </div>
@@ -252,7 +251,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
                   {post.comments && post.comments.length > 0 ? (
                     post.comments.map(comment => (
                       <div key={comment.id} className="flex gap-4">
-                        <img src={comment.author.avatar} alt={comment.author.name} className="w-10 h-10 border-2 border-white shrink-0 object-cover grayscale" />
+                        <img src={comment.author.avatar} alt={comment.author.name} className="w-10 h-10 border-2 border-white shrink-0 object-cover grayscale" loading="lazy" decoding="async" />
                         <div className="flex-1 bg-black p-3 border-2 border-white/20">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-black text-white text-xs uppercase tracking-widest">{comment.author.name}</span>
@@ -278,7 +277,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({ post, index }) => {
                   }}
                   className="flex gap-4 items-center"
                 >
-                  <img src={resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed)} alt="Me" className="w-10 h-10 border-2 border-white bg-white shrink-0 object-cover grayscale" />
+                  <img src={resolveAvatar(currentUser?.photoURL, userProfile.avatarSeed)} alt="Me" className="w-10 h-10 border-2 border-white bg-white shrink-0 object-cover grayscale" loading="lazy" decoding="async" />
                   <input 
                     type="text" 
                     placeholder={t('reply_placeholder')}

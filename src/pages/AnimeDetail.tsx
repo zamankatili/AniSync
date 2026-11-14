@@ -190,8 +190,7 @@ export const AnimeDetail = () => {
                 alt={anime.title} 
                 className="w-full h-auto object-cover grayscale hover:grayscale-0 transition-all"
                 referrerPolicy="no-referrer"
-                onError={handleImageError}
-              />
+                onError={handleImageError} loading="lazy" decoding="async" />
             </motion.div>
             
             <div className="mt-8 flex flex-col gap-4">

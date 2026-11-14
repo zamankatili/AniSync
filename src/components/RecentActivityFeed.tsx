@@ -348,16 +348,14 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
                     src={getSafeImageUrl(act.animeImage)}
                     alt={act.animeTitle}
                     className="w-14 h-20 object-cover border-2 border-white shrink-0 group-hover:scale-105 transition-transform"
-                    referrerPolicy="no-referrer"
-                  />
+                    referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-1.5 mb-1">
                         <img
                           src={act.userAvatar || getDefaultAvatar(act.userAvatarSeed || act.userName)}
                           alt={act.userName}
-                          className="w-4 h-4 rounded-full border border-white/50 bg-white"
-                        />
+                          className="w-4 h-4 rounded-full border border-white/50 bg-white" loading="lazy" decoding="async" />
                         <span className="text-[10px] font-black text-neutral-300 truncate uppercase">{act.userName}</span>
                         <span className="text-[9px] text-neutral-500 font-bold ml-auto shrink-0 uppercase">
                           {formatRelativeTime(act.createdAt)}
@@ -612,8 +610,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
                           getDefaultAvatar(activity.userAvatarSeed || activity.userName)
                         }
                         alt={activity.userName}
-                        className="w-10 h-10 border-2 border-white bg-neutral-200 shrink-0 object-cover"
-                      />
+                        className="w-10 h-10 border-2 border-white bg-neutral-200 shrink-0 object-cover" loading="lazy" decoding="async" />
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-black text-white uppercase tracking-wider text-sm hover:text-amber-400 transition-colors">
@@ -646,8 +643,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
                         src={getSafeImageUrl(activity.animeImage)}
                         alt={activity.animeTitle}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-110"
-                        referrerPolicy="no-referrer"
-                      />
+                        referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                       <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                         <ExternalLink size={22} className="text-white drop-shadow-md" strokeWidth={2.5} />
                       </div>

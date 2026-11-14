@@ -370,8 +370,7 @@ export const MyList = () => {
                       alt={item.anime.title} 
                       className="w-full h-full object-cover transition-all" 
                       referrerPolicy="no-referrer" 
-                      onError={handleImageError}
-                    />
+                      onError={handleImageError} loading="lazy" decoding="async" />
                     
                     {/* Status badge on cover */}
                     <span className="absolute top-2 left-2 bg-black text-white px-2 py-0.5 text-[9px] font-black uppercase border border-white neo-shadow-white">

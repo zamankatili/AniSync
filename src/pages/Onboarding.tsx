@@ -275,8 +275,7 @@ export default function Onboarding() {
                         alt={media.displayTitle}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
-                        referrerPolicy="no-referrer"
-                      />
+                        referrerPolicy="no-referrer" decoding="async" />
                       {media.averageScore != null && (
                         <span className="absolute top-1 left-1 inline-flex items-center gap-0.5 bg-black/90 text-amber-400 text-[10px] font-black px-1.5 py-0.5 border border-white/40">
                           <Star size={10} fill="currentColor" /> {(media.averageScore / 10).toFixed(1)}

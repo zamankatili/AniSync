@@ -683,7 +683,7 @@ export const GlobalChat = () => {
                       <div key={item.key} className={cn("flex flex-col relative z-10", isMe ? "items-end" : "items-start")}>
                         {showHeader && (
                           <div className="flex items-center gap-1.5 mb-1 pl-1">
-                            <img src={msg.avatar || resolveAvatar(null, msg.uid === 'anon' ? `misafir-${msg.id}` : msg.name)} alt={msg.name} className="w-5 h-5 border border-white bg-white grayscale" />
+                            <img src={msg.avatar || resolveAvatar(null, msg.uid === 'anon' ? `misafir-${msg.id}` : msg.name)} alt={msg.name} className="w-5 h-5 border border-white bg-white grayscale" loading="lazy" decoding="async" />
                             <span className="text-[10px] text-neutral-300 font-black uppercase tracking-widest">{msg.name}</span>
                             {msg.isLocal && (
                               <span className="text-[8px] font-black uppercase px-1.5 py-0.5 border border-amber-400 text-amber-400 bg-amber-400/10">{t('chat_local_room_badge')}</span>
@@ -754,12 +754,14 @@ export const GlobalChat = () => {
                     value={newMessage}
                     onChange={e => setNewMessage(e.target.value)}
                     placeholder={t('chat_input_placeholder', { room: roomLabel(currentRoom) })}
+                    aria-label={t('chat_input_placeholder', { room: roomLabel(currentRoom) })}
                     maxLength={250}
                     className="flex-1 min-w-0 bg-black border-2 border-white/30 px-3 py-2.5 text-white font-bold uppercase tracking-wider text-xs focus:outline-none focus:border-rose-500 placeholder-neutral-600 transition-colors"
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim()}
+                    aria-label={t('send')}
                     className="bg-white text-black disabled:opacity-40 p-2.5 border-2 border-black hover:bg-amber-400 transition-colors flex items-center justify-center font-black neo-shadow-white shrink-0 cursor-pointer"
                   >
                     <Send size={16} strokeWidth={2.5} className="translate-x-[1px]" />

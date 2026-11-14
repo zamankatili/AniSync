@@ -382,8 +382,7 @@ export const MultiMediaHub: React.FC = () => {
                     src={getSafeImageUrl(mediaCover(item))}
                     alt={item.displayTitle}
                     className="w-16 h-24 object-cover border-2 border-white shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
+                    referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <span className={cn(
@@ -428,8 +427,7 @@ export const MultiMediaHub: React.FC = () => {
                         src={getSafeImageUrl(item.coverImage)}
                         alt={item.title}
                         className="w-20 h-28 object-cover border-2 border-white shrink-0"
-                        referrerPolicy="no-referrer"
-                      />
+                        referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                       <div className="flex-1 min-w-0">
                         <span className={cn(
                           "text-[9px] font-black uppercase px-2 py-0.5 border border-white inline-block mb-1",
@@ -526,8 +524,7 @@ export const MultiMediaHub: React.FC = () => {
                     src={getSafeImageUrl(mediaCover(game))}
                     alt={game.displayTitle}
                     className="w-20 h-16 object-cover border-2 border-white shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
+                    referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <h4 lang="en" className="font-black text-xs uppercase text-white line-clamp-2">{game.displayTitle}</h4>
@@ -565,8 +562,7 @@ export const MultiMediaHub: React.FC = () => {
                         src={getSafeImageUrl(game.coverImage)}
                         alt={game.title}
                         className="w-20 h-16 object-cover border-2 border-white shrink-0"
-                        referrerPolicy="no-referrer"
-                      />
+                        referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                       <div className="flex-1 min-w-0">
                         <span className="text-[9px] font-black uppercase px-2 py-0.5 border border-white bg-black text-cyan-400 inline-block mb-1">
                           {game.platform}
@@ -635,8 +631,7 @@ export const MultiMediaHub: React.FC = () => {
                     src={getSafeImageUrl(character.image ?? '')}
                     alt={character.name}
                     className="w-full aspect-[3/4] object-cover border-2 border-white mb-2"
-                    referrerPolicy="no-referrer"
-                  />
+                    referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   <h4 lang="en" className="font-black text-[11px] uppercase text-white line-clamp-1">{character.name}</h4>
                   <p lang="en" className="text-[9px] text-amber-400 font-bold uppercase line-clamp-1 mb-2">
                     {character.animeTitle ?? '—'}
@@ -672,8 +667,7 @@ export const MultiMediaHub: React.FC = () => {
                         src={getSafeImageUrl(character.image)}
                         alt={character.name}
                         className="w-18 h-24 object-cover border-2 border-white shrink-0"
-                        referrerPolicy="no-referrer"
-                      />
+                        referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                       <div className="min-w-0">
                         <h4 lang="en" className="font-black text-lg text-white uppercase tracking-tight line-clamp-2">{character.name}</h4>
                         <p lang="en" className="text-xs text-amber-400 font-bold uppercase line-clamp-1">{character.animeTitle}</p>

@@ -310,7 +310,7 @@ export const CommunityPulse: React.FC = () => {
                               : "bg-black border-white/20 text-neutral-300 hover:border-white"
                           )}
                         >
-                          <img src={getSafeImageUrl(anime.images.webp.image_url)} alt={anime.title} className="w-8 h-10 object-cover border border-white" />
+                          <img src={getSafeImageUrl(anime.images.webp.image_url)} alt={anime.title} className="w-8 h-10 object-cover border border-white" loading="lazy" decoding="async" />
                           <span className="text-xs truncate uppercase font-bold">{anime.title_english || anime.title}</span>
                         </div>
                       ))}
@@ -355,7 +355,7 @@ export const CommunityPulse: React.FC = () => {
                               : "bg-black border-white/20 text-neutral-300 hover:border-white"
                           )}
                         >
-                          <img src={getSafeImageUrl(anime.images.webp.image_url)} alt={anime.title} className="w-8 h-10 object-cover border border-white" />
+                          <img src={getSafeImageUrl(anime.images.webp.image_url)} alt={anime.title} className="w-8 h-10 object-cover border border-white" loading="lazy" decoding="async" />
                           <span className="text-xs truncate uppercase font-bold">{anime.title_english || anime.title}</span>
                         </div>
                       ))}

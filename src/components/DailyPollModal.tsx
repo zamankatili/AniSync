@@ -266,8 +266,7 @@ export const DailyPollModal: React.FC<DailyPollModalProps> = ({ isOpen, onClose 
                                  alt={option.label} 
                                  className="w-full h-full object-cover grayscale" 
                                  referrerPolicy="no-referrer"
-                                 onError={handleImageError} 
-                               />
+                                 onError={handleImageError} loading="lazy" decoding="async" />
                             </div>
                           )}
                           

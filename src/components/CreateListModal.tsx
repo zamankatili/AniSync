@@ -209,7 +209,7 @@ export const CreateListModal = ({ isOpen, onClose, onSuccess }: { isOpen: boolea
                         onClick={() => handleToggleAnime(anime)}
                         className={`relative aspect-[3/4] cursor-pointer group border-4 transition-all ${isSelected ? 'border-rose-500 scale-95' : 'border-transparent hover:border-black'}`}
                       >
-                        <img src={getSafeImageUrl(anime.images?.jpg?.image_url || anime.image_url)} alt="cover" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={getSafeImageUrl(anime.images?.jpg?.image_url || anime.image_url)} alt="cover" className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                         <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                           {isSelected ? <Trash2 size={32} className="text-rose-500" /> : <Plus size={32} className="text-white" />}
                         </div>

@@ -132,8 +132,7 @@ export const QuickContinueWatching: React.FC = () => {
                   src={getSafeImageUrl(item.anime.images.webp.image_url)} 
                   alt={item.anime.title} 
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                  referrerPolicy="no-referrer"
-                />
+                  referrerPolicy="no-referrer" loading="lazy" decoding="async" />
               </div>
 
               {/* Info & Progress */}

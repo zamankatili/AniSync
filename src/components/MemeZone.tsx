@@ -125,8 +125,7 @@ export const MemeZone = () => {
                 className="w-full h-auto" 
                 loading="lazy" 
                 referrerPolicy="no-referrer" 
-                onError={handleImageError}
-              />
+                onError={handleImageError} decoding="async" />
               
               <div className="absolute opacity-0 group-hover:opacity-100 inset-0 bg-black/60 transition-opacity flex flex-col items-center justify-center p-4 gap-4 backdrop-blur-sm">
                  <button 

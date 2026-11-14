@@ -189,7 +189,7 @@ export const Profile = () => {
         <div className="px-6 pb-8 md:px-10 md:pb-10 relative">
           <div className="flex flex-col md:flex-row gap-6 md:items-end -mt-16 md:-mt-20 mb-6">
             <div className="w-28 h-28 md:w-36 md:h-36 border-4 border-black overflow-hidden bg-white flex-shrink-0 relative z-10 transition-colors grayscale group-hover:grayscale-0">
-              <img src={resolveAvatar(isOwnProfile ? currentUser?.photoURL : (targetProfile as any)?.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full object-cover" />
+              <img src={resolveAvatar(isOwnProfile ? currentUser?.photoURL : (targetProfile as any)?.photoURL, userProfile.avatarSeed)} alt="Profile" className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
             <div className="flex-1 pb-2 md:pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -431,7 +431,7 @@ export const Profile = () => {
                    className="flex gap-4 border-b-2 border-white/20 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0 transition-colors cursor-pointer group/fav"
                  >
                    <div className="text-2xl font-black text-white/20 group-hover/fav:text-rose-500 transition-colors w-6 flex justify-start">{i + 1}</div>
-                   <img src={getSafeImageUrl(item.anime.images.webp.image_url)} className="w-14 h-20 object-cover border-2 border-white transition-all hover:scale-105" alt={item.anime.title} referrerPolicy="no-referrer" />
+                   <img src={getSafeImageUrl(item.anime.images.webp.image_url)} className="w-14 h-20 object-cover border-2 border-white transition-all hover:scale-105" alt={item.anime.title} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                    <div className="flex flex-col justify-center flex-1">
                      <span className="text-sm font-black text-white uppercase tracking-tight line-clamp-1 group-hover/fav:text-rose-500 transition-colors leading-tight mb-1">{item.anime.title_english || item.anime.title}</span>
                      <span className="text-xs text-neutral-400 font-bold uppercase tracking-wider">{item.anime.year || 'N/A'} • {t('score_label')} {item.userScore > 0 ? item.userScore : '-'}</span>

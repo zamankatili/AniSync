@@ -242,8 +242,7 @@ export const AIRecommendationsSection: React.FC = () => {
                   src={getSafeImageUrl(rec.imageUrl)}
                   alt={rec.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  referrerPolicy="no-referrer"
-                />
+                  referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                 <div className="absolute bottom-1 left-1 bg-black/90 text-amber-400 font-black text-[10px] px-1.5 py-0.5 border border-amber-400 flex items-center gap-1">
                   <Star size={11} fill="currentColor" /> {rec.score ?? '—'}
                 </div>

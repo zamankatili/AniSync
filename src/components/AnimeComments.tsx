@@ -102,7 +102,7 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
 
       {currentUser ? (
         <form onSubmit={handleSubmit} className="mb-8 flex gap-4 bg-white p-4 border-4 border-black neo-shadow">
-          <img src={resolveAvatar(currentUser.photoURL, userProfile?.avatarSeed)} alt="Me" className="w-12 h-12 border-2 border-black bg-neutral-200 shrink-0" />
+          <img src={resolveAvatar(currentUser.photoURL, userProfile?.avatarSeed)} alt="Me" className="w-12 h-12 border-2 border-black bg-neutral-200 shrink-0" loading="lazy" decoding="async" />
           <div className="flex-1 flex flex-col gap-3">
             <textarea
               value={newComment}
@@ -166,8 +166,7 @@ export const AnimeComments = ({ animeId }: { animeId: number }) => {
                 <img 
                   src={getDefaultAvatar(comment.userAvatarSeed)} 
                   alt={comment.userName} 
-                  className="w-12 h-12 border-2 border-black bg-neutral-200 shrink-0" 
-                />
+                  className="w-12 h-12 border-2 border-black bg-neutral-200 shrink-0" loading="lazy" decoding="async" />
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-2">
                     <div>

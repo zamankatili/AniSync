@@ -278,8 +278,7 @@ export const CreateNamedListModal: React.FC<CreateNamedListModalProps> = ({
                           src={getSafeImageUrl(item.anime.images.webp.image_url)}
                           alt={item.anime.title}
                           className="w-7 h-9 object-cover border border-black flex-shrink-0"
-                          referrerPolicy="no-referrer"
-                        />
+                          referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                         <div className="min-w-0 flex-1">
                           <p className="text-[11px] font-black uppercase truncate leading-tight">
                             {item.anime.title_english || item.anime.title}

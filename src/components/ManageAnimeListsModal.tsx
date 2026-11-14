@@ -78,8 +78,7 @@ export const ManageAnimeListsModal: React.FC<ManageAnimeListsModalProps> = ({
               src={getSafeImageUrl(anime.images?.webp?.large_image_url || anime.images?.jpg?.image_url)}
               alt={anime.title}
               className="w-10 h-14 object-cover border border-black"
-              referrerPolicy="no-referrer"
-            />
+              referrerPolicy="no-referrer" loading="lazy" decoding="async" />
             <div className="min-w-0 flex-1">
               <h4 className="font-black text-sm uppercase truncate text-black">
                 {anime.title_english || anime.title}
