@@ -10,16 +10,11 @@ Bu oturumda uygulamanın **performans yolu** (görseller, service worker, kod b�
 
 | Ölçüm | Önce (üretim) | Sonra (üretim) |
 |---|---|---|
-| Lighthouse Accessibility `/` | **0.87** | **1.00** |
-| Lighthouse Accessibility `/discover` | 0.93* | **1.00** |
-| Lighthouse Accessibility `/profile` | 1.00 | 1.00 |
-| Lighthouse Accessibility `/watch-party` | 1.00 | 1.00 |
-| Lighthouse Best Practices ×4 sayfa | 1.00 | 1.00 |
-| Lighthouse SEO ×4 sayfa | 1.00 | 1.00 |
+| Lighthouse Accessibility **21 rota** | 0.87–1.00 | **1.00 (hepsi)** |
+| Lighthouse Best Practices ×21 | 1.00 | 1.00 |
+| Lighthouse SEO ×21 | 0.8–1.00 | **1.00 (hepsi)** |
 | Lighthouse **Performance** | **ölçülemedi** | **ölçülemedi** |
 | Test | 202/202 | **204/204** |
-
-*Discover'daki tek hata: `SimilarAnimeFinder` canlı arama `submit` butonu erişilebilir ad eksikliği (`button-name`); input'a da aynı `similar_search_placeholder` adı verilerek kapatıldı.
 
 "Performance" kategorisi bu ortamdaki araç tarafından hiç raporlanmıyor (aşağıda "Bilinen Sınırlar" maddesine bak). Bu yüzden perf iyileştirmeleri *dolaylı ama ölçülebilir vekâletler* ile kanıtlanmıştır: bundle boyutları, lazy görsel oranı, SW cache stratejisi, ağ sayımı.
 
@@ -53,12 +48,21 @@ Bu oturumda uygulamanın **performans yolu** (görseller, service worker, kod b�
 - **0.94 (1. dalga sonrası)**: kalanlar → `color-contrast` (accent üstünde beyaz metin), `heading-order` (QuickContinueWatching başlığı).
 - **1.00 (2. dalga sonrası, `f1fb5cb` deploy'u, prod SW v3 canlı doğrulandı)**: **sıfır hata**.
 
-**Diğer taranan sayfalar (aynı gün, `f1fb5cb` + `90f63e4` deploy'ları):**
-- `/discover`: 0.93 → **1.00** (tek hata: `SimilarAnimeFinder` arama butonu).
-- `/profile`: **1.00** (hata yok).
-- `/watch-party`: **1.00** (hata yok).
+**Diğer taranan sayfalar (aynı gün):**
+- `/` 0.87 → **1.00**
+- `/discover` 0.93 → **1.00** (`SimilarAnimeFinder` submit butonu)
+- `/calendar` 0.87 → **1.00** (ikon-only `goToAnime` butonu `aria-label={anime.title}`; seçili gün hücresinde `neutral-400 → neutral-700` kontrast; `h1→h3` atlama düzeltmesi — section h2'ler, grid kart başlığı h3)
+- `/lore` 0.95 → **1.00** (`neutral-500 → neutral-400` küçük metinler)
+- `/dle` 0.94 → **1.00** (kilitli ipucu metni `neutral-600 → neutral-400`; `ChallengeInviteBox` h4 → h2)
+- `/challenge` 0.92 → **1.00** (`neutral-500 → neutral-400`; `ChallengeInviteBox` h4 → h2; rozet başlığı h4 → h2)
+- `/music-quiz` 0.95 → **1.00** (günlük açılım çipleri: sayı metni duruma göre `text-black/white`, `opacity-40 → border-white/10`)
+- `/voice-duel` 0.95 → **1.00** (`neutral-500 → neutral-400`)
+- `/text-adventure` 0.89 → **1.00** (`<dl>` yeniden yapılandırıldı: `progressbar` dl dışına alındı; `definition-list`/`dlitem` temizlendi; `neutral-500 → neutral-400`)
+- `/list` 0.98 → **1.00** (`MyListStatusDonutChart` h3 → h2, kart başlığı h4 → h3; MyList başlıkları h2/h3 hiyerarşisiyle h1 altına dizildi)
+- `/media/1` SEO 0.80 → **1.00** (detay sayfaları artık loading/error dallarında da `<PageMeta>` ile geçici açıklama basar — `MediaDetail` ve `AnimeDetail`)
+- `/profile`, `/watch-party`, `/lists`, `/scenes`, `/arcade`, `/anime-life-sim`, `/privacy`, `/terms`, `/guidelines`, `/grid-maker`, `/anime/1`: tarandı, hata yok — zaten **1.00**.
 
-Best Practices 1.00 ve SEO 1.00 — dört sayfada da.
+**Toplam: 21 rota × (a11y + BP + SEO) → hepsi 1.00.**
 
 > Not: Lighthouse skorları koşudan koşuya oynar; 0.87 → 0.94 → 1.00 tek koşuluk değerlerdir, "her zaman 1.00" iddiası değildir.
 
@@ -130,7 +134,7 @@ Yapı: `manualChunks` (react/firebase/motion/charts/i18n) + **22 rota `React.laz
 4. **SW cache monitörü**: storage kullanımını telemetriye logla (kota aşımı erken uyarısı).
 5. **XP anti-cheat**: Firebase Admin SDK sidecar'ı (`/api/award-xp`) — client'ın `users/{uid}.xpTotal`'a doğrudan yazmasını kapat; kurallarda `xpTotal` yaz-engeli.
 6. **Smoke testi genişlet**: üretim için sentetik akış (ev → filtre → XP kazan → `/scenes` modal → geri) — şu an elle doğrulandı, otomasyon yok.
-7. **Taranan kapsamı genişletme**: `/`, `/discover`, `/profile`, `/watch-party` → hepsi 1.00. Kalan sayfalar (`/lists`, `/airing-calendar`, `/lore`, `/scenes`, `/dle`, `/arcade`, oyun sayfaları) aynı taramadan geçmedi; öncelik ilk üçüne gitti.
+7. **Tarama kapsamı tamamlandı**: 21 rota × (a11y + BP + SEO) hepsi **1.00** (2026-11-14, deploy `cbd3a12`). Yine de bu axe-tarzı sezgisel bir taramadır; ekran okuyucuyla manuel görev testi yapılmadı ve dinamik alt sayfaların tamamı (örn. tüm `/anime/:id`) örneklemlendi.
 
 ---
 
@@ -143,5 +147,7 @@ Yapı: `manualChunks` (react/firebase/motion/charts/i18n) + **22 rota `React.laz
 | `f1fb5cb` | a11y: okunabilir mürekkep (accent), Home başlık sırası, `getReadableTextColor` + testler |
 | `90f63e4` | a11y: SimilarAnimeFinder canlı arama `submit` butonu erişilebilir ad (Discover 0.93 → 1.00) |
 | `e7fed2b` | docs: bu Z raporu |
+| `ca45526` | docs: Z raporu 4 sayfa a11y 1.00 senkronu |
+| `cbd3a12` | a11y: full-page pass — calendar/lore/challenge/DLE/music-quiz/voice-duel/text-adventure/MyList/`/media/*` ve `/anime/*` hata ve loading dallarına `<PageMeta>` fallback (21 rota × 3 kategori → 1.00) |
 
 **Durum: yayında.** Üretim SW `anisync-shell-v3` + a11y 1.00 doğrulandı (19:53Z deploy).
