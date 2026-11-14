@@ -2,6 +2,7 @@
 *Son güncelleme: 9 Kasım 2026. Bitenler SYSTEM_REVIEW_2026-11.md'de işaretli.*
 
 ## Bu oturumda tamamlananlar
+- [x] **Ölçüm + güvenlik paketi (14 Kasım)**: rıza kapılı GA4 (`VITE_GA4_ID`), tembel Sentry (`VITE_SENTRY_DSN`), App Check altyapısı (`VITE_RECAPTCHA_SITE_KEY`, enforcement kapalı), tüm `/api/*` uç noktalarında hız sınırı (Upstash varsa dağıtık, yoksa bellek içi) + `docs/observability.md`. Dönüşüm olayları: `signup`, `first_list_add`, `first_game_finish` (tarayıcı başına bir kez, rıza yoksa gönderilmez).
 - [x] **Varsayılan avatarlar → chibi anime**: DiceBear `avataaars` yerine yerel `public/avatars/chibi-01..08.svg` + `src/lib/avatar.ts` (`getDefaultAvatar` / `resolveAvatar`). İnternet gerektirmez, seed'e göre deterministik.
 - [x] **Veri motorları**: gün bazlı/sayfalı AniList yayın takvimi, `/api/anime-news` + ölü rss2json temizliği, güncel sezon trendleri, canlı manga/karakter/Steam keşfi.
 - [x] **ANISYNCDLE**: TR günü, rastgele antrenman, istatistik izolasyonu, takma ad/eşleşme, 4 dilli ipuçları.
