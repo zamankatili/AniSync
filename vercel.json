@@ -10,7 +10,7 @@
           "value": "(?i).*(twitterbot|facebookexternalhit|facebot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|pinterest|redditbot|skypeuripreview|vkshare|iframely|embedly|cardyb|bluesky).*"
         }
       ],
-      "destination": "/api/og/anime/:id"
+      "destination": "/api/og?kind=anime&id=:id"
     },
     {
       "source": "/media/:id",
@@ -21,7 +21,11 @@
           "value": "(?i).*(twitterbot|facebookexternalhit|facebot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|pinterest|redditbot|skypeuripreview|vkshare|iframely|embedly|cardyb|bluesky).*"
         }
       ],
-      "destination": "/api/og/media/:id"
+      "destination": "/api/og?kind=media&id=:id"
+    },
+    {
+      "source": "/api/games/:appid(\\d+)",
+      "destination": "/api/games/appid?appid=:appid"
     },
     {
       "source": "/(.*)",

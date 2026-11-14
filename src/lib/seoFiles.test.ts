@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   NOINDEX_EXACT,
@@ -94,15 +94,19 @@ describe('bot OG preview rewrites', () => {
     expect(catchAllIndex).toBe(vercel.rewrites.length - 1);
   });
 
-  for (const [route, destination] of [
-    ['/anime/:id', '/api/og/anime/:id'],
-    ['/media/:id', '/api/og/media/:id'],
+  for (const [route, kind] of [
+    ['/anime/:id', 'anime'],
+    ['/media/:id', 'media'],
   ] as const) {
-    it(`routes social bots on ${route} to ${destination} before the catch-all`, () => {
+    it(`routes social bots on ${route} to the static /api/og function`, () => {
       const index = vercel.rewrites.findIndex((rule) => rule.source === route);
       expect(index).toBeGreaterThanOrEqual(0);
       expect(index).toBeLessThan(catchAllIndex);
-      expect(vercel.rewrites[index].destination).toBe(destination);
+
+      const destination = vercel.rewrites[index].destination;
+      // Dinamik fonksiyon adları (`api/og/[kind]/[id].ts`) Next.js olmayan
+      // projelerde çalışmıyor; parametre query ile taşınmalı.
+      expect(destination).toBe(`/api/og?kind=${kind}&id=:id`);
 
       const agent = vercel.rewrites[index].has?.find(
         (condition) => condition.type === 'header' && condition.key === 'user-agent',
@@ -117,13 +121,40 @@ describe('bot OG preview rewrites', () => {
   }
 });
 
+/**
+ * Vercel, Next.js olmayan projelerde `api/**\/[param].ts` dosyalarını
+ * yönlendirmez; istek SPA catch-all'ına düşer (canlıda `/api/games/123`
+ * index.html döndürüyordu). Bu test gelecekte aynı tuzağa düşmeyi engeller.
+ */
+describe('Vercel function routing', () => {
+  const vercel = JSON.parse(read('vercel.json')) as {
+    rewrites: Array<{ source: string; destination: string }>;
+  };
+
+  it('never uses dynamic [param] file names under api/', () => {
+    const files = readdirSync(resolve(process.cwd(), 'api'), { recursive: true })
+      .map((entry) => String(entry).replace(/\\/g, '/'))
+      .filter((entry) => entry.endsWith('.ts'));
+    const dynamic = files.filter((file) => /\[[^\]]+\]/.test(file));
+    expect(dynamic, `dynamic Vercel function names are not routed: ${dynamic.join(', ')}`).toEqual([]);
+  });
+
+  it('routes /api/games/:appid to the static games function', () => {
+    const rule = vercel.rewrites.find((entry) => entry.source === '/api/games/:appid(\\d+)');
+    expect(rule, 'missing numeric Steam detail rewrite').toBeTruthy();
+    expect(rule!.destination).toBe('/api/games/appid?appid=:appid');
+    const catchAll = vercel.rewrites.findIndex((entry) => entry.source === '/(.*)');
+    expect(vercel.rewrites.indexOf(rule!)).toBeLessThan(catchAll);
+  });
+});
+
 describe('local server parity', () => {
   const server = read('server.ts');
 
   it('serves OG previews from the same renderer as the Vercel function', () => {
     expect(server).toContain('/api/og/:kind/:id');
     expect(server).toContain('renderOgPage');
-    expect(read('api/og/[kind]/[id].ts')).toContain('renderOgPage');
+    expect(read('api/og.ts')).toContain('renderOgPage');
   });
 
   it('generates /sitemap.xml from the shared route map instead of a stale copy', () => {

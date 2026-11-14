@@ -1,6 +1,11 @@
 /**
- * Vercel Serverless Function — Steam oyun detay proxy'si (`/api/games/:appid`).
+ * Vercel Serverless Function — Steam oyun detay proxy'si.
  * Yerelde `server.ts` aynı işi yapar.
+ *
+ * Not: dosya adı bilinçli olarak statik (`appid.ts`). Next.js olmayan
+ * projelerde Vercel `api/games/[appid].ts` gibi dinamik fonksiyon adlarını
+ * yönlendirmiyor; `/api/games/:appid` isteği `vercel.json` rewrite'ı ile
+ * buraya `?appid=` olarak gelir.
  */
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';

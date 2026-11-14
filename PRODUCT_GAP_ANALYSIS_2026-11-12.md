@@ -78,17 +78,18 @@ Bu turda üç P0 açığı kapatıldı: çift meta etiketi, kozmetik ban ve izsi
 
 | # | Boşluk | Çözüm | Dosya |
 |---|---|---|---|
-| 19 | Discord/X/WhatsApp/Telegram botları JS çalıştırmadığı için `/anime/:id` ve `/media/:id` paylaşımları hep **generic AniSync kartı** gösteriyordu. | Bot UA'ları `vercel.json`'da `/api/og/...` fonksiyonuna yönlendiriliyor; fonksiyon AniList (gerekirse Jikan yedeği) kaydını çözüp başlık, özet, kapak, canonical, OG/Twitter ve `og:locale` içeren **meta-only HTML** döndürüyor. Tüm değerler kaçışlanır; görsel yalnızca `https:`. Kayıt bulunamazsa dört dilli dürüst genel kart. | `api/og/[kind]/[id].ts`, `src/lib/ogMeta.ts`, `src/lib/ogRender.ts`, `vercel.json` |
-| 20 | Bot HTML'i aynı URL'de CDN'e düşerse tarayıcıya SPA yerine bot HTML'i servis edilebilirdi (cloaking/zehirlenme). | Tüm OG yanıtları `Cache-Control: no-store`, `Vary: User-Agent, Accept-Language`, `X-Robots-Tag: noindex, nofollow`; HTML içinde canonical + `noindex`. Yalnızca sosyal/önizleme botları eşlenir; Googlebot/Bingbot bilinçli olarak hariç. | `api/og/[kind]/[id].ts`, `vercel.json`, `src/lib/ogMeta.ts` |
+| 19 | Discord/X/WhatsApp/Telegram botları JS çalıştırmadığı için `/anime/:id` ve `/media/:id` paylaşımları hep **generic AniSync kartı** gösteriyordu. | Bot UA'ları `vercel.json`'da `/api/og` fonksiyonuna yönlendiriliyor; fonksiyon AniList (gerekirse Jikan yedeği) kaydını çözüp başlık, özet, kapak, canonical, OG/Twitter ve `og:locale` içeren **meta-only HTML** döndürüyor. Tüm değerler kaçışlanır; görsel yalnızca `https:`. Kayıt bulunamazsa dört dilli dürüst genel kart. | `api/og.ts`, `src/lib/ogMeta.ts`, `src/lib/ogRender.ts`, `vercel.json` |
+| 20 | Bot HTML'i aynı URL'de CDN'e düşerse tarayıcıya SPA yerine bot HTML'i servis edilebilirdi (cloaking/zehirlenme). | Tüm OG yanıtları `Cache-Control: no-store`, `Vary: User-Agent, Accept-Language`, `X-Robots-Tag: noindex, nofollow`; HTML içinde canonical + `noindex`. Yalnızca sosyal/önizleme botları eşlenir; Googlebot/Bingbot bilinçli olarak hariç. | `api/og.ts`, `vercel.json`, `src/lib/ogMeta.ts` |
 | 21 | Yerel `server.ts` içindeki dinamik `/sitemap.xml` üretimdeki statik dosyadan farklı 8 eski rota (`/list`, `/grid-maker`, `/watch-party`...) ve 30 anime URL'i döndürüyordu; `npm start` ile canlı arasında SEO farkı oluşuyordu. | Yerel rota artık `PUBLIC_SITEMAP_ROUTES`'tan üretiliyor; statik dosya, rota haritası ve yerel sunucu tek kaynak. Drift testi `PUBLIC_SITEMAP_ROUTES` kullanımını ve eski rotaların yokluğunu doğruluyor. | `server.ts`, `src/lib/seoRoutes.ts`, `src/lib/seoFiles.test.ts` |
+| 22 | **Canlıda gizli kırık uç nokta:** Vercel bu projede (Next.js değil) `api/games/[appid].ts` gibi dinamik fonksiyon adlarını yönlendirmiyor; `/api/games/123` SPA `index.html` döndürüyordu. Aynı tuzak ilk OG tasarımını da vurdu. | Dinamik dosya adları kaldırıldı: `api/games/appid.ts` + `vercel.json` rewrite `/api/games/:appid(\\d+)` → `?appid=:appid`; OG için tek `api/og.ts` + `?kind=&id=` rewrite'ı. Test, `api/` altında `[param]` dosya adı kalırsa kırılır. | `api/games/appid.ts`, `api/og.ts`, `vercel.json`, `src/lib/seoFiles.test.ts` |
 
 ### Bu turda doğrulananlar
 
 - `GET /api/og/anime/16498` → 200, `X-Og-Fallback: 0`, `<title>Attack on Titan - AniSync</title>`, doğru kapak ve canonical `/anime/16498`.
 - `GET /api/og/media/anilist:154587` (`Accept-Language: en`) → `Frieren: Beyond Journey's End`, `<html lang="en">`, `og:locale en_US`, canonical `/media/anilist:154587`.
 - `GET /api/og/anime/zzz` → 200, `X-Og-Fallback: 1`, genel İngilizce kart, canonical `/` (ölü bağlantı önizlemesi boş kalmıyor).
-- Birim testleri: 32 yeni test (27 OG biçimlendirme/çözümleme + 5 SEO drift: rewrite sırası, arama motoru botlarının hariç tutulması, yerel/uzak sitemap tek kaynağı).
-- Kapılar: `tsc` temiz, ESLint 0 hata, **17 dosya / 137 test**, üretim derlemesi başarılı.
+- Birim testleri: 34 yeni test (27 OG biçimlendirme/çözümleme + 7 SEO/Vercel yönlendirme: rewrite sırası, arama motoru botlarının hariç tutulması, yerel/uzak sitemap tek kaynağı, dinamik `api/[param]` dosya yasağı ve Steam detay rewrite'ı).
+- Kapılar: `tsc` temiz, ESLint 0 hata, **17 dosya / 139 test**, üretim derlemesi başarılı.
 
 ---
 
@@ -97,7 +98,7 @@ Bu turda üç P0 açığı kapatıldı: çift meta etiketi, kozmetik ban ve izsi
 | Kapı | Komut | Sonuç |
 |---|---|---|
 | TypeScript (strict) | `npx.cmd tsc --noEmit` | ✅ exit 0 |
-| Testler | `npm.cmd test -- --run` | ✅ **17 dosya / 137 test** |
+| Testler | `npm.cmd test -- --run` | ✅ **17 dosya / 139 test** |
 | Üretim derlemesi | `npm.cmd run build` | ✅ exit 0 (route-level code splitting korunuyor) |
 | ESLint | `npx.cmd eslint src --quiet` | ✅ 0 error (uyarılar önceden var olan stil uyarıları) |
 | Firestore kuralları | `firebase.cmd deploy --only firestore:rules --project folkloric-centaur-q6tp2` | ✅ derlendi ve yayınlandı (14 Kasım 2026) |
@@ -109,7 +110,7 @@ Yeni test dosyaları:
 - `src/data/fanLore.test.ts` — 24+ kayıt, kategori/kaynak/çeviri bütünlüğü, üç dilde arama, spoiler dağılımı.
 - `src/data/textAdventure.test.ts` — 7 test: dört dilde oda/eşya/son/ipucu bütünlüğü, tekil kimlikler, ulaşılabilir harita, eşyaların yerleşimi, fiil eşlemesi.
 - `src/lib/textAdventureEngine.test.ts` — 15 test: üç sona giden tam yürüyüş, karanlık arşiv, kilitli kapılar, yanlış kod, dört dilde komut, kaydet/yükle ve bozuk kayıt, ipucu kademeleri, durum değişmezliği.
-- `src/lib/seoFiles.test.ts` — 10 test: sitemap rota kümesi ve `lastmod`, özel/eski rotaların sitemap'e sızmaması, robots kuralları, kendi meta'sını yazan her sayfada `<PageMeta>` olması ve ikinci `<Helmet>` bulunmaması, bot OG rewrite'larının sırası ve arama motoru botlarını hedeflememesi, yerel `/sitemap.xml`'in ortak rota haritasından üretilmesi.
+- `src/lib/seoFiles.test.ts` — 12 test: sitemap rota kümesi ve `lastmod`, özel/eski rotaların sitemap'e sızmaması, robots kuralları, kendi meta'sını yazan her sayfada `<PageMeta>` olması ve ikinci `<Helmet>` bulunmaması, bot OG rewrite'larının sırası ve arama motoru botlarını hedeflememesi, yerel `/sitemap.xml`'in ortak rota haritasından üretilmesi, `api/` altında dinamik `[param]` dosya adı yasağı, Steam detay rewrite'ı.
 - `src/lib/ogMeta.test.ts` — 27 test: HTML kaçışı, kod noktası güvenli kırpma, `https:` görsel filtresi, `Accept-Language` seçimi, OG/Twitter etiketleri, `noindex` varsayılanı, `og:type` allowlist, MAL/AniList/Jikan kimlik çözümleme, canonical türetme, dört dilli fallback kart.
 
 Tarayıcı dumanı (localhost, TR):
@@ -119,7 +120,8 @@ Tarayıcı dumanı (localhost, TR):
 - KÖŞE paneli → oda sekmeleri ve besteci çiziliyor, konsol hatası yok.
 - `/text-adventure` → tam yürüyüş sona ulaşıyor (%100), son kartı ve "BAŞTAN BAŞLA" çalışıyor, kaydet/yükle turu doğrulandı; 390 ve 320 px genişlikte yatay taşma yok, çipler yatay kayıyor, odaklanınca komut alanı sabit çubukların üstüne geliyor; konsol hatası yok.
 - SEO tek kaynak turu (localhost, TR): `/anime/16498` tek canonical/description/og:title ve AoT başlığı; `/arcade`, `/lore`, `/text-adventure`, `/challenge`, `/dle` tek meta; `/profile` noindex; `/anisyncdle` → `/dle`.
-- Bot önizleme turu (localhost): `/api/og/anime/16498` doğru başlık/kapak/canonical; `/api/og/media/anilist:154587` + `Accept-Language: en` → İngilizce kart; geçersiz kimlik 200 + genel kart (`X-Og-Fallback: 1`); tüm yanıtlar `no-store` ve `noindex`.
+- Bot önizleme turu (localhost): `/api/og?kind=anime&id=16498` ve yol tabanlı `/api/og/anime/16498` doğru başlık/kapak/canonical; `/api/og/media/anilist:154587` + `Accept-Language: fr` → Fransızca kart; geçersiz kimlik 200 + genel kart (`X-Og-Fallback: 1`); tüm yanıtlar `no-store` ve `noindex`.
+- Vercel fonksiyon yönlendirmesi: canlıda `/api/games/123` ve `/api/og/...` SPA `index.html` döndürüyordu; dinamik dosya adları yerine statik fonksiyon + rewrite'a geçildi. `/api/games/search` statik dosya olduğu için etkilenmedi (canlıda JSON doğrulandı).
 
 ---
 
@@ -168,7 +170,8 @@ Tarayıcı dumanı (localhost, TR):
 - Locale dosyaları aynı anahtar kümesini korumalı; anahtar tekrarı TS1117 verir; BOM'suz UTF-8.
 - Yeni UI metni eklerken büyük locale dosyalarını düzenlemek yerine `i18nProductPass.ts`'e eklemek daha güvenli.
 - Yeni sayfa rotası eklerken `src/lib/seoRoutes.ts` + `public/sitemap.xml` birlikte güncellenmeli; `seoFiles.test.ts` aksi halde kırılır. Sayfa kendi meta'sını yazıyorsa `<PageMeta>` kullan ve rotayı `SELF_MANAGED_EXACT`/`PREFIXES`'e ekle.
-- Bot önizlemeleri `vercel.json` rewrite + `api/og/[kind]/[id].ts` + `src/lib/ogMeta.ts` ile üretilir. Yeni bir dinamik rotayı kapsama almak için rewrite ekle ve `ogRender.parseOgTarget`'a kimlik çözümünü yaz; OG çıktısı **asla** CDN'de önbelleklenmemeli (`no-store` + `Vary`), aksi hâlde bot HTML'i tarayıcıya düşer. Arama motoru botlarını (Googlebot/Bingbot) bu rewrite'lara dahil etme.
+- Bot önizlemeleri `vercel.json` rewrite + `api/og.ts` + `src/lib/ogMeta.ts` ile üretilir. Yeni bir dinamik rotayı kapsama almak için rewrite ekle ve `ogRender.parseOgTarget`'a kimlik çözümünü yaz; OG çıktısı **asla** CDN'de önbelleklenmemeli (`no-store` + `Vary`), aksi hâlde bot HTML'i tarayıcıya düşer. Arama motoru botlarını (Googlebot/Bingbot) bu rewrite'lara dahil etme.
+- Vercel fonksiyon dosya adları **statik** olmalı: bu proje Next.js değil, `api/foo/[id].ts` yönlendirilmiyor (istek SPA'ya düşer). Parametreyi `vercel.json` rewrite'ı ile query'ye taşı (`/api/games/:appid(\\d+)` → `/api/games/appid?appid=:appid`). `seoFiles.test.ts` dinamik dosya adı kalırsa kırılır.
 - `firestore.rules` değişiklikleri **elle** dağıtılmalı: `firebase.cmd deploy --only firestore:rules --project folkloric-centaur-q6tp2`. `FIREBASE_TOKEN` yoksa GitHub `deploy-rules.yml` düşer; 14 Kasım 2026 itibarıyla ban/rol/rapor korumaları bu komutla canlıya alındı.
 - Ban yalnızca topluluk yazılarını keser (`canWrite`); kişisel watchlist/liste ve KVKK veri talebi açık kalır. Ban bandı `users/{uid}` canlı dinleyicisinden beslenir.
 - Life Sim olay kimlikleri dünya öneklerine uymalı; `universePaths.test.ts` ve `eventEngine.test.ts` bunu zorlar.
