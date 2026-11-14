@@ -318,7 +318,7 @@ export const AiringCalendar: React.FC = () => {
 
               <span className="text-xs uppercase tracking-wider mt-1">{t(`day_${day.key}`)}</span>
               <span className="text-xl font-black mt-0.5">{dayCounts[day.key] || 0}</span>
-              <span className="text-[10px] text-neutral-400 font-bold uppercase">{t('cal_anime_unit')}</span>
+              <span className={isSelected ? "text-[10px] text-neutral-700 font-bold uppercase" : "text-[10px] text-neutral-400 font-bold uppercase"}>{t('cal_anime_unit')}</span>
             </button>
           );
         })}
@@ -330,9 +330,9 @@ export const AiringCalendar: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 bg-black border-2 border-white/20 p-4 neo-shadow-white">
             <div className="flex items-center gap-3">
               <Clock size={18} className="text-amber-400" strokeWidth={2.5} />
-              <span className="text-sm font-black text-white uppercase tracking-wider">
+              <h2 className="text-sm font-black text-white uppercase tracking-wider">
                 {t('cal_day_episodes', { day: t(`day_${selectedDay}`) })}
-              </span>
+              </h2>
             </div>
 
             <div className="flex items-center gap-3">
@@ -369,13 +369,13 @@ export const AiringCalendar: React.FC = () => {
           {dayAnimeList.length === 0 ? (
             <div className="p-16 text-center bg-black border-4 border-white/20 neo-shadow-white">
               <Tv size={48} className="mx-auto text-neutral-600 mb-4" strokeWidth={2} />
-              <h3 className="text-xl font-black text-white uppercase tracking-tight">
+              <h2 className="text-xl font-black text-white uppercase tracking-tight">
                 {onlyReminders
                   ? t('cal_empty_reminders_title')
                   : onlyMyWatchlist 
                     ? t('cal_empty_list_title') 
                     : t('cal_empty_title')}
-              </h3>
+              </h2>
               <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider mt-2 max-w-md mx-auto">
                 {onlyReminders || onlyMyWatchlist
                   ? t('cal_empty_filter_desc') 
@@ -557,6 +557,7 @@ export const AiringCalendar: React.FC = () => {
 
                           <button
                             onClick={() => goToAnime(anime)}
+                            aria-label={anime.title}
                             className="text-xs font-black uppercase text-neutral-400 hover:text-white flex items-center gap-1 transition-colors ml-1 cursor-pointer"
                           >
                             <ExternalLink size={12} />
@@ -588,12 +589,12 @@ export const AiringCalendar: React.FC = () => {
                 {/* Day Section Title */}
                 <div className="flex items-center justify-between border-b-2 border-white/20 pb-3">
                   <div className="flex items-center gap-3">
-                    <span className={cn(
+                    <h2 className={cn(
                       "px-3 py-1 font-black text-sm uppercase tracking-wider border border-black",
                       isToday ? "bg-amber-400 text-black" : "bg-white text-black"
                     )}>
                       {t(`day_${dayObj.key}`)}
-                    </span>
+                    </h2>
                     {isToday && (
                       <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 border border-white uppercase animate-pulse">
                         {t('cal_today_broadcasts')}
@@ -634,9 +635,9 @@ export const AiringCalendar: React.FC = () => {
                                   <span>{t('airing_episode', { episode: anime.currentEpisode })}</span>
                                 )}
                               </div>
-                              <h4 lang="en" className="font-black text-xs text-white uppercase line-clamp-2 leading-tight group-hover:text-amber-400 transition-colors">
+                              <h3 lang="en" className="font-black text-xs text-white uppercase line-clamp-2 leading-tight group-hover:text-amber-400 transition-colors">
                                 {anime.title_english || anime.title}
-                              </h4>
+                              </h3>
                             </div>
 
                             <div className="pt-2 flex items-center justify-between">

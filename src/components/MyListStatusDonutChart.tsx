@@ -171,9 +171,9 @@ export const MyListStatusDonutChart: React.FC<MyListStatusDonutChartProps> = ({
             <PieChartIcon size={14} />
             {t('mylist_chart_title')}
           </div>
-          <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">
+          <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">
             {t('mylist_chart_subtitle')}
-          </h3>
+          </h2>
           <p className="text-neutral-400 font-bold text-xs uppercase tracking-wider mt-1">
             {t('mylist_chart_desc')}
           </p>
@@ -330,7 +330,7 @@ export const MyListStatusDonutChart: React.FC<MyListStatusDonutChartProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-4 border border-black" style={{ backgroundColor: activeStat.color }} />
-                  <h4 className="text-xl font-black text-white uppercase tracking-tight">{activeStat.name}</h4>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight">{activeStat.name}</h3>
                 </div>
                 <p className="text-xs text-neutral-300 font-bold leading-relaxed">
                   {activeStat.description}

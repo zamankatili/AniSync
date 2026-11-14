@@ -277,9 +277,9 @@ export const MyList = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">
                       {activeCustomList.name}
-                    </h3>
+                    </h2>
                     {activeCustomList.isDefault && (
                       <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-neutral-800 text-neutral-300 border border-white/30">
                         {t('default_badge')}
@@ -323,9 +323,9 @@ export const MyList = () => {
           <div className="w-20 h-20 border-4 border-black bg-black flex items-center justify-center mb-6 neo-shadow-white">
             <ListIcon size={32} className="text-white" strokeWidth={3} />
           </div>
-          <h3 className="text-3xl font-black text-black uppercase tracking-tighter">
+          <h2 className="text-3xl font-black text-black uppercase tracking-tighter">
             {filterMode === 'status' ? t('looks_empty') : t('custom_list_empty', { name: activeCustomList?.name })}
-          </h3>
+          </h2>
           <p className="text-black font-bold uppercase tracking-widest mt-4 max-w-md">
             {filterMode === 'status' 
               ? t('add_from_discover') 
@@ -380,9 +380,9 @@ export const MyList = () => {
                   
                   <div className={cn("flex-1 p-4 flex flex-col justify-between bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-white", viewMode === 'grid' && "p-4")}>
                     <div>
-                      <h4 className="font-black text-black text-base line-clamp-1 uppercase tracking-tight" title={item.anime.title_english || item.anime.title}>
+                      <h3 className="font-black text-black text-base line-clamp-1 uppercase tracking-tight" title={item.anime.title_english || item.anime.title}>
                         {item.anime.title_english || item.anime.title}
-                      </h4>
+                      </h3>
                       
                       {viewMode === 'list' && (
                         <p className="text-xs font-bold text-black/70 mt-1 line-clamp-2 uppercase tracking-wide leading-relaxed">{item.anime.synopsis}</p>

@@ -482,10 +482,23 @@ export const MusicQuiz: React.FC = () => {
                               : "bg-red-600 border-red-500"
                           : isUnlocked
                             ? "bg-neutral-800 border-white/50"
-                            : "bg-neutral-950 border-white/20 opacity-40"
+                            : "bg-neutral-950 border-white/10"
                       )}
                     >
-                      <span className="text-[8px] font-black text-black absolute inset-0 flex items-center justify-center">
+                      <span
+                        className={cn(
+                          "text-[8px] font-black absolute inset-0 flex items-center justify-center",
+                          isPassed
+                            ? guess?.correct
+                              ? "text-black"
+                              : guess?.skipped
+                                ? "text-black"
+                                : "text-white"
+                            : isUnlocked
+                              ? "text-white"
+                              : "text-neutral-400",
+                        )}
+                      >
                         {sec}s
                       </span>
                     </div>

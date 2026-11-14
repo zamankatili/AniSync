@@ -85,9 +85,9 @@ export const ChallengeInviteBox: React.FC<ChallengeInviteBoxProps> = ({
           <Swords size={24} />
         </div>
         <div>
-          <h4 className="text-base font-black text-white uppercase tracking-tight">
+          <h2 className="text-base font-black text-white uppercase tracking-tight">
             {t('challenge_box_title')}
-          </h4>
+          </h2>
           <p className="text-xs text-neutral-400 font-medium mt-0.5">
             {t('challenge_box_desc')}
           </p>

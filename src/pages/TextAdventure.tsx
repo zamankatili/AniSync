@@ -223,7 +223,7 @@ export const TextAdventure = () => {
           <p className="mt-4 text-sm md:text-base font-bold text-neutral-300 max-w-2xl leading-snug">
             {t('ta_desc')}
           </p>
-          <p className="mt-2 text-[10px] md:text-[11px] font-mono uppercase tracking-wide text-neutral-500 max-w-2xl leading-relaxed">
+          <p className="mt-2 text-[10px] md:text-[11px] font-mono uppercase tracking-wide text-neutral-400 max-w-2xl leading-relaxed">
             {t('ta_notice')}
           </p>
         </header>
@@ -292,7 +292,7 @@ export const TextAdventure = () => {
               </div>
 
               <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
-                <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-neutral-500">
+                <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-neutral-400">
                   {t('ta_quick_commands')}
                 </span>
                 {TA_QUICK_COMMANDS.map((chip) => (
@@ -308,7 +308,7 @@ export const TextAdventure = () => {
               </div>
 
               <div className="mt-1 flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
-                <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-neutral-500">
+                <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-neutral-400">
                   {t('ta_go_to')}
                 </span>
                 {directions.map(([direction, label]) => (
@@ -363,30 +363,28 @@ export const TextAdventure = () => {
               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">{t('ta_status')}</h2>
               <dl className="mt-2 space-y-1.5 font-mono text-[11px]">
                 <div className="flex items-baseline justify-between gap-2">
-                  <dt className="text-neutral-500 uppercase">{t('ta_room')}</dt>
+                  <dt className="text-neutral-400 uppercase">{t('ta_room')}</dt>
                   <dd className="text-right font-bold text-white truncate">{roomName(game.roomId, lang)}</dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-2">
-                  <dt className="text-neutral-500 uppercase">{t('ta_moves')}</dt>
+                  <dt className="text-neutral-400 uppercase">{t('ta_moves')}</dt>
                   <dd className="font-bold text-white">{game.moves}</dd>
                 </div>
-                <div className="pt-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <dt className="text-neutral-500 uppercase">{t('ta_progress')}</dt>
-                    <dd className="font-bold text-emerald-300">{progress}%</dd>
-                  </div>
-                  <div
-                    className="mt-1 h-2 bg-white/10 border border-white/20"
-                    role="progressbar"
-                    aria-valuenow={progress}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={t('ta_progress')}
-                  >
-                    <div className="h-full bg-emerald-400 transition-all" style={{ width: `${progress}%` }} />
-                  </div>
+                <div className="flex items-baseline justify-between gap-2">
+                  <dt className="text-neutral-400 uppercase">{t('ta_progress')}</dt>
+                  <dd className="font-bold text-emerald-300">{progress}%</dd>
                 </div>
               </dl>
+              <div
+                className="mt-1 h-2 bg-white/10 border border-white/20"
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={t('ta_progress')}
+              >
+                <div className="h-full bg-emerald-400 transition-all" style={{ width: `${progress}%` }} />
+              </div>
             </div>
 
             <div className="border-2 border-white/40 bg-neutral-950 p-3">
@@ -394,7 +392,7 @@ export const TextAdventure = () => {
                 <PackageOpen size={13} /> {t('ta_inventory')}
               </h2>
               {game.inventory.length === 0 ? (
-                <p className="mt-2 text-[11px] text-neutral-500">{t('ta_inventory_empty')}</p>
+                <p className="mt-2 text-[11px] text-neutral-400">{t('ta_inventory_empty')}</p>
               ) : (
                 <ul className="mt-2 space-y-1 font-mono text-[11px] text-neutral-200">
                   {game.inventory.map((id) => (
@@ -428,7 +426,7 @@ export const TextAdventure = () => {
               <h2 className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
                 <Lightbulb size={13} /> {t('ta_hints')}
               </h2>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-neutral-500">{t('ta_hint_note')}</p>
+              <p className="mt-1.5 text-[10px] leading-relaxed text-neutral-400">{t('ta_hint_note')}</p>
               <button
                 type="button"
                 onClick={() => runFromButton('hint')}

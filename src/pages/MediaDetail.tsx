@@ -140,7 +140,9 @@ export const MediaDetail = () => {
 
   if (error || !media) {
     return (
-      <div className="max-w-2xl mx-auto my-12 bg-black border-2 border-white/20 neo-shadow p-8 text-center">
+      <>
+        <PageMeta title={t('seo_default_title')} description={t('seo_default_desc')} />
+        <div className="max-w-2xl mx-auto my-12 bg-black border-2 border-white/20 neo-shadow p-8 text-center">
         <h1 className="text-2xl font-black uppercase tracking-tight mb-2">{t('media_not_found')}</h1>
         <p className="text-sm text-neutral-400 font-bold mb-6">{t('try_again_later')}</p>
         <button
@@ -150,7 +152,8 @@ export const MediaDetail = () => {
         >
           <ArrowLeft size={16} /> {t('go_back')}
         </button>
-      </div>
+        </div>
+      </>
     );
   }
 

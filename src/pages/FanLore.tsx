@@ -95,7 +95,7 @@ export const FanLore = () => {
           <p className="mt-4 text-sm md:text-base font-bold text-neutral-300 max-w-2xl leading-snug">
             {t('lore_desc')}
           </p>
-          <p className="mt-3 text-[10px] md:text-[11px] font-mono uppercase tracking-wide text-neutral-500 max-w-2xl leading-relaxed">
+          <p className="mt-3 text-[10px] md:text-[11px] font-mono uppercase tracking-wide text-neutral-400 max-w-2xl leading-relaxed">
             {t('lore_curated_notice')}
           </p>
         </div>
@@ -104,7 +104,7 @@ export const FanLore = () => {
         <div className="mt-5 border-4 border-white bg-neutral-950 p-3 md:p-4">
           <div className="flex flex-col md:flex-row gap-2 md:items-center">
             <div className="relative flex-1">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="search"
                 value={query}
@@ -160,7 +160,7 @@ export const FanLore = () => {
                 </button>
               );
             })}
-            <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-neutral-500">
+            <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-neutral-400">
               {t('lore_result_count', { count: entries.length })}
             </span>
             <button
@@ -230,7 +230,7 @@ export const FanLore = () => {
                   )}
 
                   <div className="mt-auto pt-2 border-t-2 border-white/10 flex items-center gap-2 flex-wrap">
-                    <span className="text-[9px] font-mono uppercase tracking-wider text-neutral-500">
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-neutral-400">
                       {t('lore_source_label')}: {entry.sourceLabel}
                     </span>
                     <a
@@ -245,7 +245,7 @@ export const FanLore = () => {
                       <button
                         type="button"
                         onClick={() => toggleReveal(entry.id)}
-                        className="text-[9px] font-black uppercase tracking-wider text-neutral-500 hover:text-rose-400"
+                        className="text-[9px] font-black uppercase tracking-wider text-neutral-400 hover:text-rose-400"
                       >
                         {t('lore_hide_answer')}
                       </button>
@@ -263,7 +263,7 @@ export const FanLore = () => {
             <Sparkles size={18} className="text-amber-400" />
             <div>
               <h2 className="font-serif font-black text-2xl uppercase leading-none">{t('lore_news_title')}</h2>
-              <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mt-1">{t('lore_news_desc')}</p>
+              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-1">{t('lore_news_desc')}</p>
             </div>
           </div>
           <AnimeNewsFeed />

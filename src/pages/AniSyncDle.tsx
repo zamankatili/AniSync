@@ -431,7 +431,7 @@ export const AniSyncDle: React.FC = () => {
                 "p-2 border transition-all",
                 guesses.length >= hint1At || isGameOver
                   ? "bg-neutral-900 border-white/40 text-white"
-                  : "bg-neutral-950 border-white/10 text-neutral-600"
+                  : "bg-neutral-950 border-white/10 text-neutral-400"
               )}>
                 <span className="text-neutral-400 uppercase block text-[10px] mb-0.5">{t('anisyncdle_hint_1_label')}</span>
                 <span>{guesses.length >= hint1At || isGameOver ? hints[0] : t('anisyncdle_hint_1_locked')}</span>
@@ -442,7 +442,7 @@ export const AniSyncDle: React.FC = () => {
                 "p-2 border transition-all",
                 guesses.length >= hint2At || isGameOver
                   ? "bg-neutral-900 border-white/40 text-white"
-                  : "bg-neutral-950 border-white/10 text-neutral-600"
+                  : "bg-neutral-950 border-white/10 text-neutral-400"
               )}>
                 <span className="text-neutral-400 uppercase block text-[10px] mb-0.5">{t('anisyncdle_hint_2_label')}</span>
                 <span>{guesses.length >= hint2At || isGameOver ? hints[1] : t('anisyncdle_hint_2_locked')}</span>

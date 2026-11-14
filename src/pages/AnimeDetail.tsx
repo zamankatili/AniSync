@@ -113,13 +113,16 @@ export const AnimeDetail = () => {
 
   if (!anime) {
     return (
-      <div className="max-w-4xl mx-auto my-12">
+      <>
+        <PageMeta title={t('seo_default_title')} description={t('seo_default_desc')} />
+        <div className="max-w-4xl mx-auto my-12">
         <AnimeErrorCard
           code="NOT_FOUND"
           onRetry={() => { if (id) loadAnime(parseInt(id)); }}
           onUseFallback={() => navigate('/discover')}
         />
-      </div>
+        </div>
+      </>
     );
   }
 

@@ -228,7 +228,7 @@ export const VoiceDuel = () => {
 
             {/* Mod seçimi */}
             <div className="mt-6">
-              <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-neutral-500 mb-2">{t('voice_duel_modes')}</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-neutral-400 mb-2">{t('voice_duel_modes')}</p>
               <div className="grid sm:grid-cols-2 gap-3">
                 {(['voice', 'hint'] as DuelMode[]).map((m) => {
                   const meta = modeMeta[m];
@@ -261,7 +261,7 @@ export const VoiceDuel = () => {
                         {meta.desc}
                       </p>
                       {bestScores[m] > 0 && (
-                        <p className={cn('mt-2 font-mono text-[9px] uppercase tracking-wider', active ? 'text-black/70' : 'text-neutral-500')}>
+                        <p className={cn('mt-2 font-mono text-[9px] uppercase tracking-wider', active ? 'text-black/70' : 'text-neutral-400')}>
                           <Trophy size={10} className="inline" /> {t('voice_duel_best_score', { score: bestScores[m].toLocaleString() })}
                         </p>
                       )}
@@ -287,7 +287,7 @@ export const VoiceDuel = () => {
             </button>
 
             {bestScores.voice === 0 && bestScores.hint === 0 && (
-              <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+              <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-neutral-400">
                 <Trophy size={12} className="inline" /> {t('voice_duel_best_score', { score: '0' })}
               </p>
             )}
@@ -360,9 +360,9 @@ export const VoiceDuel = () => {
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">{t('voice_duel_time')}</span><span className={cn('font-serif font-bold text-2xl tabular-nums', timeLeft <= 10 ? 'text-rose-500' : 'text-white')}>{formatTime(timeLeft)}</span></div>
-          <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">{t('voice_duel_score')}</span><span className="font-serif font-bold text-2xl tabular-nums text-amber-400">{score.toLocaleString()}</span></div>
-          {streak > 1 && <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-500">{t('voice_duel_streak')}</span><span className="font-serif font-bold text-2xl text-emerald-400">×{streak}</span></div>}
+          <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-400">{t('voice_duel_time')}</span><span className={cn('font-serif font-bold text-2xl tabular-nums', timeLeft <= 10 ? 'text-rose-500' : 'text-white')}>{formatTime(timeLeft)}</span></div>
+          <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-400">{t('voice_duel_score')}</span><span className="font-serif font-bold text-2xl tabular-nums text-amber-400">{score.toLocaleString()}</span></div>
+          {streak > 1 && <div className="text-center"><span className="block font-mono text-[8px] uppercase text-neutral-400">{t('voice_duel_streak')}</span><span className="font-serif font-bold text-2xl text-emerald-400">×{streak}</span></div>}
         </div>
       </div>
 
@@ -396,14 +396,14 @@ export const VoiceDuel = () => {
                 <p className="text-sm md:text-base font-bold leading-relaxed text-neutral-100 max-w-md">
                   {currentItem.hint[lang] || currentItem.hint.en}
                 </p>
-                <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-neutral-500">
+                <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-neutral-400">
                   {selected === null ? t('voice_duel_who') : `${t('voice_duel_series_label')}: ${currentItem.series}`}
                 </span>
               </div>
             )}
 
             <div className="flex items-center justify-between gap-3">
-              <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">
+              <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">
                 {currentItem.kind === 'voice' ? t('voice_duel_source') : t('voice_duel_hint_scoring')}
               </span>
               {currentItem.kind === 'voice' && (

@@ -159,30 +159,30 @@ export const WeeklyChallengePage: React.FC = () => {
           {/* Stats Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-neutral-950 border-2 border-white/30 p-4">
             <div>
-              <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{t('weekly_page_stat_solved')}</div>
+              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{t('weekly_page_stat_solved')}</div>
               <div className="text-xl md:text-2xl font-black text-white font-mono mt-0.5">
-                {overall.completedCount} <span className="text-xs text-neutral-500">{t('weekly_page_of_50_percent', { percent: overall.percent })}</span>
+                {overall.completedCount} <span className="text-xs text-neutral-400">{t('weekly_page_of_50_percent', { percent: overall.percent })}</span>
               </div>
             </div>
 
             <div>
-              <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{t('weekly_page_stat_streak')}</div>
+              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{t('weekly_page_stat_streak')}</div>
               <div className="text-xl md:text-2xl font-black text-orange-400 font-mono mt-0.5 flex items-center gap-1">
                 <Flame size={20} className="fill-orange-400" /> {t('weekly_page_days_count', { count: streakDays })}
               </div>
             </div>
 
             <div>
-              <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{t('weekly_page_stat_xp')}</div>
+              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{t('weekly_page_stat_xp')}</div>
               <div className="text-xl md:text-2xl font-black text-amber-400 font-mono mt-0.5">
                 +{totalChallengeXp} XP
               </div>
             </div>
 
             <div>
-              <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{t('weekly_page_stat_stages')}</div>
+              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{t('weekly_page_stat_stages')}</div>
               <div className="text-xl md:text-2xl font-black text-emerald-400 font-mono mt-0.5">
-                {overall.completedDaysCount} <span className="text-xs text-neutral-500">{t('weekly_page_of_8_stages')}</span>
+                {overall.completedDaysCount} <span className="text-xs text-neutral-400">{t('weekly_page_of_8_stages')}</span>
               </div>
             </div>
           </div>
@@ -500,9 +500,9 @@ export const WeeklyChallengePage: React.FC = () => {
                 <span className="text-3xl shrink-0">{badge.icon}</span>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="font-black text-sm text-white uppercase tracking-wider">
+                    <h2 className="font-black text-sm text-white uppercase tracking-wider">
                       {localizeWeeklyBadgeTitle(badge.id, badge.title)}
-                    </h4>
+                    </h2>
                   </div>
                   <p className="text-xs text-neutral-400 mt-1 font-medium leading-relaxed">
                     {localizeWeeklyBadgeDescription(badge.id, badge.description)}
@@ -513,7 +513,7 @@ export const WeeklyChallengePage: React.FC = () => {
                         <Check size={11} strokeWidth={3} /> {t('completed')}
                       </span>
                     ) : (
-                      <span className="text-neutral-500">{t('weekly_page_locked')}</span>
+                      <span className="text-neutral-400">{t('weekly_page_locked')}</span>
                     )}
                   </div>
                 </div>
