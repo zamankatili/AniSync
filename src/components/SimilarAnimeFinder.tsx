@@ -118,12 +118,14 @@ export const SimilarAnimeFinder: React.FC = () => {
             <input
               type="text"
               placeholder={t('similar_search_placeholder')}
+              aria-label={t('similar_search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-neutral-900 border-2 border-white/40 pl-4 pr-10 py-3 text-white font-black text-xs uppercase placeholder-neutral-500 focus:outline-none focus:border-amber-400 transition-colors"
             />
             <button
               type="submit"
+              aria-label={t('similar_search_placeholder')}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-amber-400 text-black hover:bg-white transition-colors"
             >
               <Search size={16} strokeWidth={3} />
