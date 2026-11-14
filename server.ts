@@ -3,6 +3,9 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { ingestAnimeNews } from "./src/lib/rssIngest";
 import { handleTranslate, handleAiRecommendations, handleModerateRoom } from "./src/lib/geminiEndpoints";
+import { pickLocaleFromHeader } from "./src/lib/ogMeta";
+import { renderOgPage } from "./src/lib/ogRender";
+import { PUBLIC_SITEMAP_ROUTES, SITE_BASE_URL } from "./src/lib/seoRoutes";
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -299,54 +302,34 @@ async function startServer() {
     }
   });
 
-  // Dynamic sitemap.xml endpoint for SEO indexing
+  // Sosyal bot önizlemeleri — Vercel'de `vercel.json` bota özel rewrite yapar;
+  // yerelde aynı davranışı doğrudan uç noktayla sağlıyoruz.
+  app.get("/api/og/:kind/:id", async (req, res) => {
+    const locale = pickLocaleFromHeader(req.headers["accept-language"]);
+    const result = await renderOgPage(String(req.params.kind), String(req.params.id), locale);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store, max-age=0");
+    res.setHeader("Vary", "User-Agent, Accept-Language");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.setHeader("X-Og-Fallback", result.found ? "0" : "1");
+    res.send(result.html);
+  });
+
+  // Sitemap — tek kaynak `src/lib/seoRoutes.ts`. Üretimde `public/sitemap.xml`
+  // statik olarak servis edilir; testler iki listenin aynı kaldığını doğrular.
   app.get("/sitemap.xml", (req, res) => {
     const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
-    const host = req.headers.host ? `${protocol}://${req.headers.host}` : "https://anisync.app";
-    const today = new Date().toISOString().split("T")[0];
+    const host = req.headers.host ? `${protocol}://${req.headers.host}` : SITE_BASE_URL;
 
-    const staticRoutes = [
-      { path: "", priority: "1.0", changefreq: "daily" },
-      { path: "/discover", priority: "0.9", changefreq: "daily" },
-      { path: "/list", priority: "0.8", changefreq: "daily" },
-      { path: "/lists", priority: "0.7", changefreq: "weekly" },
-      { path: "/calendar", priority: "0.8", changefreq: "daily" },
-      { path: "/grid-maker", priority: "0.7", changefreq: "weekly" },
-      { path: "/music-quiz", priority: "0.8", changefreq: "weekly" },
-      { path: "/watch-party", priority: "0.8", changefreq: "daily" },
-    ];
+    const urls = PUBLIC_SITEMAP_ROUTES.map(
+      (route) =>
+        `  <url>\n    <loc>${host}${route.path}</loc>\n    <lastmod>${route.lastmod}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`,
+    ).join("\n");
 
-    const popularAnimeIds = [
-      52991, 52299, 40748, 54492, 51179, 16498, 38000, 21, 20, 9253, 11061, 
-      32182, 1535, 5114, 41467, 37521, 50265, 42310, 44511, 47917, 52034,
-      30276, 31964, 33486, 34572, 38524, 40028, 48583, 50631, 51009, 52578
-    ];
-
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-
-    staticRoutes.forEach((route) => {
-      xml += `  <url>\n`;
-      xml += `    <loc>${host}${route.path}</loc>\n`;
-      xml += `    <lastmod>${today}</lastmod>\n`;
-      xml += `    <changefreq>${route.changefreq}</changefreq>\n`;
-      xml += `    <priority>${route.priority}</priority>\n`;
-      xml += `  </url>\n`;
-    });
-
-    popularAnimeIds.forEach((id) => {
-      xml += `  <url>\n`;
-      xml += `    <loc>${host}/anime/${id}</loc>\n`;
-      xml += `    <lastmod>${today}</lastmod>\n`;
-      xml += `    <changefreq>weekly</changefreq>\n`;
-      xml += `    <priority>0.8</priority>\n`;
-      xml += `  </url>\n`;
-    });
-
-    xml += `</urlset>`;
-
-    res.header("Content-Type", "application/xml");
-    res.send(xml);
+    res.header("Content-Type", "application/xml; charset=utf-8");
+    res.send(
+      `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`,
+    );
   });
 
   // Vite middleware for development

@@ -73,3 +73,63 @@ describe('SEO route map', () => {
     }
   });
 });
+
+/**
+ * Sosyal botlar JS çalıştırmadığı için `/anime/:id` ve `/media/:id` ham HTML'i
+ * genel kart gösteriyordu. Bu testler bot rewrite'larının doğru sırada
+ * olduğunu ve arama motoru botlarına dokunmadığını garanti eder.
+ */
+describe('bot OG preview rewrites', () => {
+  const vercel = JSON.parse(read('vercel.json')) as {
+    rewrites: Array<{
+      source: string;
+      destination: string;
+      has?: Array<{ type: string; key: string; value: string }>;
+    }>;
+  };
+
+  const catchAllIndex = vercel.rewrites.findIndex((rule) => rule.source === '/(.*)');
+
+  it('keeps the SPA catch-all last', () => {
+    expect(catchAllIndex).toBe(vercel.rewrites.length - 1);
+  });
+
+  for (const [route, destination] of [
+    ['/anime/:id', '/api/og/anime/:id'],
+    ['/media/:id', '/api/og/media/:id'],
+  ] as const) {
+    it(`routes social bots on ${route} to ${destination} before the catch-all`, () => {
+      const index = vercel.rewrites.findIndex((rule) => rule.source === route);
+      expect(index).toBeGreaterThanOrEqual(0);
+      expect(index).toBeLessThan(catchAllIndex);
+      expect(vercel.rewrites[index].destination).toBe(destination);
+
+      const agent = vercel.rewrites[index].has?.find(
+        (condition) => condition.type === 'header' && condition.key === 'user-agent',
+      );
+      expect(agent, `${route} must only match crawler user-agents`).toBeTruthy();
+      expect(agent!.value).toMatch(/twitterbot/i);
+      expect(agent!.value).toMatch(/discordbot/i);
+      // Arama motorları JS render eder; onlara farklı HTML servis etmek
+      // cloaking tartışmasına girer. Yalnızca önizleme botları hedeflenir.
+      expect(agent!.value).not.toMatch(/googlebot|bingbot|yandex|baiduspider/i);
+    });
+  }
+});
+
+describe('local server parity', () => {
+  const server = read('server.ts');
+
+  it('serves OG previews from the same renderer as the Vercel function', () => {
+    expect(server).toContain('/api/og/:kind/:id');
+    expect(server).toContain('renderOgPage');
+    expect(read('api/og/[kind]/[id].ts')).toContain('renderOgPage');
+  });
+
+  it('generates /sitemap.xml from the shared route map instead of a stale copy', () => {
+    expect(server).toContain('PUBLIC_SITEMAP_ROUTES');
+    expect(server).not.toContain('/grid-maker');
+    expect(server).not.toContain('/watch-party');
+    expect(server).toContain('app.get("/sitemap.xml"');
+  });
+});
