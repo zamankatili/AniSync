@@ -8,6 +8,7 @@ import { useAppTranslation } from '../hooks/useAppTranslation';
 import { scoreFor, getRound } from '../data/voiceDuelData';
 import { getCharacterRound, type CharacterDifficulty } from '../data/characterGuessData';
 import type { Lang4 } from '../data/universePaths';
+import { trackConversionOnce } from '../lib/analytics';
 
 const BEST_SCORE_KEY: Record<DuelMode, string> = {
   voice: 'anisync_voice_duel_best',
@@ -117,6 +118,11 @@ export const VoiceDuel = () => {
     const final = scoreRef.current;
     setIsNewRecord(final > bestBeforeRef.current && final > 0);
     setStage('finished');
+    trackConversionOnce('first_game_finish', 'first_game_finish', {
+      surface: 'voice_duel',
+      mode,
+      count: final,
+    });
     setBestScores((prev) => {
       if (final <= prev[mode]) return prev;
       try {

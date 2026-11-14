@@ -5,6 +5,7 @@ import { useDailyPoll } from '../hooks/useDailyPoll';
 import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, getAdditionalUserInfo } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { resolveAvatar } from '../lib/avatar';
+import { trackConversionOnce } from '../lib/analytics';
 
 
 interface AppState {
@@ -253,6 +254,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const credential = await signInWithPopup(auth, googleProvider);
       if (getAdditionalUserInfo(credential)?.isNewUser) {
         markOnboardingPending();
+        trackConversionOnce('signup', 'signup', { surface: 'google' });
       }
     } catch (error) {
       const code = (error as { code?: string })?.code ?? '';
@@ -285,7 +287,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     getRedirectResult(auth)
       .then((credential) => {
         if (!alive || !credential) return;
-        if (getAdditionalUserInfo(credential)?.isNewUser) markOnboardingPending();
+        if (getAdditionalUserInfo(credential)?.isNewUser) {
+          markOnboardingPending();
+          trackConversionOnce('signup', 'signup', { surface: 'google_redirect' });
+        }
       })
       .catch((error) => {
         console.warn('Google redirect result could not be completed:', error);
@@ -309,6 +314,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const credential = await createUserWithEmailAndPassword(auth, email, pass);
       if (getAdditionalUserInfo(credential)?.isNewUser) {
         markOnboardingPending();
+        trackConversionOnce('signup', 'signup', { surface: 'email' });
       }
     } catch (error) {
       console.error("Email register failed:", error);
@@ -477,16 +483,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addToWatchlist = async (anime: Anime, status: WatchStatus) => {
+    // Aktivasyon: bu tarayıcıdaki ilk liste kaydı (rıza varsa) bir kez ölçülür.
+    const isFirstListEntry = watchlist.length === 0;
     if (!currentUser) {
       // Misafirler için yalnızca yerel kayıt (topluluk akışına sahte kayıt yazılmaz)
       setWatchlist(prev => {
         if (prev.some(item => item.anime.mal_id === anime.mal_id)) return prev;
         return [...prev, { anime, status, userScore: 0, episodesWatched: 0, addedAt: new Date().toISOString() }];
       });
+      if (isFirstListEntry) {
+        trackConversionOnce('first_list_add', 'first_list_add', { surface: 'guest' });
+      }
       return;
     }
     const item: WatchlistItem = { anime, status, userScore: 0, episodesWatched: 0, addedAt: new Date().toISOString() };
     await setDoc(doc(db, `users/${currentUser.uid}/watchlist`, anime.mal_id.toString()), item);
+
+    if (isFirstListEntry) {
+      trackConversionOnce('first_list_add', 'first_list_add', { surface: 'account' });
+    }
 
     try {
       await addDoc(collection(db, 'recentActivities'), {

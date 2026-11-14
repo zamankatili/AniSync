@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { trackConversionOnce } from '../lib/analytics';
 
 const STATS_KEY = 'anisyncdle_stats_v1';
 const TODAY_STATE_KEY = 'anisyncdle_today_v2';
@@ -172,6 +173,11 @@ export const AniSyncDle: React.FC = () => {
     if (matchesCharacter(character, cleaned)) {
       setIsCorrect(true);
       setIsGameOver(true);
+      trackConversionOnce('first_game_finish', 'first_game_finish', {
+        surface: 'anisyncdle',
+        mode: gameMode,
+        result: true,
+      });
       addToast(t('anisyncdle_correct_toast', { name: character.name }), 'success');
 
       if (gameMode === 'daily') {
@@ -183,6 +189,11 @@ export const AniSyncDle: React.FC = () => {
 
     if (newGuesses.length >= maxAttempts) {
       setIsGameOver(true);
+      trackConversionOnce('first_game_finish', 'first_game_finish', {
+        surface: 'anisyncdle',
+        mode: gameMode,
+        result: false,
+      });
       addToast(
         t('anisyncdle_out_of_attempts_toast', { name: character.name, series: character.series }),
         'error',

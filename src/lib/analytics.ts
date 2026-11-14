@@ -164,6 +164,39 @@ export function trackEvent(
   return true;
 }
 
+/**
+ * Dönüşüm olayını tarayıcı başına bir kez gönderir.
+ *
+ * Aktivasyon hunisi için kullanılır (kayıt, ilk liste, ilk oyun bitirme).
+ * Ölçüm rızası yoksa hiçbir şey işaretlenmez; rıza sonradan verilirse
+ * dönüşüm bir sonraki tetiklemede kaydedilir. Bu, `localStorage` temizlenirse
+ * yeniden sayılabileceği anlamına gelir — dürüst sınır: tarayıcı bazlı.
+ */
+export function trackConversionOnce(
+  key: string,
+  name: string,
+  params: Record<string, unknown> = {},
+): boolean {
+  if (!/^[a-z0-9_]{2,32}$/.test(key)) return false;
+  const storage = safeStorage();
+  const storageKey = `anisync_conv_${key}`;
+  try {
+    if (storage?.getItem(storageKey) === '1') return false;
+  } catch {
+    // Depolama okunamıyorsa gönderimi engelleme; en fazla bir kez fazla sayılır.
+  }
+
+  const sent = trackEvent(name, params);
+  if (sent) {
+    try {
+      storage?.setItem(storageKey, '1');
+    } catch {
+      // Depolama kapalıysa dönüşüm yine de gönderildi.
+    }
+  }
+  return sent;
+}
+
 /** Olay adı allowlist'i — geçersizse `null`. */
 export function sanitizeEventName(name: string): string | null {
   const value = String(name ?? '').trim();

@@ -24,6 +24,7 @@ import { useToastStore } from '../store/useToastStore';
 import { MemorialBoardModal } from '../components/MemorialBoardModal';
 import { exportLifeCode, importLifeCode, collectSavedLifePayload, applyLifePayload } from '../lib/lifeTransfer';
 import { playBirth, playChoiceMade, playMemorial, playNextEvent, playUiTap } from '../lib/gentleAudio';
+import { trackConversionOnce } from '../lib/analytics';
 import { useSoundStore } from '../store/useSoundStore';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -182,6 +183,7 @@ export const AnimeLifeSim: React.FC = () => {
     if (!life) return;
     if (currentEventIndex >= life.events.length - 1) {
       setPhase('memorial');
+      trackConversionOnce('first_game_finish', 'first_game_finish', { surface: 'life_sim' });
       playMemorial();
       return;
     }

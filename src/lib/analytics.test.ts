@@ -6,6 +6,7 @@ import {
   sanitizeAnalyticsPath,
   sanitizeEventName,
   sanitizeEventParams,
+  trackConversionOnce,
   trackEvent,
   trackPageView,
 } from './analytics';
@@ -63,5 +64,17 @@ describe('analytics', () => {
     for (const key of Object.keys(params)) {
       expect(ALLOWED_EVENT_PARAMS).toContain(key);
     }
+  });
+
+  it('never sends conversions while measurement is disabled', () => {
+    // GA4 kimliği tanımsız: dönüşüm ne gönderilir ne de işaretlenir.
+    expect(trackConversionOnce('signup', 'signup', { surface: 'email' })).toBe(false);
+    expect(trackConversionOnce('first_game_finish', 'first_game_finish', { surface: 'voice_duel' })).toBe(false);
+  });
+
+  it('rejects unsafe conversion keys', () => {
+    expect(trackConversionOnce('Signup', 'signup')).toBe(false);
+    expect(trackConversionOnce('a', 'signup')).toBe(false);
+    expect(trackConversionOnce('../etc', 'signup')).toBe(false);
   });
 });

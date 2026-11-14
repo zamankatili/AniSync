@@ -28,6 +28,7 @@ import {
   type AdventureState,
 } from '../lib/textAdventureEngine';
 import { playMemorial, playUiTap } from '../lib/gentleAudio';
+import { trackConversionOnce } from '../lib/analytics';
 
 type LogKind = AdventureLineKind | 'command';
 
@@ -157,8 +158,12 @@ export const TextAdventure = () => {
     setInput('');
     setHasSave(hasStoredSave());
 
-    if (result.state.ending && !before.ending) playMemorial();
-    else playUiTap();
+    if (result.state.ending && !before.ending) {
+      trackConversionOnce('first_game_finish', 'first_game_finish', {
+        surface: 'text_adventure',
+      });
+      playMemorial();
+    } else playUiTap();
   };
 
   const runFromButton = (command: string) => {

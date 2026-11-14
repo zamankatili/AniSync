@@ -34,6 +34,21 @@ KVKK/GDPR gereği analitik çerezler açık rıza ister. Bu yüzden:
   result, source, count`. 40 karakterden uzun değerler düşürülür (PII riski).
 - E-posta, uid, arama terimi, mesaj içeriği **asla** gönderilmez.
 
+### Dönüşüm olayları
+Aktivasyon hunisi için üç olay **tarayıcı başına bir kez** gönderilir
+(`trackConversionOnce`, `localStorage: anisync_conv_*`):
+
+| Olay | Nerede | Parametreler |
+| --- | --- | --- |
+| `signup` | Google (popup + redirect) ve e-posta kaydı | `surface: google / google_redirect / email` |
+| `first_list_add` | İlk kez listeye anime ekleme (misafir veya hesap) | `surface: guest / account` |
+| `first_game_finish` | Voice Duel, AniSyncDLE, Life Sim sonu, Text Adventure sonu | `surface`, `mode`, `result`, `count` |
+
+Rıza verilmeden dönüşüm **gönderilmez ve işaretlenmez**; kullanıcı sonradan
+kabul ederse bir sonraki tetiklemede kaydedilir. Sınır: `localStorage`
+temizlenirse aynı tarayıcıda yeniden sayılabilir; sunucu tarafı tekilleştirme
+kullanıcı hesabı gerektirir (Admin SDK ile yapılacak).
+
 ### Kurulum
 1. GA4'te bir Web data stream oluştur, `G-XXXXXXXXXX` ölçüm kimliğini al.
 2. Vercel → Project → Settings → Environment Variables:
@@ -139,8 +154,10 @@ döner; limit aşımında `429` + `Retry-After`.
 
 ## 5. Hâlâ yapılmayanlar (dürüst backlog)
 
-1. **GA4 dönüşüm olayları** tanımlı değil: kayıt, ilk liste ekleme, ilk oyun
-   bitirme. Olay altyapısı hazır; ürün tarafında çağrı eklenmeli.
+1. **Dönüşüm olayları** artık gönderiliyor (`signup`, `first_list_add`,
+   `first_game_finish`) ama yalnızca tarayıcı bazlı tekilleştirme var; aynı
+   hesabın ikinci cihazı ayrı sayılır. GA4 arayüzünde bu olayların "conversion"
+   olarak işaretlenmesi ve huni raporunun kurulması henüz yapılmadı.
 2. **Sentry source map yüklemesi** yok. Minified stack trace okunur ama satır
    numarası eşleşmez. `@sentry/vite-plugin` + `SENTRY_AUTH_TOKEN` gerekir.
 3. **App Check enforcement** açılmadı (yukarıdaki sıra tamamlanmadı).
