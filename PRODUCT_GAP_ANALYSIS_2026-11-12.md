@@ -82,6 +82,7 @@ Bu turda üç P0 açığı kapatıldı: çift meta etiketi, kozmetik ban ve izsi
 | Testler | `npm.cmd test -- --run` | ✅ **16 dosya / 105 test** |
 | Üretim derlemesi | `npm.cmd run build` | ✅ exit 0 (route-level code splitting korunuyor) |
 | ESLint | `npx.cmd eslint src --quiet` | ✅ 0 error (uyarılar önceden var olan stil uyarıları) |
+| Firestore kuralları | `firebase.cmd deploy --only firestore:rules --project folkloric-centaur-q6tp2` | ✅ derlendi ve yayınlandı (14 Kasım 2026) |
 
 Yeni test dosyaları:
 
@@ -110,7 +111,7 @@ Tarayıcı dumanı (localhost, TR):
 2. **Native arka plan bildirimi yok.** `@capacitor/local-notifications` kurulu değil; Capacitor WebView'de Web Notification çoğu cihazda çalışmaz. Arayüz bunu açıkça söylüyor, sessiz başarısızlık yok — ama gerçek çözüm eklenti entegrasyonu.
 3. **Gemini kapalı.** Sağlanan anahtar 402 (ön ödeme kredisi bitti). `GEMINI_API_KEY` Vercel'de bilinçli olarak yok; öneri/moderasyon fail-closed ve arayüz "AI çevrimdışı — editör seçkisi" diyor. Sağlayıcı kararı (Groq/OpenRouter/AI Studio) verilmedi.
 4. **KVKK otomasyonu yok.** Silme/dışa aktarma hâlâ kuyruk + manuel e-posta; otomatik işleyici yazılmadı.
-5. **`FIREBASE_TOKEN` yok.** GitHub `deploy-rules.yml` bu yüzden düşüyor; kural/index dağıtımı manuel.
+5. **`FIREBASE_TOKEN` yok.** GitHub `deploy-rules.yml` bu yüzden düşüyor. 14 Kasım'da kurallar yerel oturumla **elle** yayınlandı (derleme başarılı); bundan sonraki kural değişiklikleri yine elle veya token eklenene kadar CI dışında.
 6. **Kalan sabit Türkçe metinler.** `MemeZone`, `MonthlyActivityChart`, `ProfileAnalyticsDashboard` ve bazı `FeedPost` yedek liste adlarında hâlâ sabit metin var; tam i18n taraması bitmedi (`locales.test.ts` yalnızca `t()` anahtarlarını ve JSX'te bilinen kalıpları tarar).
 7. **ESLint uyarıları.** Hata 0; uyarı sayısı yüksek ve `--max-warnings` kapısı gevşek.
 8. **Bundle izleme.** `recharts` ağır; Life Sim ayrı chunk (~300 KB) kabul edilebilir ama izlenmeli.
@@ -147,7 +148,7 @@ Tarayıcı dumanı (localhost, TR):
 - Locale dosyaları aynı anahtar kümesini korumalı; anahtar tekrarı TS1117 verir; BOM'suz UTF-8.
 - Yeni UI metni eklerken büyük locale dosyalarını düzenlemek yerine `i18nProductPass.ts`'e eklemek daha güvenli.
 - Yeni sayfa rotası eklerken `src/lib/seoRoutes.ts` + `public/sitemap.xml` birlikte güncellenmeli; `seoFiles.test.ts` aksi halde kırılır. Sayfa kendi meta'sını yazıyorsa `<PageMeta>` kullan ve rotayı `SELF_MANAGED_EXACT`/`PREFIXES`'e ekle.
-- `firestore.rules` değişiklikleri **elle** dağıtılmalı: `firebase.cmd deploy --only firestore:rules --project folkloric-centaur-q6tp2`. `FIREBASE_TOKEN` yoksa GitHub `deploy-rules.yml` düşer; kural dosyası canlıya çıkmadan ban/rol/rapor korumaları etkin değildir.
+- `firestore.rules` değişiklikleri **elle** dağıtılmalı: `firebase.cmd deploy --only firestore:rules --project folkloric-centaur-q6tp2`. `FIREBASE_TOKEN` yoksa GitHub `deploy-rules.yml` düşer; 14 Kasım 2026 itibarıyla ban/rol/rapor korumaları bu komutla canlıya alındı.
 - Ban yalnızca topluluk yazılarını keser (`canWrite`); kişisel watchlist/liste ve KVKK veri talebi açık kalır. Ban bandı `users/{uid}` canlı dinleyicisinden beslenir.
 - Life Sim olay kimlikleri dünya öneklerine uymalı; `universePaths.test.ts` ve `eventEngine.test.ts` bunu zorlar.
 - PWA `public/sw.js` kabuğu (`anisync-shell-v2`) dağıtımdan sonra kısa süre eski sürümü servis edebilir; gezinme network-first, hash'li varlıklar cache-first. Eski derleme görünürse SW/cache temizle.
