@@ -13,6 +13,9 @@ import {
   type LoreCategory,
 } from '../data/fanLore';
 import { AnimeNewsFeed } from '../components/AnimeNewsFeed';
+import { useXpStore } from '../store/useXpStore';
+import { useToastStore } from '../store/useToastStore';
+import { getDailyDateKey } from '../lib/dailyDate';
 import type { Lang4 } from '../data/universePaths';
 
 const catLabelKey: Record<LoreCategory, string> = {
@@ -33,6 +36,8 @@ const pickLang = (value: Record<Lang4, string>, lang: Lang4): string => value[la
 
 export const FanLore = () => {
   const { t, currentLang } = useAppTranslation();
+  const { addToast } = useToastStore();
+  const award = useXpStore((state) => state.award);
   const base = (currentLang.slice(0, 2) as Lang4);
   const lang: Lang4 = (['tr', 'en', 'ja', 'fr'] as const).includes(base) ? base : 'en';
 
@@ -44,12 +49,20 @@ export const FanLore = () => {
   const entries = useMemo(() => filterLore({ query, category }), [query, category]);
 
   const toggleReveal = (id: string) => {
+    const revealing = !revealed.has(id);
     setRevealed((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+    // XP: merak ettiğin cevabı günlük ilk kez açmanın ödülü (6/gün tavan)
+    if (revealing) {
+      const result = award({ action: 'lore_read', key: `lore:${id}:${getDailyDateKey()}` });
+      if (result.awarded > 0) {
+        addToast(t('xp_award_toast', { xp: result.awarded }), 'success');
+      }
+    }
   };
 
   const resetFilters = () => {

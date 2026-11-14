@@ -6,6 +6,10 @@ import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectRes
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { resolveAvatar } from '../lib/avatar';
 import { trackConversionOnce } from '../lib/analytics';
+import { useXpStore } from '../store/useXpStore';
+import { useToastStore } from '../store/useToastStore';
+import { getDailyDateKey } from '../lib/dailyDate';
+import i18n from '../i18n';
 
 
 interface AppState {
@@ -84,6 +88,14 @@ const DEFAULT_GUEST_PROFILE: UserProfile = {
 const AppContext = createContext<AppState | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const award = useXpStore((state) => state.award);
+  const { addToast } = useToastStore();
+
+  // Kullanıcıya XP kazandığını göster (sayaç yok — her aksiyon günlük tavanlı).
+  const toastXp = (amount: number) => {
+    if (amount > 0) addToast(i18n.t('xp_award_toast', { xp: amount }), 'success');
+  };
+
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>(() => {
     const saved = localStorage.getItem('anisync_watchlist');
     return saved ? JSON.parse(saved) : [];
@@ -485,6 +497,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addToWatchlist = async (anime: Anime, status: WatchStatus) => {
     // Aktivasyon: bu tarayıcıdaki ilk liste kaydı (rıza varsa) bir kez ölçülür.
     const isFirstListEntry = watchlist.length === 0;
+    const day = getDailyDateKey();
+    // XP: listeye anime ekleme (günlük tavanlı, günde 5)
+    const xpResult = award({ action: 'list_add', key: `list_add:${anime.mal_id}:${day}`, day });
+    void xpResult;
     if (!currentUser) {
       // Misafirler için yalnızca yerel kayıt (topluluk akışına sahte kayıt yazılmaz)
       setWatchlist(prev => {
@@ -688,9 +704,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
     if (!currentUser) {
       setForumPosts([newPost, ...forumPosts]);
-      return;
+    } else {
+      await setDoc(doc(db, 'forumPosts', newPost.id), newPost);
     }
-    await setDoc(doc(db, 'forumPosts', newPost.id), newPost);
+    toastXp(award({ action: 'forum_post', key: `forum_post:${newPost.id}` }).awarded);
   };
 
   const toggleLike = async (postId: string) => {
@@ -767,9 +784,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         replies: p.replies + 1,
         comments: [...(p.comments || []), newComment]
       } : p));
+      toastXp(award({ action: 'forum_comment', key: `forum_comment:${newComment.id}` }).awarded);
       return;
     }
-    
+
     const { isLikedByMe: _localIsLiked2, ...postData } = post;
     const updatedPost = {
       ...postData,
@@ -777,6 +795,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       comments: [...(post.comments || []), newComment]
     };
     await setDoc(doc(db, 'forumPosts', postId), updatedPost);
+    toastXp(award({ action: 'forum_comment', key: `forum_comment:${newComment.id}` }).awarded);
   };
 
   return (

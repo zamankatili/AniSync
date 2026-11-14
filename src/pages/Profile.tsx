@@ -19,6 +19,7 @@ import { db } from '../firebase';
 import { WatchlistItem, UserProfile } from '../types';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { OtakuRankBadges } from '../components/OtakuRankBadges';
+import { XpLeaderboard } from '../components/XpLeaderboard';
 import { calculateKarma, getLevelForKarma, BADGES } from '../data/badgeData';
 import { useQuizStore } from '../store/useQuizStore';
 
@@ -339,6 +340,15 @@ export const Profile = () => {
           featuredBadgeId={featuredBadgeId}
           onSelectFeaturedBadge={handleSelectFeaturedBadge}
         />
+      </motion.div>
+
+      {/* XP liderlik tablosu + kazanım kuralları */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <XpLeaderboard />
       </motion.div>
 
       {/* Analytics Chart */}

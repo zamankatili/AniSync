@@ -16,6 +16,7 @@ import { resolveAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { OFFICIAL_ROOMS, type CommunityRoom, type OfficialRoom } from '../lib/rooms';
 import { computeOtakuLevel } from '../lib/otakuLevel';
+import { useXpStore, selectActiveSnapshot } from '../store/useXpStore';
 import { localizeLevelTitle } from '../lib/badgeLocalization';
 import { useQuizStore } from '../store/useQuizStore';
 import { useIsLargeScreen } from '../lib/useMediaQuery';
@@ -73,11 +74,13 @@ export const GlobalChat = () => {
 
   const { watchlist } = useAppStore();
   const { arcadeHighScore, dailyStreak } = useQuizStore();
+  const xpSnapshot = useXpStore(selectActiveSnapshot);
+  const engagementXp = xpSnapshot.totalXp;
   const otakuInfo = useMemo(
-    () => computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore),
-    [watchlist, arcadeHighScore, dailyStreak],
+    () => computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore, engagementXp),
+    [watchlist, arcadeHighScore, dailyStreak, engagementXp],
   );
-  const myKarma = otakuInfo.karma;
+  const myKarma = otakuInfo.totalXp;
   const myLevelInfo = useMemo(
     () => ({
       level: otakuInfo.levelInfo.currentLevel.level,

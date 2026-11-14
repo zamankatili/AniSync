@@ -1,15 +1,19 @@
 import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Star } from 'lucide-react';
+import { ChevronRight, Star, Flame } from 'lucide-react';
 import { useAppStore } from '../context/AppStore';
 import { useQuizStore } from '../store/useQuizStore';
 import { useToastStore } from '../store/useToastStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { computeOtakuLevel } from '../lib/otakuLevel';
 import { localizeLevelTitle } from '../lib/badgeLocalization';
+import { useXpStore, selectActiveSnapshot } from '../store/useXpStore';
+import { dayXp, DAILY_GOAL_XP } from '../lib/xp';
+import { getDailyDateKey } from '../lib/dailyDate';
 
 /**
- * Ana sayfa "OTAKU RÜTBESİ" kartı — XP/seviye eğrisini tek bakışta gösterir.
+ * Ana sayfa "OTAKU RÜTBESİ" kartı — izleme karması + etkinlik XP'sinin
+ * toplamıyla seviye eğrisini gösterir; alt bölümde günlük hedef ve seri bulunur.
  * Seviye atlama anında tek seferlik toast atar (localStorage `anisync_level_seen`).
  */
 export const OtakuLevelBadge: React.FC = () => {
@@ -18,10 +22,17 @@ export const OtakuLevelBadge: React.FC = () => {
   const { watchlist } = useAppStore();
   const { arcadeHighScore, dailyStreak } = useQuizStore();
   const { addToast } = useToastStore();
+  const activeSnapshot = useXpStore(selectActiveSnapshot);
 
-  const { karma, levelInfo } = useMemo(
-    () => computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore),
-    [watchlist, arcadeHighScore, dailyStreak]
+  const engagementXp = activeSnapshot.totalXp;
+  const todayKey = getDailyDateKey();
+  const todayTotal = useMemo(() => dayXp(activeSnapshot, todayKey), [activeSnapshot, todayKey]);
+  const goalPercent = Math.min(100, Math.floor((todayTotal / DAILY_GOAL_XP) * 100));
+  const goalDone = todayTotal >= DAILY_GOAL_XP;
+
+  const { totalXp, levelInfo } = useMemo(
+    () => computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore, engagementXp),
+    [watchlist, arcadeHighScore, dailyStreak, engagementXp]
   );
   const { currentLevel, nextLevel, progressPercent } = levelInfo;
   const rankName = localizeLevelTitle(currentLevel.level, currentLevel.title);
@@ -76,7 +87,7 @@ export const OtakuLevelBadge: React.FC = () => {
             </span>
           </div>
           <p className="text-2xl font-black text-amber-400 leading-none mt-1">
-            {karma.toLocaleString()} <span className="text-xs text-neutral-400 font-bold uppercase">XP</span>
+            {totalXp.toLocaleString()} <span className="text-xs text-neutral-400 font-bold uppercase">XP</span>
           </p>
           {nextLevel ? (
             <p className="text-[10px] font-bold text-neutral-400 uppercase mt-0.5">
@@ -93,6 +104,34 @@ export const OtakuLevelBadge: React.FC = () => {
           className="h-full bg-gradient-to-r from-amber-400 via-rose-500 to-amber-300 transition-all duration-500"
           style={{ width: `${progressPercent}%` }}
         />
+      </div>
+
+      {/* Günlük hedef + seri */}
+      <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-3 border-t border-white/10 pt-2.5">
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">
+              {t('xp_daily_goal')}
+            </span>
+            <span className={`text-[9px] font-black uppercase tracking-widest ${goalDone ? 'text-emerald-400' : 'text-neutral-400'}`}>
+              {goalDone
+                ? t('xp_goal_done')
+                : t('xp_daily_goal_progress', { today: todayTotal, goal: DAILY_GOAL_XP })}
+            </span>
+          </div>
+          <div className="mt-1 h-1.5 w-full bg-neutral-800 border border-white/20 overflow-hidden">
+            <div
+              className={`h-full transition-all duration-500 ${goalDone ? 'bg-emerald-400' : 'bg-cyan-400'}`}
+              style={{ width: `${goalPercent}%` }}
+            />
+          </div>
+        </div>
+        {activeSnapshot.streak > 0 && (
+          <span className="inline-flex items-center gap-1 border border-orange-500/60 bg-orange-950 px-2 py-1 text-[10px] font-black uppercase text-orange-400">
+            <Flame size={12} strokeWidth={2.5} />
+            {activeSnapshot.streak}
+          </span>
+        )}
       </div>
     </button>
   );

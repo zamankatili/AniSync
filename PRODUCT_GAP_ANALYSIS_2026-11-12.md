@@ -127,6 +127,22 @@ Yani `api/anime-news`, `api/refresh-news`, `api/translate`, `api/moderate-room`,
 
 ---
 
+## 1h. 14 Kasım (ikinci oturum) — karakter sırası, zorluk ve XP ekonomisi
+
+**Karakter oyunları artık hilesiz, karışık ve bilinirlik bazlı.**
+
+- **Sıralama**: `src/lib/characterOrder.ts` — günlük karakter, her `CHARACTERS_POOL.length` günlük döngüde yeniden karışan **deterministik permütasyonla** seçilir (FNV-1a + mulberry32). Aynı gün herkes aynı karakteri görür, döngü içinde tekrar etmez. Antrenman turu ağırlıklıdır: tur 0–1 kolay%70/orta%30, 2–3 %45/%40/%15(zor), 4+ %25/%45/%30. `sort(() => Math.random() - 0.5)` yanlılığı `shuffleWithRng` (Fisher-Yates) ile değiştirildi.
+- **Zorluk = bilinirlik**: DLE havuzuna `seriesPopularity` + `characterFame` (1–5) eklendi; `difficulty` artık `difficultyFromFame(fame, popularity)` ile türetiliyor (skor ≥4.5 kolay, ≥3.5 orta, aksi zor). Dağılım 12 kolay / 5 orta / 3 zor. Seçilen karakter türüne göre hak sayısı artar (kolay 6 / orta 7 / zor 8 — ipucu açılışları 1/3 ve 2/3'te).
+- **"Kim Bu Karakter?" ipucu modu**: 86'lik havuzdan tur oranları kolay→zor artar (zor ~%25, orta ~%40, kalan kolay) + Fisher-Yates karıştırma; dosya sırası hiçbir zaman görünmez.
+- **XP ekonomisi**: `src/lib/xp.ts` — günlük giriş (+10), seri kilometre (3/7/14/30 gün → +10/+25/+60/+150), oyunlar (DLE: kolay 20 / orta 30 / zor 40, kayıp +5; 3/gün), Voice Duel (+10; 3/gün), gönderi (+15; 2/gün), yorum (+5; 4/gün), Fan lore (+5; 6/gün), liste ekleme (+5; 5/gün), Watch Party (+20; 1/gün). **Aksiyon başına günlük tavan + 300 XP global günlük tavan** (aşımı kısmi ödemeyle engellenir). `daily_login:gün` gibi anahtarlarla **idempotent**. Defter scope'ludur; misafir XP'si girişte hesaba taşınır (çakışan anahtarlar bir kez sayılır).
+- **Seviye birliği**: `computeOtakuLevel(..., engagementXp)` — toplam XP = izleme karması + etkinlik XP'si; aynı eğri (`level.ts`) ve rütbeler (Misafir→Efsane). OtakuLevelBadge artık toplam XP + günlük hedef çubuğu (100 XP) + seri ikonu gösterir; rozet sayfasında `+N etkinlik XP` satırı vardır.
+- **Liderlik tablosu**: Profile sayfasında `XpLeaderboard` — `users.xpTotal desc` ilk 10, "sen" vurgusu, boş durumda dürüst mesaj + giriş yönlendirmesi. Uyarı: **xpTotal istemci-yazılabilir** (kurallar sahip güncellemesine izin veriyor); sıralama rekabet sinyalidir, adalet garantisi değil. Detaylar `docs/xp.md`.
+- **Kapsam**: 24 değişen/yeni dosya, **22 dosya / 194 test**, `tsc` temiz, ESLint 0 hata. Tarayıcıdaki canlı oturumda uçtan uca gözlendi: günlük DLE bitişi (`dle_daily:2026-11-14`, L Lawliet orta, +30), antrenman bitişi (+30), günlük giriş (+10) ve günlük hedef çubuğu (70/100 XP) ekranı.
+
+Dürüst sınırlar: liderlik tablosu hileye açık (Admin SDK + kural sıkılaştırması şart); XP salt istemcide hesaplanır; misafir XP'si yalnızca o cihazda; kayıt anahtarları (`anisyncdle_today_v3`) önceki v2 kayıtlarını otomatik temizler (günün karakteri değişti — v3 characterId doğrulaması).
+
+---
+
 ## 1g. 14 Kasım oturumu — ölçüm, hata izleme ve kötüye kullanım koruması
 
 Dört katman eklendi; hepsi **env kapılı** ve varsayılan olarak kapalı. Kurulum adımları `docs/observability.md` içinde.

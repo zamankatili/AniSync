@@ -11,6 +11,7 @@ import { useToastStore } from '../store/useToastStore';
 import { AuthModal } from './AuthModal';
 import { AiringScheduleModal } from './AiringScheduleModal';
 import { DailyModalManager } from './DailyModalManager';
+import { XpBridge } from './XpBridge';
 import { resolveAvatar } from '../lib/avatar';
 import { AnimeRadioPlayer } from './AnimeRadioPlayer';
 import { ThemeSwitcher } from './ThemeSwitcher';
@@ -618,6 +619,7 @@ export const Layout = () => {
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       <DailyModalManager />
+      <XpBridge />
       <AiringScheduleModal 
         isOpen={isScheduleModalOpen} 
         onClose={closeScheduleModal} 

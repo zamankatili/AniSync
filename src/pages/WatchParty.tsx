@@ -13,6 +13,8 @@ import { useToastStore } from '../store/useToastStore';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { fetchAnimeFallback } from '../lib/api/animeBridge';
+import { useXpStore } from '../store/useXpStore';
+import { getDailyDateKey } from '../lib/dailyDate';
 
 export const WatchParty: React.FC = () => {
   const { roomId } = useParams<{ roomId?: string }>();
@@ -79,15 +81,23 @@ export const WatchParty: React.FC = () => {
     return () => unsub();
   }, [fetchRooms]);
 
+  const award = useXpStore((state) => state.award);
+
   // Join room when roomId is in URL
   useEffect(() => {
     if (roomId) {
+      // XP: bir odaya katılmak (günde 1 hak, 20 XP)
+      const result = award({ action: 'watch_party', key: `watch_party:${getDailyDateKey()}` });
+      if (result.awarded > 0) {
+        addToast(t('xp_award_toast', { xp: result.awarded }), 'success');
+      }
       const unsub = joinRoom(roomId, currentSafeUser);
       return () => {
         unsub();
         leaveRoom();
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, joinRoom, leaveRoom]);
 
   // Filtered rooms in Lobby

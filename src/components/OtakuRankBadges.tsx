@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Award, Shield, Sparkles, Lock, CheckCircle2, ChevronRight, 
   HelpCircle, Star, Flame, Trophy, Info, X, Zap, Crown, Target,
@@ -19,6 +19,7 @@ import {
   localizeBadgeRequirement,
   localizeLevelTitle
 } from '../lib/badgeLocalization';
+import { useXpStore, selectActiveSnapshot } from '../store/useXpStore';
 
 interface OtakuRankBadgesProps {
   watchlist: any[];
@@ -50,14 +51,17 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
     .filter(w => w.status === 'completed')
     .reduce((acc, w) => acc + (w.anime?.episodes || w.episodesWatched || 0), 0);
 
-  const totalKarma = calculateKarma(
-    watchlist.length,
-    completedCount,
-    ratedCount,
-    totalEpisodes,
-    arcadeHighScore > 0 || dailyStreak > 0,
-    arcadeHighScore
-  );
+  const engagementXp = useXpStore(selectActiveSnapshot).totalXp;
+
+  const totalKarma =
+    calculateKarma(
+      watchlist.length,
+      completedCount,
+      ratedCount,
+      totalEpisodes,
+      arcadeHighScore > 0 || dailyStreak > 0,
+      arcadeHighScore
+    ) + engagementXp;
 
   const levelInfo = getLevelForKarma(totalKarma);
   const badgeProgressList = evaluateBadges(watchlist, {
@@ -131,6 +135,11 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
               <h3 className="text-3xl font-black uppercase tracking-tight text-white">
                 {totalKarma.toLocaleString()} <span className="text-xs text-neutral-400 font-mono">{t('otaku_badge_karma_xp')}</span>
               </h3>
+              {engagementXp > 0 && (
+                <p className="text-[10px] font-black text-cyan-400 uppercase mt-1 tracking-wider">
+                  +{engagementXp.toLocaleString()} {t('xp_engagement_xp')}
+                </p>
+              )}
               <p className="text-[11px] text-neutral-400 font-bold uppercase mt-0.5">
                 {t('otaku_badge_badge_count', { count: unlockedCount })} • {t('otaku_badge_anime_count', { count: completedCount })}
               </p>

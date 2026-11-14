@@ -1,5 +1,6 @@
 import { AnimeCharacter } from '../types';
 import { getDailyDateKey } from '../lib/dailyDate';
+import { dailyIndex, difficultyFromFame, pickPracticeCharacter } from '../lib/characterOrder';
 
 export type DleHintLanguage = 'tr' | 'en' | 'ja' | 'fr';
 
@@ -7,18 +8,24 @@ export interface DleCharacter extends AnimeCharacter {
   /** Dört dilde ipuçları; eksik dil TR'ye düşer. */
   hints: Record<DleHintLanguage, string[]>;
   genre: string;
+  /** Serinin genel bilinirliği (1-5). */
+  seriesPopularity: number;
+  /** Karakterin kendi bilinirliği (1-5). */
+  characterFame: number;
   /** Kullanıcının yazabileceği alternatif adlar (takma ad, kısa ad). */
   aliases?: string[];
 }
 
-export const CHARACTERS_POOL: DleCharacter[] = [
+/** Girdi: zorluk bilinirlikten türetildiği için difficulty alanı burada yok. */
+const CHARACTER_SEEDS: Omit<DleCharacter, 'difficulty'>[] = [
   {
     id: 'char_1',
     name: 'Monkey D. Luffy',
     series: 'One Piece',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/9/310307.jpg',
-    difficulty: 'easy',
     genre: 'Shounen',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['luffy', 'straw hat', 'mugiwara'],
     hints: {
       tr: ['Hasır Şapka Korsanları Kaptanı', 'Gomu Gomu no Mi / Hito Hito no Mi', 'Korsanlar Kralı olmak istiyor'],
@@ -32,8 +39,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Roronoa Zoro',
     series: 'One Piece',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/3/100534.jpg',
-    difficulty: 'easy',
     genre: 'Shounen',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['zoro'],
     hints: {
       tr: ['Üç Kılıç Ustası (Santoryu)', 'Sürekli yönünü kaybeder', 'Dünyanın en iyi kılıç ustası olmayı hedefler'],
@@ -47,8 +55,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Gojo Satoru',
     series: 'Jujutsu Kaisen',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/15/422168.jpg',
-    difficulty: 'easy',
     genre: 'Shounen',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['gojo', 'satoru'],
     hints: {
       tr: ['Altı Göz ve Sınırsızlık (Limitless) gücü', 'Özel Derece Büyücü', 'Körbandı ve beyaz saçlarıyla bilinir'],
@@ -62,8 +71,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Levi Ackerman',
     series: 'Attack on Titan',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/2/241413.jpg',
-    difficulty: 'easy',
     genre: 'Seinen/Shounen',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['levi', 'ackerman'],
     hints: {
       tr: ['İnsanlığın En Güçlü Askeri', 'Keşif Birliği Özel Harekat Tim Lideri', 'Temizlik takıntısı var'],
@@ -77,8 +87,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Eren Yeager',
     series: 'Attack on Titan',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/10/216895.jpg',
-    difficulty: 'easy',
     genre: 'Seinen/Shounen',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['eren', 'yeager'],
     hints: {
       tr: ['Saldırı Devi ve Kurucu Dev taşıyıcısı', 'Tüm devleri yok etmeye yemin etmişti', '"Tatakae" repliğiyle tanınır'],
@@ -92,8 +103,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Naruto Uzumaki',
     series: 'Naruto',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/2/284121.jpg',
-    difficulty: 'easy',
     genre: 'Shounen',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['naruto', 'uzumaki'],
     hints: {
       tr: ['Yedinci Hokage', 'Dokuz Kuyruklu Tilki (Kurama) Jinchuuriki\'si', 'Ramen aşığı'],
@@ -107,8 +119,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Sasuke Uchiha',
     series: 'Naruto',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/9/131317.jpg',
-    difficulty: 'easy',
     genre: 'Shounen',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['sasuke', 'uchiha'],
     hints: {
       tr: ['Sharingan ve Rinnegan sahibi', 'Chidori tekniği', 'İntikam peşindeki Uchiha klanı üyesi'],
@@ -122,8 +135,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Frieren',
     series: 'Sousou no Frieren',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/7/525105.jpg',
-    difficulty: 'easy',
     genre: 'Fantasy',
+    seriesPopularity: 4,
+    characterFame: 5,
     aliases: ['frieren', 'sousou no frieren'],
     hints: {
       tr: ['Bin yaşını aşkın elf büyücü', 'Kahraman Himmel\'in yol arkadaşı', 'Büyü kitapları toplar'],
@@ -137,8 +151,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Edward Elric',
     series: 'Fullmetal Alchemist',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/9/72533.jpg',
-    difficulty: 'easy',
     genre: 'Shounen',
+    seriesPopularity: 4,
+    characterFame: 5,
     aliases: ['edward', 'ed', 'elric', 'fullmetal'],
     hints: {
       tr: ['Çelik Simyacı (Fullmetal Alchemist)', 'Kısa boyuyla dalga geçilmesinden nefret eder', 'Çember çizmeden simya yapabilir'],
@@ -152,8 +167,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Light Yagami',
     series: 'Death Note',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/6/63870.jpg',
-    difficulty: 'easy',
     genre: 'Psychological',
+    seriesPopularity: 4,
+    characterFame: 5,
     aliases: ['light', 'yagami', 'kira'],
     hints: {
       tr: ['Yeni Dünyanın Tanrısı olmak istedi', 'Kira takma adıyla bilindi', 'Ölüm Defteri\'nin ilk insan kullanıcısı'],
@@ -167,8 +183,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'L Lawliet',
     series: 'Death Note',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/10/249647.jpg',
-    difficulty: 'easy',
     genre: 'Psychological',
+    seriesPopularity: 4,
+    characterFame: 4,
     aliases: ['l', 'lawliet'],
     hints: {
       tr: ['Dünyanın en iyi dedektifi', 'Garip oturuş tarzı ve tatlı düşkünlüğü', 'Kira soruşturmasını yönetti'],
@@ -182,8 +199,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Guts',
     series: 'Berserk',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/13/284125.jpg',
-    difficulty: 'medium',
     genre: 'Seinen',
+    seriesPopularity: 2,
+    characterFame: 4,
     aliases: ['guts', 'black swordsman'],
     hints: {
       tr: ['Kara Kılıç Ustası (The Black Swordsman)', 'Ejderha Biçici (Dragonslayer) kılıcı', 'Kader ve Tanrı Eli\'ne karşı savaşır'],
@@ -197,8 +215,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Saitama',
     series: 'One Punch Man',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/11/294388.jpg',
-    difficulty: 'easy',
     genre: 'Shounen/Comedy',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['saitama', 'caped baldy', 'one punch man'],
     hints: {
       tr: ['Hobi olarak kahramanlık yapar', 'Tek yumrukla düşmanlarını alt eder', 'Süpermarket indirimlerini asla kaçırmaz'],
@@ -212,8 +231,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Killua Zoldyck',
     series: 'Hunter x Hunter',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/2/327920.jpg',
-    difficulty: 'easy',
     genre: 'Shounen',
+    seriesPopularity: 4,
+    characterFame: 4,
     aliases: ['killua', 'zoldyck'],
     hints: {
       tr: ['Efsanevi suikastçı ailesinin varisi', 'Nen gücü elektrik temellidir (Godspeed)', 'Yo-yo ve kaykay kullanır'],
@@ -227,8 +247,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Spike Spiegel',
     series: 'Cowboy Bebop',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/11/516853.jpg',
-    difficulty: 'medium',
     genre: 'Classic/Sci-Fi',
+    seriesPopularity: 3,
+    characterFame: 4,
     aliases: ['spike', 'spiegel'],
     hints: {
       tr: ['Bebop gemisinde ödül avcısı', 'Jeet Kune Do dövüş stili', '"Bang" repliğiyle tarihe geçti'],
@@ -242,8 +263,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Sung Jin-Woo',
     series: 'Solo Leveling',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/2/540692.jpg',
-    difficulty: 'easy',
     genre: 'Action/Fantasy',
+    seriesPopularity: 4,
+    characterFame: 4,
     aliases: ['sung jin woo', 'jinwoo', 'jin woo', 'sung jin-woo'],
     hints: {
       tr: ['Gölge Hükümdarı (Shadow Monarch)', '"Arise" (Uyan) komutu', 'En zayıf E-seviye avcıdan tek başına level atlayan efsaneye'],
@@ -257,8 +279,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Taro Sakamoto',
     series: 'Sakamoto Days',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/7/508475.jpg',
-    difficulty: 'medium',
     genre: 'Shounen',
+    seriesPopularity: 3,
+    characterFame: 3,
     aliases: ['sakamoto', 'taro'],
     hints: {
       tr: ['Eski efsanevi suikastçı', 'Huzurlu bir market işletmecisi ve aile babası', 'Kavga anında zayıflayıp eski formuna döner'],
@@ -272,8 +295,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Thorfinn',
     series: 'Vinland Saga',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/9/309871.jpg',
-    difficulty: 'medium',
     genre: 'Seinen',
+    seriesPopularity: 3,
+    characterFame: 3,
     aliases: ['thorfinn'],
     hints: {
       tr: ['Thors\'un oğlu', 'Askeladd\'dan intikam almak için yıllarca savaştı', '"Benim hiç düşmanım yok" felsefesini benimsedi'],
@@ -287,8 +311,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Ken Kaneki',
     series: 'Tokyo Ghoul',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/15/307255.jpg',
-    difficulty: 'easy',
     genre: 'Dark Fantasy',
+    seriesPopularity: 4,
+    characterFame: 4,
     aliases: ['kaneki', 'ken'],
     hints: {
       tr: ['Tek Gözlü Hortlak (One-Eyed Ghoul)', 'Beyaz saç ve kırkayak kagune', 'Parmak çıtlatma alışkanlığı'],
@@ -302,8 +327,9 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     name: 'Tanjiro Kamado',
     series: 'Demon Slayer: Kimetsu no Yaiba',
     imageUrl: 'https://cdn.myanimelist.net/images/characters/6/386735.jpg',
-    difficulty: 'easy',
     genre: 'Shounen',
+    seriesPopularity: 5,
+    characterFame: 5,
     aliases: ['tanjiro', 'kamado', 'kimetsu no yaiba'],
     hints: {
       tr: ['Su ve Güneş Nefesi kullanıcısı', 'Kız kardeşi Nezuko\'yu insana dönüştürmeye çalışır', 'Koku alma duyusu son derece gelişmiştir'],
@@ -313,6 +339,12 @@ export const CHARACTERS_POOL: DleCharacter[] = [
     },
   },
 ];
+
+/** Zorluk bilinirlikten türetilir: karakter %60 + serisi %40. */
+export const CHARACTERS_POOL: DleCharacter[] = CHARACTER_SEEDS.map((seed) => ({
+  ...seed,
+  difficulty: difficultyFromFame(seed.characterFame, seed.seriesPopularity),
+}));
 
 /** İpuçlarını dile göre döndürür; o dil yoksa TR'ye düşer. */
 export function getCharacterHints(character: DleCharacter, language: string): string[] {
@@ -353,20 +385,33 @@ export function matchesCharacter(character: DleCharacter, guess: string): boolea
 }
 
 /**
- * Günün karakteri — TR takvim gününe göre deterministik döner.
- * Aynı gün içinde her açılışta aynı karakter, ertesi gün bir sonraki.
+ * Günün karakteri — TR takvim gününe göre deterministik, döngüsel permütasyonla seçilir.
+ * Aynı gün herkes aynı karakteri görür; her `CHARACTERS_POOL.length` günlük döngüde
+ * sıra yeniden karışır ve karakter döngü içinde tekrar etmez.
  */
 export function getDailyCharacter(date: Date = new Date()): DleCharacter {
   const dateKey = getDailyDateKey(date);
   const dayNumber = Math.floor(Date.parse(`${dateKey}T00:00:00Z`) / 86_400_000);
-  const index = ((dayNumber % CHARACTERS_POOL.length) + CHARACTERS_POOL.length) % CHARACTERS_POOL.length;
+  const index = dailyIndex(dayNumber, CHARACTERS_POOL.length, 'anisyncdle');
   return CHARACTERS_POOL[index];
 }
 
-/** Antrenman modu için rastgele karakter (mevcut olandan farklı). */
-export function getRandomPracticeCharacter(excludeId?: string): DleCharacter {
-  const pool = excludeId
-    ? CHARACTERS_POOL.filter((character) => character.id !== excludeId)
-    : CHARACTERS_POOL;
-  return pool[Math.floor(Math.random() * pool.length)] ?? CHARACTERS_POOL[0];
+/**
+ * Antrenman turu seçimi — zorluk tur ilerledikçe artar.
+ * İlk iki tur kolay ağırlıklı, 4. turdan sonra zor karakterler belirginleşir.
+ */
+export function getPracticeCharacter(
+  roundIndex: number,
+  excludeId?: string,
+  rng: () => number = Math.random,
+): DleCharacter {
+  return (
+    pickPracticeCharacter(
+      CHARACTERS_POOL,
+      (character) => character.difficulty,
+      roundIndex,
+      (character) => !!excludeId && character.id === excludeId,
+      rng,
+    ) ?? CHARACTERS_POOL[0]
+  );
 }

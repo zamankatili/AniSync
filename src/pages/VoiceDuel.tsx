@@ -9,6 +9,9 @@ import { scoreFor, getRound } from '../data/voiceDuelData';
 import { getCharacterRound, type CharacterDifficulty } from '../data/characterGuessData';
 import type { Lang4 } from '../data/universePaths';
 import { trackConversionOnce } from '../lib/analytics';
+import { useXpStore } from '../store/useXpStore';
+import { useToastStore } from '../store/useToastStore';
+import { getDailyDateKey } from '../lib/dailyDate';
 
 const BEST_SCORE_KEY: Record<DuelMode, string> = {
   voice: 'anisync_voice_duel_best',
@@ -67,6 +70,8 @@ const buildRound = (mode: DuelMode): DuelItem[] => {
 
 export const VoiceDuel = () => {
   const { t, currentLang } = useAppTranslation();
+  const { addToast } = useToastStore();
+  const award = useXpStore((state) => state.award);
 
   const base = currentLang.slice(0, 2) as Lang4;
   const lang: Lang4 = (['tr', 'en', 'ja', 'fr'] as const).includes(base) ? base : 'en';
@@ -83,6 +88,8 @@ export const VoiceDuel = () => {
   const [streak, setStreak] = useState(0);
   const [autoplayKey, setAutoplayKey] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
+  // Her tur için taze XP anahtarı üretir (idempotency).
+  const [roundKey, setRoundKey] = useState('initial');
   const [bestScores, setBestScores] = useState<Record<DuelMode, number>>(() => ({
     voice: loadBest('voice'),
     hint: loadBest('hint'),
@@ -102,6 +109,7 @@ export const VoiceDuel = () => {
     bestBeforeRef.current = loadBest(nextMode);
     scoreRef.current = 0;
     setIsNewRecord(false);
+    setRoundKey(`${nextMode}:${Math.random().toString(36).slice(2, 10)}`);
     setMode(nextMode);
     setRound(items);
     setItemIndex(0);
@@ -118,6 +126,11 @@ export const VoiceDuel = () => {
     const final = scoreRef.current;
     setIsNewRecord(final > bestBeforeRef.current && final > 0);
     setStage('finished');
+    // XP: turu bitirmenin ödülü (günde 3 hak, 30 XP) — moddan bağımsız.
+    const result = award({ action: 'quiz_finish', key: `voice_duel:${roundKey}`, day: getDailyDateKey() });
+    if (result.awarded > 0) {
+      addToast(t('xp_award_toast', { xp: result.awarded }), 'success');
+    }
     trackConversionOnce('first_game_finish', 'first_game_finish', {
       surface: 'voice_duel',
       mode,
@@ -132,7 +145,7 @@ export const VoiceDuel = () => {
       }
       return { ...prev, [mode]: final };
     });
-  }, [mode]);
+  }, [mode, award, addToast, t, roundKey]);
 
   useEffect(() => {
     if (stage !== 'playing') return;

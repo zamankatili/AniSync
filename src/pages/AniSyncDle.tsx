@@ -6,22 +6,31 @@ import { StatsModal } from '../components/StatsModal';
 import { ChallengeInviteBox } from '../components/ChallengeInviteBox';
 import {
   getDailyCharacter,
-  getRandomPracticeCharacter,
+  getPracticeCharacter,
   getCharacterHints,
   matchesCharacter,
   normalizeCharacterName,
+  type DleCharacter,
 } from '../data/charactersPool';
 import { getDailyDateKey, getPreviousDateKey, diffDateKeys } from '../lib/dailyDate';
 import { useToastStore } from '../store/useToastStore';
 import {
-  Trophy, Sparkles, RefreshCw, HelpCircle, CheckCircle2, XCircle
+  Trophy, Sparkles, RefreshCw, HelpCircle, CheckCircle2, XCircle, Shield
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { trackConversionOnce } from '../lib/analytics';
+import { useXpStore } from '../store/useXpStore';
+import type { DifficultyTier } from '../lib/characterOrder';
 
 const STATS_KEY = 'anisyncdle_stats_v1';
-const TODAY_STATE_KEY = 'anisyncdle_today_v2';
+const TODAY_STATE_KEY = 'anisyncdle_today_v3';
+
+/**
+ * Zorluğa göre hak sayısı: beklenen bilinirlik düştükçe hak artar.
+ * Temel deneme 6; orta 7, zor 8 (zor = daha az bilinen karakter).
+ */
+const ATTEMPTS_BY_TIER: Record<DifficultyTier, number> = { easy: 6, medium: 7, hard: 8 };
 
 interface DleStats {
   played: number;
@@ -35,6 +44,8 @@ interface DleStats {
 }
 
 interface DailyState {
+  /** Kaydedilen günün karakteriyle uyuşmayan eski v2 kayıtlarını yok sayar. */
+  characterId?: string;
   guesses: string[];
   isCorrect: boolean;
   isGameOver: boolean;
@@ -60,13 +71,18 @@ function readStats(): DleStats {
   }
 }
 
-function readDailyState(dateKey: string): DailyState | null {
+function readDailyState(dateKey: string, characterId?: string): DailyState | null {
   try {
     const raw = localStorage.getItem(`${TODAY_STATE_KEY}_${dateKey}`);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<DailyState>;
     if (!Array.isArray(parsed.guesses)) return null;
+    // Günün karakteri değiştiyse kaydı yok say (izinsiz taze oyun).
+    if (characterId && typeof parsed.characterId === 'string' && parsed.characterId !== characterId) {
+      return null;
+    }
     return {
+      characterId: typeof parsed.characterId === 'string' ? parsed.characterId : undefined,
       guesses: parsed.guesses.filter((guess): guess is string => typeof guess === 'string'),
       isCorrect: parsed.isCorrect === true,
       isGameOver: parsed.isGameOver === true,
@@ -83,22 +99,27 @@ export const AniSyncDle: React.FC = () => {
   // TR takvim günü: gece 00:00'da (UTC+3) sıfırlanır, UTC'de 03:00'te değil.
   const todayKey = getDailyDateKey();
   const dailyCharacter = useMemo(() => getDailyCharacter(), [todayKey]);
+  const { award } = useXpStore();
 
   const [gameMode, setGameMode] = useState<'daily' | 'practice'>('daily');
-  const [practiceCharacter, setPracticeCharacter] = useState(() =>
-    getRandomPracticeCharacter(dailyCharacter.id),
-  );
+  const [practiceRound, setPracticeRound] = useState(0);
+  // Her antrenman turu için taze oyun anahtarı (XP idempotency anahtarı).
+  const [practiceKey, setPracticeKey] = useState(() => Math.random().toString(36).slice(2, 10));
+  const [practiceCharacter, setPracticeCharacter] = useState(() => getPracticeCharacter(0, dailyCharacter.id));
 
-  const character = gameMode === 'daily' ? dailyCharacter : practiceCharacter;
+  const character: DleCharacter = gameMode === 'daily' ? dailyCharacter : practiceCharacter;
   const hints = getCharacterHints(character, currentLang);
+
+  const difficulty: DifficultyTier = character.difficulty;
+  const maxAttempts = ATTEMPTS_BY_TIER[difficulty];
+  const hint1At = Math.ceil(maxAttempts / 3);
+  const hint2At = Math.ceil((2 * maxAttempts) / 3);
 
   const [guesses, setGuesses] = useState<string[]>([]);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [stats, setStats] = useState<DleStats>(readStats);
-
-  const maxAttempts = 6;
 
   // Günlük moda dönüldüğünde bugünün kaydını geri yükle; antrenman temiz başlar.
   useEffect(() => {
@@ -108,11 +129,11 @@ export const AniSyncDle: React.FC = () => {
       setIsGameOver(false);
       return;
     }
-    const saved = readDailyState(todayKey);
+    const saved = readDailyState(todayKey, dailyCharacter.id);
     setGuesses(saved?.guesses ?? []);
     setIsCorrect(saved?.isCorrect ?? false);
     setIsGameOver(saved?.isGameOver ?? false);
-  }, [gameMode, todayKey]);
+  }, [gameMode, todayKey, dailyCharacter.id]);
 
   // Kaçırılan günlerde seri görünürde sıfırlanır (kayıt silinmez).
   const activeStreak = useMemo(() => {
@@ -125,9 +146,21 @@ export const AniSyncDle: React.FC = () => {
 
   const persistDailyState = (payload: DailyState) => {
     try {
-      localStorage.setItem(`${TODAY_STATE_KEY}_${todayKey}`, JSON.stringify(payload));
+      localStorage.setItem(
+        `${TODAY_STATE_KEY}_${todayKey}`,
+        JSON.stringify({ ...payload, characterId: dailyCharacter.id }),
+      );
     } catch {
       /* localStorage kapalıysa oyun çalışmaya devam eder */
+    }
+  };
+
+  /** Oyun bitişi (galibiyet/mağlubiyet) için XP verir ve bildirim gösterir. */
+  const awardGameXp = (won: boolean) => {
+    const key = gameMode === 'daily' ? `dle_daily:${todayKey}` : `dle_practice:${practiceKey}`;
+    const result = award({ action: 'game_finish', key, day: todayKey, difficulty, won });
+    if (result.awarded > 0) {
+      addToast(t('xp_award_toast', { xp: result.awarded }), 'success');
     }
   };
 
@@ -179,6 +212,7 @@ export const AniSyncDle: React.FC = () => {
         result: true,
       });
       addToast(t('anisyncdle_correct_toast', { name: character.name }), 'success');
+      awardGameXp(true);
 
       if (gameMode === 'daily') {
         recordDailyResult(true);
@@ -198,6 +232,7 @@ export const AniSyncDle: React.FC = () => {
         t('anisyncdle_out_of_attempts_toast', { name: character.name, series: character.series }),
         'error',
       );
+      awardGameXp(false);
       if (gameMode === 'daily') {
         recordDailyResult(false);
         persistDailyState({ guesses: newGuesses, isCorrect: false, isGameOver: true });
@@ -210,13 +245,18 @@ export const AniSyncDle: React.FC = () => {
   const switchMode = (mode: 'daily' | 'practice') => {
     if (mode === gameMode) return;
     if (mode === 'practice') {
-      setPracticeCharacter(getRandomPracticeCharacter(dailyCharacter.id));
+      setPracticeRound(0);
+      setPracticeKey(Math.random().toString(36).slice(2, 10));
+      setPracticeCharacter(getPracticeCharacter(0, dailyCharacter.id));
     }
     setGameMode(mode);
   };
 
   const handleNextPractice = () => {
-    setPracticeCharacter((current) => getRandomPracticeCharacter(current.id));
+    const nextRound = practiceRound + 1;
+    setPracticeRound(nextRound);
+    setPracticeKey(Math.random().toString(36).slice(2, 10));
+    setPracticeCharacter((current) => getPracticeCharacter(nextRound, current.id));
     setGuesses([]);
     setIsCorrect(false);
     setIsGameOver(false);
@@ -370,26 +410,42 @@ export const AniSyncDle: React.FC = () => {
                 <span lang="en" className="text-white font-black uppercase">{character.genre}</span>
               </div>
 
-              {/* Hint 1: Unlocked at 2 wrong guesses */}
+              <div className="flex items-center justify-between p-2 bg-neutral-900 border border-white/20">
+                <span className="text-neutral-400 uppercase">{t('xp_difficulty_label')}</span>
+                <span
+                  title={t('xp_dle_attempts_note')}
+                  className={cn(
+                    'font-black uppercase px-2 py-0.5 border inline-flex items-center gap-1',
+                    difficulty === 'easy' && 'bg-emerald-500 text-black border-white',
+                    difficulty === 'medium' && 'bg-amber-400 text-black border-white',
+                    difficulty === 'hard' && 'bg-rose-600 text-white border-white',
+                  )}
+                >
+                  <Shield size={12} strokeWidth={2.5} />
+                  {t(`difficulty_${difficulty}`)} · {maxAttempts}
+                </span>
+              </div>
+
+              {/* Hint 1: Unlocked at ~1/3 of attempts */}
               <div className={cn(
                 "p-2 border transition-all",
-                guesses.length >= 2 || isGameOver
+                guesses.length >= hint1At || isGameOver
                   ? "bg-neutral-900 border-white/40 text-white"
                   : "bg-neutral-950 border-white/10 text-neutral-600"
               )}>
                 <span className="text-neutral-400 uppercase block text-[10px] mb-0.5">{t('anisyncdle_hint_1_label')}</span>
-                <span>{guesses.length >= 2 || isGameOver ? hints[0] : t('anisyncdle_hint_1_locked')}</span>
+                <span>{guesses.length >= hint1At || isGameOver ? hints[0] : t('anisyncdle_hint_1_locked')}</span>
               </div>
 
-              {/* Hint 2: Unlocked at 4 wrong guesses */}
+              {/* Hint 2: Unlocked at ~2/3 of attempts */}
               <div className={cn(
                 "p-2 border transition-all",
-                guesses.length >= 4 || isGameOver
+                guesses.length >= hint2At || isGameOver
                   ? "bg-neutral-900 border-white/40 text-white"
                   : "bg-neutral-950 border-white/10 text-neutral-600"
               )}>
                 <span className="text-neutral-400 uppercase block text-[10px] mb-0.5">{t('anisyncdle_hint_2_label')}</span>
-                <span>{guesses.length >= 4 || isGameOver ? hints[1] : t('anisyncdle_hint_2_locked')}</span>
+                <span>{guesses.length >= hint2At || isGameOver ? hints[1] : t('anisyncdle_hint_2_locked')}</span>
               </div>
             </div>
           </div>

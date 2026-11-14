@@ -10,6 +10,7 @@
  */
 
 import type { Lang4 } from './universePaths';
+import { shuffleWithRng } from '../lib/characterOrder';
 
 export type CharacterDifficulty = 'kolay' | 'orta' | 'zor';
 
@@ -1663,10 +1664,36 @@ export const CHARACTER_HINTS: CharacterHintItem[] = [
 ];
 
 export const getCharacterRound = (count = 10): CharacterHintItem[] => {
-  return [...CHARACTER_HINTS]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, Math.min(count, CHARACTER_HINTS.length))
-    .map((item) => ({ ...item, options: shuffleOptions(item.options) }));
+  const easy = CHARACTER_HINTS.filter((item) => item.difficulty === 'kolay');
+  const medium = CHARACTER_HINTS.filter((item) => item.difficulty === 'orta');
+  const hard = CHARACTER_HINTS.filter((item) => item.difficulty === 'zor');
+
+  const target = Math.min(Math.max(0, count), CHARACTER_HINTS.length);
+
+  // Bilinirliğe göre oranlar: zor ~%25, orta ~%40, kolay kalan (en azından ~%35).
+  let hardTarget = Math.min(Math.floor(target * 0.25), hard.length);
+  let mediumTarget = Math.min(Math.floor(target * 0.4), medium.length);
+  let easyTarget = Math.min(target - hardTarget - mediumTarget, easy.length);
+
+  // Koca kademe yoksa kalan ihtiyacı diğerlerinden karşıla.
+  const shortage = () => target - (easyTarget + mediumTarget + hardTarget);
+  const topUp = (pool: CharacterHintItem[], current: number) =>
+    Math.min(current + shortage(), pool.length);
+  if (shortage() > 0) easyTarget = topUp(easy, easyTarget);
+  if (shortage() > 0) mediumTarget = topUp(medium, mediumTarget);
+  if (shortage() > 0) hardTarget = topUp(hard, hardTarget);
+
+  const picked = [
+    ...shuffleWithRng(easy, Math.random).slice(0, easyTarget),
+    ...shuffleWithRng(medium, Math.random).slice(0, mediumTarget),
+    ...shuffleWithRng(hard, Math.random).slice(0, hardTarget),
+  ];
+
+  // Fisher-Yates — sort(() => random) yanlılığı yok; tur gerçekten karışık olur.
+  return shuffleWithRng(picked, Math.random).map((item) => ({
+    ...item,
+    options: shuffleOptions(item.options),
+  }));
 };
 
 const shuffleOptions = (options: readonly string[]): [string, string, string, string] => {

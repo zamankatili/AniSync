@@ -29,6 +29,7 @@ import { auth } from '../firebase';
 import { apiUrl } from './apiBase';
 import { computeOtakuLevel } from './otakuLevel';
 import { useQuizStore } from '../store/useQuizStore';
+import { useXpStore, GUEST_SCOPE } from '../store/useXpStore';
 import type { WatchlistItem } from '../types';
 
 /** Doğrudan oda açma eşiği — Kalfa (Lv5) ≈ 500 XP. */
@@ -87,10 +88,13 @@ export interface RoomRequest {
 
 export const roomsDb = db;
 
-/** Kullanıcının güncel karma/XP'si (quiz puanı dahil) — tek yerden hesaplanır. */
+/** Kullanıcının güncel karma/XP'si (quiz puanı + etkinlik XP dahil) — tek yerden hesaplanır. */
 export const computeUserKarma = (watchlist: WatchlistItem[]): number => {
   const { arcadeHighScore, dailyStreak } = useQuizStore.getState();
-  return computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore).karma;
+  const uid = auth?.currentUser?.uid;
+  const scope = uid ? `uid:${uid}` : GUEST_SCOPE;
+  const engagementXp = useXpStore.getState().scopes[scope]?.totalXp ?? 0;
+  return computeOtakuLevel(watchlist, arcadeHighScore > 0 || dailyStreak > 0, arcadeHighScore, engagementXp).totalXp;
 };
 
 export const isDirectRoomEligible = (karma: number): boolean => karma >= DIRECT_ROOM_MIN_XP;
