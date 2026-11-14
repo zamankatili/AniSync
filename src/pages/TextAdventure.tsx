@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import {
   Terminal as TerminalIcon, Send, Lightbulb, Map as MapIcon, PackageOpen,
   RotateCcw, Save, Upload, BookOpen, Sparkles, CornerDownLeft,
 } from 'lucide-react';
+import { PageMeta } from '../components/PageMeta';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { cn } from '../lib/utils';
 import {
@@ -199,10 +199,7 @@ export const TextAdventure = () => {
 
   return (
     <div className="min-h-full bg-black text-white p-3 sm:p-5 md:p-8 pb-32 md:pb-8">
-      <Helmet>
-        <title>{`${t('ta_title')} | AniSync`}</title>
-        <meta name="description" content={t('ta_desc')} />
-      </Helmet>
+      <PageMeta title={`${t('ta_title')} | AniSync`} description={t('ta_desc')} />
 
       <div className="max-w-6xl mx-auto">
         {/* Hero */}

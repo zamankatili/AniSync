@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { useAnimeData } from '../hooks/useAnimeData';
+import { PageMeta } from '../components/PageMeta';
 import { Anime } from '../types';
 import { motion } from 'framer-motion';
 import { Star, ArrowLeft, Loader2, PlayCircle, Plus, Check, ListVideo, Heart, Tv2, Sparkles } from 'lucide-react';
@@ -152,32 +152,13 @@ export const AnimeDetail = () => {
 
   return (
     <div className="pb-20 md:pb-0">
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-
-        {/* OpenGraph */}
-        <meta property="og:type" content="video.tv_show" />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content={pageImage} />
-        <meta property="og:url" content={pageUrl} />
-        <meta property="og:site_name" content="AniSync" />
-
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={pageImage} />
-
-        {/* Canonical */}
-        <link rel="canonical" href={pageUrl} />
-
-        {/* Schema.org JSON-LD */}
-        <script type="application/ld+json">
-          {JSON.stringify(schemaJsonLd)}
-        </script>
-      </Helmet>
+      <PageMeta
+        title={pageTitle}
+        description={pageDescription}
+        image={pageImage}
+        type="video.tv_show"
+        jsonLd={schemaJsonLd}
+      />
       {/* Hero Header */}
       <div className="relative h-64 md:h-96 w-full object-cover border-b-4 border-black">
         <div 

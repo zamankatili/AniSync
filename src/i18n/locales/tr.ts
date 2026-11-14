@@ -18,6 +18,8 @@ export default {
       "seo_watchparty_desc": "Canlı senkronize video oynatıcısı, anlık sohbet ve uçuşan emoji reaksiyonları ile arkadaşlarınızla anime fragmanları izleyin.",
       "seo_musicquiz_title": "Anime Müzik Quizi & Açılış Şarkısı Yarışı – AniSync",
       "seo_musicquiz_desc": "Günün açılış şarkısını dinleyin, animeyi tahmin edin ve Arcade modunda en yüksek skoru kırarak liderlik tablosuna adınızı yazdırın.",
+      "seo_voice_duel_title": "Anime Ses Düellosu & Karakter Testi - AniSync",
+      "seo_voice_duel_desc": "Resmî ses klipleri veya metin ipuçlarından anime karakterini tahmin et, en iyi skor için yarış ve liderlik tablosuna çık.",
       "seo_calendar_title": "Haftalık Yayın Takvimi & Hatırlatıcılar – AniSync",
       "seo_calendar_desc": "Türkiye saatine göre haftalık yeni bölüm yayın akışı, canlı geri sayım, Google Takvim senkronizasyonu ve 15 dk kala bildirimler.",
       "seo_gridmaker_title": "3x3 Anime Grid Kartı Oluşturucu – AniSync",

@@ -87,6 +87,10 @@ export interface UserProfile {
   bio?: string;
   /** Firestore `users/{uid}.role` — yalnız admin/moderatör için dolu. İstemci yazamaz (rules). */
   role?: 'admin' | 'moderator' | 'user';
+  /** `users/{uid}.banUntil` — epoch ms; gelecekteyse topluluk yazıları kapalı (rules). */
+  banUntil?: number;
+  /** `users/{uid}.banReason` — yönetici notu; kullanıcıya gösterilir. */
+  banReason?: string;
 }
 
 export interface SocialFeedPost {

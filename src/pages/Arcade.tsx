@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { PageMeta } from '../components/PageMeta';
 import { ArrowLeft, BookOpen, Gamepad2, Grid2X2, Trophy } from 'lucide-react';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useHighScore } from '../games/useHighScore';
@@ -96,10 +96,7 @@ export const Arcade = () => {
 
   return (
     <div className="w-full min-w-0 max-w-5xl mx-auto">
-      <Helmet>
-        <title>{`${t('arcade')} — AniSync`}</title>
-        <meta name="description" content={t('arcade_tagline')} />
-      </Helmet>
+      <PageMeta title={`${t('arcade')} — AniSync`} description={t('arcade_tagline')} />
 
       {currentGame ? (
         <div>

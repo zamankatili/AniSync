@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageMeta } from '../components/PageMeta';
 import { 
   Flame, Trophy, CheckCircle2, Award, Sparkles, Share2, RotateCcw, 
   HelpCircle, Filter, ChevronRight, Check, AlertCircle, BarChart3, Star, ArrowLeft
@@ -101,10 +101,7 @@ export const WeeklyChallengePage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20">
-      <Helmet>
-        <title>{t('weekly_page_meta_title')}</title>
-        <meta name="description" content={t('weekly_page_meta_desc')} />
-      </Helmet>
+      <PageMeta title={t('weekly_page_meta_title')} description={t('weekly_page_meta_desc')} />
 
       {/* Top Breadcrumb & Quick Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4">

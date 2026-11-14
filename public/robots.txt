@@ -1,10 +1,20 @@
 User-agent: *
 Allow: /
+
+# Kişisel / oturum gerektiren sayfalar
 Disallow: /list
-Disallow: /lists
-Disallow: /profile
+Disallow: /profile$
+Allow: /profile/
 Disallow: /watch-party
 Disallow: /grid-maker
+Disallow: /admin
+Disallow: /onboarding
+
+# Eski/çoğaltılmış adresler (uygulama kanonik rotaya yönlendirir)
+Disallow: /anisyncdle
+Disallow: /polls
+
+# API uçları
 Disallow: /api/
 
 Sitemap: https://anisync-tau.vercel.app/sitemap.xml

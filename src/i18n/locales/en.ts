@@ -18,6 +18,8 @@ export default {
       "seo_watchparty_desc": "Watch anime trailers with friends using live synced video player, instant chat and flying emoji reactions.",
       "seo_musicquiz_title": "Anime Music Quiz & Opening Song Duel – AniSync",
       "seo_musicquiz_desc": "Listen to today's opening song, guess the anime, and write your name on the leaderboard by breaking high scores in Arcade mode.",
+      "seo_voice_duel_title": "Anime Voice Duel & Character Quiz - AniSync",
+      "seo_voice_duel_desc": "Guess the anime character from official voice clips or text clues, compete for the best score, and climb the leaderboard.",
       "seo_calendar_title": "Weekly Airing Schedule & Reminders – AniSync",
       "seo_calendar_desc": "Weekly new episode airing schedule by Turkey time, live countdown, Google Calendar sync and notifications 15 minutes before.",
       "seo_gridmaker_title": "3x3 Anime Grid Card Maker – AniSync",

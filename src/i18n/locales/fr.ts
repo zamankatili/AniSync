@@ -18,6 +18,8 @@ export default {
       "seo_watchparty_desc": "Regarde des bandes-annonces d'animes avec tes amis grâce au lecteur vidéo synchronisé en direct, au chat instantané et aux réactions emoji volantes.",
       "seo_musicquiz_title": "AniSync – Quiz Musique Anime & Duel de Chanson d'Ouverture",
       "seo_musicquiz_desc": "Écoute la chanson d'ouverture du jour, devine l'anime, et écris ton nom au classement en battant les scores records en mode Arcade.",
+      "seo_voice_duel_title": "Duel de voix anime & quiz de personnages - AniSync",
+      "seo_voice_duel_desc": "Devine le personnage d'anime à partir de clips vocaux officiels ou d'indices textuels, vise le meilleur score et grimpe au classement.",
       "seo_calendar_title": "AniSync – Calendrier de Diffusion Hebdomadaire & Rappels",
       "seo_calendar_desc": "Calendrier hebdomadaire des nouveaux épisodes (heure de Turquie), compte à rebours en direct, synchronisation Agenda Google et notifications 15 minutes avant.",
       "seo_gridmaker_title": "AniSync – Créateur de Carte Grille Anime 3x3",

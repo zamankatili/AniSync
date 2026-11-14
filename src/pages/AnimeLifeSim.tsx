@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import { PageMeta } from '../components/PageMeta';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
 import { ANIME_REGIONS, getRegionsByWorld, getRegionById } from '../data/animeRegions';
@@ -604,10 +604,7 @@ export const AnimeLifeSim: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
-      <Helmet>
-        <title>{t('als_page_title')}</title>
-        <meta name="description" content={t('als_page_desc')} />
-      </Helmet>
+      <PageMeta title={t('als_page_title')} description={t('als_page_desc')} />
 
       {phase === 'select' && (
         <div className="space-y-6">

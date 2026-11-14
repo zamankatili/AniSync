@@ -4,10 +4,11 @@ import { useAppStore } from '../../context/AppStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useRemoteConfig } from '../../hooks/useRemoteConfig';
 import { DEFAULT_REMOTE_CONFIG, type RemoteConfig } from '../../lib/adminConfig';
-import { collection, doc, getDocs, orderBy, query, limit, updateDoc, deleteDoc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDocs, addDoc, orderBy, query, limit, updateDoc, deleteDoc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { SEED_POLLS, generateMorePolls } from '../../data/polls';
 import { cn } from '../../lib/utils';
+import { isBootstrapAdminEmail } from '../../lib/adminConfig';
 import { Shield, Users, Flag, Settings, RefreshCw, Check, Inbox } from 'lucide-react';
 
 type Tab = 'flags' | 'users' | 'reports' | 'data';
@@ -54,9 +55,31 @@ export const AdminPage: React.FC = () => {
   const [seedingPolls, setSeedingPolls] = useState(false);
   const [loading, setLoading] = useState(false);
   const { addToast } = useToastStore();
-  const { currentUser } = useAppStore();
+  const { currentUser, userProfile } = useAppStore();
+  const canManageRoles = isBootstrapAdminEmail(currentUser?.email) || userProfile.role === 'admin';
 
   useEffect(() => { setDraft(config); }, [config, loaded]);
+
+  /**
+   * Denetim izi: kim, ne zaman, hangi hedefe ne yaptı. `adminActions` yalnız
+   * admin/moderatör tarafından ve kendi adına yazılabilir (firestore.rules).
+   */
+  const logAdminAction = async (action: string, target: string, details: Record<string, unknown> = {}) => {
+    if (!currentUser) return;
+    try {
+      await addDoc(collection(db, 'adminActions'), {
+        action,
+        target,
+        details,
+        actorUid: currentUser.uid,
+        actorEmail: currentUser.email ?? null,
+        createdAt: serverTimestamp(),
+      });
+    } catch (err) {
+      // Denetim kaydı başarısız olsa da asıl işlem geri alınmaz; konsola düş.
+      console.warn('Admin audit log failed:', err);
+    }
+  };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -105,6 +128,7 @@ export const AdminPage: React.FC = () => {
     try {
       await updateDoc(doc(db, 'dataRequests', row.id), { status: 'done' });
       setDataRequests(prev => prev.map(x => (x.id === row.id ? { ...x, status: 'done' } : x)));
+      void logAdminAction('data_request_done', `dataRequests/${row.id}`, { type: row.type ?? null });
       addToast(t('admin_data_done', { defaultValue: 'Talep tamamlandı olarak işaretlendi' }), 'success');
     } catch {
       addToast(t('admin_action_failed', { defaultValue: 'İşlem başarısız' }), 'error');
@@ -155,7 +179,11 @@ export const AdminPage: React.FC = () => {
     try {
       await updateDoc(doc(db, 'users', u.id), {
         banUntil: banning ? Date.now() + 1000 * 60 * 60 * 24 * 7 : 0, // 7 gün
-        banReason: banning ? 'Admin action' : '',
+        banReason: banning ? t('admin_ban_reason_default', { defaultValue: 'Yönetici işlemi' }) : '',
+      });
+      void logAdminAction(banning ? 'ban_user' : 'unban_user', `users/${u.id}`, {
+        days: banning ? 7 : 0,
+        name: u.name ?? null,
       });
       addToast(banning ? t('admin_user_banned', { defaultValue: 'Kullanıcı banlandı (7 gün)' }) : t('admin_user_unbanned', { defaultValue: 'Ban kaldırıldı' }), 'success');
       loadUsers();
@@ -165,10 +193,35 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const changeRole = async (u: FirestoreUserDoc, nextRole: 'user' | 'moderator' | 'admin') => {
+    if (!canManageRoles || busy) return;
+    if (u.id === currentUser?.uid && nextRole !== 'admin') {
+      addToast(t('admin_role_self_blocked', { defaultValue: 'Kendi admin rolünü kaldıramazsın' }), 'error');
+      return;
+    }
+    setBusy(true);
+    try {
+      await updateDoc(doc(db, 'users', u.id), { role: nextRole });
+      void logAdminAction('change_role', `users/${u.id}`, {
+        from: u.role ?? 'user',
+        to: nextRole,
+        name: u.name ?? null,
+      });
+      setUsers(prev => prev.map(x => (x.id === u.id ? { ...x, role: nextRole } : x)));
+      addToast(t('admin_role_changed', { defaultValue: 'Rol güncellendi' }), 'success');
+    } catch (err) {
+      console.warn('Role change failed:', err);
+      addToast(t('admin_action_failed', { defaultValue: 'İşlem başarısız' }), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const resolveReport = async (row: ReportRow) => {
     setBusy(true);
     try {
       await deleteDoc(doc(db, 'reports', row.id));
+      void logAdminAction('archive_report', `reports/${row.id}`, { targetPath: row.targetPath ?? null, reason: row.reason ?? null });
       addToast(t('admin_report_resolved', { defaultValue: 'Şikayet çözüldü' }), 'success');
       setReports(prev => prev.filter(x => x.id !== row.id));
     } catch { addToast(t('admin_action_failed', { defaultValue: 'Silinemedi' }), 'error'); } finally { setBusy(false); }
@@ -188,6 +241,7 @@ export const AdminPage: React.FC = () => {
     try {
       await deleteDoc(doc(db, row.targetPath));
       await deleteDoc(doc(db, 'reports', row.id));
+      void logAdminAction('delete_reported_content', row.targetPath, { reportId: row.id, reason: row.reason ?? null });
       addToast(t('admin_content_deleted', { defaultValue: 'İçerik silindi' }), 'success');
       setReports(prev => prev.filter(x => x.id !== row.id));
     } catch (err) {
@@ -356,7 +410,23 @@ export const AdminPage: React.FC = () => {
                     <td className="py-2 pr-4 text-white font-bold truncate max-w-[140px]">{u.name ?? '—'}</td>
                     <td className="py-2 pr-4 text-neutral-400 truncate max-w-[140px]">@{u.handle ?? '—'}</td>
                     <td className="py-2 pr-4 font-mono text-[10px] text-neutral-500">{u.id.slice(0, 10)}…</td>
-                    <td className="py-2 pr-4 text-neutral-300">{u.role ?? 'user'}</td>
+                    <td className="py-2 pr-4">
+                      {canManageRoles ? (
+                        <select
+                          value={u.role === 'admin' || u.role === 'moderator' ? u.role : 'user'}
+                          onChange={(e) => changeRole(u, e.target.value as 'user' | 'moderator' | 'admin')}
+                          disabled={busy || u.id === currentUser?.uid}
+                          className="bg-black border border-white/30 text-neutral-200 text-[10px] font-black uppercase px-1 py-1 disabled:opacity-40 cursor-pointer"
+                          aria-label={t('admin_role_label', { defaultValue: 'Rol' })}
+                        >
+                          <option value="user">{t('admin_role_user', { defaultValue: 'Üye' })}</option>
+                          <option value="moderator">{t('admin_role_moderator', { defaultValue: 'Moderatör' })}</option>
+                          <option value="admin">{t('admin_role_admin', { defaultValue: 'Admin' })}</option>
+                        </select>
+                      ) : (
+                        <span className="text-neutral-300">{u.role ?? 'user'}</span>
+                      )}
+                    </td>
                     <td className="py-2 pr-4 text-neutral-400">{u.banUntil && u.banUntil > Date.now() ? '✓' : '—'}</td>
                     <td className="py-2 pr-4 text-right">
                       <button onClick={() => toggleBan(u)} className="px-3 py-1 bg-rose-600/80 hover:bg-rose-500 text-white font-black uppercase text-[10px] border border-white/30 cursor-pointer">

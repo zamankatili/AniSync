@@ -52,12 +52,34 @@ Bu turda iki iş yapıldı: (a) tür araştırması yapılıp **özgün** bir me
 
 ---
 
+## 1c. 13 Kasım P0 turu — SEO tek kaynak, ban yaptırımı, admin denetim izi
+
+Bu turda üç P0 açığı kapatıldı: çift meta etiketi, kozmetik ban ve izsiz admin işlemleri.
+
+| # | Boşluk | Çözüm | Dosya |
+|---|---|---|---|
+| 13 | Detay ve oyun sayfalarında **iki `<title>`, iki canonical, iki description** vardı; generic olan kazanabiliyordu. | Tek meta kaynağı `PageMeta`: başlık, açıklama, canonical, OG/Twitter, `og:locale`, `noindex` ve JSON-LD birlikte yazılır. `SEOManager` kendi meta'sını yazan rotaları atlar (`/anime/*`, `/media/*`, `/arcade`, `/lore`, `/text-adventure`, `/challenge`, `/anime-life-sim`, `/dle`). | `src/components/PageMeta.tsx`, `src/components/SEOManager.tsx`, `src/lib/seoRoutes.ts`, 8 sayfa |
+| 14 | `/lists` robots'ta engelliydi, sitemap 9 eski URL'deydi, `/lore` ve `/text-adventure` yoktu; `/profile` kuralı herkese açık profilleri de kapatıyordu. | Sitemap 15 gerçek rotaya çıkarıldı (`lastmod 2026-11-13`); robots'ta `/lists` ve `/profile/` açıldı, yalnızca `/profile$` kapalı. Eski `/anisyncdle` → `/dle`, `/polls` → `/challenge` yönlendirmesi. | `public/sitemap.xml`, `public/robots.txt`, `src/lib/seoRoutes.ts`, `src/App.tsx` |
+| 15 | Ban yalnızca admin tablosunda bir sayıydı; kurallar `banUntil` okumuyordu, banlı kullanıcı SDK ile yazmaya devam ediyordu. | `isBanned()` / `canWrite()` kuralları: banlıyken yorum, sohbet, gönderi, oda, oy, puan, parti mesajı yazımı reddedilir. Kişisel takip/liste ve KVKK veri talebi açık kalır. İstemcide `users/{uid}` canlı dinlenir, `Layout` kısıt bandı gösterir. | `firestore.rules`, `src/context/AppStore.tsx`, `src/types.ts`, `src/components/Layout.tsx`, `src/i18nProductPass.ts` |
+| 16 | `reports` create "imzalı herkes" idi: `reportedBy` sahtelenebilir, not sınırsız, sebep serbestti. | Rapor: `reportedBy == uid`, sebep allowlist, not ≤500, etiket ≤300, bilinen alanlar; banlıyken rapor yazılamaz. | `firestore.rules` |
+| 17 | `chatRooms` create yalnızca alan biçimine bakıyordu; Kalfa kapısı istemcideydi. | Doğrudan oda için kural düzeyinde **500 XP** eşiği. Karma hâlâ istemcide hesaplandığı için bu bir hız tümseği, güvenlik sınırı değil — gerçek çözüm güvenilir uç nokta/Admin SDK. | `firestore.rules`, `src/lib/rooms.ts` |
+| 18 | Rol verme/alma arayüzü yoktu; `adminActions` tanımlı ama hiç yazılmıyordu. | Admin panelinde rol seçici (yalnız admin; kendi rolünü düşürmesi engelli). Ban/unban, rol değişimi, rapor arşivleme, içerik silme ve KVKK tamamlama `adminActions`'a yazılır; kayıtlar admin/moderatör okur, güncelleme/silme admin-only. | `src/pages/admin/AdminPage.tsx`, `src/i18nAdmin.ts`, `firestore.rules` |
+
+### Bu turda doğrulananlar
+
+- `/anime/16498`, `/arcade`, `/lore`, `/text-adventure`, `/challenge`, `/dle`: **tek** canonical, **tek** description, **tek** `og:title`; başlık sayfaya özel.
+- `/profile`: `noindex, follow`; `/anisyncdle` istemcide `/dle`'a yönleniyor.
+- `/lists`, `/calendar`, `/voice-duel`: yeni meta kaynağından başlık/açıklama alıyor (`voice-duel` anahtarları dört dilde eklendi).
+- Sitemap/robots ile rota haritası `seoFiles.test.ts` ile kilitlendi; kendi meta'sını yazan sayfada ikinci `<Helmet>` kalırsa test kırılır.
+
+---
+
 ## 2. Doğrulama kapıları (12–13 Kasım 2026, bu çalışma ağacı)
 
 | Kapı | Komut | Sonuç |
 |---|---|---|
 | TypeScript (strict) | `npx.cmd tsc --noEmit` | ✅ exit 0 |
-| Testler | `npm.cmd test -- --run` | ✅ **15 dosya / 100 test** |
+| Testler | `npm.cmd test -- --run` | ✅ **16 dosya / 105 test** |
 | Üretim derlemesi | `npm.cmd run build` | ✅ exit 0 (route-level code splitting korunuyor) |
 | ESLint | `npx.cmd eslint src --quiet` | ✅ 0 error (uyarılar önceden var olan stil uyarıları) |
 
@@ -68,6 +90,7 @@ Yeni test dosyaları:
 - `src/data/fanLore.test.ts` — 24+ kayıt, kategori/kaynak/çeviri bütünlüğü, üç dilde arama, spoiler dağılımı.
 - `src/data/textAdventure.test.ts` — 7 test: dört dilde oda/eşya/son/ipucu bütünlüğü, tekil kimlikler, ulaşılabilir harita, eşyaların yerleşimi, fiil eşlemesi.
 - `src/lib/textAdventureEngine.test.ts` — 15 test: üç sona giden tam yürüyüş, karanlık arşiv, kilitli kapılar, yanlış kod, dört dilde komut, kaydet/yükle ve bozuk kayıt, ipucu kademeleri, durum değişmezliği.
+- `src/lib/seoFiles.test.ts` — 5 test: sitemap rota kümesi ve `lastmod`, özel/eski rotaların sitemap'e sızmaması, robots kuralları, kendi meta'sını yazan her sayfada `<PageMeta>` olması ve ikinci `<Helmet>` bulunmaması.
 
 Tarayıcı dumanı (localhost, TR):
 
@@ -75,6 +98,7 @@ Tarayıcı dumanı (localhost, TR):
 - `/voice-duel` → mod seçici görünüyor; **İpucu Tanıma** ile 10 turluk oyun başlıyor, dört dilli ipucu ve dört şık geliyor, konsol hatası yok.
 - KÖŞE paneli → oda sekmeleri ve besteci çiziliyor, konsol hatası yok.
 - `/text-adventure` → tam yürüyüş sona ulaşıyor (%100), son kartı ve "BAŞTAN BAŞLA" çalışıyor, kaydet/yükle turu doğrulandı; 390 ve 320 px genişlikte yatay taşma yok, çipler yatay kayıyor, odaklanınca komut alanı sabit çubukların üstüne geliyor; konsol hatası yok.
+- SEO tek kaynak turu (localhost, TR): `/anime/16498` tek canonical/description/og:title ve AoT başlığı; `/arcade`, `/lore`, `/text-adventure`, `/challenge`, `/dle` tek meta; `/profile` noindex; `/anisyncdle` → `/dle`.
 
 ---
 
@@ -94,6 +118,13 @@ Tarayıcı dumanı (localhost, TR):
 10. **Metin macera tek bölüm.** "Kayıp Bölüm" 7 oda / 15–25 dakika; ikinci bölüm, `undo` komutu, başarım ve oyuncu yazımı editörü yok. İçerik dört dilde elle yazıldığı için büyüme hızı düşük — bu bilinçli.
 11. **Yönlendirmeli Google girişi gerçek cihazda test edilmedi.** Kod yolu (`signInWithRedirect` + `getRedirectResult`) eklendi ve popup kapatma hatadan sayılmıyor; ancak popup engelleyen bir tarayıcıda ve Capacitor WebView'de uçtan uca denenmedi. WebView için hâlâ yerel auth eklentisi gerekebilir.
 12. **Dokunma hedefleri sayfa sayfa eşit değil.** Oyun sayfasında tüm düğmeler ≥44 px; uygulamanın geri kalanında hâlâ 32–36 px kontroller var. Sistematik bir erişilebilirlik taraması yapılmadı.
+13. **Botlar için sunucu tarafı meta yok.** `PageMeta` istemcide çalışır; Discord/X/WhatsApp botları JS çalıştırmadığı için paylaşım kartı hâlâ generic. Vercel edge/function ile `/anime/:id` ve `/media/:id` için title + `og:image` enjeksiyonu gerekli (P0 devamı).
+14. **Dil başına URL yok.** Dört hreflang de aynı SPA'ya `?lang=` ile gidiyor; canonical query'yi atıyor. Gerçek çok dilli indeksleme için `/tr/...`, `/en/...` rotaları gerekli.
+15. **Kalfa kapısı güvenilir değil.** Kural 500 XP istiyor ama `karmaAtCreation` istemcide hesaplanıyor; kötü niyetli istemci bu alanı uydurabilir. Trusted endpoint/Admin SDK + `users/{uid}.karma` senkronu şart.
+16. **Rapor hız sınırı yok.** `reportedBy` doğrulandı ve alanlar sınırlandı, ancak aynı hedefe tekrar/limit koruması yok (rules sorgu sayamaz). Cloud Function/App Check ile çözülür.
+17. **E-posta doğrulama ve handle tekilliği yok.** Handle hâlâ e-postanın `@` öncesinden türetiliyor; `users/{uid}` dünya-okunur. Doğrulama akışı + benzersiz handle indeksi P1.
+18. **Moderatör paneli yok.** Moderasyon KÖŞE paneli + admin sekmelerine dağılmış; şikayet bağlamı, atama, durum akışı ve süreli ban (7 gün sabit) hâlâ eksik.
+19. **Performans/erişilebilirlik borcu.** `loading="lazy"` yalnızca 3/77 görselde; `charts` her rotada modulepreload; ortak Modal/focus-trap ve skip-link yok; Sentry/GA4 yok.
 
 ---
 
@@ -115,5 +146,8 @@ Tarayıcı dumanı (localhost, TR):
 - Windows: `npm.cmd`, `npx.cmd`, `firebase.cmd` kullan; PowerShell git/gh stderr'i hata gibi gösterir.
 - Locale dosyaları aynı anahtar kümesini korumalı; anahtar tekrarı TS1117 verir; BOM'suz UTF-8.
 - Yeni UI metni eklerken büyük locale dosyalarını düzenlemek yerine `i18nProductPass.ts`'e eklemek daha güvenli.
+- Yeni sayfa rotası eklerken `src/lib/seoRoutes.ts` + `public/sitemap.xml` birlikte güncellenmeli; `seoFiles.test.ts` aksi halde kırılır. Sayfa kendi meta'sını yazıyorsa `<PageMeta>` kullan ve rotayı `SELF_MANAGED_EXACT`/`PREFIXES`'e ekle.
+- `firestore.rules` değişiklikleri **elle** dağıtılmalı: `firebase.cmd deploy --only firestore:rules --project folkloric-centaur-q6tp2`. `FIREBASE_TOKEN` yoksa GitHub `deploy-rules.yml` düşer; kural dosyası canlıya çıkmadan ban/rol/rapor korumaları etkin değildir.
+- Ban yalnızca topluluk yazılarını keser (`canWrite`); kişisel watchlist/liste ve KVKK veri talebi açık kalır. Ban bandı `users/{uid}` canlı dinleyicisinden beslenir.
 - Life Sim olay kimlikleri dünya öneklerine uymalı; `universePaths.test.ts` ve `eventEngine.test.ts` bunu zorlar.
 - PWA `public/sw.js` kabuğu (`anisync-shell-v2`) dağıtımdan sonra kısa süre eski sürümü servis edebilir; gezinme network-first, hash'li varlıklar cache-first. Eski derleme görünürse SW/cache temizle.

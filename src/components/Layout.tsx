@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight, Mic2, BookOpen, Terminal } from 'lucide-react';
+import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight, Mic2, BookOpen, Terminal, ShieldAlert } from 'lucide-react';
 import { cn, getSafeImageUrl, handleImageError } from '../lib/utils';
 import { animeDetailPath } from '../lib/mediaLinks';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -108,6 +108,12 @@ export const Layout = () => {
   const { checkAutoTheme, currentTheme } = useThemeStore();
   const activeConfig = THEME_CONFIGS[currentTheme] || THEME_CONFIGS.noon;
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Ban bilgisi `users/{uid}` dinleyicisinden gelir; yazma kuralları da aynı alanı okur.
+  const banActive = Boolean(currentUser && userProfile.banUntil && userProfile.banUntil > Date.now());
+  const banEndsAt = banActive && userProfile.banUntil
+    ? new Date(userProfile.banUntil).toLocaleString(i18n.language, { dateStyle: 'medium', timeStyle: 'short' })
+    : '';
 
   // Global keyboard shortcut for search (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -580,6 +586,27 @@ export const Layout = () => {
              )}
            </div>
         </header>
+
+        {banActive && (
+          <div role="status" className="border-b-4 border-rose-500 bg-rose-950/70 px-4 py-3">
+            <div className="max-w-7xl mx-auto flex items-start gap-3">
+              <ShieldAlert size={18} strokeWidth={2.5} className="text-rose-400 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-wider text-rose-300">
+                  {t('restriction_banner_title')}
+                </p>
+                <p className="text-[11px] font-bold text-rose-100/85">
+                  {t('restriction_banner_body', { date: banEndsAt })}
+                </p>
+                {userProfile.banReason && (
+                  <p className="text-[11px] font-bold text-rose-200/70 break-words">
+                    {t('restriction_banner_reason', { reason: userProfile.banReason })}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="p-4 md:p-6 pb-28 md:pb-6 flex-1">
           <AnimeErrorBoundary>

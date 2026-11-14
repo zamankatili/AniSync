@@ -100,6 +100,11 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     ta_restart_story: 'Baştan başla',
     ta_keyboard_note: 'Klavyeyle tam oynanır; mobilde komut çiplerine dokun.',
     ta_history_note: 'Önceki komutlar için ↑ / ↓ kullan.',
+
+    // Hesap kısıtı (ban)
+    restriction_banner_title: 'Hesabın geçici olarak kısıtlı',
+    restriction_banner_body: 'Yorum, sohbet ve gönderi yazma kapalı. Kısıt bitişi: {{date}}.',
+    restriction_banner_reason: 'Sebep: {{reason}}',
   },
 
   en: {
@@ -192,6 +197,11 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     ta_restart_story: 'Start over',
     ta_keyboard_note: 'Fully playable with a keyboard; on mobile, tap the command chips.',
     ta_history_note: 'Use ↑ / ↓ for previous commands.',
+
+    // Account restriction (ban)
+    restriction_banner_title: 'Your account is temporarily restricted',
+    restriction_banner_body: 'Posting comments, chat messages and feed posts is disabled. Restriction ends: {{date}}.',
+    restriction_banner_reason: 'Reason: {{reason}}',
   },
 
   ja: {
@@ -284,6 +294,11 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     ta_restart_story: '最初から',
     ta_keyboard_note: 'キーボードだけで遊べます。モバイルではコマンドチップをタップ。',
     ta_history_note: '前のコマンドは ↑ / ↓ で呼び出せます。',
+
+    // アカウント制限（BAN）
+    restriction_banner_title: 'アカウントは一時的に制限されています',
+    restriction_banner_body: 'コメント・チャット・投稿の書き込みができません。解除日時: {{date}}。',
+    restriction_banner_reason: '理由: {{reason}}',
   },
 
   fr: {
@@ -376,5 +391,10 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     ta_restart_story: 'Reprendre au début',
     ta_keyboard_note: 'Entièrement jouable au clavier ; sur mobile, touche les puces de commande.',
     ta_history_note: 'Utilise ↑ / ↓ pour les commandes précédentes.',
+
+    // Restriction de compte (bannissement)
+    restriction_banner_title: 'Ton compte est temporairement restreint',
+    restriction_banner_body: 'La publication de commentaires, messages et posts est désactivée. Fin de la restriction : {{date}}.',
+    restriction_banner_reason: 'Raison : {{reason}}',
   },
 };

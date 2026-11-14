@@ -18,6 +18,8 @@ export default {
       "seo_watchparty_desc": "ライブ同期動画プレーヤー、インスタントチャット、飛び出すリアクションで友達とアニメ予告編を一緒に見よう。",
       "seo_musicquiz_title": "AniSync – アニメミュージッククイズ＆オープニングソング対決",
       "seo_musicquiz_desc": "今日のオープニングソングを聴いてアニメを当てよう。アーケードモードでハイスコアを更新し、ランキングに名前を刻もう。",
+      "seo_voice_duel_title": "アニメ声優デュエル＆キャラクタークイズ - AniSync",
+      "seo_voice_duel_desc": "公式ボイスクリップやテキストのヒントからアニメキャラクターを当てて、最高スコアを目指そう。",
       "seo_calendar_title": "AniSync – 週間放送スケジュール＆リマインダー",
       "seo_calendar_desc": "トルコ時間基準の週間新エピソード放送スケジュール、ライブカウントダウン、Googleカレンダー同期、15分前通知。",
       "seo_gridmaker_title": "AniSync – 3x3アニメグリッドカードメーカー",

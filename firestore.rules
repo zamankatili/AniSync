@@ -30,6 +30,29 @@ service cloud.firestore {
     function affectedKeys() {
       return request.resource.data.diff(resource.data).affectedKeys();
     }
+    // ─── Ban: users/{uid}.banUntil (epoch ms) gelecekteyse topluluk yazıları kapalı ───
+    // Kişisel takip/liste/veri talebi yazıları açık kalır (KVKK ve temel işlev).
+    function isBanned() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().data.get('banUntil', 0) is number
+        && userDoc().data.get('banUntil', 0) > request.time.toMillis();
+    }
+    function canWrite() {
+      return isSignedIn() && !isBanned();
+    }
+    // Rapor: kendi adına, geçerli sebep, sınırlı not/etiket — spoofing ve şişirme engeli.
+    function isValidReport(data) {
+      return data.keys().hasOnly(['targetPath', 'targetLabel', 'reason', 'note', 'reportedBy', 'status', 'createdAt'])
+        && data.reportedBy == request.auth.uid
+        && data.targetPath is string
+        && data.targetPath.size() >= 3
+        && data.targetPath.size() <= 300
+        && (!data.keys().hasAny(['targetLabel']) || (data.targetLabel is string && data.targetLabel.size() <= 300))
+        && data.reason in ['spam', 'harassment', 'hate', 'misinformation', 'other']
+        && data.status == 'open'
+        && (!data.keys().hasAny(['note']) || data.note == null || (data.note is string && data.note.size() <= 500));
+    }
 
     // ─── Admin & sistem ─────────────────────────────────────
     match /config/{doc} {
@@ -38,11 +61,18 @@ service cloud.firestore {
     }
     match /adminActions/{doc} {
       allow read: if isAdmin();
-      allow write: if isAdminOnly();
+      // Denetim izi: yalnız kendi adına kayıt; güncelleme/silme admin-only (iz kurcalanmaz).
+      allow create: if isAdmin()
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.action is string
+        && request.resource.data.action.size() <= 48
+        && request.resource.data.target is string
+        && request.resource.data.target.size() <= 200;
+      allow update, delete: if isAdminOnly();
     }
     match /reports/{doc} {
       allow read: if isAdmin();
-      allow create: if isSignedIn();
+      allow create: if canWrite() && isValidReport(request.resource.data);
       allow update, delete: if isAdmin();
     }
     // KVKK/GDPR veri talepleri: kullanıcı yalnız kendi adına oluşturabilir; işleme admin
@@ -63,8 +93,8 @@ service cloud.firestore {
       // Oluşturma: rol/ban alanları yok sayılır (yetki yükseltme koruması)
       allow create: if isSignedIn() && request.auth.uid == uid
         && !request.resource.data.keys().hasAny(['role', 'banUntil', 'banReason']);
-      // Sahip güncellemesi: rol/ban alanlarına dokunamaz
-      allow update: if isSignedIn() && request.auth.uid == uid
+      // Sahip güncellemesi: rol/ban alanlarına dokunamaz; banlıyken profil düzenleyemez
+      allow update: if canWrite() && request.auth.uid == uid
         && !affectedKeys().hasAny(['role', 'banUntil', 'banReason']);
       // Moderatör/admin: SADECE ban alanları değiştirebilir
       allow update: if isAdmin()
@@ -106,16 +136,16 @@ service cloud.firestore {
         allow delete: if isAdmin();
       }
     }
-    match /suggestedPolls/{id} { allow read: if isAdmin(); allow create: if isSignedIn(); allow update, delete: if isAdmin(); }
+    match /suggestedPolls/{id} { allow read: if isAdmin(); allow create: if canWrite(); allow update, delete: if isAdmin(); }
 
     // ─── Forum: yazar veya moderatör/admin ─────────────────────
     match /forumPosts/{id} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.author.uid == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.author.uid == request.auth.uid;
       // Yazar her şeyi; diğer imzalı kullanıcılar SADECE like/yorum alanlarını değiştirebilir
       allow update: if isAdmin()
-        || (isSignedIn() && resource.data.author.uid == request.auth.uid)
-        || (isSignedIn() && affectedKeys().hasOnly(['likedBy', 'likes', 'comments', 'replies']));
+        || (canWrite() && resource.data.author.uid == request.auth.uid)
+        || (canWrite() && affectedKeys().hasOnly(['likedBy', 'likes', 'comments', 'replies']));
       allow delete: if isAdmin()
         || (isSignedIn() && resource.data.author.uid == request.auth.uid);
     }
@@ -123,7 +153,7 @@ service cloud.firestore {
     // ─── Topluluk aktiviteleri: sadece kendi adına yazma ───────
     match /recentActivities/{id} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid;
       allow update: if isAdminOnly();
       allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
@@ -133,7 +163,7 @@ service cloud.firestore {
     // Özet dokümanı istemci transaction ile günceller; değerler aralık dışına çıkamaz.
     match /animeRatings/{animeId} {
       allow read: if true;
-      allow create, update: if isSignedIn()
+      allow create, update: if canWrite()
         && request.resource.data.averageRating is number
         && request.resource.data.averageRating >= 0
         && request.resource.data.averageRating <= 5
@@ -144,7 +174,7 @@ service cloud.firestore {
 
       match /ratings/{uid} {
         allow read: if true;
-        allow create, update: if isSignedIn() && request.auth.uid == uid
+        allow create, update: if canWrite() && request.auth.uid == uid
           && request.resource.data.rating is int
           && request.resource.data.rating >= 1
           && request.resource.data.rating <= 5;
@@ -155,12 +185,12 @@ service cloud.firestore {
     // Chat canlı etkinlik RSVP'leri: everyone reads count; only own write
     match /chatEventRsvps/{uid} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn() && request.auth.uid == uid;
+      allow create, update, delete: if canWrite() && request.auth.uid == uid;
     }
 
     match /animeComments/{id} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid
         && request.resource.data.content is string
         && request.resource.data.content.size() <= 2000;
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
@@ -169,33 +199,33 @@ service cloud.firestore {
     // ─── Anime incelemeleri: yazar tam yetki; herkes sadece like alanını değiştirebilir ───
     match /animeReviews/{animeId}/userReviews/{uid} {
       allow read: if true;
-      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow write: if isAdmin() || (canWrite() && request.auth.uid == uid);
       allow update: if isAdmin()
-        || (isSignedIn() && affectedKeys().hasOnly(['likes', 'likedBy']));
+        || (canWrite() && affectedKeys().hasOnly(['likes', 'likedBy']));
     }
 
     // ─── Özel listeler: `creatorId` alanı ──────────────────────
     match /customLists/{id} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.creatorId == request.auth.uid;
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.creatorId == request.auth.uid);
     }
 
     // ─── Sosyal akış ───────────────────────────────────────────
     match /socialFeed/{id} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid;
       // Yazar her şeyi; diğer imzalı kullanıcılar SADECE like alanlarını değiştirebilir
       allow update: if isAdmin()
-        || (isSignedIn() && resource.data.userId == request.auth.uid)
-        || (isSignedIn() && affectedKeys().hasOnly(['likedBy', 'likes']));
+        || (canWrite() && resource.data.userId == request.auth.uid)
+        || (canWrite() && affectedKeys().hasOnly(['likedBy', 'likes']));
       allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
     // ─── Genel sohbet: `uid` alanı ─────────────────────────────
     match /globalChat/{id} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid
+      allow create: if canWrite() && request.resource.data.uid == request.auth.uid
         && request.resource.data.text is string
         && request.resource.data.text.size() <= 500;
       allow update: if isAdminOnly();
@@ -203,7 +233,7 @@ service cloud.firestore {
     }
 
     // ─── Kozmik sohbet odaları (resmi + topluluk) ──────────────
-    // okuma imzalı kullanıcılara; oda açma: Kalfa+ (istemcide uygulanır) + AI filtresi;
+    // okuma herkese açık; oda açma: Kalfa+ (kural düzeyinde 500 XP) + AI filtresi;
     // istek odası: 50 oy + moderatör onayı; yalnızca kendi uid'i ile oy verilebilir.
     function isValidRoom(data) {
       return data.keys().hasOnly(['name', 'topic', 'icon', 'createdAt', 'createdBy', 'karmaAtCreation', 'source'])
@@ -213,6 +243,9 @@ service cloud.firestore {
         && data.createdBy.name is string
         && data.karmaAtCreation is int
         && data.source in ['direct', 'approved']
+        // Doğrudan oda: Kalfa eşiği (500 XP). Karma istemcide hesaplanır; asıl
+        // güvence ileride güvenilir uç nokta/Admin SDK ile sağlanacak.
+        && (data.source != 'direct' || data.karmaAtCreation >= 500)
         // Doğrudan oda: kullanıcı yalnız kendi adına açar.
         // Onaylı oda: moderatör, isteği onaylarken istek sahibi adına oluşturur.
         && (
@@ -232,12 +265,12 @@ service cloud.firestore {
 
     match /chatRooms/{id} {
       allow read: if true;
-      allow create: if isSignedIn() && isValidRoom(request.resource.data);
+      allow create: if canWrite() && isValidRoom(request.resource.data);
       allow update, delete: if isAdmin();
     }
     match /roomRequests/{id} {
       allow read: if true;
-      allow create: if isSignedIn()
+      allow create: if canWrite()
         && isValidRoomRequest(request.resource.data)
         && request.resource.data.status == 'pending'
         && request.resource.data.votes == 0
@@ -245,7 +278,7 @@ service cloud.firestore {
         && request.resource.data.aiReason is string
         && request.resource.data.aiReason.size() <= 220;
       // Oy verme: yalnızca kendi uid eklenir; tek oy; status değişmez
-      allow update: if isSignedIn()
+      allow update: if canWrite()
         && resource.data.status == 'pending'
         && affectedKeys().hasOnly(['voters', 'votes'])
         && request.resource.data.voters == resource.data.voters.concat([request.auth.uid])
@@ -259,12 +292,12 @@ service cloud.firestore {
     // ─── İzleme partisi odaları ────────────────────────────────
     match /watchPartyRooms/{id} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.hostId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.hostId == request.auth.uid;
       // Oynatma senkronu: host/admin her alanı; diğer imzalı kullanıcılar yalnız
       // kilit açıkken oynatma zamanını değiştirebilir. videoId/title/lock host'a kapalıdır.
       allow update: if isAdmin()
-        || (isSignedIn() && resource.data.hostId == request.auth.uid)
-        || (isSignedIn()
+        || (canWrite() && resource.data.hostId == request.auth.uid)
+        || (canWrite()
             && resource.data.isLocked != true
             && affectedKeys().hasOnly(['isPlaying', 'currentTime', 'updatedAt'])
             && request.resource.data.currentTime is int
@@ -274,13 +307,13 @@ service cloud.firestore {
 
       match /messages/{mid} {
         allow read: if true;
-        allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid
+        allow create: if canWrite() && request.resource.data.uid == request.auth.uid
           && request.resource.data.text.size() <= 500;
         allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       }
       match /reactions/{rid} {
         allow read: if true;
-        allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+        allow create: if canWrite() && request.resource.data.uid == request.auth.uid;
         allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       }
     }
@@ -290,7 +323,7 @@ service cloud.firestore {
     // Güncelleme: imzalı kullanıcılar SADECE mum sayısını +1 artırabilir; admin her şeyi yapar.
     match /sharedLives/{id} {
       allow read: if true;
-      allow create: if isSignedIn()
+      allow create: if canWrite()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.candles == 0
         && request.resource.data.keys().hasOnly([
@@ -300,7 +333,7 @@ service cloud.firestore {
              'eventsCount', 'candles', 'createdAt', 'userId'
            ]);
       allow update: if isAdminOnly()
-        || (isSignedIn()
+        || (canWrite()
             && affectedKeys().hasOnly(['candles'])
             && request.resource.data.candles is int
             && request.resource.data.candles == resource.data.candles + 1);

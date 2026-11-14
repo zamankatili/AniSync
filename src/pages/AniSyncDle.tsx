@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { BlurredImage } from '../components/BlurredImage';
+import { PageMeta } from '../components/PageMeta';
 import { GuessInput } from '../components/GuessInput';
 import { StatsModal } from '../components/StatsModal';
 import { ChallengeInviteBox } from '../components/ChallengeInviteBox';
@@ -213,10 +213,7 @@ export const AniSyncDle: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <Helmet>
-        <title>{t('anisyncdle_meta_title')}</title>
-        <meta name="description" content={t('anisyncdle_meta_desc')} />
-      </Helmet>
+      <PageMeta title={t('anisyncdle_meta_title')} description={t('anisyncdle_meta_desc')} />
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-white/20 pb-6">

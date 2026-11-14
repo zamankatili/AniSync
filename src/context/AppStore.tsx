@@ -182,6 +182,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       photoURL: user.photoURL || null,
     }, { merge: true }).catch((err) => console.warn('Profile sync failed:', err));
 
+    // Rol ve ban alanlarını canlı dinle: ban anında yazma kapanır, kullanıcı bilgilendirilir.
+    // İstemci bu alanları yazamaz (firestore.rules) — yalnız okur.
+    const unsubUserDoc = onSnapshot(doc(db, `users/${uid}`), (snap) => {
+      if (!alive || !snap.exists()) return;
+      const data = snap.data() as { role?: unknown; banUntil?: unknown; banReason?: unknown };
+      const role =
+        data.role === 'admin' || data.role === 'moderator' || data.role === 'user'
+          ? data.role
+          : undefined;
+      setUserProfile(prev => ({
+        ...prev,
+        role,
+        banUntil: typeof data.banUntil === 'number' ? data.banUntil : 0,
+        banReason: typeof data.banReason === 'string' ? data.banReason : '',
+      }));
+    }, (err) => {
+      console.warn('User doc listener error:', err);
+    });
+
     // Yerel (misafir) watchlist'i hesaba taşı — yalnızca bir kez.
     (async () => {
       try {
@@ -216,6 +235,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     return () => {
       alive = false;
+      unsubUserDoc();
       unsubWatchlist();
     };
   }, [uid]);

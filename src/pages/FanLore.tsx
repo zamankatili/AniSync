@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import {
   BookOpen, Search, ExternalLink, Eye, EyeOff, Sparkles, RefreshCw, X,
 } from 'lucide-react';
+import { PageMeta } from '../components/PageMeta';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { cn } from '../lib/utils';
 import {
@@ -63,10 +63,7 @@ export const FanLore = () => {
 
   return (
     <div className="min-h-full bg-black text-white p-4 md:p-8">
-      <Helmet>
-        <title>{`${t('lore_title')} | AniSync`}</title>
-        <meta name="description" content={t('lore_desc')} />
-      </Helmet>
+      <PageMeta title={`${t('lore_title')} | AniSync`} description={t('lore_desc')} />
 
       <div className="max-w-6xl mx-auto">
         {/* Hero */}

@@ -44,9 +44,9 @@ export default function App() {
               <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="challenge" element={<WeeklyChallengePage />} />
-              <Route path="polls" element={<WeeklyChallengePage />} />
+              <Route path="polls" element={<Navigate to="/challenge" replace />} />
               <Route path="dle" element={<AniSyncDle />} />
-              <Route path="anisyncdle" element={<AniSyncDle />} />
+              <Route path="anisyncdle" element={<Navigate to="/dle" replace />} />
               <Route path="music-quiz" element={<MusicQuiz />} />
 <Route path="voice-duel" element={<VoiceDuel />} />
               <Route path="arcade" element={<Arcade />} />

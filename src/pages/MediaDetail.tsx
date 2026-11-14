@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { PageMeta } from '../components/PageMeta';
 import {
   ArrowLeft,
   BookOpen,
@@ -184,10 +184,11 @@ export const MediaDetail = () => {
 
   return (
     <div className="w-full min-w-0 max-w-5xl mx-auto">
-      <Helmet>
-        <title>{`${localizedTitle} — AniSync`}</title>
-        <meta name="description" content={media.synopsis?.slice(0, 160) || localizedTitle} />
-      </Helmet>
+      <PageMeta
+        title={`${localizedTitle} — AniSync`}
+        description={media.synopsis?.slice(0, 160) || localizedTitle}
+        image={media.cover?.large || media.cover?.medium}
+      />
 
       <button
         type="button"
