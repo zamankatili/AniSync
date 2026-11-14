@@ -10,11 +10,16 @@ Bu oturumda uygulamanın **performans yolu** (görseller, service worker, kod b�
 
 | Ölçüm | Önce (üretim) | Sonra (üretim) |
 |---|---|---|
-| Lighthouse Accessibility | **0.87** | **1.00** |
-| Lighthouse Best Practices | 1.00 | 1.00 |
-| Lighthouse SEO | 1.00 | 1.00 |
+| Lighthouse Accessibility `/` | **0.87** | **1.00** |
+| Lighthouse Accessibility `/discover` | 0.93* | **1.00** |
+| Lighthouse Accessibility `/profile` | 1.00 | 1.00 |
+| Lighthouse Accessibility `/watch-party` | 1.00 | 1.00 |
+| Lighthouse Best Practices ×4 sayfa | 1.00 | 1.00 |
+| Lighthouse SEO ×4 sayfa | 1.00 | 1.00 |
 | Lighthouse **Performance** | **ölçülemedi** | **ölçülemedi** |
 | Test | 202/202 | **204/204** |
+
+*Discover'daki tek hata: `SimilarAnimeFinder` canlı arama `submit` butonu erişilebilir ad eksikliği (`button-name`); input'a da aynı `similar_search_placeholder` adı verilerek kapatıldı.
 
 "Performance" kategorisi bu ortamdaki araç tarafından hiç raporlanmıyor (aşağıda "Bilinen Sınırlar" maddesine bak). Bu yüzden perf iyileştirmeleri *dolaylı ama ölçülebilir vekâletler* ile kanıtlanmıştır: bundle boyutları, lazy görsel oranı, SW cache stratejisi, ağ sayımı.
 
@@ -42,10 +47,18 @@ Bu oturumda uygulamanın **performans yolu** (görseller, service worker, kod b�
 
 ## 2. Ölçüm detayı (dürüst)
 
-### 2.1 Lighthouse (üretim, tek koşu, ev /)
+### 2.1 Lighthouse (üretim, tek koşu)
+**`/` (ana sayfa):**
 - **0.87 (önce)**: hatalar → `button-name` ×2 (Home composer ikon butonları), `color-contrast` ×1 (sidebar nav rozeti), `heading-order` ×1, `label-content-name-mismatch` ×1 (dil dropdown).
 - **0.94 (1. dalga sonrası)**: kalanlar → `color-contrast` (accent üstünde beyaz metin), `heading-order` (QuickContinueWatching başlığı).
-- **1.00 (2. dalga sonrası, `f1fb5cb` deploy'u, prod SW v3 canlı doğrulandı)**: **sıfır hata**. Best Practices 1.00, SEO 1.00.
+- **1.00 (2. dalga sonrası, `f1fb5cb` deploy'u, prod SW v3 canlı doğrulandı)**: **sıfır hata**.
+
+**Diğer taranan sayfalar (aynı gün, `f1fb5cb` + `90f63e4` deploy'ları):**
+- `/discover`: 0.93 → **1.00** (tek hata: `SimilarAnimeFinder` arama butonu).
+- `/profile`: **1.00** (hata yok).
+- `/watch-party`: **1.00** (hata yok).
+
+Best Practices 1.00 ve SEO 1.00 — dört sayfada da.
 
 > Not: Lighthouse skorları koşudan koşuya oynar; 0.87 → 0.94 → 1.00 tek koşuluk değerlerdir, "her zaman 1.00" iddiası değildir.
 
@@ -117,7 +130,7 @@ Yapı: `manualChunks` (react/firebase/motion/charts/i18n) + **22 rota `React.laz
 4. **SW cache monitörü**: storage kullanımını telemetriye logla (kota aşımı erken uyarısı).
 5. **XP anti-cheat**: Firebase Admin SDK sidecar'ı (`/api/award-xp`) — client'ın `users/{uid}.xpTotal`'a doğrudan yazmasını kapat; kurallarda `xpTotal` yaz-engeli.
 6. **Smoke testi genişlet**: üretim için sentetik akış (ev → filtre → XP kazan → `/scenes` modal → geri) — şu an elle doğrulandı, otomasyon yok.
-7. **`/` dışı sayfalarda aynı a11y parlaması** (Discover, Profile, Watch Party) aynı taramadan geçirilmeli; bu rapor sadece ana sayfa skorunu garanti eder.
+7. **Taranan kapsamı genişletme**: `/`, `/discover`, `/profile`, `/watch-party` → hepsi 1.00. Kalan sayfalar (`/lists`, `/airing-calendar`, `/lore`, `/scenes`, `/dle`, `/arcade`, oyun sayfaları) aynı taramadan geçmedi; öncelik ilk üçüne gitti.
 
 ---
 
@@ -128,5 +141,7 @@ Yapı: `manualChunks` (react/firebase/motion/charts/i18n) + **22 rota `React.laz
 | `f743121` | Iconic Scenes: resmî kanallardan 15 video embed, 15/15 kart, oEmbed doğrulamalı (bu raporun hemen öncesi) |
 | `7457fa7` | perf: image lazy-loading, SW v3 + görsel cache, a11y 1. dalga, docs 15 sahne senkronu |
 | `f1fb5cb` | a11y: okunabilir mürekkep (accent), Home başlık sırası, `getReadableTextColor` + testler |
+| `90f63e4` | a11y: SimilarAnimeFinder canlı arama `submit` butonu erişilebilir ad (Discover 0.93 → 1.00) |
+| `e7fed2b` | docs: bu Z raporu |
 
 **Durum: yayında.** Üretim SW `anisync-shell-v3` + a11y 1.00 doğrulandı (19:53Z deploy).
