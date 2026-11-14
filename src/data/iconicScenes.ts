@@ -62,6 +62,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'hafif',
     category: 'duygusal',
     gradient: 'from-sky-900 to-blue-950',
+      videoId: 'VKA3OtTCuME',
+      channelLabel: 'Prime Video JP - プライムビデオ',
+
   },
   {
     id: 'ic-op-marineford',
@@ -78,6 +81,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'hafif',
     category: 'aksiyon',
     gradient: 'from-orange-600 to-rose-900',
+      videoId: 'qBN2UgCAVqk',
+      channelLabel: 'ONE PIECE公式YouTubeチャンネル',
+
   },
   {
     id: 'ic-guren-kamina',
@@ -94,6 +100,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'hafif',
     category: 'aksiyon',
     gradient: 'from-red-600 to-orange-900',
+      videoId: 'oXkkMhCuCMg',
+      channelLabel: 'Aniplex USA',
+
   },
   {
     id: 'ic-jjk-void',
@@ -127,6 +136,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'hafif',
     category: 'duygusal',
     gradient: 'from-red-700 to-amber-900',
+      videoId: '6JnxnSq7sqU',
+      channelLabel: 'アニプレックス チャンネル',
+
   },
   {
     id: 'ic-ds-akaza',
@@ -142,6 +154,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'agir',
     category: 'aksiyon',
     gradient: 'from-indigo-800 to-purple-950',
+      videoId: 'fHKBje6deFg',
+      channelLabel: 'アニプレックス チャンネル',
+
   },
   {
     id: 'ic-aot-marley',
@@ -157,6 +172,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'hafif',
     category: 'duygusal',
     gradient: 'from-emerald-800 to-teal-950',
+      videoId: 'SlNpRThS9t8',
+      channelLabel: '進撃の巨人 - Attack on Titan Official',
+
   },
   {
     id: 'ic-aot-levi',
@@ -172,6 +190,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'hafif',
     category: 'aksiyon',
     gradient: 'from-sky-800 to-slate-900',
+      videoId: 'E7WytLM2KvY',
+      channelLabel: '進撃の巨人 - Attack on Titan Official',
+
   },
   {
     id: 'ic-steins-gate-bridge',
@@ -187,6 +208,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'hafif',
     category: 'atmosfer',
     gradient: 'from-amber-700 to-yellow-900',
+      videoId: 'xgOz7832pt0',
+      channelLabel: 'KADOKAWAanime',
+
   },
   {
     id: 'ic-frieren-tears',
@@ -202,6 +226,26 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'hafif',
     category: 'atmosfer',
     gradient: 'from-lime-900 to-emerald-950',
+      videoId: 'f5ZEiJyqDKU',
+      channelLabel: 'TOHO animation チャンネル',
+
+  },
+  {
+    id: 'ic-mha-herootoo',
+    series: 'My Hero Academia',
+    arc: L('1年A組のテーマソング — 「あなたもヒーローになれる」', 'Class 1-A’s anthem — "you too can be a hero"', '1年A組のテーマソング「あなたもヒーローになれる」', "L'hymne de la 1-A — « toi aussi, tu peux devenir héros »"),
+    title: L('Hero too', 'Hero too', 'HERO TOO', 'Hero too'),
+    why: L(
+      'ヒーローは特別な人だけではない。みんな行動で示している——「あなたもヒーローになれる」は、雄英のA組が出した答えです。',
+      'Heroes are not born special. Everyone gets there by doing — the answer Class 1-A stakes their lives on: you can be one too. The anthem U.A. made for every kid in school who felt unremarkable.',
+      'ヒーローは特別な人だけじゃない——「あなたもなれる」がA組の答え。U.A.の全ての「ありふれた子ども」に捧げたテーマソング。',
+      "Un héros n'est pas né spécial — c'est le pari de toute la classe 1-A : toi aussi, tu peux en devenir un. L'hymne de l'U.A. dédié à chaque enfant ordinaire du monde.",
+    ),
+    spoiler: 'none',
+    category: 'atmosfer',
+    gradient: 'from-green-600 to-emerald-900',
+    videoId: 'GgwUenaQqlM',
+    channelLabel: 'TOHO animation チャンネル',
   },
   {
     id: 'ic-op-merry',
@@ -217,6 +261,9 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'none',
     category: 'duygusal',
     gradient: 'from-cyan-700 to-blue-900',
+      videoId: 'aGnYgnX6jJM',
+      channelLabel: 'ONE PIECE公式YouTubeチャンネル',
+
   },
   {
     id: 'ic-jjk-shibuya',
@@ -232,38 +279,49 @@ export const ICONIC_SCENES: IconicScene[] = [
     spoiler: 'agir',
     category: 'aksiyon',
     gradient: 'from-rose-800 to-red-950',
+      videoId: 'PKHQuQF1S8k',
+      channelLabel: 'TOHO animation チャンネル',
+
   },
+
+
   {
-    id: 'ic-deathnote-firstmeet',
-    series: 'Death Note',
-    arc: L('第一話 — 夜神月の選んだ道', 'Episode 1 — The Path Light Chose', '第一章 — 夜神月が選んだ道', "Épisode 1 — Le chemin de Light"),
-    title: L('死こと身の回りにある', "Death is closer than you think", '死はすぐそばにあった', 'La mort était toute proche'),
+    id: 'ic-csm-denji',
+    series: 'Chainsaw Man',
+    arc: L('Kan Kana — Yeni bir köpek', 'Dog Devil Arc — A new dog', '血まみれ — 新しい犬', "Arc du Chien de Sang — un nouveau chien"),
+    title: L('Reçel Hayalleri', 'Dreams of jam on toast', 'ジャムの夢', 'Rêves de confiture sur du pain'),
     why: L(
-      'Bir genç başka bir gençle tanışıyor ve her ikisi de birbirinin kim olduğunu anlamıyor. Dünyanın en büyük zihin savaşı, bu kahrolası sessiz karşılaşmayla başlıyor.',
-      'A boy meets someone he cannot measure — and both sides choose their weapons. The ultimate mind battle carefully staged as a polite conversation. The coldest opening chapter of the decade.',
-      '少年が測れない相手に対面する——二人とも言葉だけで戦いを選んだ。世紀最高の頭脳戦は、まるで礼儀正しい会話のフリをした残酷な対峙で始まる。',
-      "Un garçon rencontre quelqu'un qu'il ne peut pas mesurer — et chacun choisit son arme. La plus grande bataille d'esprits de ce siècle commence comme une conversation polie.",
+      'Bir insanın kalbinin nasıl dar bir temelde büyüyebileceğinin en keskin örneği. Denji, kan kokusu ve güneşle basit bir hayat hayal eder; dünya ise ona tam bir kabus sunar.',
+      'Proof that one boy’s impossible ambitions stabilize when his world stays honest. Denji dreams of jam, movies and a girlfriend; the world gives him debt, sawdust and Hell. The scenes that made Chainsaw Man a cult masterpiece.',
+      '貧困、借金、死にかけの少年。彼の夢は「ジャムのパンを毎朝食べること」だけ。世界はドル、ドル、状況だけを投げつける。チェンソーマンをカルト映画にした章。',
+      "La preuve qu’un garçon peut rêver concrètement même quand tout lui est refusé. Denji rêve de confiture, de cinéma et d’une petite amie; le monde lui offre la dette, la scie et l'enfer. Le chapitre le plus déchirant de Chainsaw Man.",
     ),
     spoiler: 'hafif',
-    category: 'atmosfer',
-    gradient: 'from-neutral-800 to-zinc-950',
+    category: 'aksiyon',
+    gradient: 'from-rose-600 to-red-950',
+    videoId: 'j7L9BA7JJ-E',
+    channelLabel: 'MAPPA CHANNEL',
   },
   {
-    id: 'ic-mha-allmight',
-    series: 'My Hero Academia',
-    arc: L('Season 7 — オールマイト vs オールフォーワン', 'Season 7 — All Might vs All For One', 'Season 7 — オールマイト vs オールフォーワン', "Saison 7 — All Might contre All For One"),
-    title: L('君はヒーローになれる', 'You can become a hero', '君はヒーローになれる', 'Tu peux devenir un héros'),
+    id: 'ic-csm-himeno',
+    series: 'Chainsaw Man',
+    arc: L('田舎 Aks — Shiraishi her zaman', 'Katana Man Arc — The last gift', '刀の悪々 — Shiro Shiraishi', "Arc Katana — le dernier cadeau"),
+    title: L('Kötü Gülümseme', 'The Saw-Toothed Smile', '偽りの笑み', 'Le sourire sous la scie'),
     why: L(
-      'Bir adam 5 saniye ile dünyanın en güçlüsünü dizginleyebiliyor; ve 5 saniyenin sonunda en sevdiği genç için cebinde kalan son gücünü buna harcıyor.',
-      'A man who can stop the strongest villain with five seconds of power — and spends his last five seconds on the boy he saved first. The eighth-grade fight that became a national moment.',
-      '5秒で世界一の悪役をとめた男——その5秒を、一番最初に救った少年のために使い切る。中学生の格闘が国民的な儀式になった瞬間。',
-      "Un homme qui peut vaincre le plus grand méchant en cinq secondes de puissance — et qui dépense ces cinq dernières secondes pour le garçon qu'il a sauvé en premier. Le combat de collégiens devenu un rituel national.",
+      'Himeno içten içe boğulan bir kadındır. Denji ona ilk kez gerçek bir hayatın bir parça umudunu hissettirirken, o zaten biliyor ki kurtuluş yok ve içinin en gerçek dostluğu öldürmeden önceydi.',
+      'A contract with a devil cannot be returned. Himeno’s whole life was arranged losses in exchange for safety — until the day she chose a boy with saws instead. The last frame leaves no one comfortable.',
+      '悪魔との契約は消えない。彼女は安全の代わりに何度も失い続けた人生を送った。そしてついに、彼女はのこぎりの子に賭けた。誰も幸せにしないラストシーン。',
+      "Un contrat avec un démon ne se rend pas. Himeno a perdu tout, en échange de sa sécurité — jusqu'au jour où elle a misé sur le garçon à la scie. La dernière séquence ne laisse personne respirer.",
     ),
-    spoiler: 'agir',
-    category: 'aksiyon',
-    gradient: 'from-green-600 to-emerald-900',
+    spoiler: 'hafif',
+    category: 'duygusal',
+    gradient: 'from-fuchsia-800 to-purple-950',
+    videoId: 'Xa8c3ZQLAec',
+    channelLabel: 'MAPPA CHANNEL',
   },
 ];
+
+
 
 /** Kartın sol kenarındaki ince renk şeridi — Seriye göre değişir. */
 export const seriesAccent = (series: string): string => {
@@ -272,11 +330,13 @@ export const seriesAccent = (series: string): string => {
   if (s.includes('one piece')) return 'bg-orange-400';
   if (s.includes('jujutsu')) return 'bg-purple-500';
   if (s.includes('attack')) return 'bg-emerald-500';
+  if (s.includes('hero')) return 'bg-green-500';
   if (s.includes('steins')) return 'bg-amber-400';
   if (s.includes('death')) return 'bg-red-600';
   if (s.includes('hero')) return 'bg-sky-500';
   if (s.includes('evangelion')) return 'bg-sky-400';
   if (s.includes('frieren')) return 'bg-lime-400';
   if (s.includes('gurren')) return 'bg-rose-500';
+  if (s.includes('chainsaw')) return 'bg-rose-400';
   return 'bg-cyan-400';
 };
