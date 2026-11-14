@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight, Mic2, BookOpen, Terminal, ShieldAlert } from 'lucide-react';
+import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight, Mic2, BookOpen, Terminal, ShieldAlert, Clapperboard } from 'lucide-react';
 import { cn, getSafeImageUrl, handleImageError } from '../lib/utils';
 import { animeDetailPath } from '../lib/mediaLinks';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,6 +54,7 @@ const NAV_GROUPS: { sectionKey: string; items: { path: string; labelKey: string;
     items: [
       { path: '/discover', labelKey: 'discover', icon: Compass },
       { path: '/lore', labelKey: 'fan_lore', icon: BookOpen },
+      { path: '/scenes', labelKey: 'nav_iconic_scenes', icon: Clapperboard },
       { path: '/grid-maker', labelKey: 'grid_maker', icon: Grid3X3 },
       { path: '/anime-life-sim', labelKey: 'anime_life_sim', icon: Dices },
     ],

@@ -17,6 +17,7 @@ export const SELF_MANAGED_EXACT = [
   '/lore',
   '/text-adventure',
   '/challenge',
+  '/scenes',
 ] as const;
 
 export const SITE_BASE_URL = 'https://anisync-tau.vercel.app';
@@ -40,7 +41,8 @@ export const PUBLIC_SITEMAP_ROUTES: SitemapRoute[] = [
   { path: '/music-quiz', lastmod: '2026-11-13', changefreq: 'daily', priority: '0.7' },
   { path: '/voice-duel', lastmod: '2026-11-13', changefreq: 'weekly', priority: '0.7' },
   { path: '/dle', lastmod: '2026-11-13', changefreq: 'daily', priority: '0.7' },
-  { path: '/lore', lastmod: '2026-11-13', changefreq: 'weekly', priority: '0.6' },
+  { path: '/lore', lastmod: '2026-11-14', changefreq: 'weekly', priority: '0.6' },
+  { path: '/scenes', lastmod: '2026-11-14', changefreq: 'weekly', priority: '0.7' },
   { path: '/text-adventure', lastmod: '2026-11-13', changefreq: 'weekly', priority: '0.7' },
   { path: '/privacy', lastmod: '2026-11-13', changefreq: 'yearly', priority: '0.3' },
   { path: '/terms', lastmod: '2026-11-13', changefreq: 'yearly', priority: '0.3' },

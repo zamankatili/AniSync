@@ -39,6 +39,7 @@ GÜNLİK tekrarlanabilir; "taksitle farm" sayımı yoktur.
 | Topluluk gönderisi (`forum_post`) | +15 | 2 | 30 |
 | Gönderi yorumu (`forum_comment`) | +5 | 4 | 20 |
 | Fan lore okuma (`lore_read`) | +5 | 6 | 30 |
+| İkonik Sahne açma (`scene_view`) | +5 | 6 | 30 |
 | Liste ekleme (`list_add`) | +5 | 5 | 25 |
 | Watch Party'ye katılım (`watch_party`) | +20 | 1 | 20 |
 
@@ -101,4 +102,6 @@ XP kapsamı kimliksiz `guest` iken cihazda saklanır; Google/e-posta ile girişt
   oyun/örnek tavanı, global tavan (kısmi ödeme), idempotent birleştirme.
 - `src/lib/characterOrder.test.ts` — 14 test: deterministik seçim, döngü permütasyonu,
   zorluk türetimi (%60 karakter + %40 seri), ağırlıklı kademeli zorluk.
+- `src/data/iconicScenes.test.ts` — 8 test: 12+ sahne, 10+ seri, 4 dilli tamlık,
+  alıntı bütünlüğü, resmi videoId biçimi, kategori/teori bütünlüğü.
 - `src/data/characterGuessData.test.ts` — tur bileşimi ve 4 dil bütünlüğü.

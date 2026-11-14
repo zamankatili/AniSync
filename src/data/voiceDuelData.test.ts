@@ -40,9 +40,13 @@ describe('voiceDuel getRound', () => {
     }
   });
 
-  it('documents at least two official sourcing channels', () => {
+  it('documents at least three popular series from official sources', () => {
     const series = new Set(VOICE_CLIPS.map((clip) => clip.series));
     expect(series.has('Chainsaw Man')).toBe(true);
-    expect(series.has('Puella Magi Madoka Magica') || series.has('Puella Magi Magia Exedra')).toBe(true);
+    expect(series.has('Jujutsu Kaisen')).toBe(true);
+    expect(series.has('Demon Slayer: Kimetsu no Yaiba')).toBe(true);
+    // Madoka çıkarıldı; Magica hiçbir şekilde geri gelmemeli.
+    expect(series.has('Puella Magi Madoka Magica')).toBe(false);
+    expect(series.has('Puella Magi Magia Exedra')).toBe(false);
   });
 });

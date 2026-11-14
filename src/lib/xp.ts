@@ -36,6 +36,7 @@ export const XP_ACTIONS = [
   'forum_post',
   'forum_comment',
   'lore_read',
+  'scene_view',
   'watch_party',
   'list_add',
   'quiz_finish',
@@ -60,6 +61,8 @@ export const XP_RULES: Record<XpAction, XpRule> = {
   forum_post: { baseXp: 15, dailyCountCap: 2, dailyXpCap: 30 },
   forum_comment: { baseXp: 5, dailyCountCap: 4, dailyXpCap: 20 },
   lore_read: { baseXp: 5, dailyCountCap: 6, dailyXpCap: 30 },
+  /** İkonik Sahneler kartını günlük ilk kez açmanın ödülü — lore ile aynı grup, ayrı anahtar. */
+  scene_view: { baseXp: 5, dailyCountCap: 6, dailyXpCap: 30 },
   watch_party: { baseXp: 20, dailyCountCap: 1, dailyXpCap: 20 },
   list_add: { baseXp: 5, dailyCountCap: 5, dailyXpCap: 25 },
   quiz_finish: { baseXp: 10, dailyCountCap: 3, dailyXpCap: 30 },

@@ -59,6 +59,7 @@ describe('SEO route map', () => {
       '/lore': 'src/pages/FanLore.tsx',
       '/text-adventure': 'src/pages/TextAdventure.tsx',
       '/challenge': 'src/pages/WeeklyChallengePage.tsx',
+      '/scenes': 'src/pages/IconicScenes.tsx',
       '/anime/': 'src/pages/AnimeDetail.tsx',
       '/media/': 'src/pages/MediaDetail.tsx',
     };

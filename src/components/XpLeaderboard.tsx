@@ -43,6 +43,7 @@ export const XpLeaderboard: React.FC = () => {
     'xp_rule_forum_post',
     'xp_rule_forum_comment',
     'xp_rule_lore_read',
+    'xp_rule_scene_view',
     'xp_rule_list_add',
     'xp_rule_watch_party',
   ];

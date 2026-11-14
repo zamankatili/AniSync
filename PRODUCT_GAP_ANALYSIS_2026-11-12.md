@@ -143,6 +143,21 @@ Dürüst sınırlar: liderlik tablosu hileye açık (Admin SDK + kural sıkıla�
 
 ---
 
+## 1i. 14 Kasım (üçüncü oturum) — İkonik Sahneler ve Voice Duel serisi genişletmesi
+
+**"İKONİK SAHNELER" sayfası (/scenes)** yayına eklendi. Editörün seçtiği 14 sahne; her biri 4 dilde bağlam, arc etiketi, kategori (Duygusal 4 / Atmosfer 3 / Aksiyon 7), spoiler düzeyi (21 ipucu ile `Ⅰ/Ⅱ`) ve resmî kaynak etiketini taşır. Bazı sahneler resmî kanallardan embed (youtube-nocookie, `rel=0`) içerir; diğerleri metin kartlarıdır. Kart açılışı `scene_view` XP kurallarına dahildir (6/gün, 30 XP). Sayfa `KEŞİFE` menüsüne eklendi, sitemap/SEO testleri senkron kaldı. Alıntılar yalnızca kanonik ve herkesçe bilinen satırlar (örn. "逃げちゃいかんよ", "海賊王におれはなる", "俺が来たぞーーーッ！！", "領域展開——無量空処"); doğrulanamayan satırlar bilinçli olarak boş bırakıldı — uydurma alıntı yapılmadı.
+
+**Voice Duel'den Madoka çıkarıldı, popüler seriler eklendi:**
+- 10 Madoka klip kaldırıldı; UI metni ve `docs/voice-sources.md` güncellendi (araç, test senkronu).
+- 14 yeni klip **resmî kanallardan** eklendi (oEmbed ile doğrulama yapıldı, doğrulanamayan adaylar elendi): 呪術廻戦 ファントムパレード公式 (Gojo, Nobara, Megumi, Yuta, Naoya, Kenjaku), ONE PIECE Official (Luffy Gear 5, 海賊無双4 Crocodile/Big Mom), アニプレックス チャンネル (Kamado Tanjiro, 冨岡義勇 Giyu, 我妻善逸 Zenitsu, 胡蝶しのぶ Shinobu), Crunchyroll (Orochimaru). Eklenen resmî kanallar belgede listelenir.
+- Ses biçi 7'ye 14'e çıktı: 21 klip (Chainsaw Man 7, Jujutsu Kaisen 6, ONE PIECE 3, Demon Slayer 4, Naruto 1).
+- **Eklenemeyenler — dürüstçe elendi**: Naruto/Spy x Family/My Hero Academia/Attack on Titan için, ancak "キャラクター紹介映像" niteliğinde resmî klip bulunabildiğinde eklenecek (mevcutlar var ancak doğrulama yapılamayanlar bırakılmadı). TODO.md'de takvimli aksiyon olarak duruyor.
+- Madoka-free doğrulama: kaynak testi, `madoka` için locales araması sıfır çıktı; canlıda sayfa metinleri güncel.
+
+Doğrulama: `tsc` temiz, ESLint 0 hata, **23 dosya / 202 test**, build exit 0. Tarayıcıda `/scenes` ve `/voice-duel` doğrulandı (Madoka yok, beş seri görünüyor, konsol temiz).
+
+---
+
 ## 1g. 14 Kasım oturumu — ölçüm, hata izleme ve kötüye kullanım koruması
 
 Dört katman eklendi; hepsi **env kapılı** ve varsayılan olarak kapalı. Kurulum adımları `docs/observability.md` içinde.

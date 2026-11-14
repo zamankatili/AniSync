@@ -30,6 +30,7 @@ const AniSyncDle = lazy(() => import('./pages/AniSyncDle').then(m => ({ default:
 const Arcade = lazy(() => import('./pages/Arcade').then(m => ({ default: m.Arcade })));
 const AnimeLifeSim = lazy(() => import('./pages/AnimeLifeSim').then(m => ({ default: m.AnimeLifeSim })));
 const FanLore = lazy(() => import('./pages/FanLore').then(m => ({ default: m.FanLore })));
+const IconicScenes = lazy(() => import('./pages/IconicScenes').then(m => ({ default: m.IconicScenes })));
 const AdminPage = lazy(() => import('./pages/admin/AdminPage').then(m => ({ default: m.AdminPage })));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const LegalPage = lazy(() => import('./pages/Legal').then(m => ({ default: m.LegalPage })));
@@ -59,6 +60,7 @@ export default function App() {
               <Route path="calendar" element={<AiringCalendar />} />
               <Route path="discover" element={<Discover />} />
               <Route path="lore" element={<FanLore />} />
+              <Route path="scenes" element={<IconicScenes />} />
               <Route path="lists" element={<ListsPage />} />
               <Route path="anime/:id" element={<AnimeDetail />} />
               <Route path="media/:id" element={<MediaDetail />} />
