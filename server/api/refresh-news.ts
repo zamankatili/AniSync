@@ -7,6 +7,7 @@
  * `Authorization: Bearer <CRON_SECRET>` başlığı taşımak zorundadır (Vercel Cron bunu otomatik gönderir).
  */
 import { ingestAnimeNews } from '../../src/lib/rssIngest';
+import { enforceRateLimit, RATE_LIMITS } from '../../src/lib/rateLimit';
 
 export default async function handler(req: any, res: any) {
   const cronSecret = process.env.CRON_SECRET;
@@ -17,6 +18,7 @@ export default async function handler(req: any, res: any) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
   }
+  if (!(await enforceRateLimit(req, res, RATE_LIMITS['refresh-news']))) return;
 
   try {
     const result = await ingestAnimeNews(true);

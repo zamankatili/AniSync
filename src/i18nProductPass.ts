@@ -11,6 +11,13 @@ export type ProductLang = 'tr' | 'en' | 'ja' | 'fr';
 
 export const productPassTranslations: Record<ProductLang, Record<string, string>> = {
   tr: {
+    // Analytics consent (KVKK)
+    consent_title: 'Ölçüm tercihi',
+    consent_body:
+      'AniSync\'i geliştirmek için hangi sayfaların kullanıldığını anonim olarak ölçmek istiyoruz. Reklam profili oluşturulmaz; e-posta veya kullanıcı kimliği gönderilmez. Reddedersen ölçüm tamamen kapalı kalır.',
+    consent_accept: 'Kabul et',
+    consent_decline: 'Reddet',
+
     // Life Sim — path / audio
     als_volume: 'Ses seviyesi',
     als_path_rank: 'Rütbe',
@@ -108,6 +115,13 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
   },
 
   en: {
+    // Analytics consent (KVKK)
+    consent_title: 'Measurement preference',
+    consent_body:
+      'We would like to measure anonymously which pages are used, so we can improve AniSync. No advertising profile is built and no email or user ID is sent. If you decline, measurement stays completely off.',
+    consent_accept: 'Accept',
+    consent_decline: 'Decline',
+
     // Life Sim — path / audio
     als_volume: 'Sound level',
     als_path_rank: 'Rank',
@@ -205,6 +219,13 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
   },
 
   ja: {
+    // Analytics consent (KVKK)
+    consent_title: '計測の設定',
+    consent_body:
+      'AniSync を改善するため、どのページが利用されているかを匿名で計測します。広告プロファイルは作成せず、メールアドレスやユーザーIDは送信しません。拒否すると計測は完全に無効になります。',
+    consent_accept: '同意する',
+    consent_decline: '拒否する',
+
     // Life Sim — path / audio
     als_volume: '音量',
     als_path_rank: '階級',
@@ -302,6 +323,13 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
   },
 
   fr: {
+    // Analytics consent (KVKK)
+    consent_title: 'Préférence de mesure',
+    consent_body:
+      "Nous souhaitons mesurer anonymement les pages consultées afin d'améliorer AniSync. Aucun profil publicitaire n'est créé, aucun e-mail ni identifiant utilisateur n'est envoyé. Si vous refusez, la mesure reste totalement désactivée.",
+    consent_accept: 'Accepter',
+    consent_decline: 'Refuser',
+
     // Life Sim — path / audio
     als_volume: 'Volume',
     als_path_rank: 'Rang',

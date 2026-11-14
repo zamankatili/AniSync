@@ -2,6 +2,7 @@ import React, { ErrorInfo, ReactNode } from 'react';
 import { AnimeErrorCard } from './AnimeErrorCard';
 import { useErrorStore } from '../store/useErrorStore';
 import i18n from '../i18n';
+import { captureError } from '../lib/errorReporting';
 
 interface Props {
   children: ReactNode;
@@ -27,6 +28,10 @@ export class AnimeErrorBoundary extends React.Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error caught by AnimeErrorBoundary:', error, errorInfo);
+    captureError(error, {
+      surface: 'react.errorBoundary',
+      componentStack: errorInfo.componentStack ?? '',
+    });
     useErrorStore.getState().logError({
       title: i18n.t('error_boundary_title'),
       message: error.message || i18n.t('error_boundary_message'),

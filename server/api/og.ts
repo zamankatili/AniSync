@@ -15,6 +15,7 @@
  */
 import { pickLocaleFromHeader } from '../../src/lib/ogMeta';
 import { renderOgPage } from '../../src/lib/ogRender';
+import { enforceRateLimit, RATE_LIMITS } from '../../src/lib/rateLimit';
 
 /** Query yoksa yol tabanlı çağrıyı da kabul et (`/api/og/anime/16498`). */
 function readParams(req: any): { kind: string; id: string } {
@@ -35,6 +36,8 @@ function readParams(req: any): { kind: string; id: string } {
 }
 
 export default async function handler(req: any, res: any) {
+  if (!(await enforceRateLimit(req, res, RATE_LIMITS.og))) return;
+
   const { kind, id } = readParams(req);
   const locale = pickLocaleFromHeader(req?.headers?.['accept-language']);
 

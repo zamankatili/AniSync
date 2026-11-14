@@ -6,13 +6,40 @@ import { handleTranslate, handleAiRecommendations, handleModerateRoom } from "./
 import { pickLocaleFromHeader } from "./src/lib/ogMeta";
 import { renderOgPage } from "./src/lib/ogRender";
 import { PUBLIC_SITEMAP_ROUTES, SITE_BASE_URL } from "./src/lib/seoRoutes";
+import { enforceRateLimit, RATE_LIMITS, type RateLimitRule } from "./src/lib/rateLimit";
 import dotenv from 'dotenv';
 dotenv.config();
+
+/**
+ * Yerel Express sunucusunda Vercel fonksiyonlarıyla aynı hız sınırlarını
+ * uygular. Üretimde her fonksiyon kendi `enforceRateLimit` çağrısını yapar;
+ * burada amaç dev ortamında davranış sapmasını önlemek.
+ */
+const LOCAL_RATE_LIMITS: Array<{ prefix: string; rule: RateLimitRule }> = [
+  { prefix: '/api/anime-news', rule: RATE_LIMITS['anime-news'] },
+  { prefix: '/api/refresh-news', rule: RATE_LIMITS['refresh-news'] },
+  { prefix: '/api/games/search', rule: RATE_LIMITS['games-search'] },
+  { prefix: '/api/games', rule: RATE_LIMITS['games-appid'] },
+  { prefix: '/api/og', rule: RATE_LIMITS.og },
+  { prefix: '/api/translate', rule: RATE_LIMITS.translate },
+  { prefix: '/api/moderate-room', rule: RATE_LIMITS['moderate-room'] },
+  { prefix: '/api/ai-recommendations', rule: RATE_LIMITS['ai-recommendations'] },
+];
+
+const ruleForPath = (pathname: string): RateLimitRule | null =>
+  LOCAL_RATE_LIMITS.find(({ prefix }) => pathname === prefix || pathname.startsWith(`${prefix}/`))?.rule ?? null;
 
 async function startServer() {
   const app = express();
   const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
   app.use(express.json());
+
+  app.use(async (req, res, next) => {
+    const rule = ruleForPath(req.path);
+    if (!rule) return next();
+    if (!(await enforceRateLimit(req, res, rule))) return;
+    next();
+  });
 
   // Ortak Gemini çekirdeği (`src/lib/geminiEndpoints.ts`) — kimlik + kota burada.
   app.post("/api/translate", async (req, res) => {

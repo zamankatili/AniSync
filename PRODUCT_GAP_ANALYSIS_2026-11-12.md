@@ -127,12 +127,32 @@ Yani `api/anime-news`, `api/refresh-news`, `api/translate`, `api/moderate-room`,
 
 ---
 
+## 1g. 14 Kasım oturumu — ölçüm, hata izleme ve kötüye kullanım koruması
+
+Dört katman eklendi; hepsi **env kapılı** ve varsayılan olarak kapalı. Kurulum adımları `docs/observability.md` içinde.
+
+- **GA4** (`src/lib/analytics.ts`): `VITE_GA4_ID` yoksa hiçbir script yüklenmez. KVKK rıza bandı (`AnalyticsConsent`) olmadan gtag çalışmaz; "Reddet" kalıcıdır. Giden yollar sadeleştirilir (`/anime/16498` → `/anime/:id`), query/hash atılır, olay adları ve parametreleri allowlist ile sınırlı. Reklam sinyalleri kapalı.
+- **Sentry** (`src/lib/errorReporting.ts`): `VITE_SENTRY_DSN` yoksa no-op. SDK **yalnızca ilk hatada** dinamik indirilir (hata olmayan ziyaretlerde ek paket yok). Global `error`/`unhandledrejection` tamponu 10 hata; `beforeSend` kullanıcı, istek gövdesi, çerez ve query'yi siler. React render hataları `AnimeErrorBoundary` üzerinden `surface: react.errorBoundary` etiketiyle gider.
+- **Firebase App Check** (`src/firebase.ts`): `VITE_RECAPTCHA_SITE_KEY` varsa reCAPTCHA v3 sağlayıcısı başlatılır; Capacitor WebView'de bilinçli olarak atlanır. **Enforcement açılmadı** — sıra `docs/observability.md` §3'te.
+- **Hız sınırı** (`src/lib/rateLimit.ts`): tüm genel uç noktalar `enforceRateLimit` ile korunuyor. Upstash Redis varsa dağıtık atomik sayaç, yoksa bellek içi (örnek başına, dürüst sınır). Redis hatasında **fail-open**. IP'ler düz metin saklanmaz (FNV-1a). Limitler: news 60, games/search 30, games/:appid 40, og 240, translate 20, moderate-room 20, ai-recommendations 10, refresh-news 6 (dakika). Yerel Express sunucusu (`server.ts`) aynı limitleri uygular; `RATE_LIMIT_DISABLED=1` yalnızca geliştirme içindir.
+
+Doğrulama:
+
+- Paketlenmiş `api/games/search.js` doğrudan çalıştırıldı: aynı IP'den 30 istek 200, sonraki 5 istek 429 + `Retry-After: 60`; farklı IP 200.
+- Yerel sunucuda `/api/games/search` → `X-RateLimit-Limit: 30`, `/api/og/anime/16498` → `X-RateLimit-Limit: 240` ve `X-Og-Fallback: 0`.
+- Tarayıcıda rıza akışı: script yok → "Reddet" → kalıcı, gtag yok → "Kabul et" (localStorage) → gtag yüklenir, `consent/default`, `config`, `page_view`; `/anime/16498` görüntülemesi `/anime/:id` olarak raporlandı. Konsolda uygulama hatası yok (yalnızca ikinci dev sunucusunun HMR WebSocket uyarısı).
+- Kapılar: `tsc` temiz, ESLint 0 hata, **20 dosya / 161 test**, `npm run build` exit 0, `verify:api` commit sonrası yeşil.
+
+Kalanlar (dürüst): GA4 dönüşüm olayları (kayıt, ilk liste, ilk oyun) henüz çağrılmıyor; Sentry source map yüklemesi yok; App Check enforcement kapalı; alarm/alert politikası ve kalıcı sunucu logu yok; hız sınırı IP bazlı (uid kotası için Admin SDK şart).
+
+---
+
 ## 2. Doğrulama kapıları (12–13 Kasım 2026, bu çalışma ağacı)
 
 | Kapı | Komut | Sonuç |
 |---|---|---|
 | TypeScript (strict) | `npx.cmd tsc --noEmit` | ✅ exit 0 |
-| Testler | `npm.cmd test -- --run` | ✅ **17 dosya / 143 test** |
+| Testler | `npm.cmd test -- --run` | ✅ **20 dosya / 161 test** |
 | Üretim derlemesi | `npm.cmd run build` | ✅ exit 0 (route-level code splitting korunuyor) |
 | ESLint | `npx.cmd eslint src --quiet` | ✅ 0 error (uyarılar önceden var olan stil uyarıları) |
 | Firestore kuralları | `firebase.cmd deploy --only firestore:rules --project folkloric-centaur-q6tp2` | ✅ derlendi ve yayınlandı (14 Kasım 2026) |
@@ -145,6 +165,9 @@ Yeni test dosyaları:
 - `src/data/textAdventure.test.ts` — 7 test: dört dilde oda/eşya/son/ipucu bütünlüğü, tekil kimlikler, ulaşılabilir harita, eşyaların yerleşimi, fiil eşlemesi.
 - `src/lib/textAdventureEngine.test.ts` — 15 test: üç sona giden tam yürüyüş, karanlık arşiv, kilitli kapılar, yanlış kod, dört dilde komut, kaydet/yükle ve bozuk kayıt, ipucu kademeleri, durum değişmezliği.
 - `src/lib/seoFiles.test.ts` — 14 test: sitemap rota kümesi ve `lastmod`, özel/eski rotaların sitemap'e sızmaması, robots kuralları, kendi meta'sını yazan her sayfada `<PageMeta>` olması ve ikinci `<Helmet>` bulunmaması, bot OG rewrite'larının sırası ve arama motoru botlarını hedeflememesi, yerel `/sitemap.xml`'in ortak rota haritasından üretilmesi, `api/` altında yalnızca üretilmiş `.js` bulunması, `[param]` dosya adı yasağı, `server/api` ↔ `api` dosya kümesi eşleşmesi, Steam detay rewrite'ı.
+- `src/lib/analytics.test.ts` — 7 test: kapalıyken no-op, rıza varsayılanı, yol sadeleştirme, olay adı/parametre allowlist.
+- `src/lib/errorReporting.test.ts` — 4 test: DSN yokken no-op, kullanıcı/istek/breadcrumb temizliği.
+- `src/lib/rateLimit.test.ts` — 7 test: IP hash, başlık önceliği, limit/retry hesabı, pencere sıfırlama, varsayılan limitler.
 - `src/lib/ogMeta.test.ts` — 27 test: HTML kaçışı, kod noktası güvenli kırpma, `https:` görsel filtresi, `Accept-Language` seçimi, OG/Twitter etiketleri, `noindex` varsayılanı, `og:type` allowlist, MAL/AniList/Jikan kimlik çözümleme, canonical türetme, dört dilli fallback kart.
 
 Tarayıcı dumanı (localhost, TR):

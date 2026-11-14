@@ -7,8 +7,11 @@
  * (ANN + Google News) sunar; CDN'de 15 dk önbelleklenir.
  */
 import { ingestAnimeNews } from '../../src/lib/rssIngest';
+import { enforceRateLimit, RATE_LIMITS } from '../../src/lib/rateLimit';
 
 export default async function handler(req: any, res: any) {
+  if (!(await enforceRateLimit(req, res, RATE_LIMITS['anime-news']))) return;
+
   const forceRefresh = String(req?.query?.refresh ?? '') === 'true';
 
   try {

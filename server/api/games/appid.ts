@@ -7,10 +7,14 @@
  * yönlendirmiyor; `/api/games/:appid` isteği `vercel.json` rewrite'ı ile
  * buraya `?appid=` olarak gelir.
  */
+import { enforceRateLimit, RATE_LIMITS } from '../../../src/lib/rateLimit';
+
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 
 export default async function handler(req: any, res: any) {
+  if (!(await enforceRateLimit(req, res, RATE_LIMITS['games-appid']))) return;
+
   const appid = String(req?.query?.appid ?? req?.query?.id ?? '').replace(/\D/g, '');
   if (!appid) {
     return res.status(400).json({ error: 'invalid_appid' });

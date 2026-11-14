@@ -7,6 +7,7 @@ import {AnimeErrorBoundary} from './components/AnimeErrorBoundary';
 import './index.css';
 import i18n, { i18nReady } from './i18n';
 import { initNativeShell } from './lib/nativeShell';
+import { initErrorReporting } from './lib/errorReporting';
 
 let rendered = false;
 const mount = () => {
@@ -31,6 +32,10 @@ i18nReady.then(mount, mount);
 
 // Native kabuk açılış ayarları (web'de no-op).
 void initNativeShell();
+
+// Hata raporlama: DSN yoksa no-op; varsa SDK dinamik yüklenir ve global
+// hata dinleyicileri hemen devreye girer.
+void initErrorReporting();
 
 // PWA: yalnızca web production build'de service worker kaydet
 // (dev'de HMR'ı, native WebView'da ise gereksiz önbelleği bozmamak için).

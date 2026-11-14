@@ -8,6 +8,8 @@ import { PrivateRoute } from './components/PrivateRoute';
 import { AdminRoute } from './components/AdminRoute';
 import { MaintenanceGate } from './components/MaintenanceGate';
 import { AnnouncementBanner } from './components/AnnouncementBanner';
+import { AnalyticsRouteTracker } from './components/AnalyticsRouteTracker';
+import { AnalyticsConsent } from './components/AnalyticsConsent';
 
 // Route-level code splitting using React.lazy for optimized bundle loading
 const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
@@ -37,8 +39,10 @@ export default function App() {
     <AppProvider>
       <BrowserRouter>
         <SEOManager />
+        <AnalyticsRouteTracker />
         <MaintenanceGate>
           <AnnouncementBanner />
+          <AnalyticsConsent />
           <Suspense fallback={<PageLoadingSkeleton />}>
             <Routes>
               <Route path="/" element={<Layout />}>
