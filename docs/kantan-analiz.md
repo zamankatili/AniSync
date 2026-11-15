@@ -121,3 +121,25 @@ Türkçe, **yapay zeka destekli haber platformu** — teknoloji, bilim, oyun, ot
 - Kantan **orijinal haber üretemiyor/kırıntılııyor** değil; (RSS/ajans toplama + AI polish) modelini çalıştırıyor ama `/arsiv/dizin/g10/kayitlar` gibi `nofollow` dizini Cloudflare ile korunuyor — yani **herkese açık değil**; arşivleri paylaşılmıyor, "AI content farm" değil, lisanslı kaynak + AI edit kullanıyorlar.
 - `kantan.news` Türkçe hedefli; AniSync'in Japonca/Franssız/İngilizce kullanıcı aramasına direkt etkisi yok ama **teknik desen** birebir taşınır.
 - Bu rapor kantan.news'den hiçbir içerik/asset kopyalamadı; yalnızca açık HTTP yanıtları ve JS bundle gözlemidir.
+
+
+---
+
+## Ek: "Bu site tamamen otomatik mi?" sorusunun cevabı (2026-11-15)
+
+**Video:** [MC22IrrjeFM](https://www.youtube.com/watch?v=MC22IrrjeFM) — *"Mesut Çevik'in Yapay Zekayla Kurduğu Sitenin Perde Arkası"*, **Umut İLHAN ile Sonraki Adım**. Açıklama birebir: *"Ayda binlerce haber üreten bu sistemin arkasında hangi araçlar, ne kadar insan kontrolü ve nasıl bir maliyet var? Bu bölümde Claude Code, yerel yapay zekâ modelleri, içerik otomasyonu ve yazılımcılığın geleceğini konuşuyoruz."*
+
+**Cevap: Evet — uçtan uca otomasyon; ama gerçeği AI uydurmuyor, ajans/RSS kaynaklarından geliyor.** Kanıtlar:
+
+1. **Kaynaklar (API'den):** `original_link` DHA (`dha.com.tr/#dha-478529`), SCMP (`scmp.com/news/.../3374473`), YouTube görürüz. AI kaynak **değil**; ajans haberi yeniden yazılıyor.
+2. **Kantan hakkımızda (site beyanı):** "dünya genelindeki haber kaynaklarından içerikleri otomatik olarak toplamak, yapay zeka ile analiz etmek"; "kantan asistan: haber arşivimiz üzerinde çalışan, kaynak göstererek yanıt veren yapay zeka asistanı. modeller kendi sunucularımızda çalışır."; "duplikat algılama: aynı haberin farklı kaynaklardan tekrarlanmasını önleyen dna tabanlı sistem."
+3. **Anonim yazarlık:** API `author_name: null`, `author_avatar: null` — insan muhabir/editör adı yok; seslendirme ve özet otomatik.
+4. **AI ajanı kendi haberini yazdı:** Anasayfa kişiselleştirmesi yayınlandığında **o güncellemenin haberi de yapay zekâ tarafından yazılıp yayınlandı** (Mesut'un X/YouTube yorumuna kendi yanıtı: *"...sonrasında kendi güncellemesi ile ilgili haber yazan yapay zeka"*).
+5. **İnsan denetimi görünür ama marjinal:** Mesut Çevik yorumları elle yanıtlıyor (community management); yayına giren metinlerin tamamında editör kontrolü yok — bir okurun yorumu birebir: *"otomatik onay olduğu için yasal olarak yarın bir gün sıkıntı çıkması pek hoş olmayabilir."*
+6. **Sesli bülten de otomatik:** "Kantan Podcast" — günlük 36 dakikalık teknoloji bülteni AI-seslendirme + bölüm zaman damgalarıyla yayınlanıyor; RSS içeriğinden.
+
+**Doğru ama iki sınırla:**
+- AI'nın yazdığı yalnızca **yeniden yazı**: haberler DHA/SCMP gibi ajans kökenli; yanlış bilgi/telif/atıf riski otomatik onayda olduğu için yorumda da belirtildiği gibi yasal gri alan.
+- "Kendi kendine" tam değil: sistem **toplama → sınıflandırma → özetleme → seslendirme → sıralama → kişiselleştirme** adımlarında insan müdahalesiz çalışır; fakat kaynak seçimi ve yayına insan dokunuşu asgari düzeyde (Mesut community’de aktif, edit aşamasında değil).
+
+**AniSync açısından:** AniSync'in mevcut haber hattı (`/api/anime-news`: RSS→stripHtml→kategori→`original_link` gösterimi) **Kantan'dan daha güvenli**: alıntı yok, alıntıdan sorumlu ajans; biz atfı koruyoruz. Kantan modelini almak demek AI'nın özgün Türkçe metin yazması + otomatik yayın — bu, sansür/telif/olgu hatası riskini aynı oranda büyütür; AniSync'e onu birebir ithal etmek yerine (1) tarayıcı TTS'si, (2) `scroll_view_count` ölçümü, (3) opsiyonel `GEMINI_API_KEY` ile **alıntılamayan** TL;DR filtrelemesi önerilir (bkz. yukarıda §4).
