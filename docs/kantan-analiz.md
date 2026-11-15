@@ -66,7 +66,7 @@ Türkçe, **yapay zeka destekli haber platformu** — teknoloji, bilim, oyun, ot
 | AI özet | `/api/ai-recommendations` var ama **`GEMINI_API_KEY` Vercel'de yok → AI fail-closed** | Canlı, her makalede |
 | Analytics | GA4 (consent-gated, env-gated) | Matomo self-hosted, consent-gated |
 | robots.txt | Basit; **Content-Signal yok** | Cloudflare Managed Content-Signal + 15+ AI crawler blocklist |
-| hreflang | **Yok** (`og:locale:alternate` sadece OG'de) | `tr/en/es` + `x-default` |
+| hreflang | ⚠️ **Var ama bozuk** (`index.html:44-49` 5 alternatif; fakat `?lang=` okunmuyor + canonical query'yi atıyor → bkz. `bes-rapor-elestirisi.md` §3.1) | `tr/en/es` + `x-default` |
 | JSON-LD | WebSite (id, inLanguage) ✓ + TVSeries (anime detay) ✓ | Organization + WebSite + **SearchAction** |
 | Sitemap | `sitemap-index` + statik/self-managed rotalar | 13-parçalı news sitemap + videos + bülten |
 | OG görsel | MAL CDN sıcak bağlantısı (ev OG'sinde) | Yerel `/og-default.jpg?v=2` |
@@ -86,7 +86,7 @@ Türkçe, **yapay zeka destekli haber platformu** — teknoloji, bilim, oyun, ot
    Content-Signal: search=yes,ai-train=no,use=reference
    ```
    + GPTBot/ClaudeBot/Google-Extended/CCBot/Bytespider/Diffbot/Amazonbot vb. `Disallow: /`. Vercel default robots'a eklenecek; API'yi de koruyun (zaten `/api/` disallow).
-3. **hreflang alternates** — `/`, `/en`, `/ja`, `/fr` + `x-default` (türkçe için). `SEOManager` içine 4 `<link rel=alternate hreflang=…>`; mevcut `og:locale:alternate` deseniyle aynı yer. Google, dil-alternatifli sayfaları daha iyi kümeleler.
+3. **hreflang alternates — düzelt (ekleme değil)** — `index.html:44-49` beş alternatifi zaten taşıyor ama iki nedenle etkisiz: (a) `i18n.ts` `LanguageDetector` yapılandırmasız → `?lang=` okunmuyor (varsayılan `lng`), (b) `SEOManager` canonical'ı query'siz üretiyor → alternatifler kendini `/` olarak canonicalize ediyor. Fix: `detection.lookupQuerystring='lang'` + canonical'a dil parametresi + sitemap eşlemesi (bkz. `docs/bes-rapor-elestirisi.md` §3.1).
 4. **JSON-LD `SearchAction`** (WebSite şemasına): `"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://anisync-tau.vercel.app/discover?q={search_term_string}"},"query-input":"required name=search_term_string"}` — Google sitesearch sonuç kutusuna uygunluk.
 5. **Scroll-depth GA4 olayı** (consent-gated): `news_article_scrolled`, `lore_scrolled`, `scene_viewed_complete` — GA4 `scroll_depth` event'i 25/50/75/100% eşiğinde `AnalyticsConsent`+`useAnalytics` altyapısına. Kantan'ın `scroll_view_count`'unun AniSync karşılığı.
 6. **Font-scale 125%/150%** — `documentElement.style.fontSize` boot script'i + ayarlar menüsünde A−/A+ iki buton (`font_scale` localStorage). Kantan'ın düşük-görme desteği birebir alınır; AniSync'in a11y'sini 1.00'den taşır.

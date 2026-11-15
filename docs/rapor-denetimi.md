@@ -60,7 +60,7 @@ Bu belge üç işi yapıyor: (a) her iddiayı bugünkü kodla eşleştirmek, (b)
 | 10 | Metin macera tek bölüm | ✅ Bilinçli karar | Değişmedi |
 | 11 | Redirect'li Google girişi cihazda test edilmedi | ❌ **Açık** | Native WebView'da hâlâ riskli (§4.3) |
 | 12 | Dokunma hedefleri eşit değil | ⚠️ **Kısmen** | Oyun sayfaları iyi; sistematik tarama yok |
-| 13 | Dil başına URL yok (hreflang) | ❌ **Açık** | `kantan-analiz.md` §4.3 aynı eksiği öneriyor |
+| 13 | Dil başına URL yok (hreflang) | ❌ **Açık** | ⚠️ **Düzeltme (çapraz denetim)**: `index.html:44-49` hreflang **zaten var**, ama çalışmıyor — `i18n.ts` detector'ı yapılandırmasız (varsayılan `lng`, `?lang=` okunmuyor) ve canonical query'yi atıyor. Doğru iş "ekle" değil "düzelt veya kaldır" → `docs/bes-rapor-elestirisi.md` §3.1 |
 | 14 | Kalfa kapısı güvenilir değil | ❌ **Açık** | Kural yorumu da kabul ediyor (`rules:246-247`) |
 | 15 | Rapor hız sınırı yok | ❌ **Açık** | Kuralda sorgu sayacı yok |
 | 16 | E-posta doğrulama + handle tekilliği | ❌ **Açık** | Handle hâlâ e-postadan türetiliyor |
