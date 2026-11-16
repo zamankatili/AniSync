@@ -18,6 +18,9 @@ export const CommunityPulse: React.FC = () => {
   const { t } = useAppTranslation();
   const { 
     forumPosts, 
+    forumHasMore,
+    forumMoreLoading,
+    loadMoreForumPosts,
     addForumPost, 
     watchlist, 
     userNamedLists, 
@@ -211,9 +214,26 @@ export const CommunityPulse: React.FC = () => {
       {/* Feed Stream */}
       <div className="space-y-6">
         {filteredPosts.length > 0 ? (
-          filteredPosts.map((post, index) => (
-            <FeedPost key={post.id} post={post} index={index} />
-          ))
+          <>
+            {filteredPosts.map((post, index) => (
+              <FeedPost key={post.id} post={post} index={index} />
+            ))}
+            {forumHasMore && (
+              <div className="text-center space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => void loadMoreForumPosts()}
+                  disabled={forumMoreLoading}
+                  className="px-6 py-2.5 bg-black border-2 border-white text-white font-black text-xs uppercase neo-shadow hover:bg-white hover:text-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {forumMoreLoading ? t('forum_load_more_loading') : t('forum_load_more')}
+                </button>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                  {t('forum_feed_window')}
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="bg-black border-2 border-white/20 p-12 text-center neo-shadow">
             <Activity size={48} className="mx-auto mb-3 text-neutral-600" />

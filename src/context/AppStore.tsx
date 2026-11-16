@@ -3,13 +3,20 @@ import { WatchlistItem, WatchStatus, Anime, ForumPost, Friend, UserProfile, User
 import { auth, googleProvider, db } from '../firebase';
 import { useDailyPoll } from '../hooks/useDailyPoll';
 import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, getAdditionalUserInfo } from 'firebase/auth';
-import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc, writeBatch, addDoc, serverTimestamp, limit, startAfter, getDocs, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { resolveAvatar } from '../lib/avatar';
 import { trackConversionOnce } from '../lib/analytics';
 import { useXpStore } from '../store/useXpStore';
 import { useToastStore } from '../store/useToastStore';
 import { getDailyDateKey } from '../lib/dailyDate';
 import i18n from '../i18n';
+
+/**
+ * Feed sayfa boyutu. Önceden `forumPosts` limitsiz dinleniyordu: her istemci
+ * tüm koleksiyonu ilk yüklemede okuyor ve her değişimde yeniden okuyordu.
+ * Artık yalnız son 25 canlı; daha eskisi "daha fazla" ile sayfalanır.
+ */
+const FORUM_PAGE_SIZE = 25;
 
 
 interface AppState {
@@ -27,6 +34,10 @@ interface AppState {
   deleteUserNamedList: (listId: string) => void;
   toggleAnimeInNamedList: (listId: string, mal_id: number) => void;
   forumPosts: ForumPost[];
+  /** Canlı pencere son `FORUM_PAGE_SIZE` gönderiyi tutar; daha eskisi istek üzerine gelir. */
+  forumHasMore: boolean;
+  forumMoreLoading: boolean;
+  loadMoreForumPosts: () => Promise<void>;
   addForumPost: (post: Omit<ForumPost, 'id' | 'createdAt' | 'author'>) => void;
   deletePost: (postId: string) => void;
   friends: Friend[];
@@ -123,6 +134,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
+  const [forumHasMore, setForumHasMore] = useState(false);
+  const [forumMoreLoading, setForumMoreLoading] = useState(false);
+  /** Son canlı snapshot sayfasının son belgesi — `startAfter` imleci. */
+  const forumLastDocRef = useRef<QueryDocumentSnapshot | null>(null);
+  /** Canlı penceredeki kimlikler; eski sayfaları merge ederken ayırt etmek için. */
+  const forumLiveIdsRef = useRef<Set<string>>(new Set());
   const [friends] = useState<Friend[]>([]);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -132,25 +149,82 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Daily Poll (src/hooks/useDailyPoll.ts — koleksiyonu dinler, rotasyona göre seçer)
   const activePoll = useDailyPoll();
 
-  // Firestore Sync Effect for Forum Posts
+  // Firestore Sync Effect for Forum Posts — yalnız son FORUM_PAGE_SIZE canlı.
   useEffect(() => {
-    const q = query(collection(db, 'forumPosts'), orderBy('createdAt', 'desc'));
+    const q = query(
+      collection(db, 'forumPosts'),
+      orderBy('createdAt', 'desc'),
+      limit(FORUM_PAGE_SIZE),
+    );
+    let alive = true;
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const posts: ForumPost[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data() as ForumPost;
-        posts.push({
-           ...data,
-           isLikedByMe: auth.currentUser ? (data.likedBy || []).includes(auth.currentUser.uid) : false
-        });
+      if (!alive) return;
+      const live = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data() as ForumPost;
+        return {
+          ...data,
+          isLikedByMe: auth.currentUser ? (data.likedBy || []).includes(auth.currentUser.uid) : false,
+        };
       });
-      // Güncel listeyi her zaman uygula (silinen gönderiler ekranda kalmasın)
-      setForumPosts(posts);
+      const liveIds = new Set(live.map((post) => post.id));
+      const previousLiveIds = forumLiveIdsRef.current;
+      setForumPosts((prev) => {
+        // Daha önce "daha fazla" ile yüklenmiş eski sayfalar korunur. Canlı
+        // pencereden düşen/silinen kayıtlar (önceki pencerede olup yeni
+        // snapshot'ta olmayanlar) listeden çıkar.
+        const older = prev.filter(
+          (post) => !previousLiveIds.has(post.id) && !liveIds.has(post.id),
+        );
+        return [...live, ...older];
+      });
+      forumLiveIdsRef.current = liveIds;
+      forumLastDocRef.current = snapshot.docs[snapshot.docs.length - 1] ?? null;
+      setForumHasMore(snapshot.size === FORUM_PAGE_SIZE);
     }, (error) => {
       console.warn("Forum posts listener permission or network error (using cached posts):", error);
     });
-    return () => unsubscribe();
+    return () => {
+      alive = false;
+      unsubscribe();
+    };
   }, [auth.currentUser]);
+
+  /**
+   * Bir sonraki eski sayfayı getirir. Canlı dinleyici kapanmaz; sonuçlar
+   * mevcut listenin sonuna eklenir. Silinen eski gönderi bir sonraki tam
+   * yenilemeye kadar görünmeye devam edebilir (kabul edilen sınır).
+   */
+  const loadMoreForumPosts = async (): Promise<void> => {
+    const cursor = forumLastDocRef.current;
+    if (!cursor || forumMoreLoading || !forumHasMore) return;
+    setForumMoreLoading(true);
+    try {
+      const pageQuery = query(
+        collection(db, 'forumPosts'),
+        orderBy('createdAt', 'desc'),
+        startAfter(cursor),
+        limit(FORUM_PAGE_SIZE),
+      );
+      const snapshot = await getDocs(pageQuery);
+      const older = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data() as ForumPost;
+        return {
+          ...data,
+          isLikedByMe: auth.currentUser ? (data.likedBy || []).includes(auth.currentUser.uid) : false,
+        };
+      });
+      setForumPosts((prev) => {
+        const seen = new Set(prev.map((post) => post.id));
+        return [...prev, ...older.filter((post) => !seen.has(post.id))];
+      });
+      forumLastDocRef.current = snapshot.docs[snapshot.docs.length - 1] ?? cursor;
+      setForumHasMore(snapshot.size === FORUM_PAGE_SIZE);
+    } catch (error) {
+      console.warn('Forum posts pagination failed:', error);
+    } finally {
+      setForumMoreLoading(false);
+    }
+  };
 
   // Firestore Sync Effect for Watchlist & Auth
   // Not: watchlist listener'ı auth callback'inin İÇİNDE kurulmaz; aksi halde
@@ -172,6 +246,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setWatchlist([]);
         setUserProfile({ ...DEFAULT_GUEST_PROFILE, joinYear: new Date().getFullYear() });
         setForumPosts([]);
+        forumLiveIdsRef.current = new Set();
+        forumLastDocRef.current = null;
+        setForumHasMore(false);
         try {
           localStorage.removeItem('anisync_profile');
         } catch {
@@ -802,7 +879,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <AppContext.Provider value={{
       watchlist, addToWatchlist, updateWatchlistItem, incrementEpisode, decrementEpisode, setEpisodeCount, importWatchlistItems, removeFromWatchlist,
       userNamedLists, createUserNamedList, updateUserNamedList, deleteUserNamedList, toggleAnimeInNamedList,
-      forumPosts, addForumPost, deletePost, friends, toggleLike, addComment,
+      forumPosts, forumHasMore, forumMoreLoading, loadMoreForumPosts, addForumPost, deletePost, friends, toggleLike, addComment,
       userProfile, updateUserProfile, currentUser, authLoading, loginWithGoogle, loginWithEmail, registerWithEmail, resetPassword, logout,
       activePoll
     }}>

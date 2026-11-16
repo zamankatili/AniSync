@@ -50,7 +50,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
   levelInfo,
 }) => {
   const { t, currentLang } = useAppTranslation();
-  const { forumPosts, addForumPost, toggleLike, currentUser, userProfile } = useAppStore();
+  const { forumPosts, forumHasMore, forumMoreLoading, loadMoreForumPosts, addForumPost, toggleLike, currentUser, userProfile } = useAppStore();
   const { isPlaying, togglePlay, currentStationIndex, volume, isMuted, setVolume, toggleMute, nextStation, prevStation } = useRadioStore();
 
   const [activeTable, setActiveTable] = useState<TableId>('all');
@@ -282,7 +282,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
               </div>
             ) : (
               <div className="mt-4 space-y-3">
-                {posts.slice(0, 40).map((post) => {
+                {posts.map((post) => {
                   const kind = (post.category || 'Sohbet') as TableId;
                   const kindMeta = TABLES.find((tb) => tb.id === (kind as any)) ?? TABLES[1];
                   const avatar = resolveAvatar(post.author?.avatar ?? null, post.author?.name || post.id);
@@ -322,6 +322,21 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                     </article>
                   );
                 })}
+              </div>
+            )}
+            {posts.length > 0 && forumHasMore && (
+              <div className="mt-5 text-center space-y-2">
+                <button
+                  type="button"
+                  onClick={() => void loadMoreForumPosts()}
+                  disabled={forumMoreLoading}
+                  className="px-5 py-2 border-2 border-white text-white font-mono text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {forumMoreLoading ? t('forum_load_more_loading') : t('forum_load_more')}
+                </button>
+                <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">
+                  {t('forum_feed_window')}
+                </p>
               </div>
             )}
           </div>
