@@ -3,6 +3,8 @@ import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import type { Lang4 } from '../data/universePaths';
+import { canonicalUrl } from '../lib/seoUrls';
+import { useHreflangLinks } from '../hooks/useHreflangLinks';
 
 /**
  * Tek sayfa meta yöneticisi.
@@ -47,8 +49,16 @@ export const PageMeta: React.FC<PageMetaProps> = ({
     ? (currentLang as Lang4)
     : 'en';
 
-  const canonical = `${window.location.origin}${location.pathname}`;
+  // Canonical kendi URL'idir: yalnızca desteklenen `?lang=` korunur.
+  // (Algılanan dili zorlamak `/dle` → `/dle?lang=en` yapıp x-default'u kırardı.)
+  const canonical = canonicalUrl(location.pathname, {
+    search: location.search,
+    origin: window.location.origin,
+  });
   const ogImage = image || DEFAULT_IMAGE;
+
+  // Statik kök hreflang etiketlerini bu sayfanın yoluna taşır.
+  useHreflangLinks(location.pathname);
 
   return (
     <Helmet>

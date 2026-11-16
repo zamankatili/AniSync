@@ -6,6 +6,7 @@ import { handleTranslate, handleAiRecommendations, handleModerateRoom } from "./
 import { pickLocaleFromHeader } from "./src/lib/ogMeta";
 import { renderOgPage } from "./src/lib/ogRender";
 import { PUBLIC_SITEMAP_ROUTES, SITE_BASE_URL } from "./src/lib/seoRoutes";
+import { sitemapAlternateLines } from "./src/lib/seoUrls";
 import { enforceRateLimit, RATE_LIMITS, type RateLimitRule } from "./src/lib/rateLimit";
 import dotenv from 'dotenv';
 dotenv.config();
@@ -350,12 +351,12 @@ async function startServer() {
 
     const urls = PUBLIC_SITEMAP_ROUTES.map(
       (route) =>
-        `  <url>\n    <loc>${host}${route.path}</loc>\n    <lastmod>${route.lastmod}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`,
+        `  <url>\n    <loc>${host}${route.path}</loc>\n    <lastmod>${route.lastmod}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n${sitemapAlternateLines(route.path, host).join("\n")}\n  </url>`,
     ).join("\n");
 
     res.header("Content-Type", "application/xml; charset=utf-8");
     res.send(
-      `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`,
+      `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls}\n</urlset>`,
     );
   });
 

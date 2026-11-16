@@ -41,7 +41,9 @@
     <!-- Twitter / X Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://cdn.myanimelist.net/images/anime/1015/138006l.webp" />
-    <!-- Dil alternatifleri (LanguageDetector `?lang=` parametresini okur) -->
+    <!-- Dil alternatifleri: kök için statik (JS'siz crawler'lar), diğer rotalarda
+         SEOManager/PageMeta üretir. `?lang=` parametresi i18n.ts
+         `detection.lookupQuerystring: 'lang'` ile okunur. -->
     <link rel="alternate" hreflang="en" href="https://anisync-tau.vercel.app/?lang=en" />
     <link rel="alternate" hreflang="tr" href="https://anisync-tau.vercel.app/?lang=tr" />
     <link rel="alternate" hreflang="ja" href="https://anisync-tau.vercel.app/?lang=ja" />

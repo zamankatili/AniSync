@@ -63,6 +63,8 @@ Bunlar artık tartışma konusu değil; tekrar doğrulandı:
 
 > Ders: SEO iddiası üç dosyada birlikte doğrulanmalı — `index.html` (statik), `SEOManager` (dinamik), `PageMeta` (detay). Bu turda `PageMeta.tsx:66` yalnız `og:locale` üretiyor, hreflang yok.
 
+**Uygulama notu (15 Kasım, aynı gün):** Bu bölümdeki düzeltme **yapıldı**. `src/lib/seoUrls.ts` (canonical + hreflang + sitemap tek kaynağı), `src/hooks/useHreflangLinks.ts` (statik kök etiketlerini rotaya taşır), `i18n.ts` `detection.lookupQuerystring: 'lang'`, sitemap 16×5 alternatif + `server.ts` parity, 15 yeni test. Canlı doğrulama: `/calendar?lang=tr` → `html lang="tr"`, her rota tam 5 hreflang, canonical kendine. Ayrıntı: `TODO.md`.
+
 ### 3.2 🟠 MemeZone: hata UI'sı **var**, rapor bayat
 
 `home-analiz.md:110` "şimdilik sadece boş liste basıyor" diyor. Gerçek: `MemeZone.tsx:97-107` `fetchError || memes.length === 0` dalında başlık + açıklama + **"Yeniden dene"** butonu var; `:24` `fetchError` state'i, `:46` `catch` bloğu mevcut. Yani "hata UI ekle" maddesi **zaten yapılmış**.

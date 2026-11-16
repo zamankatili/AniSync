@@ -8,6 +8,8 @@ import {
   SELF_MANAGED_EXACT,
   SELF_MANAGED_PREFIXES,
 } from '../lib/seoRoutes';
+import { canonicalUrl } from '../lib/seoUrls';
+import { useHreflangLinks } from '../hooks/useHreflangLinks';
 
 /**
  * Statik rotaların tek meta kaynağı.
@@ -21,6 +23,9 @@ export const SEOManager: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const { t } = useAppTranslation();
+  // Statik kök hreflang etiketlerini bu rotaya taşır (kendi PageMeta'sını
+  // yazan sayfalarda da aynı kanca çalışır; değerler aynı olduğu için idempotent).
+  useHreflangLinks(currentPath);
 
   const DEFAULT_SEO = {
     title: t('seo_default_title'),
@@ -114,21 +119,26 @@ export const SEOManager: React.FC = () => {
 
   const finalTitle = seoInfo.title || DEFAULT_SEO.title;
   const finalDesc = seoInfo.description || DEFAULT_SEO.description;
-  const canonicalUrl = window.location.origin + currentPath;
+  const canonicalHref = canonicalUrl(currentPath, {
+    search: window.location.search,
+    origin: window.location.origin,
+  });
   const noindex =
     (NOINDEX_EXACT as readonly string[]).includes(currentPath) ||
     NOINDEX_PREFIXES.some((prefix) => currentPath.startsWith(prefix));
 
+  // Kök için hreflang `index.html`'de statik durur; `useHreflangLinks` bu
+  // etiketleri geçerli rotaya taşır (JS'siz crawler'lar için taban korunur).
   return (
     <Helmet>
       <title>{finalTitle}</title>
       <meta name="description" content={finalDesc} />
-      <link rel="canonical" href={canonicalUrl} />
+      <link rel="canonical" href={canonicalHref} />
       {noindex && <meta name="robots" content="noindex, follow" />}
 
       <meta property="og:title" content={finalTitle} />
       <meta property="og:description" content={finalDesc} />
-      <meta property="og:url" content={canonicalUrl} />
+      <meta property="og:url" content={canonicalHref} />
       <meta property="og:image" content={DEFAULT_SEO.image} />
       <meta property="og:type" content="website" />
 

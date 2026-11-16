@@ -7,6 +7,7 @@ import {
   SELF_MANAGED_EXACT,
   SITE_BASE_URL,
 } from './seoRoutes';
+import { canonicalUrl, hreflangLinks } from './seoUrls';
 
 const read = (relative: string) => readFileSync(resolve(process.cwd(), relative), 'utf8');
 
@@ -72,6 +73,71 @@ describe('SEO route map', () => {
       expect(read(file), `${file} must render <PageMeta> for ${route}`).toContain('<PageMeta');
       expect(read(file), `${file} must not render a second <Helmet>`).not.toContain('<Helmet>');
     }
+  });
+});
+
+/**
+ * Dil alternatifleri üç yerde yaşar: statik `index.html` (kök), dinamik
+ * `SEOManager`/`PageMeta` (diğer rotalar) ve sitemap. Bunların aynı kümeyi
+ * üretmesi ve her alternatifin **kendi canonical'ı** olması gerekir; aksi
+ * hâlde Google hreflang'i yok sayar.
+ */
+describe('language alternates (hreflang)', () => {
+  const sitemap = read('public/sitemap.xml');
+  const indexHtml = read('index.html');
+  const blocks = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((match) => match[1]);
+
+  it('declares a reciprocal alternate set for every sitemap URL', () => {
+    expect(blocks.length).toBe(PUBLIC_SITEMAP_ROUTES.length);
+    for (const block of blocks) {
+      const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1];
+      expect(loc, 'every <url> needs a <loc>').toBeTruthy();
+      const path = loc!.replace(SITE_BASE_URL, '') || '/';
+      const expected = hreflangLinks(path, SITE_BASE_URL)
+        .map((link) => link.href)
+        .sort();
+      const actual = [...block.matchAll(/<xhtml:link[^>]+href="([^"]+)"/g)]
+        .map((match) => match[1])
+        .sort();
+      expect(actual, `alternates for ${loc}`).toEqual(expected);
+    }
+  });
+
+  it('keeps every declared alternate self-canonical', () => {
+    for (const block of blocks) {
+      for (const match of block.matchAll(/<xhtml:link[^>]+href="([^"]+)"/g)) {
+        const url = new URL(match[1]);
+        const own = canonicalUrl(url.pathname, { search: url.search, origin: url.origin });
+        expect(own, `${match[1]} must canonicalize to itself`).toBe(match[1]);
+      }
+    }
+  });
+
+  it('keeps the static home alternates in index.html in sync', () => {
+    const expected = hreflangLinks('/', SITE_BASE_URL)
+      .map((link) => link.href)
+      .sort();
+    const actual = [
+      ...indexHtml.matchAll(/<link rel="alternate" hreflang="[^"]+" href="([^"]+)"/g),
+    ]
+      .map((match) => match[1])
+      .sort();
+    expect(actual).toEqual(expected);
+  });
+
+  it('actually reads ?lang= at runtime (detector default is lng)', () => {
+    const i18n = read('src/i18n.ts');
+    expect(i18n).toContain("lookupQuerystring: 'lang'");
+    expect(i18n).toContain("'querystring'");
+  });
+
+  it('moves the static home alternates to the active route at runtime', () => {
+    const seo = read('src/components/SEOManager.tsx');
+    const pageMeta = read('src/components/PageMeta.tsx');
+    const hook = read('src/hooks/useHreflangLinks.ts');
+    for (const file of [seo, pageMeta]) expect(file).toContain('useHreflangLinks');
+    expect(hook).toContain('syncHreflangTags');
+    expect(read('src/lib/seoUrls.ts')).toContain('syncHreflangTags');
   });
 });
 

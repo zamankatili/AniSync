@@ -46,6 +46,14 @@ i18n
     fallbackLng: 'en',
     supportedLngs: ['tr', 'en', 'ja', 'fr'],
     nonExplicitSupportedLngs: true,
+    // `index.html` hreflang ve sitemap alternatifleri `?lang=xx` kullanır.
+    // Dedektörün varsayılanı `lng` olduğu için açıkça eşlenir; yalnızca
+    // `localStorage`'a yazılır (cookie yok — KVKK/GDPR sadeleştirmesi).
+    detection: {
+      order: ['querystring', 'localStorage', 'navigator', 'htmlTag'],
+      lookupQuerystring: 'lang',
+      caches: ['localStorage'],
+    },
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
