@@ -8,6 +8,7 @@ import { getSafeImageUrl, formatRelativeTime, cn } from '../lib/utils';
 import { getDefaultAvatar } from '../lib/avatar';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { playUiTap } from '../lib/gentleAudio';
+import { useSoundStore } from '../store/useSoundStore';
 import { 
   Activity, BookmarkPlus, Check, Star, ExternalLink, Filter, 
   Layers, Clock, Film, Sparkles, RefreshCw, Plus,
@@ -53,7 +54,11 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
     listName: string;
     time: string;
   } | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  // Feed çanı global SFX tercihine bağlı (varsayılan KAPALI): kullanıcı
+  // kendi açmadıkça başkasının gönderisi için ses çalmaz. Aynı anahtar
+  // Life Sim / hatırlatıcı çanını da yönetir — tek ses tercihi.
+  const soundEnabled = useSoundStore((state) => state.enabled);
+  const toggleSound = useSoundStore((state) => state.toggleEnabled);
 
   useEffect(() => {
     // Listen to live community additions using onSnapshot
@@ -82,7 +87,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
               time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
             });
 
-            if (soundEnabled) {
+            if (useSoundStore.getState().enabled) {
               playNeoChime();
             }
 
@@ -140,7 +145,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
     );
 
     return () => unsubscribe();
-  }, [maxItems, soundEnabled]);
+  }, [maxItems, t]);
 
   const isAnimeInWatchlist = (animeId: number) => {
     return watchlist.some((item) => item.anime.mal_id === animeId);
@@ -270,7 +275,9 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={toggleSound}
+              aria-pressed={soundEnabled}
+              aria-label={soundEnabled ? t('recent_activity_sound_off_title') : t('recent_activity_sound_on_title')}
               title={soundEnabled ? t('recent_activity_sound_off_title') : t('recent_activity_sound_on_title')}
               className="p-1 text-xs border border-white/40 hover:border-white text-neutral-300 hover:text-white transition-colors cursor-pointer"
             >
@@ -442,7 +449,8 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
 
           <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={toggleSound}
+              aria-pressed={soundEnabled}
               className={cn(
                 "p-2.5 border-2 transition-all cursor-pointer flex items-center gap-2 text-xs font-black uppercase tracking-wider",
                 soundEnabled 

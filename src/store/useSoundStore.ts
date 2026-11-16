@@ -1,11 +1,17 @@
 import { create } from 'zustand';
 
 /**
- * Global sound-effects preference (Life Sim, reminder chime, quiz fallback).
+ * Global sound-effects preference (Life Sim, reminder chime, feed chime,
+ * quiz fallback).
  *
  * Persisted in localStorage so a user who mutes the game never gets a surprise
  * chime after a reload. Volume is a 0–1 multiplier applied on top of the very
  * low per-engine ceiling (see `lib/gentleAudio.ts`).
+ *
+ * **Default is OFF.** A first-time visitor must never hear audio they did not
+ * ask for — the live feed chime fires when someone else posts, and that is
+ * unsolicited. Turning sound on anywhere (feed button, Life Sim header)
+ * persists the choice and unlocks every sound in the app.
  */
 
 const STORAGE_KEY = 'anisync_sfx_settings';
@@ -24,18 +30,33 @@ const clamp01 = (value: number): number => {
   return Math.min(1, Math.max(0, value));
 };
 
-const loadInitial = (): { enabled: boolean; volume: number } => {
-  if (typeof window === 'undefined') return { enabled: true, volume: 0.5 };
+/**
+ * localStorage'daki ham tercihi güvenli bir duruma çevirir.
+ *
+ * Saf fonksiyon: DOM yok, yan etki yok. Varsayılan **kapalı** — kayıt yoksa,
+ * JSON bozuksa veya `enabled` alanı eksikse ses açılmaz. Yalnızca kullanıcının
+ * açıkça kaydettiği `true` sesi açar.
+ */
+export const resolveStoredSound = (raw: string | null): { enabled: boolean; volume: number } => {
+  if (!raw) return { enabled: false, volume: 0.5 };
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { enabled: true, volume: 0.5 };
-    const parsed = JSON.parse(raw) as { enabled?: unknown; volume?: unknown };
+    const parsed = JSON.parse(raw) as { enabled?: unknown; volume?: unknown } | null;
     return {
-      enabled: parsed.enabled !== false,
-      volume: typeof parsed.volume === 'number' ? clamp01(parsed.volume) : 0.5,
+      enabled: parsed?.enabled === true,
+      volume: typeof parsed?.volume === 'number' ? clamp01(parsed.volume) : 0.5,
     };
   } catch {
-    return { enabled: true, volume: 0.5 };
+    return { enabled: false, volume: 0.5 };
+  }
+};
+
+const loadInitial = (): { enabled: boolean; volume: number } => {
+  if (typeof window === 'undefined') return resolveStoredSound(null);
+  try {
+    return resolveStoredSound(window.localStorage.getItem(STORAGE_KEY));
+  } catch {
+    // localStorage okunamıyorsa (gizli mod) varsayılan: sessiz.
+    return { enabled: false, volume: 0.5 };
   }
 };
 

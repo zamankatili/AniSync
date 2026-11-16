@@ -67,7 +67,7 @@ export const Home = () => {
     }
 
     addForumPost({
-      title: 'Topluluk Gönderisi',
+      title: t('community_post'),
       content: newPostContent,
       likes: 0,
       replies: 0,
@@ -88,14 +88,18 @@ export const Home = () => {
           <h1 className="text-4xl font-black text-white tracking-tighter uppercase whitespace-pre-wrap">{t('home')}</h1>
           
           {/* Mobilde tek satırda kaydırılabilir sekme şeridi; masaüstünde tamamı sığar. */}
-          <div className="flex bg-black border-4 border-white neo-shadow overflow-x-auto hide-scrollbar max-w-full">
+          <div role="tablist" aria-label={t('home')} className="flex bg-black border-4 border-white neo-shadow overflow-x-auto hide-scrollbar max-w-full">
             <button 
+              role="tab"
+              aria-selected={activeTab === 'feed'}
               onClick={() => setActiveTab('feed')}
               className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors cursor-pointer", activeTab === 'feed' ? "bg-white text-black" : "text-white hover:bg-neutral-900")}
             >
               {t('home_tab_feed')}
             </button>
             <button 
+              role="tab"
+              aria-selected={activeTab === 'activity'}
               onClick={() => setActiveTab('activity')}
               className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center gap-1 cursor-pointer", activeTab === 'activity' ? "bg-amber-400 text-black" : "text-white hover:bg-neutral-900")}
             >
@@ -104,6 +108,8 @@ export const Home = () => {
               {t('home_tab_activity')}
             </button>
             <button 
+              role="tab"
+              aria-selected={activeTab === 'multimedia'}
               onClick={() => setActiveTab('multimedia')}
               className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center gap-1 cursor-pointer", activeTab === 'multimedia' ? "bg-rose-600 text-white" : "text-white hover:bg-neutral-900")}
             >
@@ -111,12 +117,16 @@ export const Home = () => {
               {t('home_tab_multimedia')}
             </button>
             <button 
+              role="tab"
+              aria-selected={activeTab === 'memes'}
               onClick={() => setActiveTab('memes')}
               className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white cursor-pointer", activeTab === 'memes' ? "bg-cyan-500 text-white" : "text-white hover:bg-neutral-900")}
             >
               {t('home_tab_memes')}
             </button>
             <button 
+              role="tab"
+              aria-selected={activeTab === 'news'}
               onClick={() => setActiveTab('news')}
               className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center gap-1 cursor-pointer", activeTab === 'news' ? "bg-cyan-400 text-black" : "text-white hover:bg-neutral-900")}
             >
