@@ -359,7 +359,7 @@ export const MultiMediaHub: React.FC = () => {
                   onClick={() => selectMangaRegion(region)}
                   aria-pressed={mangaRegion === region}
                   className={cn(
-                    "px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider border-2 transition-colors",
+                    "px-2.5 py-1.5 min-h-[44px] sm:min-h-0 text-[10px] font-black uppercase tracking-wider border-2 transition-colors",
                     mangaRegion === region
                       ? "bg-cyan-500 border-cyan-500 text-black"
                       : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"

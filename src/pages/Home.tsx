@@ -29,18 +29,43 @@ import { useWeeklyChallengeStore } from '../store/useWeeklyChallengeStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { localizeGenres } from '../lib/genreNames';
 
+/** Sekme sırası — klavye (ok tuşları) gezinmesi ve roving tabindex bunu kullanır. */
+const HOME_TAB_IDS = ['feed', 'activity', 'multimedia', 'memes', 'news'] as const;
+type HomeTabId = (typeof HOME_TAB_IDS)[number];
+
 export const Home = () => {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
   const { addForumPost, userProfile, currentUser, activePoll } = useAppStore();
   const { addToast } = useToastStore();
 
-  const [activeTab, setActiveTab] = useState<'feed' | 'activity' | 'multimedia' | 'memes' | 'news'>('feed');
+  const [activeTab, setActiveTab] = useState<HomeTabId>('feed');
   const [newPostContent, setNewPostContent] = useState('');
 
   const [isPollModalOpen, setIsPollModalOpen] = useState(false);
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const [isTasteModalOpen, setIsTasteModalOpen] = useState(false);
+
+  /**
+   * WAI-ARIA sekmeler deseni: ok tuşları sekmeler arasında gezinir, Home/End
+   * ilk/son sekmeye gider. `role="tab"` verip klavye desteğini atlamak, ekran
+   * okuyucuya "sekme" deyip klavyeye hiçbir şey vermemek olurdu.
+   */
+  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End') return;
+    const current = HOME_TAB_IDS.indexOf(activeTab);
+    const next =
+      e.key === 'ArrowRight'
+        ? (current + 1) % HOME_TAB_IDS.length
+        : e.key === 'ArrowLeft'
+          ? (current - 1 + HOME_TAB_IDS.length) % HOME_TAB_IDS.length
+          : e.key === 'Home'
+            ? 0
+            : HOME_TAB_IDS.length - 1;
+    e.preventDefault();
+    setActiveTab(HOME_TAB_IDS[next]);
+    e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+  };
 
   const { getOverallProgress, streakDays, totalChallengeXp } = useWeeklyChallengeStore();
   const challengeProgress = getOverallProgress();
@@ -88,20 +113,31 @@ export const Home = () => {
           <h1 className="text-4xl font-black text-white tracking-tighter uppercase whitespace-pre-wrap">{t('home')}</h1>
           
           {/* Mobilde tek satırda kaydırılabilir sekme şeridi; masaüstünde tamamı sığar. */}
-          <div role="tablist" aria-label={t('home')} className="flex bg-black border-4 border-white neo-shadow overflow-x-auto hide-scrollbar max-w-full">
+          <div
+            role="tablist"
+            aria-label={t('home')}
+            onKeyDown={handleTabKeyDown}
+            className="flex bg-black border-4 border-white neo-shadow overflow-x-auto hide-scrollbar max-w-full"
+          >
             <button 
               role="tab"
+              id="home-tab-feed"
+              aria-controls="home-tabpanel"
               aria-selected={activeTab === 'feed'}
+              tabIndex={activeTab === 'feed' ? 0 : -1}
               onClick={() => setActiveTab('feed')}
-              className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors cursor-pointer", activeTab === 'feed' ? "bg-white text-black" : "text-white hover:bg-neutral-900")}
+              className={cn("shrink-0 min-h-[44px] px-2.5 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors cursor-pointer flex items-center justify-center gap-1", activeTab === 'feed' ? "bg-white text-black" : "text-white hover:bg-neutral-900")}
             >
               {t('home_tab_feed')}
             </button>
             <button 
               role="tab"
+              id="home-tab-activity"
+              aria-controls="home-tabpanel"
               aria-selected={activeTab === 'activity'}
+              tabIndex={activeTab === 'activity' ? 0 : -1}
               onClick={() => setActiveTab('activity')}
-              className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center gap-1 cursor-pointer", activeTab === 'activity' ? "bg-amber-400 text-black" : "text-white hover:bg-neutral-900")}
+              className={cn("shrink-0 min-h-[44px] px-2.5 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center justify-center gap-1 cursor-pointer", activeTab === 'activity' ? "bg-amber-400 text-black" : "text-white hover:bg-neutral-900")}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping shrink-0" />
               <Activity size={14} strokeWidth={3} className={activeTab === 'activity' ? "text-black" : "text-amber-400"} />
@@ -109,26 +145,35 @@ export const Home = () => {
             </button>
             <button 
               role="tab"
+              id="home-tab-multimedia"
+              aria-controls="home-tabpanel"
               aria-selected={activeTab === 'multimedia'}
+              tabIndex={activeTab === 'multimedia' ? 0 : -1}
               onClick={() => setActiveTab('multimedia')}
-              className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center gap-1 cursor-pointer", activeTab === 'multimedia' ? "bg-rose-600 text-white" : "text-white hover:bg-neutral-900")}
+              className={cn("shrink-0 min-h-[44px] px-2.5 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center justify-center gap-1 cursor-pointer", activeTab === 'multimedia' ? "bg-rose-600 text-white" : "text-white hover:bg-neutral-900")}
             >
               <BookOpen size={14} strokeWidth={2.5} className="shrink-0" />
               {t('home_tab_multimedia')}
             </button>
             <button 
               role="tab"
+              id="home-tab-memes"
+              aria-controls="home-tabpanel"
               aria-selected={activeTab === 'memes'}
+              tabIndex={activeTab === 'memes' ? 0 : -1}
               onClick={() => setActiveTab('memes')}
-              className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white cursor-pointer", activeTab === 'memes' ? "bg-cyan-500 text-white" : "text-white hover:bg-neutral-900")}
+              className={cn("shrink-0 min-h-[44px] px-2.5 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center justify-center gap-1 cursor-pointer", activeTab === 'memes' ? "bg-cyan-500 text-white" : "text-white hover:bg-neutral-900")}
             >
               {t('home_tab_memes')}
             </button>
             <button 
               role="tab"
+              id="home-tab-news"
+              aria-controls="home-tabpanel"
               aria-selected={activeTab === 'news'}
+              tabIndex={activeTab === 'news' ? 0 : -1}
               onClick={() => setActiveTab('news')}
-              className={cn("shrink-0 px-2.5 py-2 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center gap-1 cursor-pointer", activeTab === 'news' ? "bg-cyan-400 text-black" : "text-white hover:bg-neutral-900")}
+              className={cn("shrink-0 min-h-[44px] px-2.5 font-black uppercase tracking-wide text-[10px] sm:text-xs whitespace-nowrap transition-colors border-l-4 border-white flex items-center justify-center gap-1 cursor-pointer", activeTab === 'news' ? "bg-cyan-400 text-black" : "text-white hover:bg-neutral-900")}
             >
               <Newspaper size={14} strokeWidth={2.5} className="shrink-0" />
               {t('home_tab_news')}
@@ -172,6 +217,12 @@ export const Home = () => {
           </button>
         </div>
 
+        <div
+          role="tabpanel"
+          id="home-tabpanel"
+          aria-labelledby={`home-tab-${activeTab}`}
+          tabIndex={0}
+        >
         {activeTab === 'feed' ? (
           <motion.div
             key="feed"
@@ -308,6 +359,7 @@ export const Home = () => {
             <MemeZone />
           </motion.div>
         )}
+        </div>
       </div>
 
       {/* Right Sidebar - Widgets */}

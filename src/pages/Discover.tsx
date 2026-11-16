@@ -163,7 +163,7 @@ export const Discover = () => {
                           onClick={() => selectRegion(null)}
                           aria-pressed={selectedRegion === null}
                           className={cn(
-                            "px-4 py-2 text-sm transition-all duration-100 flex items-center gap-2 border-2 font-black uppercase tracking-wider",
+                            "px-4 py-2 min-h-[44px] text-sm transition-all duration-100 flex items-center gap-2 border-2 font-black uppercase tracking-wider",
                             selectedRegion === null
                               ? "bg-white border-white text-black neo-shadow-white"
                               : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
@@ -179,7 +179,7 @@ export const Discover = () => {
                             onClick={() => selectRegion(selectedRegion === region.id ? null : region.id)}
                             aria-pressed={selectedRegion === region.id}
                             className={cn(
-                              "px-4 py-2 text-sm transition-all duration-100 flex items-center gap-2 border-2 font-black uppercase tracking-wider",
+                              "px-4 py-2 min-h-[44px] text-sm transition-all duration-100 flex items-center gap-2 border-2 font-black uppercase tracking-wider",
                               selectedRegion === region.id
                                 ? "bg-white border-white text-black neo-shadow-white"
                                 : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
@@ -203,7 +203,7 @@ export const Discover = () => {
                           key={g.id}
                           onClick={() => toggleGenre(g.id)}
                           className={cn(
-                            "px-4 py-2 text-sm transition-all duration-100 flex items-center gap-2 border-2 font-black uppercase tracking-wider",
+                            "px-4 py-2 min-h-[44px] text-sm transition-all duration-100 flex items-center gap-2 border-2 font-black uppercase tracking-wider",
                             selectedGenres.includes(g.id) 
                               ? "bg-white border-white text-black neo-shadow-white" 
                               : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
@@ -317,7 +317,7 @@ export const Discover = () => {
               onClick={() => selectRegion(null)}
               aria-pressed={selectedRegion === null}
               className={cn(
-                "px-3 py-2 text-xs font-black uppercase tracking-wider border-2 transition-colors",
+                "px-3 py-2 min-h-[44px] sm:min-h-0 text-xs font-black uppercase tracking-wider border-2 transition-colors",
                 selectedRegion === null
                   ? "bg-white border-white text-black"
                   : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
@@ -332,7 +332,7 @@ export const Discover = () => {
                 onClick={() => selectRegion(selectedRegion === region.id ? null : region.id)}
                 aria-pressed={selectedRegion === region.id}
                 className={cn(
-                  "px-3 py-2 text-xs font-black uppercase tracking-wider border-2 transition-colors flex items-center gap-2",
+                  "px-3 py-2 min-h-[44px] sm:min-h-0 text-xs font-black uppercase tracking-wider border-2 transition-colors flex items-center gap-2",
                   selectedRegion === region.id
                     ? "bg-white border-white text-black"
                     : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"

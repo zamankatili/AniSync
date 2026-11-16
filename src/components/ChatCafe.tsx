@@ -330,7 +330,7 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({
                   type="button"
                   onClick={() => void loadMoreForumPosts()}
                   disabled={forumMoreLoading}
-                  className="px-5 py-2 border-2 border-white text-white font-mono text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="px-5 py-2 min-h-[44px] border-2 border-white text-white font-mono text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {forumMoreLoading ? t('forum_load_more_loading') : t('forum_load_more')}
                 </button>

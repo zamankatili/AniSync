@@ -224,7 +224,7 @@ export const CommunityPulse: React.FC = () => {
                   type="button"
                   onClick={() => void loadMoreForumPosts()}
                   disabled={forumMoreLoading}
-                  className="px-6 py-2.5 bg-black border-2 border-white text-white font-black text-xs uppercase neo-shadow hover:bg-white hover:text-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                  className="px-6 py-2.5 min-h-[44px] bg-black border-2 border-white text-white font-black text-xs uppercase neo-shadow hover:bg-white hover:text-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {forumMoreLoading ? t('forum_load_more_loading') : t('forum_load_more')}
                 </button>

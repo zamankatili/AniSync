@@ -23,12 +23,40 @@ describe('Home — sekme erişilebilirliği', () => {
   });
 
   it('marks every tab with role=tab and aria-selected', () => {
-    expect(home.match(/role="tab"/g)?.length).toBe(5);
-    expect(home.match(/aria-selected=\{/g)?.length).toBe(5);
+    // Yalnız kendi satırında duran JSX niteliği sayılır (yorum ve
+    // querySelector içindeki metinler hariç).
+    expect(home.match(/^\s*role="tab"$/gm)?.length).toBe(5);
+    expect(home.match(/^\s*aria-selected=\{/gm)?.length).toBe(5);
   });
 
   it('keeps the feed tab selected by default', () => {
     expect(home).toContain("aria-selected={activeTab === 'feed'}");
+  });
+
+  it('links every tab to the single tabpanel', () => {
+    // Her sekme aynı paneli kontrol ediyor; panel de seçili sekmeyi işaret ediyor.
+    expect(home.match(/aria-controls="home-tabpanel"/g)?.length).toBe(5);
+    expect(home).toContain('role="tabpanel"');
+    expect(home).toContain('id="home-tabpanel"');
+    expect(home).toContain('aria-labelledby={`home-tab-${activeTab}`}');
+  });
+
+  it('uses roving tabIndex so only the selected tab is in the tab order', () => {
+    // 5 sekme × birer koşullu tabIndex; hep aynı desen.
+    const roving = home.match(/tabIndex=\{activeTab === '\w+' \? 0 : -1\}/g) || [];
+    expect(roving.length).toBe(5);
+  });
+
+  it('supports Arrow/Home/End keyboard navigation', () => {
+    expect(home).toContain('handleTabKeyDown');
+    for (const key of ['ArrowRight', 'ArrowLeft', 'Home', 'End']) {
+      expect(home).toContain(`'${key}'`);
+    }
+    expect(home).toContain('onKeyDown={handleTabKeyDown}');
+  });
+
+  it('keeps mobile tap targets at 44px on the tab strip', () => {
+    expect(home.match(/min-h-\[44px\]/g)?.length).toBe(5);
   });
 });
 

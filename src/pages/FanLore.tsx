@@ -131,7 +131,7 @@ export const FanLore = () => {
               onClick={() => setShowSpoilers((v) => !v)}
               aria-pressed={showSpoilers}
               className={cn(
-                'px-3 py-2.5 border-2 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-colors cursor-pointer',
+                'px-3 py-2.5 min-h-[44px] border-2 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-colors cursor-pointer',
                 showSpoilers
                   ? 'bg-rose-600 text-white border-rose-400'
                   : 'bg-black text-neutral-300 border-white/30 hover:border-white',
@@ -152,7 +152,7 @@ export const FanLore = () => {
                   onClick={() => setCategory(cat)}
                   aria-pressed={active}
                   className={cn(
-                    'px-2.5 py-1.5 border-2 font-black text-[10px] uppercase tracking-wider transition-colors cursor-pointer',
+                    'px-2.5 py-1.5 min-h-[44px] sm:min-h-0 border-2 font-black text-[10px] uppercase tracking-wider transition-colors cursor-pointer',
                     active
                       ? 'bg-white text-black border-white'
                       : 'bg-black text-neutral-400 border-white/20 hover:text-white hover:border-white/50',
