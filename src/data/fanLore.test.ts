@@ -49,4 +49,25 @@ describe('fanLore', () => {
       expect(FAN_LORE.some((entry) => entry.category === category && !entry.spoiler)).toBe(true);
     }
   });
+
+  it('ships a xianxia & donghua glossary that is honestly scoped', () => {
+    const glossary = filterLore({ category: 'xianxia' });
+    expect(glossary.length).toBeGreaterThanOrEqual(5);
+    // Sözlük kayıtları spoiler değil: terim bilgisi herkese açık olmalı.
+    expect(glossary.every((entry) => !entry.spoiler)).toBe(true);
+    // Ansiklopedik doğrulama bağlantısı zorunlu.
+    expect(glossary.every((entry) => entry.sourceUrl.startsWith('https://'))).toBe(true);
+
+    // Çin/Çince ve roman terimleri dört dilde de aranabilmeli.
+    expect(filterLore({ query: '仙侠' }).some((entry) => entry.category === 'xianxia')).toBe(true);
+    expect(filterLore({ query: 'donghua' }).some((entry) => entry.id === 'donghua-vs-anime')).toBe(true);
+    expect(filterLore({ query: '动画' }).some((entry) => entry.id === 'donghua-vs-anime')).toBe(true);
+    expect(filterLore({ query: 'manhwa' }).some((entry) => entry.id === 'manhua-manhwa-manga')).toBe(true);
+    expect(filterLore({ query: 'qidian' }).some((entry) => entry.id === 'xianxia-web-novels-scope')).toBe(true);
+
+    // Kapsam dürüstlüğü: web romanı metni olmadığını söyleyen kayıt kalmalı.
+    const scope = glossary.find((entry) => entry.id === 'xianxia-web-novels-scope');
+    expect(scope).toBeDefined();
+    expect(scope!.answer.en.toLowerCase()).toContain('no book text');
+  });
 });

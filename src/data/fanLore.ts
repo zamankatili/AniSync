@@ -14,7 +14,7 @@
 
 import type { Localized } from './universePaths';
 
-export type LoreCategory = 'character' | 'world' | 'series' | 'industry';
+export type LoreCategory = 'character' | 'world' | 'series' | 'industry' | 'xianxia';
 
 export interface FanLoreEntry {
   id: string;
@@ -606,9 +606,142 @@ export const FAN_LORE: FanLoreEntry[] = [
     sourceUrl: 'https://en.wikipedia.org/wiki/Cowboy_Bebop',
     tags: ['cowboy bebop', 'yoko kanno', 'seatbelts', 'jazz'],
   },
+
+  /* ── Xianxia & Donghua sözlüğü ───────────────────────────────
+   * Bu kayıtlar başka bir dünyanın kanonu değil, tür sözlüğüdür.
+   * Amaç: Çin yapımlarına gelen kullanıcının "xianxia", "donghua",
+   * "manhua" terimlerini doğru yerde öğrenmesi. Kitap metni yok;
+   * kaynaklar ansiklopedik doğrulama bağlantılarıdır.
+   */
+  {
+    id: 'xianxia-cultivation-basics',
+    category: 'xianxia',
+    series: 'Xianxia & Donghua',
+    spoiler: false,
+    question: L(
+      'Xianxia ne demek, neden her yerde “cultivation” geçiyor?',
+      'What does xianxia mean, and why is “cultivation” everywhere?',
+      '仙侠（シェンシア）とは？なぜ「修行」ばかり出てくるのか？',
+      'Que signifie « xianxia », et pourquoi parle-t-on toujours de « cultivation » ?',
+    ),
+    answer: L(
+      'Xianxia (仙侠) “ölümsüz kahramanlar” demektir: Taocu simya, Çin mitolojisi ve dövüş sanatlarından beslenen bir fantezi türü. Kahramanlar qi (yaşam enerjisi) toplayıp bedeni ve ruhu arındırarak cultivation (xiulian) yapar; amaç güçlenmek ve ölümsüzlüğe yaklaşmaktır. Meridyenler, dantian, dan/simya ve “qi sapması” (走火入魔) türün ortak sözlüğüdür. Terimler ve aşamalar yazara göre değişir; tek bir kanon yok.',
+      'Xianxia (仙侠) means “immortal heroes”: a fantasy genre rooted in Taoist alchemy, Chinese mythology and martial arts. Characters gather qi (life energy) and refine body and spirit through cultivation (xiulian) to grow stronger and approach immortality. Meridians, the dantian, alchemical pills and “qi deviation” (走火入魔) are shared vocabulary. Terms and stages vary by author — there is no single canon.',
+      '仙侠（シェンシア）は「仙人の英雄」を意味する。道教の錬丹術、中国神話、武術を背景にしたファンタジーで、登場人物は気を集め、修行によって肉体と魂を鍛え、強くなること・不老不死に近づくことを目指す。経脈、丹田、丹薬、そして「走火入魔」（気の暴走）が共通の語彙。用語や段階は作者ごとに異なり、唯一の正典は存在しない。',
+      '« Xianxia » (仙侠) signifie « héros immortels » : un genre fantastique nourri d’alchimie taoïste, de mythologie chinoise et d’arts martiaux. Les personnages accumulent le qi (énergie vitale) et affinent corps et esprit par la « cultivation » (xiulian) pour gagner en puissance et approcher l’immortalité. Méridiens, dantian, pilules alchimiques et « déviation du qi » (走火入魔) forment le vocabulaire commun. Termes et paliers varient selon l’auteur : il n’existe pas de canon unique.',
+    ),
+    sourceLabel: 'Wikipedia — Xianxia',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Xianxia',
+    tags: ['xianxia', '仙侠', 'cultivation', 'xiulian', 'qi', 'dantian', '走火入魔', 'ölümsüz', 'immortal'],
+  },
+  {
+    id: 'xianxia-cultivation-realms',
+    category: 'xianxia',
+    series: 'Xianxia & Donghua',
+    spoiler: false,
+    question: L(
+      'Cultivation aşamaları (Qi Refining, Foundation Establishment…) sabit mi?',
+      'Are the cultivation stages (Qi Refining, Foundation Establishment…) fixed?',
+      '修行の段階（錬気、築基など）は固定なのか？',
+      'Les paliers de cultivation (Qi Refining, Foundation Establishment…) sont-ils fixes ?',
+    ),
+    answer: L(
+      'Pek çok xianxia anlatısı benzer bir iskelet kullanır: qi toplama → temel kurma → çekirdek oluşumu (altın çekirdek) → ruhsal bebek → ruh oluşumu → ölümsüzlüğe yükseliş. Ama bu sıra kanon değildir: her yazar kendi sistemini kurar, aşamaları böler, birleştirir ya da atlar. Bir eserdeki “altın çekirdek” başka eserde farklı bir basamağa denk gelebilir. Bu yüzden buradaki terimler tür sözlüğüdür, tek doğru şema değil.',
+      'Many xianxia stories share a skeleton: qi gathering → foundation building → core formation (golden core) → nascent soul → soul formation → immortal ascension. That order is not canon: every author builds their own system, splitting, merging or skipping stages. A “golden core” in one novel can map to a different step in another. Treat these terms as genre vocabulary, not one true schema.',
+      '多くの仙侠作品は似た骨格を共有する。気を集める → 築基 → 金丹（核の形成）→ 元嬰（霊的胎児）→ 化神 → 昇仙、という流れだ。ただしこれは正典ではなく、作者ごとに段階を分けたり統合したり省略したりする。ある作品の「金丹」が別の作品では違う段階に当たることもある。ここに挙げる用語はジャンルの語彙であり、唯一の体系図ではない。',
+      'Beaucoup de récits xianxia partagent une ossature : accumulation du qi → fondation → formation du noyau (noyau d’or) → âme naissante → formation de l’âme → ascension immortelle. Cet ordre n’est pas canonique : chaque auteur bâtit son système, scinde, fusionne ou saute des paliers. Un « noyau d’or » peut correspondre à une autre étape ailleurs. Ces termes sont un vocabulaire de genre, pas un schéma unique.',
+    ),
+    sourceLabel: 'Wikipedia — Xianxia (cultivation)',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Xianxia',
+    tags: ['cultivation', 'golden core', '金丹', 'nascent soul', '元嬰', 'aşama', 'realm', 'paliers'],
+  },
+  {
+    id: 'wuxia-vs-xianxia',
+    category: 'xianxia',
+    series: 'Wuxia & Xianxia',
+    spoiler: false,
+    question: L(
+      'Wuxia ile xianxia aynı şey mi?',
+      'Are wuxia and xianxia the same thing?',
+      '武侠（ウーシャ）と仙侠は同じもの？',
+      'Wuxia et xianxia, est-ce la même chose ?',
+    ),
+    answer: L(
+      'Hayır. Wuxia (武侠) “dövüş kahramanları” demektir: jianghu (nehir-göl) dünyasında geçen, düşük fantezi düzeyinde dövüş sanatı hikâyeleridir; Jin Yong (Louis Cha) klasikleri bu türün standardıdır. Xianxia ise ölümsüzlük, cultivation, tanrılar ve mitoloji içeren yüksek fantazidir. İkisi de Çin fantazisi ama ölçek farklı: wuxia insan sınırları içinde kalır, xianxia bu sınırları aşar.',
+      'No. Wuxia (武侠) means “martial heroes”: low-fantasy martial-arts stories set in the jianghu (“rivers and lakes”); Jin Yong’s (Louis Cha) classics define the genre. Xianxia is high fantasy with immortality, cultivation, gods and mythology. Both are Chinese fantasy, but the scale differs: wuxia stays within human limits, xianxia breaks them.',
+      'いいえ。武侠（ウーシャ）は「武の英雄」を指し、江湖（川と湖、すなわち武人の世界）を舞台にしたローファンタジー的な武術譚。金庸（ジン・ヨン）の作品が代表的だ。一方、仙侠は不老不死・修行・神々・神話を含むハイファンタジー。どちらも中国ファンタジーだが規模が違う。武侠は人の限界にとどまり、仙侠はそれを超える。',
+      'Non. Le wuxia (武侠) désigne les « héros martiaux » : des récits d’arts martiaux en fantaisie basse situés dans le jianghu (« rivières et lacs ») ; les classiques de Jin Yong (Louis Cha) font référence. Le xianxia est de la haute fantaisie avec immortalité, cultivation, dieux et mythologie. Les deux sont chinois, mais l’échelle diffère : le wuxia reste dans les limites humaines, le xianxia les dépasse.',
+    ),
+    sourceLabel: 'Wikipedia — Wuxia',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Wuxia',
+    tags: ['wuxia', '武侠', 'xianxia', 'jianghu', '江湖', 'jin yong', 'louis cha', 'dövüş sanatları'],
+  },
+  {
+    id: 'donghua-vs-anime',
+    category: 'xianxia',
+    series: 'Donghua',
+    spoiler: false,
+    question: L(
+      '“Donghua” anime mi, ayrı bir şey mi?',
+      'Is “donghua” anime, or something else?',
+      '「ドンファ」はアニメなのか、別物なのか？',
+      '« Donghua », est-ce du anime ou autre chose ?',
+    ),
+    answer: L(
+      'Donghua (动画) Çince “animasyon” demektir; anime topluluğu bunu Çin yapımı animasyon dizileri için kullanır. Japon anime ile ortak bir görsel dil paylaşsa da prodüksiyon, yayın ve denetim pratikleri farklıdır; birçok donghua 3D CG ağırlıklıdır. AniList bu yapımları menşe ülke alanıyla (`countryOfOrigin: CN`) ayırır — AniSync’in “Bölgesel Keşif” filtresi tam olarak bu veriyi kullanır. Her donghua xianxia değildir: günlük yaşam, bilim kurgu ve komedi de yaygındır.',
+      'Donghua (动画) is the Chinese word for “animation”; the anime community uses it for Chinese-made animated series. It shares visual language with Japanese anime, but production, distribution and censorship practices differ, and many donghua are 3D CG. AniList separates these works by country of origin (`countryOfOrigin: CN`) — AniSync’s “Regional Discovery” filter uses exactly that data. Not every donghua is xianxia: slice of life, sci-fi and comedy are common too.',
+      'ドンファ（动画）は中国語で「アニメーション」を意味し、アニメコミュニティでは中国制作のアニメ作品を指す。日本のアニメと視覚言語を共有するが、制作・配給・検閲の慣行は異なり、3D CG 主体の作品も多い。AniList は制作国（`countryOfOrigin: CN`）で区別しており、AniSync の「地域別ディスカバリー」はまさにこのデータを使う。ドンファがすべて仙侠というわけではなく、日常系・SF・コメディも多い。',
+      '« Donghua » (动画) est le mot chinois pour « animation » ; la communauté anime l’emploie pour les séries animées chinoises. Il partage un langage visuel avec l’anime japonais, mais production, diffusion et censure diffèrent, et beaucoup de donghua sont en 3D. AniList les distingue par pays d’origine (`countryOfOrigin: CN`) — le filtre « Découverte par région » d’AniSync utilise exactement ces données. Tout donghua n’est pas xianxia : tranche de vie, SF et comédie sont courants.',
+    ),
+    sourceLabel: 'Wikipedia — Chinese animation',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Chinese_animation',
+    tags: ['donghua', '动画', 'çin animasyonu', 'chinese animation', 'countryoforigin', 'bölgesel keşif', '3d cg'],
+  },
+  {
+    id: 'manhua-manhwa-manga',
+    category: 'xianxia',
+    series: 'Manhua · Manhwa · Manga',
+    spoiler: false,
+    question: L(
+      'Manhua, manhwa ve manga arasındaki fark ne?',
+      'What is the difference between manhua, manhwa and manga?',
+      '中華圏の漫画・韓国の漫画・日本の漫画はどう違う？',
+      'Quelle différence entre manhua, manhwa et manga ?',
+    ),
+    answer: L(
+      'Üçü de aynı Han karakterlerinin (漫画) yerel okunuşudur: manga (Japonca), manhua (Çince), manhwa (Korece). Ayrım coğrafidir: manga Japonya, manhua Çin/Tayvan/Hong Kong, manhwa Kore çizgi roman geleneğidir. Okuma yönü de değişir: basılı Japon manga genelde sağdan sola, Kore webtoon’ları ve Çin web manhua’ları çoğunlukla dikey kaydırmalıdır. AniSync’te “ÇİN / MANHUA” anahtarı AniList’te menşei Çin olan kayıtları süzer.',
+      'All three are local readings of the same Han characters (漫画): manga (Japanese), manhua (Chinese), manhwa (Korean). The split is geographic: manga from Japan, manhua from China/Taiwan/Hong Kong, manhwa from Korea. Reading direction differs too: printed Japanese manga is usually right-to-left, while Korean webtoons and Chinese web manhua mostly scroll vertically. AniSync’s “CHINA / MANHUA” switch filters AniList entries whose origin is China.',
+      '三つとも同じ漢字（漫画）の地域ごとの読み方で、日本は「マンガ」、中国語圏は「マンファ」、韓国語も「マンファ」と発音が変わる。つまり呼び分けは地理的なもので、日本の漫画・中国（台湾・香港を含む）の漫画・韓国の漫画を指す。読み方も異なり、日本の紙媒体は右から左、韓国のウェブトゥーンや中国のウェブ漫画は縦スクロールが多い。AniSync の「中国 / マンファ」は AniList で制作国が中国の作品だけを絞り込む。',
+      'Les trois sont des lectures locales des mêmes caractères han (漫画) : manga (japonais), manhua (chinois), manhwa (coréen). La distinction est géographique : manga du Japon, manhua de Chine/Taïwan/Hong Kong, manhwa de Corée. Le sens de lecture varie aussi : le manga imprimé japonais se lit de droite à gauche, tandis que les webtoons coréens et les web manhua chinois défilent surtout verticalement. Le bouton « CHINE / MANHUA » d’AniSync filtre les entrées AniList dont l’origine est la Chine.',
+    ),
+    sourceLabel: 'Wikipedia — Manhua',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Manhua',
+    tags: ['manhua', '漫画', 'manhwa', 'manga', 'webtoon', 'okuma yönü', 'reading direction'],
+  },
+  {
+    id: 'xianxia-web-novels-scope',
+    category: 'xianxia',
+    series: 'Xianxia web novels',
+    spoiler: false,
+    question: L(
+      'Xianxia web romanları (Qidian, NovelUpdates) neden AniSync’te yok?',
+      'Why are xianxia web novels (Qidian, NovelUpdates) not on AniSync?',
+      '仙侠ウェブ小説（起点、NovelUpdates）はなぜ AniSync にないのか？',
+      'Pourquoi les web-romans xianxia (Qidian, NovelUpdates) sont-ils absents d’AniSync ?',
+    ),
+    answer: L(
+      'Çünkü veri kaynağımız AniList: orada donghua ve manhua meta verisi vardır, Qidian/NovelUpdates gibi platformlarda serileşen web romanlarının metni ya da eksiksiz kataloğu yoktur. AniSync kitap metni barındırmaz; bir romanın anime veya manhua uyarlaması varsa o kaydı gösterir. Bu bilinçli bir kapsam sınırıdır: olmayan bir kataloğu varmış gibi göstermiyoruz.',
+      'Because our data source is AniList: it carries donghua and manhua metadata, but not the text or the complete catalogue of web novels serialized on platforms like Qidian or NovelUpdates. AniSync hosts no book text; if a novel has an anime or manhua adaptation, that entry is shown. This is a deliberate scope limit: we never pretend to have a catalogue we do not have.',
+      'データ源が AniList だからだ。AniList にはドンファやマンファのメタデータはあるが、起点（Qidian）や NovelUpdates で連載されるウェブ小説の本文や完全なカタログはない。AniSync は小説本文を掲載せず、アニメ化・マンファ化された作品があればその項目を表示する。これは意図的な範囲の限界であり、存在しないカタログがあるふりはしない。',
+      'Parce que notre source est AniList : elle fournit des métadonnées de donghua et de manhua, mais ni le texte ni le catalogue complet des web-romans sérialisés sur Qidian ou NovelUpdates. AniSync n’héberge aucun texte de roman ; si un roman a une adaptation anime ou manhua, c’est cette fiche qui s’affiche. C’est une limite de périmètre assumée : nous ne prétendons pas avoir un catalogue que nous n’avons pas.',
+    ),
+    sourceLabel: 'Wikipedia — Web novel',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Web_novel',
+    tags: ['web novel', 'qidian', 'novelupdates', 'xianxia', '仙侠', 'kapsam', 'scope', 'anilist'],
+  },
 ];
 
-export const LORE_CATEGORIES: LoreCategory[] = ['character', 'world', 'series', 'industry'];
+export const LORE_CATEGORIES: LoreCategory[] = ['character', 'world', 'xianxia', 'series', 'industry'];
 
 export const getLoreCategories = (): LoreCategory[] => LORE_CATEGORIES;
 

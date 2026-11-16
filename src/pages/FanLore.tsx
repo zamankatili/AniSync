@@ -21,6 +21,7 @@ import type { Lang4 } from '../data/universePaths';
 const catLabelKey: Record<LoreCategory, string> = {
   character: 'lore_filter_character',
   world: 'lore_filter_world',
+  xianxia: 'lore_filter_xianxia',
   series: 'lore_filter_series',
   industry: 'lore_filter_industry',
 };
@@ -28,6 +29,7 @@ const catLabelKey: Record<LoreCategory, string> = {
 const catAccent: Record<LoreCategory, string> = {
   character: 'text-rose-400 border-rose-400/50 bg-rose-400/10',
   world: 'text-cyan-400 border-cyan-400/50 bg-cyan-400/10',
+  xianxia: 'text-orange-400 border-orange-400/50 bg-orange-400/10',
   series: 'text-amber-400 border-amber-400/50 bg-amber-400/10',
   industry: 'text-emerald-400 border-emerald-400/50 bg-emerald-400/10',
 };
@@ -172,6 +174,13 @@ export const FanLore = () => {
             </button>
           </div>
         </div>
+
+        {/* Xianxia kapsam notu — yalnız bu kategori seçiliyken */}
+        {category === 'xianxia' && (
+          <p className="mt-4 border-2 border-orange-400/60 bg-orange-400/10 text-orange-200 px-3 py-2 text-[10px] md:text-[11px] font-mono uppercase tracking-wide leading-relaxed">
+            {t('lore_xianxia_notice')}
+          </p>
+        )}
 
         {/* Entries */}
         {entries.length === 0 ? (
