@@ -68,6 +68,11 @@ export interface UnifiedMedia {
   season?: string;
   seasonYear?: number | null;
   startDate?: MediaDate;
+  /**
+   * Menşe ülke (AniList `countryOfOrigin`: JP, CN, KR, TW...).
+   * Donghua/manhua ile Japon anime/manga'yı ayırmak için kullanılır.
+   */
+  countryOfOrigin?: string | null;
   episodes?: number | null;
   chapters?: number | null;
   volumes?: number | null;

@@ -296,6 +296,7 @@ var MEDIA_CORE = `
     season
     seasonYear
     startDate { year month day }
+    countryOfOrigin
     episodes
     chapters
     volumes
@@ -362,6 +363,7 @@ function mapAniListMedia(node) {
     season: node.season ?? void 0,
     seasonYear: node.seasonYear ?? null,
     startDate: node.startDate ?? void 0,
+    countryOfOrigin: node.countryOfOrigin ?? void 0,
     episodes: node.episodes ?? null,
     chapters: node.chapters ?? null,
     volumes: node.volumes ?? null,

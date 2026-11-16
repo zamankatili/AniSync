@@ -3,7 +3,7 @@ import { Anime } from '../types';
 import { FALLBACK_LISTS, EXTENDED_RANDOM_CATALOG } from '../data/fallbackLists';
 import { fetchSimilarRecommendations, type SimilarRecommendation } from '../lib/similarAnime';
 import { fetchAnimeFallback, toLegacyAnime } from '../lib/api/animeBridge';
-import { searchAniList, fetchSeasonalTrendingAnime } from '../lib/api/anilist';
+import { searchAniList, fetchSeasonalTrendingAnime, type AniListCountry } from '../lib/api/anilist';
 
 const BASE_URL = 'https://api.jikan.moe/v4';
 
@@ -78,7 +78,7 @@ interface UseAnimeResult {
   fetchTop: () => Promise<void>;
   searchAnime: (query: string) => Promise<void>;
   fetchRandom: () => Promise<Anime | null>;
-  fetchByCriteria: (genres: number[]) => Promise<Anime[] | null>;
+  fetchByCriteria: (genres: number[], country?: AniListCountry) => Promise<Anime[] | null>;
   fetchAnimeList: (path: string) => Promise<Anime[] | null>;
   fetchById: (id: number) => Promise<Anime | null>;
   fetchSimilarAnime: (animeId: number) => Promise<SimilarRecommendation[]>;
@@ -320,13 +320,30 @@ export const useAnimeData = (): UseAnimeResult => {
   }, []);
 
   // Filter by Criteria — AniList birincil: genre_in ile rastgele sayfa
-  const fetchByCriteria = useCallback(async (genres: number[]): Promise<Anime[] | null> => {
+  const fetchByCriteria = useCallback(async (genres: number[], country?: AniListCountry): Promise<Anime[] | null> => {
     setLoading(true);
     setError(null);
     try {
       const names = Array.from(
         new Set(genres.map((id) => MAL_GENRE_TO_ANILIST[id]).filter((name): name is string => Boolean(name)))
       );
+
+      // Ülke filtresi varsa YALNIZCA AniList kullanılır. Boş sonuçta Jikan'ın
+      // Japon kataloğuna düşmek, "Çin" isteyene gizlice anime göstermek olur.
+      if (country) {
+        const page = Math.floor(Math.random() * 3) + 1;
+        const result = await searchAniList({
+          kind: 'anime',
+          page,
+          perPage: 15,
+          genreIn: names.length > 0 ? names : undefined,
+          country,
+        });
+        const pool = result.items
+          .filter((m) => typeof m.externalIds?.mal === 'number')
+          .map((m) => toLegacyAnime(m, m.externalIds!.mal as number));
+        return pool;
+      }
 
       if (names.length > 0) {
         const page = Math.floor(Math.random() * 4) + 1;

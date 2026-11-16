@@ -33,6 +33,7 @@ const MEDIA_CORE = `
     season
     seasonYear
     startDate { year month day }
+    countryOfOrigin
     episodes
     chapters
     volumes
@@ -84,6 +85,7 @@ interface AniListMediaNode {
   season?: string | null;
   seasonYear?: number | null;
   startDate?: { year?: number | null; month?: number | null; day?: number | null } | null;
+  countryOfOrigin?: string | null;
   episodes?: number | null;
   chapters?: number | null;
   volumes?: number | null;
@@ -164,6 +166,7 @@ export function mapAniListMedia(node: AniListMediaNode): UnifiedMedia {
     season: node.season ?? undefined,
     seasonYear: node.seasonYear ?? null,
     startDate: node.startDate ?? undefined,
+    countryOfOrigin: node.countryOfOrigin ?? undefined,
     episodes: node.episodes ?? null,
     chapters: node.chapters ?? null,
     volumes: node.volumes ?? null,
@@ -231,6 +234,12 @@ const KIND_TO_ANILIST_TYPE: Partial<Record<MediaKind, 'ANIME' | 'MANGA'>> = {
   light_novel: 'MANGA',
 };
 
+/**
+ * AniList menşe ülkesi. `CN` = Çin (donghua/manhua), `JP` = Japonya,
+ * `KR` = Kore (manhwa), `TW` = Tayvan.
+ */
+export type AniListCountry = 'CN' | 'JP' | 'KR' | 'TW';
+
 export interface AniListSearchParams {
   query?: string;
   kind: 'anime' | 'manga' | 'light_novel';
@@ -239,58 +248,109 @@ export interface AniListSearchParams {
   hideAdult?: boolean;
   /** AniList tür adları (ör. ['Action', 'Fantasy']); boşsa uygulanmaz. */
   genreIn?: string[];
+  /**
+   * Menşe ülke filtresi (`countryOfOrigin`). Boşsa tüm ülkeler gelir.
+   * Çin için `CN`: donghua (`kind: 'anime'`) ve manhua (`kind: 'manga'`).
+   */
+  country?: AniListCountry;
   signal?: AbortSignal;
 }
 
 /**
- * AniList'te arama yapar. `query` boşsa popülerlik sırasına göre listeler.
+ * AniList aramasının GraphQL belgesini ve değişkenlerini üretir.
+ *
+ * Saf fonksiyon — ağ çağrısı yapmaz; ülke/tür filtrelerinin sorguya doğru
+ * biçimde yansıdığı ayrı test edilebilir. Filtre argümanları yalnızca
+ * kullanıldığında eklenir; gereksiz değişken GraphQL tarafında hataya yol
+ * açabilir.
  */
-export async function searchAniList(params: AniListSearchParams): Promise<MediaSearchResult> {
-  const { query = '', kind, page = 1, perPage = 20, hideAdult = true, genreIn, signal } = params;
-  const type = KIND_TO_ANILIST_TYPE[kind];
-  if (!type) throw new Error(`AniList desteklenmeyen tür: ${kind}`);
+export function buildAniListSearchQuery(input: {
+  search: string;
+  type: 'ANIME' | 'MANGA';
+  page: number;
+  perPage: number;
+  hideAdult: boolean;
+  genres: string[];
+  country?: AniListCountry;
+  format?: string;
+}): { query: string; variables: Record<string, unknown> } {
+  const useSearch = input.search.length > 0;
+  const genreArg = input.genres.length > 0 ? ', $genres: [String]' : '';
+  const genreInArg = input.genres.length > 0 ? ', genre_in: $genres' : '';
+  const countryArg = input.country ? ', $country: CountryCode' : '';
+  const countryFilter = input.country ? ', countryOfOrigin: $country' : '';
 
-  const trimmed = query.trim();
-  const genres = Array.isArray(genreIn) ? Array.from(new Set(genreIn.map((g) => g.trim()).filter(Boolean))) : [];
-  const cacheKey = `search:${kind}:${trimmed.toLowerCase()}:${page}:${perPage}:${hideAdult ? 'sfw' : 'all'}:${genres.join('|')}`;
-
-  return dedupe(cacheKey, async () => {
-    const cached = cache.get(cacheKey) as MediaSearchResult | null;
-    if (cached) return cached;
-
-    const useSearch = trimmed.length > 0;
-    // AniList'te NOVEL ayrı bir formattır; light novel sonuçlarını sunucu tarafında süz.
-    const format = kind === 'light_novel' ? 'NOVEL' : undefined;
-    const genreArg = genres.length > 0 ? ', $genres: [String]' : '';
-    const genreInArg = genres.length > 0 ? ', genre_in: $genres' : '';
-
-    const queryDoc = useSearch
-      ? `
-        query ($search: String, $type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}) {
+  const query = useSearch
+    ? `
+        query ($search: String, $type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}${countryArg}) {
           Page(page: $page, perPage: $perPage) {
             pageInfo { total currentPage lastPage hasNextPage }
-            media(search: $search, type: $type, isAdult: $isAdult, format: $format, sort: SEARCH_MATCH${genreInArg}) {
+            media(search: $search, type: $type, isAdult: $isAdult, format: $format, sort: SEARCH_MATCH${genreInArg}${countryFilter}) {
               ...MediaCore
             }
           }
         }
       `
-      : `
-        query ($type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}) {
+    : `
+        query ($type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}${countryArg}) {
           Page(page: $page, perPage: $perPage) {
             pageInfo { total currentPage lastPage hasNextPage }
-            media(type: $type, isAdult: $isAdult, format: $format, sort: POPULARITY_DESC${genreInArg}) {
+            media(type: $type, isAdult: $isAdult, format: $format, sort: POPULARITY_DESC${genreInArg}${countryFilter}) {
               ...MediaCore
             }
           }
         }
       `;
 
-    const variables = useSearch
-      ? { search: trimmed, type, page, perPage, isAdult: hideAdult ? false : undefined, format, genres: genres.length > 0 ? genres : undefined }
-      : { type, page, perPage, isAdult: hideAdult ? false : undefined, format, genres: genres.length > 0 ? genres : undefined };
+  const variables: Record<string, unknown> = {
+    type: input.type,
+    page: input.page,
+    perPage: input.perPage,
+    isAdult: input.hideAdult ? false : undefined,
+  };
+  if (useSearch) variables.search = input.search;
+  if (input.format) variables.format = input.format;
+  if (input.genres.length > 0) variables.genres = input.genres;
+  if (input.country) variables.country = input.country;
 
-    const payload = await graphql<AniListPageResponse>(queryDoc, variables, `arama (${kind})`, signal);
+  return { query, variables };
+}
+
+/**
+ * AniList'te arama yapar. `query` boşsa popülerlik sırasına göre listeler.
+ */
+export async function searchAniList(params: AniListSearchParams): Promise<MediaSearchResult> {
+  const { query = '', kind, page = 1, perPage = 20, hideAdult = true, genreIn, country, signal } = params;
+  const type = KIND_TO_ANILIST_TYPE[kind];
+  if (!type) throw new Error(`AniList desteklenmeyen tür: ${kind}`);
+
+  const trimmed = query.trim();
+  const genres = Array.isArray(genreIn) ? Array.from(new Set(genreIn.map((g) => g.trim()).filter(Boolean))) : [];
+  // AniList'te NOVEL ayrı bir formattır; light novel sonuçlarını sunucu tarafında süz.
+  const format = kind === 'light_novel' ? 'NOVEL' : undefined;
+  const cacheKey = `search:${kind}:${trimmed.toLowerCase()}:${page}:${perPage}:${hideAdult ? 'sfw' : 'all'}:${genres.join('|')}:${country ?? 'all'}`;
+
+  return dedupe(cacheKey, async () => {
+    const cached = cache.get(cacheKey) as MediaSearchResult | null;
+    if (cached) return cached;
+
+    const { query: queryDoc, variables } = buildAniListSearchQuery({
+      search: trimmed,
+      type,
+      page,
+      perPage,
+      hideAdult,
+      genres,
+      country,
+      format,
+    });
+
+    const payload = await graphql<AniListPageResponse>(
+      queryDoc,
+      variables,
+      `arama (${kind}${country ? `/${country}` : ''})`,
+      signal
+    );
 
     const media = payload.data?.Page?.media ?? [];
     const filtered =

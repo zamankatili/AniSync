@@ -248,6 +248,7 @@ var MEDIA_CORE = `
     season
     seasonYear
     startDate { year month day }
+    countryOfOrigin
     episodes
     chapters
     volumes
@@ -314,6 +315,7 @@ function mapAniListMedia(node) {
     season: node.season ?? void 0,
     seasonYear: node.seasonYear ?? null,
     startDate: node.startDate ?? void 0,
+    countryOfOrigin: node.countryOfOrigin ?? void 0,
     episodes: node.episodes ?? null,
     chapters: node.chapters ?? null,
     volumes: node.volumes ?? null,
@@ -369,41 +371,70 @@ var KIND_TO_ANILIST_TYPE = {
   manga: "MANGA",
   light_novel: "MANGA"
 };
-async function searchAniList(params) {
-  const { query = "", kind, page = 1, perPage = 20, hideAdult = true, genreIn, signal } = params;
-  const type = KIND_TO_ANILIST_TYPE[kind];
-  if (!type) throw new Error(`AniList desteklenmeyen t\xFCr: ${kind}`);
-  const trimmed = query.trim();
-  const genres = Array.isArray(genreIn) ? Array.from(new Set(genreIn.map((g) => g.trim()).filter(Boolean))) : [];
-  const cacheKey = `search:${kind}:${trimmed.toLowerCase()}:${page}:${perPage}:${hideAdult ? "sfw" : "all"}:${genres.join("|")}`;
-  return dedupe(cacheKey, async () => {
-    const cached = cache.get(cacheKey);
-    if (cached) return cached;
-    const useSearch = trimmed.length > 0;
-    const format = kind === "light_novel" ? "NOVEL" : void 0;
-    const genreArg = genres.length > 0 ? ", $genres: [String]" : "";
-    const genreInArg = genres.length > 0 ? ", genre_in: $genres" : "";
-    const queryDoc = useSearch ? `
-        query ($search: String, $type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}) {
+function buildAniListSearchQuery(input) {
+  const useSearch = input.search.length > 0;
+  const genreArg = input.genres.length > 0 ? ", $genres: [String]" : "";
+  const genreInArg = input.genres.length > 0 ? ", genre_in: $genres" : "";
+  const countryArg = input.country ? ", $country: CountryCode" : "";
+  const countryFilter = input.country ? ", countryOfOrigin: $country" : "";
+  const query = useSearch ? `
+        query ($search: String, $type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}${countryArg}) {
           Page(page: $page, perPage: $perPage) {
             pageInfo { total currentPage lastPage hasNextPage }
-            media(search: $search, type: $type, isAdult: $isAdult, format: $format, sort: SEARCH_MATCH${genreInArg}) {
+            media(search: $search, type: $type, isAdult: $isAdult, format: $format, sort: SEARCH_MATCH${genreInArg}${countryFilter}) {
               ...MediaCore
             }
           }
         }
       ` : `
-        query ($type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}) {
+        query ($type: MediaType, $page: Int, $perPage: Int, $isAdult: Boolean, $format: MediaFormat${genreArg}${countryArg}) {
           Page(page: $page, perPage: $perPage) {
             pageInfo { total currentPage lastPage hasNextPage }
-            media(type: $type, isAdult: $isAdult, format: $format, sort: POPULARITY_DESC${genreInArg}) {
+            media(type: $type, isAdult: $isAdult, format: $format, sort: POPULARITY_DESC${genreInArg}${countryFilter}) {
               ...MediaCore
             }
           }
         }
       `;
-    const variables = useSearch ? { search: trimmed, type, page, perPage, isAdult: hideAdult ? false : void 0, format, genres: genres.length > 0 ? genres : void 0 } : { type, page, perPage, isAdult: hideAdult ? false : void 0, format, genres: genres.length > 0 ? genres : void 0 };
-    const payload = await graphql(queryDoc, variables, `arama (${kind})`, signal);
+  const variables = {
+    type: input.type,
+    page: input.page,
+    perPage: input.perPage,
+    isAdult: input.hideAdult ? false : void 0
+  };
+  if (useSearch) variables.search = input.search;
+  if (input.format) variables.format = input.format;
+  if (input.genres.length > 0) variables.genres = input.genres;
+  if (input.country) variables.country = input.country;
+  return { query, variables };
+}
+async function searchAniList(params) {
+  const { query = "", kind, page = 1, perPage = 20, hideAdult = true, genreIn, country, signal } = params;
+  const type = KIND_TO_ANILIST_TYPE[kind];
+  if (!type) throw new Error(`AniList desteklenmeyen t\xFCr: ${kind}`);
+  const trimmed = query.trim();
+  const genres = Array.isArray(genreIn) ? Array.from(new Set(genreIn.map((g) => g.trim()).filter(Boolean))) : [];
+  const format = kind === "light_novel" ? "NOVEL" : void 0;
+  const cacheKey = `search:${kind}:${trimmed.toLowerCase()}:${page}:${perPage}:${hideAdult ? "sfw" : "all"}:${genres.join("|")}:${country ?? "all"}`;
+  return dedupe(cacheKey, async () => {
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+    const { query: queryDoc, variables } = buildAniListSearchQuery({
+      search: trimmed,
+      type,
+      page,
+      perPage,
+      hideAdult,
+      genres,
+      country,
+      format
+    });
+    const payload = await graphql(
+      queryDoc,
+      variables,
+      `arama (${kind}${country ? `/${country}` : ""})`,
+      signal
+    );
     const media = payload.data?.Page?.media ?? [];
     const filtered = kind === "light_novel" ? media.filter((node) => node.format === "NOVEL") : kind === "manga" ? media.filter((node) => node.format !== "NOVEL") : media;
     const result = {

@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAnimeData } from '../hooks/useAnimeData';
 import { AnimeCard } from '../components/AnimeCard';
 import { GenreTrendingVisualization } from '../components/GenreTrendingVisualization';
 import { SimilarAnimeFinder } from '../components/SimilarAnimeFinder';
 import { SocialFeedSection } from '../components/SocialFeedSection';
-import { Sparkles, Loader2, Play, Calendar, Filter, Shuffle, Search, RotateCcw } from 'lucide-react';
+import { Sparkles, Loader2, Play, Calendar, Filter, Shuffle, Search, RotateCcw, Globe2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Anime } from '../types';
 import { useDailyPicks } from '../hooks/useDailyPicks';
 import { toLegacyAnime } from '../lib/api/animeBridge';
+import { searchAniList, type AniListCountry } from '../lib/api/anilist';
 import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { AnimeErrorCard } from '../components/AnimeErrorCard';
@@ -26,6 +27,16 @@ const GENRES = [
   { id: 36, name: 'Slice of Life', emoji: '☕' },
 ];
 
+/**
+ * Menşe ülke çipleri. AniList `countryOfOrigin` alanına dayanır; "Çin"
+ * seçildiğinde donghua listelenir. Xianxia web romanları AniList'te
+ * olmadığı için bu bölümde yer almaz — arayüz bunu açıkça söyler.
+ */
+const REGIONS: Array<{ id: AniListCountry; emoji: string; labelKey: string }> = [
+  { id: 'CN', emoji: '🇨🇳', labelKey: 'discover_region_cn' },
+  { id: 'JP', emoji: '🇯🇵', labelKey: 'discover_region_jp' },
+];
+
 export const Discover = () => {
   const { t } = useAppTranslation();
   const { data: trending, loading, error, fetchTop, fetchRandom, fetchByCriteria } = useAnimeData();
@@ -33,22 +44,63 @@ export const Discover = () => {
   const [isRolling, setIsRolling] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<AniListCountry | null>(null);
+  const [regionItems, setRegionItems] = useState<Anime[]>([]);
+  const [regionState, setRegionState] = useState<'idle' | 'loading' | 'ready' | 'empty'>('idle');
+  const [heroEmpty, setHeroEmpty] = useState(false);
+  const regionRequest = useRef(0);
   const { items: dailyPicks, personalized, state: picksState, refresh: refreshPicks } = useDailyPicks(3);
+  const activeFilterCount = selectedGenres.length + (selectedRegion ? 1 : 0);
 
   useEffect(() => {
     fetchTop();
   }, [fetchTop]);
 
+  /**
+   * Bölge seçimi — o bölgenin popüler yapımları AniList `countryOfOrigin`
+   * üzerinden yüklenir. Sonuç yoksa Japon yedeğine DÜŞÜLMEZ: "Çin" isteyene
+   * gizlice anime göstermek yanıltıcı olur. `regionRequest` sayaç, hızlı çip
+   * değişimlerinde eski yanıtın yeni listeyi ezmesini engeller.
+   */
+  const selectRegion = (region: AniListCountry | null) => {
+    setSelectedRegion(region);
+    setHeroEmpty(false);
+    const requestId = regionRequest.current + 1;
+    regionRequest.current = requestId;
+
+    if (!region) {
+      setRegionItems([]);
+      setRegionState('idle');
+      return;
+    }
+
+    setRegionState('loading');
+    searchAniList({ kind: 'anime', country: region, perPage: 18 })
+      .then((result) => {
+        if (requestId !== regionRequest.current) return;
+        const items = result.items.map((item) => toLegacyAnime(item));
+        setRegionItems(items);
+        setRegionState(items.length > 0 ? 'ready' : 'empty');
+      })
+      .catch(() => {
+        if (requestId !== regionRequest.current) return;
+        setRegionItems([]);
+        setRegionState('empty');
+      });
+  };
+
   const handleRandomize = async () => {
     setIsRolling(true);
+    setHeroEmpty(false);
     let result: Anime | null = null;
     
     try {
-      if (selectedGenres.length > 0) {
-        const results = await fetchByCriteria(selectedGenres);
+      if (selectedGenres.length > 0 || selectedRegion) {
+        const results = await fetchByCriteria(selectedGenres, selectedRegion ?? undefined);
         if (results && results.length > 0) {
           result = results[Math.floor(Math.random() * results.length)];
-        } else {
+        } else if (!selectedRegion) {
+          // Bölge filtresi yoksa genel havuza düşmek dürüsttür.
           result = await fetchRandom();
         }
       } else {
@@ -56,11 +108,14 @@ export const Discover = () => {
       }
     } catch (e) {
       console.warn('Randomize error, pulling from global engine:', e);
-      result = await fetchRandom();
+      if (!selectedRegion) result = await fetchRandom();
     }
     
     if (result) {
       setRandomAnime(result);
+    } else {
+      // Seçili bölgede/türde sonuç yok — sessizce başka içerik göstermiyoruz.
+      setHeroEmpty(true);
     }
     setIsRolling(false);
   };
@@ -100,7 +155,48 @@ export const Discover = () => {
                   className="overflow-hidden"
                 >
                   <div className="bg-black p-4 border-2 border-black text-left space-y-4">
-                    <p className="text-xs font-black text-white uppercase tracking-widest">{t('genre_selection')}</p>
+                    <div className="space-y-3">
+                      <p className="text-xs font-black text-white uppercase tracking-widest ">{t('discover_region_title')}</p>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => selectRegion(null)}
+                          aria-pressed={selectedRegion === null}
+                          className={cn(
+                            "px-4 py-2 text-sm transition-all duration-100 flex items-center gap-2 border-2 font-black uppercase tracking-wider",
+                            selectedRegion === null
+                              ? "bg-white border-white text-black neo-shadow-white"
+                              : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
+                          )}
+                        >
+                          <Globe2 size={16} />
+                          {t('discover_region_all')}
+                        </button>
+                        {REGIONS.map((region) => (
+                          <button
+                            key={region.id}
+                            type="button"
+                            onClick={() => selectRegion(selectedRegion === region.id ? null : region.id)}
+                            aria-pressed={selectedRegion === region.id}
+                            className={cn(
+                              "px-4 py-2 text-sm transition-all duration-100 flex items-center gap-2 border-2 font-black uppercase tracking-wider",
+                              selectedRegion === region.id
+                                ? "bg-white border-white text-black neo-shadow-white"
+                                : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
+                            )}
+                          >
+                            <span aria-hidden="true">{region.emoji}</span>
+                            <span>{t(region.labelKey)}</span>
+                          </button>
+                        ))}
+                      </div>
+                      {selectedRegion === 'CN' && (
+                        <p className="text-[10px] font-bold text-amber-300 uppercase tracking-wider leading-relaxed">
+                          {t('discover_region_cn_hint')}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-xs font-black text-white uppercase tracking-widest pt-2 border-t-2 border-white/20">{t('genre_selection')}</p>
                     <div className="flex flex-wrap gap-3">
                       {GENRES.map(g => (
                         <button
@@ -130,8 +226,8 @@ export const Discover = () => {
                 className="w-full sm:w-auto overflow-hidden bg-black text-white font-black px-8 py-4 uppercase tracking-widest flex items-center justify-center gap-3 border-4 border-black hover:bg-white hover:text-black transition-all shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[8px] hover:translate-y-[8px] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  {isRolling ? <Loader2 size={24} strokeWidth={2.5} className="animate-spin" /> : (selectedGenres.length > 0 ? <Search size={24} strokeWidth={2.5} /> : <Shuffle size={24} strokeWidth={2.5} />)}
-                  {isRolling ? t('searching') : (selectedGenres.length > 0 ? t('discover_cta_filter') : t('discover_cta_random'))}
+                  {isRolling ? <Loader2 size={24} strokeWidth={2.5} className="animate-spin" /> : (activeFilterCount > 0 ? <Search size={24} strokeWidth={2.5} /> : <Shuffle size={24} strokeWidth={2.5} />)}
+                  {isRolling ? t('searching') : (activeFilterCount > 0 ? t('discover_cta_filter') : t('discover_cta_random'))}
                 </span>
               </button>
               
@@ -139,13 +235,13 @@ export const Discover = () => {
                 onClick={() => setShowFilters(!showFilters)}
                 className={cn(
                   "w-full sm:w-auto px-6 py-4 flex items-center justify-center gap-2 font-black uppercase tracking-widest transition-all border-4 cursor-pointer",
-                  showFilters || selectedGenres.length > 0
+                  showFilters || activeFilterCount > 0
                     ? "bg-black border-black text-white"
                     : "bg-white border-black text-black hover:bg-black hover:text-white"
                 )}
               >
                 <Filter size={20} strokeWidth={2.5} />
-                {selectedGenres.length > 0 ? `${selectedGenres.length} ${t('genres_selected')}` : t('filter')}
+                {activeFilterCount > 0 ? `${activeFilterCount} ${t('filters_active')}` : t('filter')}
               </button>
             </div>
           </div>
@@ -190,12 +286,94 @@ export const Discover = () => {
                   className="w-56 sm:w-64 aspect-[3/4] border-4 border-black bg-white flex flex-col items-center justify-center text-black p-6 text-center neo-shadow"
                 >
                   <Sparkles size={64} strokeWidth={1} className="mb-6 opacity-80" />
-                  <p className="font-black uppercase tracking-wider text-sm leading-relaxed">{t('click_discover')}</p>
+                  <p className="font-black uppercase tracking-wider text-sm leading-relaxed">
+                    {heroEmpty ? t('discover_region_empty') : t('click_discover')}
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
+      </section>
+
+      {/* Bölgesel Keşif — Çin (donghua) dahil menşe ülke filtresi */}
+      <section>
+        <div className="flex items-start justify-between mb-8 pb-4 border-b-4 border-white/20 gap-4 flex-wrap">
+          <div>
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter flex items-center gap-4 flex-wrap">
+              <Globe2 size={28} strokeWidth={2.5} className="text-amber-400" />
+              {t('discover_region_title')}
+              {selectedRegion && (
+                <span className="text-[9px] bg-amber-400 text-black font-black px-2 py-1 border border-black uppercase tracking-widest">
+                  {t(selectedRegion === 'CN' ? 'discover_region_cn' : 'discover_region_jp')}
+                </span>
+              )}
+            </h2>
+            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">{t('discover_region_subtitle')}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => selectRegion(null)}
+              aria-pressed={selectedRegion === null}
+              className={cn(
+                "px-3 py-2 text-xs font-black uppercase tracking-wider border-2 transition-colors",
+                selectedRegion === null
+                  ? "bg-white border-white text-black"
+                  : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
+              )}
+            >
+              {t('discover_region_all')}
+            </button>
+            {REGIONS.map((region) => (
+              <button
+                key={region.id}
+                type="button"
+                onClick={() => selectRegion(selectedRegion === region.id ? null : region.id)}
+                aria-pressed={selectedRegion === region.id}
+                className={cn(
+                  "px-3 py-2 text-xs font-black uppercase tracking-wider border-2 transition-colors flex items-center gap-2",
+                  selectedRegion === region.id
+                    ? "bg-white border-white text-black"
+                    : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
+                )}
+              >
+                <span aria-hidden="true">{region.emoji}</span>
+                {t(region.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {selectedRegion === null ? (
+          <p className="p-6 bg-black border-2 border-white/20 text-neutral-400 font-black uppercase tracking-wider text-xs leading-relaxed">
+            {t('discover_region_pick')}
+          </p>
+        ) : regionState === 'loading' ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="aspect-[3/4] border-2 border-white/20 bg-white/5 animate-pulse" />
+            ))}
+          </div>
+        ) : regionState === 'empty' ? (
+          <div className="p-8 bg-black border-2 border-white/20 space-y-3">
+            <p className="text-neutral-300 font-black uppercase tracking-wider text-xs leading-relaxed">{t('discover_region_empty')}</p>
+            <p className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] leading-relaxed">{t('discover_region_missing')}</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {regionItems.map((anime) => (
+                <AnimeCard key={anime.anilist_id ?? anime.mal_id} anime={anime} />
+              ))}
+            </div>
+            {selectedRegion === 'CN' && (
+              <p className="mt-4 text-[10px] font-bold text-neutral-400 uppercase tracking-wider leading-relaxed">
+                {t('discover_region_missing')}
+              </p>
+            )}
+          </>
+        )}
       </section>
 
       {/* NEW FEATURE: Similar Anime Recommendation Engine */}

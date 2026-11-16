@@ -88,6 +88,7 @@ export const MultiMediaHub: React.FC = () => {
   const [mangaLoading, setMangaLoading] = useState(false);
   const [mangaError, setMangaError] = useState(false);
   const [mangaQuery, setMangaQuery] = useState('');
+  const [mangaRegion, setMangaRegion] = useState<'all' | 'CN'>('all');
 
   const [gameResults, setGameResults] = useState<UnifiedMedia[]>([]);
   const [gamesLoading, setGamesLoading] = useState(false);
@@ -106,13 +107,16 @@ export const MultiMediaHub: React.FC = () => {
     }
   }, [library]);
 
-  const loadManga = useCallback(async (query: string) => {
+  const loadManga = useCallback(async (query: string, region: 'all' | 'CN' = 'all') => {
     setMangaLoading(true);
     setMangaError(false);
     try {
+      // Ülke filtresi YALNIZCA AniList tarafında uygulanır ve boş sonuçta
+      // Japon yedeğine düşülmez — "Çin" isteyene anime/manga göstermek yanıltıcı olur.
+      const country = region === 'CN' ? ('CN' as const) : undefined;
       const [manga, novels] = await Promise.all([
-        searchAniList({ kind: 'manga', query, perPage: 6 }),
-        searchAniList({ kind: 'light_novel', query, perPage: 4 }),
+        searchAniList({ kind: 'manga', query, perPage: 6, country }),
+        searchAniList({ kind: 'light_novel', query, perPage: 4, country }),
       ]);
       const merged = [...manga.items, ...novels.items];
       const seen = new Set<string>();
@@ -165,7 +169,7 @@ export const MultiMediaHub: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void loadManga('');
+    void loadManga('', 'all');
     void loadCharacters();
   }, [loadManga, loadCharacters]);
 
@@ -173,8 +177,14 @@ export const MultiMediaHub: React.FC = () => {
     void loadGames('anime');
   }, [loadGames]);
 
+  /** Bölge değişimi: aynı arama sorgusuyla yeniden yükle (sessiz yedek yok). */
+  const selectMangaRegion = (region: 'all' | 'CN') => {
+    setMangaRegion(region);
+    void loadManga(mangaQuery, region);
+  };
+
   const refreshActive = () => {
-    if (activeTab === 'manga') void loadManga(mangaQuery);
+    if (activeTab === 'manga') void loadManga(mangaQuery, mangaRegion);
     else if (activeTab === 'games') void loadGames(gameQuery);
     else void loadCharacters();
   };
@@ -338,10 +348,31 @@ export const MultiMediaHub: React.FC = () => {
             <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
               <Sparkles size={15} /> {t('multimedia_discover')}
             </h3>
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t('multimedia_region_all')}>
+              {([
+                ['all', t('multimedia_region_all')],
+                ['CN', t('multimedia_region_cn')],
+              ] as const).map(([region, label]) => (
+                <button
+                  key={region}
+                  type="button"
+                  onClick={() => selectMangaRegion(region)}
+                  aria-pressed={mangaRegion === region}
+                  className={cn(
+                    "px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider border-2 transition-colors",
+                    mangaRegion === region
+                      ? "bg-cyan-500 border-cyan-500 text-black"
+                      : "bg-black border-white/30 text-neutral-400 hover:border-white hover:text-white"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                void loadManga(mangaQuery);
+                void loadManga(mangaQuery, mangaRegion);
               }}
               className="flex gap-2 w-full sm:w-auto"
             >
@@ -361,6 +392,12 @@ export const MultiMediaHub: React.FC = () => {
               </button>
             </form>
           </div>
+
+          {mangaRegion === 'CN' && (
+            <p className="text-[10px] font-bold text-amber-300 uppercase tracking-wider leading-relaxed">
+              {t('multimedia_region_note')}
+            </p>
+          )}
 
           {mangaLoading ? (
             <div className="flex items-center justify-center gap-2 p-8 text-neutral-400 font-black uppercase text-xs">
