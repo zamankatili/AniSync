@@ -14,6 +14,7 @@ import { cn } from '../lib/utils';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { AnimeErrorCard } from '../components/AnimeErrorCard';
 import { MultiMediaHub } from '../components/MultiMediaHub';
+import { DonghuaShelf } from '../components/DonghuaShelf';
 
 const GENRES = [
   { id: 1, name: 'Action', emoji: '⚔️' },
@@ -374,6 +375,11 @@ export const Discover = () => {
             )}
           </>
         )}
+      </section>
+
+      {/* Elle küratörlü Xianxia & Donghua rafı */}
+      <section>
+        <DonghuaShelf />
       </section>
 
       {/* NEW FEATURE: Similar Anime Recommendation Engine */}

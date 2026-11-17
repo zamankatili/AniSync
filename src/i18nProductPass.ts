@@ -77,6 +77,26 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     lore_reset: 'Filtreleri sıfırla',
     lore_read_more: 'Kaynağı aç',
 
+    // Xianxia & Donghua shelf (hand-curated)
+    shelf_title: 'Xianxia & Donghua rafı',
+    shelf_subtitle: 'Çin yapımı donghua ve manhua için elle seçilmiş kısa liste.',
+    shelf_curated_badge: 'Elle küratörlü',
+    shelf_last_checked: 'Son kontrol: {{date}}',
+    shelf_scope_note:
+      'Meta veri ve kapaklar AniList’ten gelir; her kart kendi AniList sayfasına bağlanır. Roman metni barındırılmaz — NovelUpdates bağlantısı yalnızca kaynağı aramak içindir.',
+    shelf_kind_donghua: 'Donghua',
+    shelf_kind_manhua: 'Manhua',
+    shelf_tag_xianxia: 'Xianxia',
+    shelf_tag_cultivation: 'Cultivation',
+    shelf_tag_wuxia: 'Wuxia',
+    shelf_tag_fantasy: 'Fantastik',
+    shelf_tag_modern: 'Modern',
+    shelf_episodes: '{{count}} bölüm',
+    shelf_chapters: '{{count}} chapter',
+    shelf_link_anilist: 'AniList’te aç',
+    shelf_link_novel: 'Romanı ara',
+    shelf_count: '{{count}} kayıt',
+
     // Text adventure — "Kayıp Bölüm"
     text_adventure: 'Kayıp Bölüm',
     ta_badge: 'METİN MACERA — ÖZGÜN',
@@ -238,6 +258,26 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     lore_news_desc: 'The entries above are curated; for current announcements use the live news feed:',
     lore_reset: 'Reset filters',
     lore_read_more: 'Open source',
+
+    // Xianxia & Donghua shelf (hand-curated)
+    shelf_title: 'Xianxia & Donghua shelf',
+    shelf_subtitle: 'A short hand-picked list of Chinese donghua and manhua.',
+    shelf_curated_badge: 'Hand-curated',
+    shelf_last_checked: 'Last checked: {{date}}',
+    shelf_scope_note:
+      'Metadata and covers come from AniList; every card links to its own AniList page. No novel text is hosted — the NovelUpdates link only searches for the source.',
+    shelf_kind_donghua: 'Donghua',
+    shelf_kind_manhua: 'Manhua',
+    shelf_tag_xianxia: 'Xianxia',
+    shelf_tag_cultivation: 'Cultivation',
+    shelf_tag_wuxia: 'Wuxia',
+    shelf_tag_fantasy: 'Fantasy',
+    shelf_tag_modern: 'Modern',
+    shelf_episodes: '{{count}} episodes',
+    shelf_chapters: '{{count}} chapters',
+    shelf_link_anilist: 'Open on AniList',
+    shelf_link_novel: 'Search the novel',
+    shelf_count: '{{count}} entries',
 
     // Text adventure — "The Lost Episode"
     text_adventure: 'The Lost Episode',
@@ -401,6 +441,26 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     lore_reset: 'フィルターをリセット',
     lore_read_more: '出典を開く',
 
+    // Xianxia & Donghua shelf (hand-curated)
+    shelf_title: '仙侠・ドンファ棚',
+    shelf_subtitle: '中国制作のドンファとマンファを手で選んだ短いリスト。',
+    shelf_curated_badge: '手動キュレーション',
+    shelf_last_checked: '最終確認: {{date}}',
+    shelf_scope_note:
+      'メタデータとカバー画像は AniList 由来で、各カードは AniList のページにリンクします。小説本文は掲載しません。NovelUpdates へのリンクは出典を探す検索のみです。',
+    shelf_kind_donghua: 'ドンファ',
+    shelf_kind_manhua: 'マンファ',
+    shelf_tag_xianxia: '仙侠',
+    shelf_tag_cultivation: '修行',
+    shelf_tag_wuxia: '武侠',
+    shelf_tag_fantasy: 'ファンタジー',
+    shelf_tag_modern: '現代',
+    shelf_episodes: '{{count}} 話',
+    shelf_chapters: '{{count}} 章',
+    shelf_link_anilist: 'AniList で開く',
+    shelf_link_novel: '原作小説を検索',
+    shelf_count: '{{count}} 件',
+
     // Text adventure — 「失われた回」
     text_adventure: '失われた回',
     ta_badge: 'テキストアドベンチャー — オリジナル',
@@ -562,6 +622,26 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     lore_news_desc: 'Les fiches ci-dessus sont sélectionnées ; pour les annonces récentes, utilise le flux en direct :',
     lore_reset: 'Réinitialiser les filtres',
     lore_read_more: 'Ouvrir la source',
+
+    // Xianxia & Donghua shelf (hand-curated)
+    shelf_title: 'Rayon Xianxia & Donghua',
+    shelf_subtitle: 'Une courte sélection de donghua et manhua chinois, choisie à la main.',
+    shelf_curated_badge: 'Sélection manuelle',
+    shelf_last_checked: 'Vérifié le : {{date}}',
+    shelf_scope_note:
+      'Les métadonnées et les couvertures viennent d’AniList ; chaque fiche renvoie à sa propre page AniList. Aucun texte de roman n’est hébergé : le lien NovelUpdates sert uniquement à chercher la source.',
+    shelf_kind_donghua: 'Donghua',
+    shelf_kind_manhua: 'Manhua',
+    shelf_tag_xianxia: 'Xianxia',
+    shelf_tag_cultivation: 'Cultivation',
+    shelf_tag_wuxia: 'Wuxia',
+    shelf_tag_fantasy: 'Fantasy',
+    shelf_tag_modern: 'Moderne',
+    shelf_episodes: '{{count}} épisodes',
+    shelf_chapters: '{{count}} chapitres',
+    shelf_link_anilist: 'Ouvrir sur AniList',
+    shelf_link_novel: 'Chercher le roman',
+    shelf_count: '{{count}} entrées',
 
     // Text adventure — « L’Épisode perdu »
     text_adventure: 'L’Épisode perdu',
