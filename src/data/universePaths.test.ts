@@ -16,6 +16,7 @@ const WORLD_IDS = [
   'seinen_psych',
   'romance_drama',
   'sports',
+  'xianxia_cultivation',
 ] as const;
 
 const LANGS = ['tr', 'en', 'ja', 'fr'] as const;
@@ -79,6 +80,7 @@ describe('universePaths', () => {
     expect(UNIVERSE_PATHS.romance_drama.dilemma.id.startsWith('romance_')).toBe(true);
     expect(UNIVERSE_PATHS.sports.dilemma.id.startsWith('sports_')).toBe(true);
     expect(UNIVERSE_PATHS.slice_of_life.dilemma.id.startsWith('sol_')).toBe(true);
+    expect(UNIVERSE_PATHS.xianxia_cultivation.dilemma.id.startsWith('xianxia_')).toBe(true);
   });
 
   it('computes clamped progress and snapshots the right rank', () => {

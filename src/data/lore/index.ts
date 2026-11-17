@@ -7,6 +7,7 @@ import { cyberpunkLore } from './cyberpunk';
 import { seinenLore } from './seinen';
 import { romanceLore } from './romance';
 import { sportsLore } from './sports';
+import { xianxiaLore } from './xianxia';
 
 export * from './types';
 
@@ -19,6 +20,7 @@ export const WORLD_LORE: Record<string, WorldLore> = {
   seinen_psych: seinenLore,
   romance_drama: romanceLore,
   sports: sportsLore,
+  xianxia_cultivation: xianxiaLore,
 };
 
 export function getWorldLore(worldId: string, lang?: 'tr' | 'en' | 'ja' | 'fr'): WorldLore | undefined {

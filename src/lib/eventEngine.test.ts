@@ -122,6 +122,31 @@ describe('eventEngine — generateLife', () => {
     expect(shonenSeenSportsEvent).toBe(false);
   });
 
+  it('xianxia evreni 7/16/27 olaylarını ve kademe ikilemini üretir', () => {
+    const xianxia = getWorldById('xianxia_cultivation')!;
+    const sect = getRegionById('seven_mysteries_sect')!;
+
+    randomSpy.mockImplementation(mulberry32(7)); // ölüm yaşı 60'ın üstünde kalsın
+    const life = generateLife(xianxia, sect, '1.5h', { focus: 'study' });
+    const ids = life.events.map((e) => e.id);
+
+    expect(ids).toContain('xianxia_qi_test_7');
+    expect(ids).toContain('xianxia_sect_mission_16');
+    expect(ids).toContain('xianxia_deviation_27');
+    expect(ids).toContain('xianxia_dilemma_first_breakthrough');
+    expect(life.events.find((e) => e.id === 'xianxia_deviation_27')?.type).toBe('crisis');
+
+    // Evrene sadakat, xianxia_ önekli olaylarla ölçülür.
+    expect(computeWorldFidelity(life)).toBeGreaterThan(0);
+  });
+
+  it('xianxia olayları başka evrenlerde görünmez', () => {
+    const shonen = getWorldById('shonen_battle')!;
+    randomSpy.mockImplementation(mulberry32(11));
+    const life = generateLife(shonen, getRegionById('konoha')!, '1.5h', { focus: 'combat' });
+    expect(life.events.some((e) => e.id.startsWith('xianxia_'))).toBe(false);
+  });
+
   it('evrene özgü yeni olaylar üretilir (sports_injury_23, isekai_party_12, romance_grief_40)', () => {
     const sports = getWorldById('sports')!;
     const isekai = getWorldById('isekai')!;

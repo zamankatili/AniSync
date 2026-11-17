@@ -3,11 +3,16 @@
  * Her evren kendi bölgesel istatistiklerine sahiptir.
  */
 
+import type { Lang4 } from './universePaths';
+
 export interface AnimeRegion {
   id: string;
   worldId: string;
   nameTR: string;
   nameEN: string;
+  /** JA/FR adlar opsiyonel; yoksa İngilizce ada düşer. */
+  nameJA?: string;
+  nameFR?: string;
   emoji: string;
   population: number; // Evrensel nüfus (sembolik)
   birthRate: number;  // Yıllık doğum oranı (0-1)
@@ -37,6 +42,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'shonen_battle',
     nameTR: 'Konoha (Gizli Yaprak Köyü)',
     nameEN: 'Konoha (Hidden Leaf Village)',
+    nameJA: '木ノ葉隠れの里',
+    nameFR: 'Konoha (Village de la Feuille)',
     emoji: '🍃',
     population: 50000,
     birthRate: 0.025,
@@ -52,6 +59,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'shonen_battle',
     nameTR: 'Kanton (Korsanlar Denizi)',
     nameEN: 'East Blue (Pirate Sea)',
+    nameJA: '東の海（イーストブルー）',
+    nameFR: 'East Blue (mer des pirates)',
     emoji: '🏴‍☠️',
     population: 100000,
     birthRate: 0.030,
@@ -67,6 +76,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'shonen_battle',
     nameTR: 'Ruhlar Dünyası (Soul Society)',
     nameEN: 'Soul Society',
+    nameJA: 'ソウル・ソサエティ',
+    nameFR: 'Soul Society',
     emoji: '⚔️',
     population: 80000,
     birthRate: 0.015,
@@ -82,6 +93,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'dark_fantasy',
     nameTR: 'Marley (Devler Ülkesi)',
     nameEN: 'Marley (Land of Titans)',
+    nameJA: 'マーレ（巨人の国）',
+    nameFR: 'Marley (terre des Titans)',
     emoji: '⚔️',
     population: 200000,
     birthRate: 0.020,
@@ -97,6 +110,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'shonen_battle',
     nameTR: 'Jujutsu Lisesi (Büyücü Okulu)',
     nameEN: 'Jujutsu High (Sorcerer School)',
+    nameJA: '呪術高専',
+    nameFR: 'Jujutsu High (école de sorcellerie)',
     emoji: '🔮',
     population: 1000,
     birthRate: 0.010,
@@ -114,6 +129,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'slice_of_life',
     nameTR: 'Kırsal Japonya',
     nameEN: 'Rural Japan',
+    nameJA: '日本の田舎',
+    nameFR: 'Japon rural',
     emoji: '🏔️',
     population: 5000,
     birthRate: 0.008,
@@ -129,6 +146,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'slice_of_life',
     nameTR: 'Okul Kasabası',
     nameEN: 'School Town',
+    nameJA: '学校町',
+    nameFR: 'Ville scolaire',
     emoji: '🏫',
     population: 20000,
     birthRate: 0.012,
@@ -144,6 +163,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'slice_of_life',
     nameTR: 'Kıyı Kasabası',
     nameEN: 'Coastal Village',
+    nameJA: '海辺の村',
+    nameFR: 'Village côtier',
     emoji: '🌊',
     population: 8000,
     birthRate: 0.010,
@@ -161,6 +182,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'dark_fantasy',
     nameTR: 'Midland (Berserk)',
     nameEN: 'Midland (Berserk)',
+    nameJA: 'ミッドランド（ベルセルク）',
+    nameFR: 'Midland (Berserk)',
     emoji: '🗡️',
     population: 500000,
     birthRate: 0.025,
@@ -176,6 +199,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'dark_fantasy',
     nameTR: 'Paradis Adası (AOT)',
     nameEN: 'Paradis Island (AOT)',
+    nameJA: 'パラディ島（進撃の巨人）',
+    nameFR: 'Île de Paradis (L\'Attaque des Titans)',
     emoji: '🏰',
     population: 1000000,
     birthRate: 0.020,
@@ -191,6 +216,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'dark_fantasy',
     nameTR: 'Uçurum (Made in Abyss)',
     nameEN: 'The Abyss (Made in Abyss)',
+    nameJA: 'アビス（メイドインアビス）',
+    nameFR: 'L\'Abîme (Made in Abyss)',
     emoji: '🕳️',
     population: 5000,
     birthRate: 0.010,
@@ -208,6 +235,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'isekai',
     nameTR: 'Lugunica Krallığı',
     nameEN: 'Kingdom of Lugunica',
+    nameJA: 'ルグニカ王国',
+    nameFR: 'Royaume de Lugunica',
     emoji: '🏰',
     population: 500000,
     birthRate: 0.022,
@@ -223,6 +252,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'isekai',
     nameTR: 'Axel Şehri',
     nameEN: 'Axel Town',
+    nameJA: 'アクセルの町',
+    nameFR: 'Ville d\'Axel',
     emoji: '🛡️',
     population: 50000,
     birthRate: 0.018,
@@ -238,6 +269,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'isekai',
     nameTR: 'Asura Krallığı',
     nameEN: 'Asura Kingdom',
+    nameJA: 'アスラ王国',
+    nameFR: 'Royaume d\'Asura',
     emoji: '⚔️',
     population: 1000000,
     birthRate: 0.020,
@@ -255,6 +288,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'cyberpunk',
     nameTR: 'Night City',
     nameEN: 'Night City',
+    nameJA: 'ナイトシティ',
+    nameFR: 'Night City',
     emoji: '🌃',
     population: 1000000,
     birthRate: 0.015,
@@ -270,6 +305,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'cyberpunk',
     nameTR: 'Sibyl Şehri',
     nameEN: 'Sibyl City',
+    nameJA: 'シビュラ・シティ',
+    nameFR: 'Ville de Sibyl',
     emoji: '🔍',
     population: 2000000,
     birthRate: 0.012,
@@ -285,6 +322,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'cyberpunk',
     nameTR: 'Neo-Tokyo',
     nameEN: 'Neo-Tokyo',
+    nameJA: 'ネオ東京',
+    nameFR: 'Neo-Tokyo',
     emoji: '🏙️',
     population: 3000000,
     birthRate: 0.010,
@@ -302,6 +341,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'seinen_psych',
     nameTR: 'Modern Tokyo',
     nameEN: 'Modern Tokyo',
+    nameJA: '現代の東京',
+    nameFR: 'Tokyo moderne',
     emoji: '🗼',
     population: 14000000,
     birthRate: 0.008,
@@ -317,6 +358,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'seinen_psych',
     nameTR: 'Düsseldorf (1980\'ler)',
     nameEN: 'Düsseldorf (1980s)',
+    nameJA: 'デュッセルドルフ（1980年代）',
+    nameFR: 'Düsseldorf (années 1980)',
     emoji: '🔍',
     population: 500000,
     birthRate: 0.007,
@@ -332,6 +375,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'seinen_psych',
     nameTR: 'Akihabara (Otaku Bölgesi)',
     nameEN: 'Akihabara (Otaku District)',
+    nameJA: '秋葉原（オタク街）',
+    nameFR: 'Akihabara (quartier otaku)',
     emoji: '🎮',
     population: 100000,
     birthRate: 0.006,
@@ -349,6 +394,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'romance_drama',
     nameTR: 'Hikarizaka (Clannad)',
     nameEN: 'Hikarizaka (Clannad)',
+    nameJA: '光坂（クラナド）',
+    nameFR: 'Hikarizaka (Clannad)',
     emoji: '🌸',
     population: 30000,
     birthRate: 0.012,
@@ -364,6 +411,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'romance_drama',
     nameTR: 'Shigatsu Kasabası',
     nameEN: 'Shigatsu Town',
+    nameJA: '四月の町',
+    nameFR: 'Ville de Shigatsu',
     emoji: '🎹',
     population: 20000,
     birthRate: 0.010,
@@ -379,6 +428,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'romance_drama',
     nameTR: 'Leiden (Violet Evergarden)',
     nameEN: 'Leiden (Violet Evergarden)',
+    nameJA: 'ライデン（ヴァイオレット・エヴァーガーデン）',
+    nameFR: 'Leiden (Violet Evergarden)',
     emoji: '✉️',
     population: 15000,
     birthRate: 0.009,
@@ -396,6 +447,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'sports',
     nameTR: 'Karasuno Lisesi',
     nameEN: 'Karasuno High School',
+    nameJA: '烏野高校',
+    nameFR: 'Lycée Karasuno',
     emoji: '🏐',
     population: 1500,
     birthRate: 0.015,
@@ -411,6 +464,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'sports',
     nameTR: 'Seirin Lisesi',
     nameEN: 'Seirin High School',
+    nameJA: '誠凛高校',
+    nameFR: 'Lycée Seirin',
     emoji: '🏀',
     population: 1200,
     birthRate: 0.014,
@@ -426,6 +481,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'sports',
     nameTR: 'Blue Lock Tesisleri',
     nameEN: 'Blue Lock Facility',
+    nameJA: 'ブルーロック施設',
+    nameFR: 'Centre Blue Lock',
     emoji: '⚽',
     population: 300,
     birthRate: 0.010,
@@ -441,6 +498,8 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     worldId: 'sports',
     nameTR: 'Kamogawa Boks Salonu',
     nameEN: 'Kamogawa Boxing Gym',
+    nameJA: '鴨川ボクシングジム',
+    nameFR: 'Salle de boxe Kamogawa',
     emoji: '🥊',
     population: 50,
     birthRate: 0.008,
@@ -450,8 +509,99 @@ export const ANIME_REGIONS: AnimeRegion[] = [
     descriptionEN: 'Kamogawa gym in the Hajime no Ippo universe. Boxing, determination and makivara training.',
     descriptionJA: 'はじめの一歩の世界の鴨川ボクシングジム。ボクシング、根性、そして巻き藁の鍛錬。',
     descriptionFR: 'La salle Kamogawa dans l\'univers Hajime no Ippo. Boxe, détermination et entraînement à la makivara.'
+  },
+
+  // Xianxia / Cultivation World — gerçek donghua mekânları
+  {
+    id: 'seven_mysteries_sect',
+    worldId: 'xianxia_cultivation',
+    nameTR: 'Yedi Gizem Tarikatı (七玄门)',
+    nameEN: 'Seven Mysteries Sect (七玄门)',
+    nameJA: '七玄門',
+    nameFR: 'Secte des Sept Mystères (七玄门)',
+    emoji: '⛰️',
+    population: 8000,
+    birthRate: 0.020,
+    lifeExpectancy: [55, 95],
+    stats: { warRate: 0.20, diseaseRate: 0.12, povertyRate: 0.30, accidentRate: 0.10, violenceRate: 0.20, substanceRate: 0.03, suicideRate: 0.03, powerAwakeningRate: 0.20, adventureRate: 0.35, deathRate: 0.16 },
+    descriptionTR: 'A Record of a Mortal\'s Journey to Immortality\'daki dağ tarikatı. Şifalı ot toplama, dış ve iç disiplin ayrımı, sıradan insanlarla cultivator\'ların yan yana yaşadığı bir kapı.',
+    descriptionEN: 'The mountain sect from A Record of a Mortal\'s Journey to Immortality. Herb gathering, the split between outer and inner disciples, and mortals living beside cultivators.',
+    descriptionJA: '『凡人修仙伝』の山門。薬草採集、外門と内門の区別、そして凡人が修行者と隣り合って暮らす場所。',
+    descriptionFR: 'La secte de montagne de « A Record of a Mortal\'s Journey to Immortality ». Cueillette d\'herbes, séparation entre disciples externes et internes, et mortels vivant aux côtés des cultivateurs.'
+  },
+  {
+    id: 'shrek_academy',
+    worldId: 'xianxia_cultivation',
+    nameTR: 'Shrek Akademisi (史莱克学院)',
+    nameEN: 'Shrek Academy (史莱克学院)',
+    nameJA: 'シュレック学院',
+    nameFR: 'Académie Shrek (史莱克学院)',
+    emoji: '🏯',
+    population: 1500,
+    birthRate: 0.012,
+    lifeExpectancy: [60, 105],
+    stats: { warRate: 0.15, diseaseRate: 0.06, povertyRate: 0.10, accidentRate: 0.12, violenceRate: 0.18, substanceRate: 0.02, suicideRate: 0.02, powerAwakeningRate: 0.45, adventureRate: 0.50, deathRate: 0.14 },
+    descriptionTR: 'Soul Land\'deki ruh ustası akademisi. "Sadece canavarlar" sloganıyla yalnız en güçlü yetenekleri alır; eğitim acımasız, mezuniyet ölümcüldür.',
+    descriptionEN: 'The spirit master academy from Soul Land. Its motto is "only monsters" — it admits only the strongest talents, training is brutal and graduation is lethal.',
+    descriptionJA: '『斗羅大陸』の武魂学院。「怪物だけ」を掲げ、最も強い素質だけを受け入れる。訓練は過酷で、卒業は命がけだ。',
+    descriptionFR: 'L\'académie de maîtres d\'esprit de « Soul Land ». Sa devise : « seulement des monstres » — elle n\'admet que les talents les plus forts, l\'entraînement est brutal et l\'examen final mortel.'
+  },
+  {
+    id: 'jiama_empire',
+    worldId: 'xianxia_cultivation',
+    nameTR: 'Jiama İmparatorluğu (加玛帝国)',
+    nameEN: 'Jia Ma Empire (加玛帝国)',
+    nameJA: 'ジャマ帝国',
+    nameFR: 'Empire de Jia Ma (加玛帝国)',
+    emoji: '🏛️',
+    population: 400000,
+    birthRate: 0.026,
+    lifeExpectancy: [45, 85],
+    stats: { warRate: 0.30, diseaseRate: 0.12, povertyRate: 0.28, accidentRate: 0.09, violenceRate: 0.30, substanceRate: 0.05, suicideRate: 0.03, powerAwakeningRate: 0.15, adventureRate: 0.40, deathRate: 0.20 },
+    descriptionTR: 'Battle Through the Heavens\'taki imparatorluk. Simyacı loncası, müzayedeler ve çöl sınırındaki klan çatışmaları: ticaret de, güç de aynı pazarda satılır.',
+    descriptionEN: 'The empire from Battle Through the Heavens. An alchemist guild, auctions and clan feuds on the desert border — trade and power are sold in the same market.',
+    descriptionJA: '『闘破穹天』の帝国。錬丹師ギルド、競売、そして砂漠国境の一族抗争。取引も力も同じ市場で売買される。',
+    descriptionFR: 'L\'empire de « Battle Through the Heavens ». Guilde des alchimistes, enchères et querelles de clans à la frontière du désert : le commerce et le pouvoir se vendent sur le même marché.'
+  },
+  {
+    id: 'star_luo_empire',
+    worldId: 'xianxia_cultivation',
+    nameTR: 'Star Luo İmparatorluğu (星罗帝国)',
+    nameEN: 'Star Luo Empire (星罗帝国)',
+    nameJA: '星羅帝国',
+    nameFR: 'Empire de Star Luo (星罗帝国)',
+    emoji: '⚔️',
+    population: 600000,
+    birthRate: 0.024,
+    lifeExpectancy: [45, 85],
+    stats: { warRate: 0.35, diseaseRate: 0.11, povertyRate: 0.22, accidentRate: 0.10, violenceRate: 0.32, substanceRate: 0.04, suicideRate: 0.04, powerAwakeningRate: 0.25, adventureRate: 0.38, deathRate: 0.22 },
+    descriptionTR: 'Soul Land\'deki askerî imparatorluk. Ruh ustası birlikleri, soylu ailelerin evlilik ittifakları ve sürekli sınır savaşı; güç doğrudan rütbe demek.',
+    descriptionEN: 'The military empire from Soul Land. Spirit master legions, noble marriage alliances and constant border war — power translates directly into rank.',
+    descriptionJA: '『斗羅大陸』の軍事帝国。武魂師の軍団、貴族の婚姻同盟、そして絶えない国境戦争。力がそのまま階級になる。',
+    descriptionFR: 'L\'empire militaire de « Soul Land ». Légions de maîtres d\'esprit, alliances matrimoniales nobles et guerre de frontière permanente — la puissance se traduit directement en grade.'
   }
 ];
+
+const LOCALIZED_REGION_NAME: Record<string, 'nameTR' | 'nameEN' | 'nameJA' | 'nameFR'> = {
+  tr: 'nameTR',
+  en: 'nameEN',
+  ja: 'nameJA',
+  fr: 'nameFR',
+};
+
+/** Bölge adını verilen dilde döndürür (JA/FR yoksa İngilizceye düşer). */
+export const localizeRegionName = (region: AnimeRegion, lang: Lang4): string => {
+  const key = LOCALIZED_REGION_NAME[lang] ?? 'nameEN';
+  return region[key] ?? region.nameEN;
+};
+
+/** Bölge açıklamasını verilen dilde döndürür (JA/FR yoksa İngilizce). */
+export const localizeRegionDescription = (region: AnimeRegion, lang: Lang4): string => {
+  if (lang === 'tr') return region.descriptionTR;
+  if (lang === 'ja') return region.descriptionJA ?? region.descriptionEN;
+  if (lang === 'fr') return region.descriptionFR ?? region.descriptionEN;
+  return region.descriptionEN;
+};
 
 export const getRegionById = (id: string): AnimeRegion | undefined =>
   ANIME_REGIONS.find(r => r.id === id);
@@ -486,5 +636,9 @@ export const REGION_COLORS: Record<string, string> = {
   karasuno: 'amber',
   seirin: 'cyan',
   blue_lock: 'rose',
-  kamogawa: 'neutral'
+  kamogawa: 'neutral',
+  seven_mysteries_sect: 'orange',
+  shrek_academy: 'amber',
+  jiama_empire: 'orange',
+  star_luo_empire: 'rose'
 };

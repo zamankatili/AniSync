@@ -2,8 +2,8 @@
 import { useNavigate } from 'react-router-dom';
 import { PageMeta } from '../components/PageMeta';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { ANIME_WORLDS, getWorldById } from '../data/animeWorlds';
-import { ANIME_REGIONS, getRegionsByWorld, getRegionById } from '../data/animeRegions';
+import { ANIME_WORLDS, getWorldById, localizeWorldName, localizeWorldDescription } from '../data/animeWorlds';
+import { ANIME_REGIONS, getRegionsByWorld, getRegionById, localizeRegionName, localizeRegionDescription } from '../data/animeRegions';
 import type { AnimeRegion } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
 import { computePathProgress, getRankSnapshot } from '../data/universePaths';
@@ -104,15 +104,12 @@ export const AnimeLifeSim: React.FC = () => {
   const regions = selectedWorld ? getRegionsByWorld(selectedWorld) : [];
   const region = selectedRegion ? regions.find(r => r.id === selectedRegion) : null;
 
-  const isTr = currentLang === 'tr';
   const langKey = (currentLang.slice(0, 2) as 'tr' | 'en' | 'ja' | 'fr');
   const pathLang: 'tr' | 'en' | 'ja' | 'fr' = (['tr', 'en', 'ja', 'fr'] as const).includes(langKey) ? langKey : 'en';
-  const pick4 = (tr: string, en: string, ja: string | undefined, fr: string | undefined) =>
-    currentLang.startsWith('tr') ? tr : currentLang.startsWith('ja') ? (ja || en) : currentLang.startsWith('fr') ? (fr || en) : en;
-  const worldName = (w: { nameTR: string; nameEN: string }) => (isTr ? w.nameTR : w.nameEN);
-  const worldDesc = (w: { descriptionTR: string; descriptionEN: string; descriptionJA?: string; descriptionFR?: string }) => pick4(w.descriptionTR, w.descriptionEN, w.descriptionJA, w.descriptionFR);
-  const regionName = (r: { nameTR: string; nameEN: string }) => (isTr ? r.nameTR : r.nameEN);
-  const regionDesc = (r: { descriptionTR: string; descriptionEN: string; descriptionJA?: string; descriptionFR?: string }) => pick4(r.descriptionTR, r.descriptionEN, r.descriptionJA, r.descriptionFR);
+  const worldName = (w: Parameters<typeof localizeWorldName>[0]) => localizeWorldName(w, pathLang);
+  const worldDesc = (w: Parameters<typeof localizeWorldDescription>[0]) => localizeWorldDescription(w, pathLang);
+  const regionName = (r: AnimeRegion) => localizeRegionName(r, pathLang);
+  const regionDesc = (r: AnimeRegion) => localizeRegionDescription(r, pathLang);
 
   const familyLabel = (status: LifeResult['familyStatus']) =>
     status === 'poor' ? t('als_family_poor') : status === 'noble' ? t('als_family_noble') : t('als_family_middle');

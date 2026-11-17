@@ -11,8 +11,8 @@
  * - Ölüm ekranında Anma Sayfası çıkar
  */
 
-import { AnimeWorld } from '../data/animeWorlds';
-import { AnimeRegion } from '../data/animeRegions';
+import { AnimeWorld, localizeWorldName } from '../data/animeWorlds';
+import { AnimeRegion, localizeRegionName } from '../data/animeRegions';
 import { getWorldLore } from '../data/lore';
 import { getUniversePath } from '../data/universePaths';
 import type { Localized } from '../data/universePaths';
@@ -34,8 +34,8 @@ const L = (tr: string, en: string, ja: string, fr: string) => {
 };
 /** TR dışı her şey İngilizce içeriğe düşer (doğum/çocukluk/odak JA/FR tam çeviri). */
 const isEn = () => lifeLang() !== 'tr';
-const worldNameL = (w: AnimeWorld) => (lifeLang() === 'tr' ? w.nameTR : w.nameEN);
-const regionNameL = (r: AnimeRegion) => (lifeLang() === 'tr' ? r.nameTR : r.nameEN);
+const worldNameL = (w: AnimeWorld) => localizeWorldName(w, lifeLang());
+const regionNameL = (r: AnimeRegion) => localizeRegionName(r, lifeLang());
 
 // ─── Tipler ───────────────────────────────────────────────
 
@@ -448,13 +448,34 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
       { id: 'detective', label: 'Dedektif Ol', description: 'Gerçeğin peşinde bir kafa yolu', statChanges: { intelligence: 12, socialClass: 5 }, consequences: ['Gerçek', 'Yalnızlık'], risk: 'medium' },
       { id: 'ordinary', label: 'Sıradan Kal', description: 'Sakin ve düzenli bir hayat', statChanges: { health: 10, socialClass: 5 }, consequences: ['Huzur', 'Sıradanlık'], risk: 'low' },
       { id: 'shadow', label: 'Gölge Komisyoncusu Ol', description: 'Bilgi alıp satan soğuk bir yol', statChanges: { intelligence: 8, luck: 8, socialClass: -10 }, consequences: ['Güç', 'Sürgün'], risk: 'extreme' }
+    ],
+    xianxia_cultivation: l === 'ja' ? [
+      { id: 'sect', label: '宗門の弟子になる', description: '師と戒律のもとで修行する', statChanges: { socialClass: 8, intelligence: 5, power: 4 }, consequences: ['師の指導', '戒律'], risk: 'low' },
+      { id: 'clan', label: '古き一族に入る', description: '血筋の名家に身を寄せる', statChanges: { power: 6, socialClass: 10, luck: -2 }, consequences: ['名家の後ろ盾', '重い期待'], risk: 'medium' },
+      { id: 'rogue', label: '流浪の修行者になる', description: '宗門なしで自らの道を歩む', statChanges: { power: 10, luck: 5, socialClass: -10 }, consequences: ['自由', '無防備'], risk: 'high' },
+      { id: 'alchemist', label: '錬丹師ギルドに入る', description: '丹薬と知識の道', statChanges: { intelligence: 12, socialClass: 5, power: -2 }, consequences: ['知識', '市場の力'], risk: 'low' }
+    ] : l === 'fr' ? [
+      { id: 'sect', label: 'Devenir disciple d\'une secte', description: 'S\'entraîner sous un maître et une règle', statChanges: { socialClass: 8, intelligence: 5, power: 4 }, consequences: ['Enseignement', 'Discipline'], risk: 'low' },
+      { id: 'clan', label: 'Rejoindre un clan ancien', description: 'S\'appuyer sur une maison de sang', statChanges: { power: 6, socialClass: 10, luck: -2 }, consequences: ['Protection du clan', 'Attentes lourdes'], risk: 'medium' },
+      { id: 'rogue', label: 'Devenir cultivateur errant', description: 'Marcher sans secte, selon sa propre loi', statChanges: { power: 10, luck: 5, socialClass: -10 }, consequences: ['Liberté', 'Sans protection'], risk: 'high' },
+      { id: 'alchemist', label: 'Rejoindre la guilde des alchimistes', description: 'La voie des pilules et du savoir', statChanges: { intelligence: 12, socialClass: 5, power: -2 }, consequences: ['Savoir', 'Pouvoir du marché'], risk: 'low' }
+    ] : l === 'en' ? [
+      { id: 'sect', label: 'Join the Sect as a Disciple', description: 'Train under a master and a rule', statChanges: { socialClass: 8, intelligence: 5, power: 4 }, consequences: ['Teaching', 'Discipline'], risk: 'low' },
+      { id: 'clan', label: 'Join an Ancient Clan', description: 'Lean on a bloodline house', statChanges: { power: 6, socialClass: 10, luck: -2 }, consequences: ['Clan backing', 'Heavy expectations'], risk: 'medium' },
+      { id: 'rogue', label: 'Become a Rogue Cultivator', description: 'Walk without a sect, by your own law', statChanges: { power: 10, luck: 5, socialClass: -10 }, consequences: ['Freedom', 'Unprotected'], risk: 'high' },
+      { id: 'alchemist', label: 'Join the Alchemist Guild', description: 'The path of pills and knowledge', statChanges: { intelligence: 12, socialClass: 5, power: -2 }, consequences: ['Knowledge', 'Market power'], risk: 'low' }
+    ] : [
+      { id: 'sect', label: 'Tarikat Öğrencisi Ol', description: 'Bir hoca ve kural altında çalış', statChanges: { socialClass: 8, intelligence: 5, power: 4 }, consequences: ['Hocalık', 'Disiplin'], risk: 'low' },
+      { id: 'clan', label: 'Kadim Aileye Katıl', description: 'Kan bağı olan bir haneye yaslan', statChanges: { power: 6, socialClass: 10, luck: -2 }, consequences: ['Aile desteği', 'Ağır beklentiler'], risk: 'medium' },
+      { id: 'rogue', label: 'Gezgin Cultivator Ol', description: 'Tarikat olmadan kendi kuralınla yürü', statChanges: { power: 10, luck: 5, socialClass: -10 }, consequences: ['Özgürlük', 'Korumasız'], risk: 'high' },
+      { id: 'alchemist', label: 'Simyacı Loncasına Gir', description: 'Dan ve bilgi yolu', statChanges: { intelligence: 12, socialClass: 5, power: -2 }, consequences: ['Bilgi', 'Pazar gücü'], risk: 'low' }
     ]
   };
 
   // Bazı evrenlerde fraksiyon yoktur (slice_of_life, romance_drama, sports)
   const options = factionOptions[world.id];
   if (!options) return null;
-  const lore = getWorldLore(world.id);
+  const lore = getWorldLore(world.id, lifeLang());
   const factionNames = lore ? lore.factions.slice(0, 4).map(f => f.name).join(', ') : '';
 
   return {
@@ -463,10 +484,10 @@ function createFactionEvent(world: AnimeWorld, region: AnimeRegion, age: number,
     year,
     title: L('Fraksiyon Seçimi', 'Faction Choice', '勢力選び', 'Choix de faction'),
     description: L(
-      `${age} yaşındasın. ${region.nameTR} bölgesinde ${world.nameTR} evreninde bir fraksiyon seçmen gerekiyor (örn. ${factionNames}). Bu seçim hayatının yönünü belirleyecek.`,
+      `${age} yaşındasın. ${regionNameL(region)} bölgesinde ${worldNameL(world)} evreninde bir fraksiyon seçmen gerekiyor (örn. ${factionNames}). Bu seçim hayatının yönünü belirleyecek.`,
       `You are ${age} years old. In the ${regionNameL(region)} region of the ${worldNameL(world)} world, you must choose a faction (e.g. ${factionNames}). This choice will set the course of your life.`,
-      `${age}歳。${region.nameEN}地方、${world.nameEN}の世界で、勢力を選ばなければならない（例: ${factionNames}）。この選択があなたの人生の方向を決める。`,
-      `Tu as ${age} ans. Dans la région de ${region.nameEN} du monde ${world.nameEN}, tu dois choisir une faction (ex. ${factionNames}). Ce choix déterminera le cours de ta vie.`
+      `${age}歳。${regionNameL(region)}地方、${worldNameL(world)}の世界で、勢力を選ばなければならない（例: ${factionNames}）。この選択があなたの人生の方向を決める。`,
+      `Tu as ${age} ans. Dans la région de ${regionNameL(region)} du monde ${worldNameL(world)}, tu dois choisir une faction (ex. ${factionNames}). Ce choix déterminera le cours de ta vie.`
     ),
     type: 'faction',
     choices: options,
@@ -670,7 +691,24 @@ function createCanonEncounter(world: AnimeWorld, region: AnimeRegion, age: numbe
     ],
     romance_drama: [],
     slice_of_life: [],
-    sports: []
+    sports: [],
+    // Xianxia / Cultivation World — gerçek donghua karakterleri
+    seven_mysteries_sect: [
+      { minAge: 8, maxAge: 15, character: 'Han Li', description: 'Sırtında şifalı ot sepeti taşıyan sakin bir çırak, dağ patikasında yürüyor. Kimseye bakmadan geçiyor.', descriptionEN: 'A calm apprentice carrying a basket of herbs walks the mountain path. He passes without looking at anyone.', descriptionJA: '薬草の籠を背負った物静かな見習いが山道を歩いている。誰も見ずに通り過ぎる。', descriptionFR: 'Un apprenti calme portant un panier d\'herbes marche sur le sentier de montagne. Il passe sans regarder personne.', probability: 0.12 },
+      { minAge: 15, maxAge: 25, character: 'Han Li', description: 'Genç bir cultivator, avucundaki küçük bir şişeyi kontrol edip koluna saklıyor. Etrafı kolaçan ediyor.', descriptionEN: 'A young cultivator checks a small bottle in his palm, then hides it in his sleeve. He scans his surroundings.', descriptionJA: '若い修行者が手のひらの小さな瓶を確かめ、袖に隠す。周囲に目を走らせる。', descriptionFR: 'Un jeune cultivateur vérifie une petite fiole dans sa paume, puis la cache dans sa manche. Il scrute les alentours.', probability: 0.08 }
+    ],
+    shrek_academy: [
+      { minAge: 10, maxAge: 18, character: 'Tang San', description: 'Avucunda beliren ruhuyla sessizce antrenman yapan bir öğrenci. Hareketleri fazla düzgün.', descriptionEN: 'A student trains silently, a spirit manifesting in his palm. His movements are too precise.', descriptionJA: '手のひらに武魂を現して黙々と鍛錬する生徒。動きが妙に正確だ。', descriptionFR: 'Un élève s\'entraîne en silence, un esprit se manifestant dans sa paume. Ses gestes sont trop précis.', probability: 0.10 },
+      { minAge: 18, maxAge: 28, character: 'Tang San', description: 'Akademinin avlusunda bir hoca adayı, gençlere kademe farkını tek hamlede gösteriyor.', descriptionEN: 'In the academy courtyard, a master candidate shows the students a rank gap in a single move.', descriptionJA: '学院の中庭で、師範候補が一撃で段階の差を見せつける。', descriptionFR: 'Dans la cour de l\'académie, un candidat maître montre aux élèves l\'écart de palier en un seul geste.', probability: 0.07 }
+    ],
+    jiama_empire: [
+      { minAge: 10, maxAge: 20, character: 'Xiao Yan', description: 'Müzayede salonunun önünde bir genç, avucundaki alevi söndürüp içeri giriyor. Lonca mühürü taşıyor.', descriptionEN: 'Outside the auction hall, a youth extinguishes a flame in his palm and steps in. He carries a guild seal.', descriptionJA: '競売場の前で、若者が手のひらの炎を消して中へ入る。ギルドの印を持っている。', descriptionFR: 'Devant la salle des enchères, un jeune éteint une flamme dans sa paume et entre. Il porte le sceau de la guilde.', probability: 0.10 },
+      { minAge: 20, maxAge: 32, character: 'Yao Lao', description: 'Yaşlı bir simyacının sesi, genç bir dövüşçünün omzunun üstünden konuşuyor. Kimse başını çevirmiyor.', descriptionEN: 'An old alchemist\'s voice speaks from above a young fighter\'s shoulder. Nobody turns their head.', descriptionJA: '老いた錬丹師の声が、若い戦士の肩越しに語りかける。誰も振り向かない。', descriptionFR: 'La voix d\'un vieil alchimiste parle au-dessus de l\'épaule d\'un jeune combattant. Personne ne se retourne.', probability: 0.05 }
+    ],
+    star_luo_empire: [
+      { minAge: 12, maxAge: 22, character: 'Dai Mubai', description: 'Zırhlı bir subay, ruh ustası birliğinin sırasını denetliyor. Bakışı bir saniye sana takılıyor.', descriptionEN: 'An armoured officer inspects a spirit master squad\'s line. His gaze catches on you for a second.', descriptionJA: '鎧姿の将校が武魂師部隊の列を点検している。一瞬だけ視線があなたで止まる。', descriptionFR: 'Un officier en armure inspecte la ligne d\'une escouade de maîtres d\'esprit. Son regard s\'arrête une seconde sur toi.', probability: 0.09 },
+      { minAge: 18, maxAge: 30, character: 'Tang San', description: 'Sınır karakolunda bir haberci, mühürlü bir mektubu subaya uzatıp aceleyle ayrılıyor.', descriptionEN: 'At the border post a courier hands a sealed letter to an officer and leaves in haste.', descriptionJA: '国境の詰め所で伝令が封印された手紙を将校に渡し、急いで去っていく。', descriptionFR: 'Au poste frontière, un messager remet une lettre scellée à un officier et repart précipitamment.', probability: 0.06 }
+    ]
   };
 
   // Önce region bazlı havuz, yoksa world bazlı havuz
@@ -1671,6 +1709,109 @@ function createWorldUniqueEvent(world: AnimeWorld, region: AnimeRegion, age: num
       }
       return null;
 
+    // ─── XIANXIA / CULTIVATION: qi sınavı, tarikat görevi, qi sapması ───
+    case 'xianxia_cultivation':
+      if (age === 7) {
+        return {
+          id: 'xianxia_qi_test_7',
+          age,
+          year,
+          title: en4('Qi Sınavı', 'The Qi Test', '気の試験', 'L\'épreuve du qi'),
+          description: en4(
+            '7 yaşındasın. Tarikat, köyün çocuklarını qi duyarlılığı için sınıyor. Sıra sana geldiğinde avucunda bir sıcaklık hissediyorsun — ama herkesin önünde göstermek başka bir şey.',
+            'You are 7. The sect is testing the village children for qi sensitivity. When your turn comes you feel a warmth in your palm — but showing it in front of everyone is another matter.',
+            '7歳。宗門が村の子供たちの気の適性を調べている。順番が来ると手のひらに温かさを感じる——だが皆の前で示すのは別の話だ。',
+            'Tu as 7 ans. La secte teste les enfants du village pour la sensibilité au qi. À ton tour, tu sens une chaleur dans ta paume — mais le montrer devant tous est autre chose.'
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'show', label: '手を差し出す', description: '宗門に拾われるかもしれない', statChanges: { power: 6, socialClass: 8, luck: -2 }, consequences: ['宗門の目', '期待'], risk: 'medium' },
+            { id: 'hide', label: '隠す', description: '家族のもとに残る', statChanges: { health: 5, socialClass: -3 }, consequences: ['家族', '静かな人生'], risk: 'low' },
+            { id: 'secret', label: '夜に一人で試す', description: '誰にも言わずに練習する', statChanges: { intelligence: 7, power: 3, health: -2 }, consequences: ['独学', '秘密'], risk: 'low' }
+          ] : l === 'fr' ? [
+            { id: 'show', label: 'Tendre la main', description: 'La secte pourrait te remarquer', statChanges: { power: 6, socialClass: 8, luck: -2 }, consequences: ['Regard de la secte', 'Attentes'], risk: 'medium' },
+            { id: 'hide', label: 'Le cacher', description: 'Rester avec ta famille', statChanges: { health: 5, socialClass: -3 }, consequences: ['Famille', 'Vie tranquille'], risk: 'low' },
+            { id: 'secret', label: 'Essayer seul, la nuit', description: 'T\'entraîner sans le dire', statChanges: { intelligence: 7, power: 3, health: -2 }, consequences: ['Autodidacte', 'Secret'], risk: 'low' }
+          ] : l === 'en' ? [
+            { id: 'show', label: 'Hold Out Your Hand', description: 'The sect might take you in', statChanges: { power: 6, socialClass: 8, luck: -2 }, consequences: ['Sect attention', 'Expectations'], risk: 'medium' },
+            { id: 'hide', label: 'Hide It', description: 'Stay with your family', statChanges: { health: 5, socialClass: -3 }, consequences: ['Family', 'Quiet life'], risk: 'low' },
+            { id: 'secret', label: 'Practise Alone at Night', description: 'Train without telling anyone', statChanges: { intelligence: 7, power: 3, health: -2 }, consequences: ['Self-taught', 'Secret'], risk: 'low' }
+          ] : [
+            { id: 'show', label: 'Elini Uzat', description: 'Tarikat seni alabilir', statChanges: { power: 6, socialClass: 8, luck: -2 }, consequences: ['Tarikat ilgisi', 'Beklenti'], risk: 'medium' },
+            { id: 'hide', label: 'Gizle', description: 'Ailenle kal', statChanges: { health: 5, socialClass: -3 }, consequences: ['Aile', 'Sakin hayat'], risk: 'low' },
+            { id: 'secret', label: 'Gece Tek Başına Dene', description: 'Kimseye söylemeden çalış', statChanges: { intelligence: 7, power: 3, health: -2 }, consequences: ['Kendi kendine', 'Sır'], risk: 'low' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 16) {
+        return {
+          id: 'xianxia_sect_mission_16',
+          age,
+          year,
+          title: en4('Tarikat Görevi', 'Sect Mission', '宗門の任務', 'Mission de la secte'),
+          description: en4(
+            '16 yaşındasın. İlk gerçek tarikat görevin: ya şifalı ot toplamaya çıkacaksın, ya sınır devriyesine katılacaksın, ya da yasaklı kitaplığın kapısında nöbet tutacaksın. Hangisi seni büyütür — hangisi seni bitirir, bilmiyorsun.',
+            'You are 16. Your first real sect mission: gather herbs, join the border patrol, or guard the door of the forbidden library. Which one grows you — and which one ends you — you do not know.',
+            '16歳。初めての本物の宗門任務：薬草採集、国境の巡回、あるいは禁書庫の門番。どれがあなたを育て、どれがあなたを終わらせるのか、まだ分からない。',
+            'Tu as 16 ans. Ta première vraie mission de secte : cueillir des herbes, rejoindre la patrouille frontalière, ou garder la porte de la bibliothèque interdite. Laquelle t\'élève — et laquelle te brise — tu l\'ignores.'
+          ),
+          type: 'special',
+          choices: l === 'ja' ? [
+            { id: 'herbs', label: '薬草採集', description: '地味だが安全、そして知識', statChanges: { intelligence: 8, health: -3, socialClass: 3 }, consequences: ['薬草学', '小さな信頼'], risk: 'low' },
+            { id: 'patrol', label: '国境の巡回', description: '実戦と規律', statChanges: { power: 10, socialClass: 5, health: -5 }, consequences: ['戦闘経験', '上官の評価'], risk: 'high' },
+            { id: 'library', label: '禁書庫の門番', description: '禁じられた知識の匂い', statChanges: { intelligence: 12, luck: -4, socialClass: -3 }, consequences: ['危険な知識', '疑い'], risk: 'extreme' }
+          ] : l === 'fr' ? [
+            { id: 'herbs', label: 'Cueillir des herbes', description: 'Modeste, sûr, et instructif', statChanges: { intelligence: 8, health: -3, socialClass: 3 }, consequences: ['Herboristerie', 'Petite confiance'], risk: 'low' },
+            { id: 'patrol', label: 'Patrouille frontalière', description: 'Combat réel et discipline', statChanges: { power: 10, socialClass: 5, health: -5 }, consequences: ['Expérience du combat', 'Estime du supérieur'], risk: 'high' },
+            { id: 'library', label: 'Garder la bibliothèque interdite', description: 'L\'odeur du savoir défendu', statChanges: { intelligence: 12, luck: -4, socialClass: -3 }, consequences: ['Savoir dangereux', 'Soupçons'], risk: 'extreme' }
+          ] : l === 'en' ? [
+            { id: 'herbs', label: 'Gather Herbs', description: 'Modest, safe, and it teaches you', statChanges: { intelligence: 8, health: -3, socialClass: 3 }, consequences: ['Herb lore', 'Small trust'], risk: 'low' },
+            { id: 'patrol', label: 'Join the Border Patrol', description: 'Real combat and discipline', statChanges: { power: 10, socialClass: 5, health: -5 }, consequences: ['Combat experience', 'Officer\'s notice'], risk: 'high' },
+            { id: 'library', label: 'Guard the Forbidden Library', description: 'The smell of forbidden knowledge', statChanges: { intelligence: 12, luck: -4, socialClass: -3 }, consequences: ['Dangerous knowledge', 'Suspicion'], risk: 'extreme' }
+          ] : [
+            { id: 'herbs', label: 'Şifalı Ot Topla', description: 'Sade, güvenli ve öğretici', statChanges: { intelligence: 8, health: -3, socialClass: 3 }, consequences: ['Bitki bilgisi', 'Küçük güven'], risk: 'low' },
+            { id: 'patrol', label: 'Sınır Devriyesine Katıl', description: 'Gerçek savaş ve disiplin', statChanges: { power: 10, socialClass: 5, health: -5 }, consequences: ['Savaş deneyimi', 'Üstün takdiri'], risk: 'high' },
+            { id: 'library', label: 'Yasak Kütüphanede Nöbet', description: 'Yasak bilginin kokusu', statChanges: { intelligence: 12, luck: -4, socialClass: -3 }, consequences: ['Tehlikeli bilgi', 'Şüphe'], risk: 'extreme' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      if (age === 27) {
+        return {
+          id: 'xianxia_deviation_27',
+          age,
+          year,
+          title: en4('Qi Sapması (走火入魔)', 'Qi Deviation (走火入魔)', '走火入魔', 'Déviation du qi (走火入魔)'),
+          description: en4(
+            '27 yaşındasın. Meridyenlerinde qi ters akıyor: ellerin titriyor, kulaklarında uğultu var. Kademeyi zorlarsan güç gelebilir; durursan yıllar kaybedersin. Simyacıya gitmek ise kesenin ağzını açar.',
+            'You are 27. Qi runs backwards through your meridians: your hands shake and your ears ring. Forcing the stage might bring power; stopping costs years. Seeing an alchemist opens your purse wide.',
+            '27歳。経脈を気が逆流している。手が震え、耳鳴りがする。段階を押し切れば力が得られるかもしれない。止まれば何年も失う。錬丹師に診せれば財布が軽くなる。',
+            'Tu as 27 ans. Le qi reflue dans tes méridiens : tes mains tremblent, tes oreilles sifflent. Forcer le palier pourrait apporter de la puissance ; t\'arrêter coûte des années. Consulter un alchimiste vide ta bourse.'
+          ),
+          type: 'crisis',
+          choices: l === 'ja' ? [
+            { id: 'stop', label: '止めて立て直す', description: '数年を失うが体は残る', statChanges: { health: 12, power: -8, intelligence: 5 }, consequences: ['安全な土台', '遅れ'], risk: 'low' },
+            { id: 'push', label: '押し切る', description: '力か、破滅か', statChanges: { power: 16, health: -14, luck: -6 }, consequences: ['突破か崩壊', '傷'], risk: 'extreme' },
+            { id: 'alchemist', label: '錬丹師に診せる', description: '金で時間を買う', statChanges: { health: 8, socialClass: -10, luck: 4 }, consequences: ['丹薬', '借り'], risk: 'medium' }
+          ] : l === 'fr' ? [
+            { id: 'stop', label: 'Arrêter et reconstruire', description: 'Des années perdues, un corps intact', statChanges: { health: 12, power: -8, intelligence: 5 }, consequences: ['Fondation sûre', 'Retard'], risk: 'low' },
+            { id: 'push', label: 'Forcer le passage', description: 'La puissance ou la ruine', statChanges: { power: 16, health: -14, luck: -6 }, consequences: ['Percée ou effondrement', 'Cicatrices'], risk: 'extreme' },
+            { id: 'alchemist', label: 'Consulter un alchimiste', description: 'Acheter du temps avec de l\'or', statChanges: { health: 8, socialClass: -10, luck: 4 }, consequences: ['Pilules', 'Dette'], risk: 'medium' }
+          ] : l === 'en' ? [
+            { id: 'stop', label: 'Stop and Rebuild', description: 'Lose years, keep the body', statChanges: { health: 12, power: -8, intelligence: 5 }, consequences: ['Safe foundation', 'Delay'], risk: 'low' },
+            { id: 'push', label: 'Force Through', description: 'Power or ruin', statChanges: { power: 16, health: -14, luck: -6 }, consequences: ['Breakthrough or collapse', 'Scars'], risk: 'extreme' },
+            { id: 'alchemist', label: 'See an Alchemist', description: 'Buy time with gold', statChanges: { health: 8, socialClass: -10, luck: 4 }, consequences: ['Pills', 'Debt'], risk: 'medium' }
+          ] : [
+            { id: 'stop', label: 'Dur ve Yeniden Kur', description: 'Yıllar gider, beden kalır', statChanges: { health: 12, power: -8, intelligence: 5 }, consequences: ['Sağlam temel', 'Gecikme'], risk: 'low' },
+            { id: 'push', label: 'Zorla Geç', description: 'Güç ya da yıkım', statChanges: { power: 16, health: -14, luck: -6 }, consequences: ['Atlayış ya da çöküş', 'İzler'], risk: 'extreme' },
+            { id: 'alchemist', label: 'Simyacıya Git', description: 'Altınla zaman satın al', statChanges: { health: 8, socialClass: -10, luck: 4 }, consequences: ['Dan', 'Borç'], risk: 'medium' }
+          ],
+          isCanonEncounter: false
+        };
+      }
+      return null;
+
     default:
       return null;
   }
@@ -1937,7 +2078,8 @@ export function generateLife(
     cyberpunk: ['V', 'David', 'Johnny', 'K', 'Neo', 'Axel', 'Rex', 'Zero'],
     seinen_psych: ['Light', 'L', 'Ken', 'Shin', 'Ren', 'Yuki', 'Akira', 'Takumi'],
     romance_drama: ['Haru', 'Yuki', 'Kousei', 'Ryuji', 'Miyuki', 'Ren', 'Sota', 'Kaito'],
-    sports: ['Shoyo', 'Tobio', 'Tetsuya', 'Seijuro', 'Yoichi', 'Hanamichi', 'Ryota', 'Kenji']
+    sports: ['Shoyo', 'Tobio', 'Tetsuya', 'Seijuro', 'Yoichi', 'Hanamichi', 'Ryota', 'Kenji'],
+    xianxia_cultivation: ['Wei', 'Jian', 'Hao', 'Jun', 'Chen', 'Feng', 'Yu', 'Tian']
   };
   const femaleNames: Record<string, string[]> = {
     shonen_battle: ['Sakura', 'Hinata', 'Rukia', 'Mikasa', 'Nami', 'Asuna', 'Yoruichi', 'Nobara'],
@@ -1947,7 +2089,8 @@ export function generateLife(
     cyberpunk: ['Motoko', 'Akane', 'Lucy', 'Judy', 'Panam', 'Kiwi', 'Rebecca', 'Gloria'],
     seinen_psych: ['Misa', 'Risa', 'Yuki', 'Aya', 'Rin', 'Mai', 'Saya', 'Nana'],
     romance_drama: ['Kaori', 'Nagisa', 'Taiga', 'Kaguya', 'Miyuki', 'Hana', 'Yui', 'Sakura'],
-    sports: ['Kiyoko', 'Yachi', 'Riko', 'Aoba', 'Minori', 'Yuki', 'Hana', 'Sakura']
+    sports: ['Kiyoko', 'Yachi', 'Riko', 'Aoba', 'Minori', 'Yuki', 'Hana', 'Sakura'],
+    xianxia_cultivation: ['Xue', 'Yan', 'Mei', 'Lan', 'Qing', 'Yue', 'Ru', 'Xin']
   };
   const pool = gender === 'male' ? (maleNames[world.id] || maleNames.shonen_battle) : (femaleNames[world.id] || femaleNames.shonen_battle);
   const characterName = pool[Math.floor(Math.random() * pool.length)];
@@ -2038,7 +2181,7 @@ export function generateLife(
     if (factionEvent) events.push(factionEvent);
   }
 
-  // Evrene özgü olaylar (Faz 1) — shonen/dark_fantasy/isekai/sports/romance/slice_of_life/cyberpunk/seinen_psych
+  // Evrene özgü olaylar (Faz 1) — shonen/dark_fantasy/isekai/sports/romance/slice_of_life/cyberpunk/seinen_psych/xianxia
   const uniqueEventAges = [7, 9, 12, 13, 16, 17, 20, 22, 23, 25, 27, 30, 40];
   for (const uniqueAge of uniqueEventAges) {
     if (uniqueAge < deathAge) {
@@ -2103,6 +2246,9 @@ export function generateLife(
     cyberpunk: 1.1,
     shonen_battle: 0.9,
     dark_fantasy: 1.5,
+    // Xianxia: kademe atlayışı ve qi sapması krizleri sık; ama ölüm oranı
+    // dark_fantasy kadar değil (uzun yaşam telafisi).
+    xianxia_cultivation: 1.1,
   };
   const crisisWeight = WORLD_CRISIS_WEIGHT[world.id] ?? 1;
   if (crisisWeight > 0) {
@@ -2409,6 +2555,7 @@ const WORLD_SPECIFIC_ID_PREFIXES: Record<string, RegExp> = {
   romance_drama: /^romance_/,
   sports: /^sports_/,
   slice_of_life: /^sol_/,
+  xianxia_cultivation: /^xianxia_/,
 };
 
 export function computeWorldFidelity(life: LifeResult): number {
@@ -2428,11 +2575,13 @@ export function getEventTimeline(life: LifeResult): { age: number; event: LifeEv
 export function generateShareText(life: LifeResult, world: AnimeWorld, region: AnimeRegion): string {
   const l = lifeLang();
   const pick = (tr: string, en: string, ja: string, fr: string) => (l === 'tr' ? tr : l === 'ja' ? ja : l === 'fr' ? fr : en);
+  const wName = worldNameL(world);
+  const rName = regionNameL(region);
   const line1 = pick(
-    `🌍 ${world.nameTR} evreninde ${region.nameTR} bölgesinde ${life.deathAge} yıl yaşadım.`,
-    `🌍 I lived ${life.deathAge} years in ${region.nameEN}, ${world.nameEN}.`,
-    `🌍 ${world.nameEN}の世界、${region.nameEN}地方で${life.deathAge}年間生きた。`,
-    `🌍 J'ai vécu ${life.deathAge} ans à ${region.nameEN}, dans le monde ${world.nameEN}.`
+    `🌍 ${wName} evreninde ${rName} bölgesinde ${life.deathAge} yıl yaşadım.`,
+    `🌍 I lived ${life.deathAge} years in ${rName}, ${wName}.`,
+    `🌍 ${wName}の世界、${rName}地方で${life.deathAge}年間生きた。`,
+    `🌍 J'ai vécu ${life.deathAge} ans à ${rName}, dans le monde ${wName}.`
   );
   const lineDeath = pick(`Ölüm nedeni: ${life.deathCause}`, `Cause of death: ${life.deathCause}`, `死因: ${life.deathCause}`, `Cause du décès : ${life.deathCause}`);
   const lineStats = pick(`Güç: ${life.finalStats.power} | Zeka: ${life.finalStats.intelligence} | Şans: ${life.finalStats.luck}`, `Power: ${life.finalStats.power} | Intelligence: ${life.finalStats.intelligence} | Luck: ${life.finalStats.luck}`, `筋力: ${life.finalStats.power} | 知力: ${life.finalStats.intelligence} | 運: ${life.finalStats.luck}`, `Force : ${life.finalStats.power} | Intelligence : ${life.finalStats.intelligence} | Chance : ${life.finalStats.luck}`);

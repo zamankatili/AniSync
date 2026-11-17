@@ -3,10 +3,15 @@
  * Her evren, farklı yaşam beklentisi, tehlike seviyesi ve olay profiline sahiptir.
  */
 
+import type { Lang4 } from './universePaths';
+
 export interface AnimeWorld {
   id: string;
   nameTR: string;
   nameEN: string;
+  /** JA/FR adlar opsiyonel; yoksa İngilizce ada düşer (uydurma çeviri yazmayız). */
+  nameJA?: string;
+  nameFR?: string;
   emoji: string;
   themeColor: string; // Tailwind color class
   descriptionTR: string;
@@ -38,6 +43,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     id: 'shonen_battle',
     nameTR: 'Shounen Savaş Dünyası',
     nameEN: 'Shounen Battle World',
+    nameJA: '少年バトルの世界',
+    nameFR: 'Monde des combats shōnen',
     emoji: '⚔️',
     themeColor: 'rose',
     descriptionTR: 'Ninja, kılıç ustası ve şeytan avcılarının yaşadığı, sürekli çatışma ve güçlenme odaklı bir dünya. Her gün bir savaş, her gün bir meydan okuma.',
@@ -66,6 +73,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     id: 'slice_of_life',
     nameTR: 'Huzurlu Yaşam Dünyası',
     nameEN: 'Slice of Life World',
+    nameJA: '日常系の世界',
+    nameFR: 'Monde du quotidien',
     emoji: '🍵',
     themeColor: 'emerald',
     descriptionTR: 'Huzurlu, barışçıl ve günlük yaşamın güzelliğini kutlayan bir dünya. Kamp, müzik, okul ve dostluk odaklı.',
@@ -94,6 +103,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     id: 'dark_fantasy',
     nameTR: 'Karanlık Fantastik Dünya',
     nameEN: 'Dark Fantasy World',
+    nameJA: 'ダークファンタジーの世界',
+    nameFR: 'Monde de dark fantasy',
     emoji: '🗡️',
     themeColor: 'neutral',
     descriptionTR: 'Kaos, ölüm, ihanet ve hayatta kalma mücadelesinin hüküm sürdüğü karanlık bir dünya. Her gün bir savaş, her gün bir kayıp.',
@@ -122,6 +133,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     id: 'isekai',
     nameTR: 'Isekai (Başka Dünya) Evreni',
     nameEN: 'Isekai (Another World) Universe',
+    nameJA: '異世界（イセカイ）の世界',
+    nameFR: 'Univers isekai',
     emoji: '🌀',
     themeColor: 'purple',
     descriptionTR: 'Modern dünyadan başka bir dünyaya reenkarnasyon veya ışınlanma. Güç sistemleri, maceralar ve kaderin belirsizliği.',
@@ -150,6 +163,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     id: 'cyberpunk',
     nameTR: 'Cyberpunk / Sci-Fi Dünyası',
     nameEN: 'Cyberpunk / Sci-Fi World',
+    nameJA: 'サイバーパンク／SFの世界',
+    nameFR: 'Monde cyberpunk / SF',
     emoji: '🤖',
     themeColor: 'cyan',
     descriptionTR: 'Teknoloji, siber suç, yapay zeka ve distopik toplumların hüküm sürdüğü gelecek dünya. İnsan ve makine arasındaki çizgi bulanık.',
@@ -178,6 +193,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     id: 'seinen_psych',
     nameTR: 'Seinen / Psikolojik Dünya',
     nameEN: 'Seinen / Psychological World',
+    nameJA: '青年漫画・心理の世界',
+    nameFR: 'Monde seinen / psychologique',
     emoji: '🧠',
     themeColor: 'neutral',
     descriptionTR: 'Zeka savaşları, ahlaki ikilemler, psikolojik gerilim ve derin karakter analizlerinin dünyası. Her gün bir satranç hamlesi.',
@@ -206,6 +223,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     id: 'romance_drama',
     nameTR: 'Romantik Dram Dünyası',
     nameEN: 'Romance / Drama World',
+    nameJA: '恋愛ドラマの世界',
+    nameFR: 'Monde romance / drame',
     emoji: '💖',
     themeColor: 'pink',
     descriptionTR: 'Duygusal yolculuklar, aşk, kayıp ve insan ilişkilerinin derinlemesine işlendiği bir dünya. Gözyaşı ve mutluluk bir arada.',
@@ -234,6 +253,8 @@ export const ANIME_WORLDS: AnimeWorld[] = [
     id: 'sports',
     nameTR: 'Spor Dünyası',
     nameEN: 'Sports World',
+    nameJA: 'スポーツの世界',
+    nameFR: 'Monde du sport',
     emoji: '🏐',
     themeColor: 'amber',
     descriptionTR: 'Takım ruhu, azim ve rekabetin hüküm sürdüğü spor dünyası. Voleybol, futbol, basketbol ve daha fazlası.',
@@ -257,8 +278,70 @@ export const ANIME_WORLDS: AnimeWorld[] = [
       adventureRate: 0.05,
       deathRate: 0.02
     }
+  },
+  {
+    id: 'xianxia_cultivation',
+    nameTR: 'Xianxia / Cultivation Dünyası',
+    nameEN: 'Xianxia / Cultivation World',
+    nameJA: '仙侠（修行）の世界',
+    nameFR: 'Monde xianxia (cultivation)',
+    emoji: '🐉',
+    themeColor: 'orange',
+    descriptionTR: 'Qi toplayıp bedenini ve ruhunu arındırdığın, tarikatlar ile kadim ailelerin gökleri paylaştığı bir dünya. Uzun yaşam mümkün — ama her kademe atlayışı bir bedel ister. Kademe adları esere göre değişir; tek bir kanon yok.',
+    descriptionEN: 'A world where you gather qi and refine body and spirit, while sects and ancient clans divide the heavens. Long life is possible — but every breakthrough demands a price. Stage names differ per work; there is no single canon.',
+    descriptionJA: '気を集めて肉体と魂を鍛え、宗門や古き一族が天を分け合う世界。長命は可能だが、段階を上がるたびに代償が求められる。段階の呼称は作品ごとに異なり、唯一の正典はない。',
+    descriptionFR: 'Un monde où l\'on accumule le qi et affine corps et esprit, tandis que sectes et clans anciens se partagent les cieux. Une longue vie est possible — mais chaque palier franchi exige un prix. Les noms des paliers varient selon l\'œuvre ; il n\'existe pas de canon unique.',
+    lifeExpectancy: [60, 110],
+    dangerLevel: 'high',
+    powerSystem: 'Qi / Cultivation / Ruhsal Kademeler',
+    // Gerçek donghua yapımları — uydurma başlık yok.
+    sourceAnime: [
+      'A Record of a Mortal\'s Journey to Immortality',
+      'Soul Land',
+      'Battle Through the Heavens',
+      'The Daily Life of the Immortal King'
+    ],
+    regionIds: ['seven_mysteries_sect', 'shrek_academy', 'jiama_empire', 'star_luo_empire'],
+    stats: {
+      warRate: 0.30,
+      diseaseRate: 0.10,
+      povertyRate: 0.22,
+      accidentRate: 0.10,
+      violenceRate: 0.28,
+      substanceRate: 0.04,
+      suicideRate: 0.04,
+      powerAwakeningRate: 0.30,
+      adventureRate: 0.42,
+      deathRate: 0.22
+    }
   }
 ];
+
+const LOCALIZED_NAME: Record<string, 'nameTR' | 'nameEN' | 'nameJA' | 'nameFR'> = {
+  tr: 'nameTR',
+  en: 'nameEN',
+  ja: 'nameJA',
+  fr: 'nameFR',
+};
+
+/**
+ * Evren adını verilen dilde döndürür.
+ *
+ * JA/FR adı tanımlı değilse İngilizceye düşer — eksik çeviriyi uydurmak yerine
+ * dürüst bir geri dönüş. Yeni evrenlerde nameJA/nameFR doldurulur.
+ */
+export const localizeWorldName = (world: AnimeWorld, lang: Lang4): string => {
+  const key = LOCALIZED_NAME[lang] ?? 'nameEN';
+  return world[key] ?? world.nameEN;
+};
+
+/** Evren açıklamasını verilen dilde döndürür (JA/FR yoksa İngilizce). */
+export const localizeWorldDescription = (world: AnimeWorld, lang: Lang4): string => {
+  if (lang === 'tr') return world.descriptionTR;
+  if (lang === 'ja') return world.descriptionJA ?? world.descriptionEN;
+  if (lang === 'fr') return world.descriptionFR ?? world.descriptionEN;
+  return world.descriptionEN;
+};
 
 export const getWorldById = (id: string): AnimeWorld | undefined =>
   ANIME_WORLDS.find(w => w.id === id);
@@ -274,5 +357,6 @@ export const WORLD_COLORS: Record<string, string> = {
   cyberpunk: 'cyan',
   seinen_psych: 'neutral',
   romance_drama: 'pink',
-  sports: 'amber'
+  sports: 'amber',
+  xianxia_cultivation: 'orange'
 };

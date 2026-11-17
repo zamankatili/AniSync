@@ -492,6 +492,81 @@ export const UNIVERSE_PATHS: Record<string, UniversePath> = {
       ],
     },
   },
+
+  xianxia_cultivation: {
+    worldId: 'xianxia_cultivation',
+    arcName: L('Cultivation Yolu', 'The Cultivation Path', '修行の道', 'La voie de la cultivation'),
+    arcNote: L(
+      'Qi ile başlar, sabırla yükselirsin. Her kademe atlayışı güç getirir ama bedeni ve şansı zorlar; hız ile sağlamlık arasında seçim yaparsın.',
+      'You start with qi and rise through patience. Every breakthrough brings power but strains body and luck; you choose between speed and stability.',
+      '気から始まり、忍耐で登っていく。段階を上がるたびに力は増すが、肉体と運を削る。速さと堅実さのどちらを取るか。',
+      'Tu commences par le qi et montes par la patience. Chaque percée apporte de la puissance mais éprouve le corps et la chance ; tu choisis entre vitesse et solidité.',
+    ),
+    ranks: [
+      {
+        threshold: 0,
+        name: L('Qi Toplayan', 'Qi Refining', '錬気', 'Affinage du qi'),
+        note: L('İlk nefes, ilk meridyen', 'First breath, first meridian', '最初の呼吸、最初の経脈', 'Premier souffle, premier méridien'),
+      },
+      {
+        threshold: 0.22,
+        name: L('Temel Kurucu', 'Foundation Establishment', '築基', 'Fondation'),
+        note: L('Beden artık taşıyıcı', 'The body becomes a vessel', '肉体が器になる', 'Le corps devient un réceptacle'),
+      },
+      {
+        threshold: 0.46,
+        name: L('Altın Çekirdek', 'Golden Core', '金丹', 'Noyau d\'or'),
+        note: L('Güç kalıcılaşır', 'Power becomes permanent', '力が定着する', 'La puissance se fixe'),
+      },
+      {
+        threshold: 0.68,
+        name: L('Ruhsal Bebek', 'Nascent Soul', '元嬰', 'Âme naissante'),
+        note: L('Ölüm artık bir kapı', 'Death becomes a door', '死は扉になる', 'La mort devient une porte'),
+      },
+      {
+        threshold: 0.86,
+        name: L('Yükselen Ölümsüz', 'Ascended Immortal', '昇仙', 'Immortel ascendant'),
+        note: L('İnsan ölçeğini aştın', 'Beyond human scale', '人の尺度を超えた', 'Au-delà de l\'échelle humaine'),
+      },
+    ],
+    dilemma: {
+      id: 'xianxia_dilemma_first_breakthrough',
+      age: 13,
+      title: L('İlk Kademe Sınavı', 'The First Breakthrough', '最初の突破', 'La première percée'),
+      description: L(
+        '13 yaşındasın. Tarikat sınavında qi\'yi ilk kez bilinçli yönlendireceksin. Hoca iki yol gösteriyor; üçüncü yol ise kimsenin önermediği yasak yöntem: kısa yoldan güç.',
+        'You are 13. At the sect trial you will guide qi consciously for the first time. Your master offers two paths; the third is the forbidden shortcut nobody recommends: power, fast.',
+        '13歳。宗門の試験で初めて意識的に気を導く。師は二つの道を示す。三つ目は誰も勧めない禁じられた近道——手っ取り早い力。',
+        'Tu as 13 ans. Lors de l\'épreuve de la secte, tu guides le qi consciemment pour la première fois. Ton maître propose deux voies ; la troisième est le raccourci interdit que personne ne recommande : la puissance, vite.',
+      ),
+      choices: [
+        {
+          id: 'steady',
+          label: L('Temeli Sağlam Kur', 'Build the Foundation', '基を固める', 'Bâtir la fondation'),
+          description: L('Yavaş ama bedeni yormayan yol.', 'Slow, but it does not wreck the body.', '遅いが肉体を壊さない道。', 'Lent, mais sans abîmer le corps.'),
+          statChanges: { health: 6, intelligence: 6, power: 3 },
+          consequences: [L('Sağlam meridyenler', 'Solid meridians', '堅牢な経脈', 'Méridiens solides')],
+          risk: 'low',
+        },
+        {
+          id: 'sect_path',
+          label: L('Tarikat Yöntemini İzle', 'Follow the Sect Method', '宗門の法に従う', 'Suivre la méthode de la secte'),
+          description: L('Dengeli ilerleme, tarikat güveni.', 'Balanced progress, sect trust.', '均衡の取れた前進、宗門の信頼。', 'Progression équilibrée, confiance de la secte.'),
+          statChanges: { power: 7, socialClass: 6, luck: 2 },
+          consequences: [L('Hocanın gözdesi', 'Master\'s favour', '師の覚え', 'La faveur du maître')],
+          risk: 'medium',
+        },
+        {
+          id: 'forbidden',
+          label: L('Yasak Kısayolu Dene', 'Try the Forbidden Shortcut', '禁じられた近道を試す', 'Tenter le raccourci interdit'),
+          description: L('Hızlı güç; qi sapması riski.', 'Fast power; risk of qi deviation.', '速い力、走火入魔の危険。', 'Puissance rapide ; risque de déviation du qi.'),
+          statChanges: { power: 14, health: -9, luck: -6 },
+          consequences: [L('Sınıfı atladın', 'You skipped a grade', '段階を飛ばした', 'Tu as sauté un palier'), L('Damgalı meridyenler', 'Scarred meridians', '傷ついた経脈', 'Méridiens marqués')],
+          risk: 'extreme',
+        },
+      ],
+    },
+  },
 };
 
 export const getUniversePath = (worldId: string): UniversePath | undefined => UNIVERSE_PATHS[worldId];
