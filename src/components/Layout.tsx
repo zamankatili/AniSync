@@ -15,6 +15,8 @@ import { XpBridge } from './XpBridge';
 import { resolveAvatar } from '../lib/avatar';
 import { AnimeRadioPlayer } from './AnimeRadioPlayer';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { SeasonalAmbience } from './SeasonalAmbience';
+import { AmbienceControl } from './AmbienceControl';
 import { GlobalChat } from './GlobalChat';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useReminderStore } from '../store/useReminderStore';
@@ -250,6 +252,9 @@ export const Layout = () => {
           background: `radial-gradient(ellipse at 50% -5%, ${activeConfig.glowColor} 0%, transparent 60%)`
         }}
       />
+
+      {/* Seasonal ambience (decorative; no weather/live data) */}
+      <SeasonalAmbience />
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 xl:w-72 border-r-2 border-white/20 bg-black/85 backdrop-blur-md p-5 safe-area-top overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent]">
@@ -516,6 +521,9 @@ export const Layout = () => {
              {/* Atmospheric Theme Switcher */}
              <ThemeSwitcher />
 
+             {/* Seasonal Ambience */}
+             <AmbienceControl />
+
              {/* Language Dropdown */}
              <div className="relative">
                <button
@@ -727,6 +735,13 @@ export const Layout = () => {
                     </div>
                   </div>
                 ))}
+
+                <section
+                  aria-label={t('ambience_title')}
+                  className="border-t-2 border-white/10 pt-4"
+                >
+                  <AmbienceControl variant="inline" />
+                </section>
               </div>
             </motion.div>
           </>

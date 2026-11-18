@@ -97,6 +97,51 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     shelf_link_novel: 'Romanı ara',
     shelf_count: '{{count}} kayıt',
 
+    // Seasonal ambience (decorative, procedural)
+    ambience_title: 'Mevsimsel ambiyans',
+    ambience_open: 'Mevsimsel ambiyans ayarları',
+    ambience_badge: 'Dekoratif',
+    ambience_subtitle: 'Dekoratif mevsim katmanı — hava durumu veya canlı veri kullanmaz.',
+    ambience_now: 'Şu an: {{season}} · {{phase}}',
+    ambience_mode_label: 'Katman',
+    ambience_mode_off: 'Kapalı',
+    ambience_mode_calm: 'Sakin',
+    ambience_mode_full: 'Hareketli',
+    ambience_mode_off_desc: 'Hiçbir katman gösterilmez.',
+    ambience_mode_calm_desc: 'Yalnızca sabit mevsim tonu; parçacık yok.',
+    ambience_mode_full_desc:
+      'Sabit ton ve yavaş parçacıklar; hareket azaltma açıksa yalnızca ton kalır.',
+    ambience_hemisphere: 'Yarımküre',
+    ambience_hemisphere_north: 'Kuzey',
+    ambience_hemisphere_south: 'Güney',
+    ambience_hemisphere_note: 'Konum izni istenmez; mevsimi kendin seçersin.',
+    ambience_sound_on: 'Ses açık — genel ses tercihine bağlı',
+    ambience_sound_off: 'Ses kapalı',
+    ambience_sound_enable: 'Genel sesi aç',
+    ambience_sound_disable: 'Genel sesi kapat',
+    ambience_sound_note:
+      'Ambiyans sesi ayrı bir anahtar değildir; genel ses tercihine uyar ve yalnızca kısa, tek seferlik doğa sesleri çalar.',
+    ambience_cadence_label: 'Sıklık',
+    ambience_cadence_value: '{{minutes}} dakikada bir',
+    ambience_accent_birds: 'Kuş cıvıltısı',
+    ambience_accent_crickets: 'Cırcır böceği',
+    ambience_accent_wind: 'Rüzgâr',
+    ambience_accent_hush: 'Kar sessizliği',
+    ambience_reduced_motion:
+      'Hareket azaltma açık: parçacıklar kapalı, yalnızca sabit ton gösteriliyor.',
+    ambience_paused_route:
+      'Bu ekranda ambiyans duraklatıldı (video, müzik veya mikrofon kullanımı).',
+    ambience_decorative_note:
+      'Tamamen dekoratif; canlı yayın, hava durumu veya içerik iddiası yoktur. Sesler tarayıcıda üretilir, üçüncü taraf kayıt kullanılmaz.',
+    ambience_season_spring: 'İlkbahar',
+    ambience_season_summer: 'Yaz',
+    ambience_season_autumn: 'Sonbahar',
+    ambience_season_winter: 'Kış',
+    ambience_phase_dawn: 'Şafak',
+    ambience_phase_day: 'Gündüz',
+    ambience_phase_dusk: 'Akşamüstü',
+    ambience_phase_night: 'Gece',
+
     // Text adventure — "Kayıp Bölüm"
     text_adventure: 'Kayıp Bölüm',
     ta_badge: 'METİN MACERA — ÖZGÜN',
@@ -278,6 +323,51 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     shelf_link_anilist: 'Open on AniList',
     shelf_link_novel: 'Search the novel',
     shelf_count: '{{count}} entries',
+
+    // Seasonal ambience (decorative, procedural)
+    ambience_title: 'Seasonal ambience',
+    ambience_open: 'Seasonal ambience settings',
+    ambience_badge: 'Decorative',
+    ambience_subtitle: 'Decorative seasonal layer — no weather or live data.',
+    ambience_now: 'Now: {{season}} · {{phase}}',
+    ambience_mode_label: 'Layer',
+    ambience_mode_off: 'Off',
+    ambience_mode_calm: 'Calm',
+    ambience_mode_full: 'Moving',
+    ambience_mode_off_desc: 'No layer is shown.',
+    ambience_mode_calm_desc: 'A fixed seasonal tone only; no particles.',
+    ambience_mode_full_desc:
+      'Fixed tone plus slow particles; if reduced motion is on, only the tone remains.',
+    ambience_hemisphere: 'Hemisphere',
+    ambience_hemisphere_north: 'North',
+    ambience_hemisphere_south: 'South',
+    ambience_hemisphere_note: 'No location permission is requested; you pick the season.',
+    ambience_sound_on: 'Sound on — follows the global sound preference',
+    ambience_sound_off: 'Sound off',
+    ambience_sound_enable: 'Turn global sound on',
+    ambience_sound_disable: 'Turn global sound off',
+    ambience_sound_note:
+      'Ambience audio is not a separate switch: it follows the global preference and only plays brief, one-shot nature sounds.',
+    ambience_cadence_label: 'Cadence',
+    ambience_cadence_value: 'Every {{minutes}} minutes',
+    ambience_accent_birds: 'Bird song',
+    ambience_accent_crickets: 'Crickets',
+    ambience_accent_wind: 'Wind',
+    ambience_accent_hush: 'Snow hush',
+    ambience_reduced_motion:
+      'Reduced motion is on: particles are off and only the fixed tone is shown.',
+    ambience_paused_route:
+      'Ambience is paused on this screen (video, music or microphone use).',
+    ambience_decorative_note:
+      'Fully decorative; no live broadcast, weather or content claim. Sounds are synthesised in the browser; no third-party recordings are used.',
+    ambience_season_spring: 'Spring',
+    ambience_season_summer: 'Summer',
+    ambience_season_autumn: 'Autumn',
+    ambience_season_winter: 'Winter',
+    ambience_phase_dawn: 'Dawn',
+    ambience_phase_day: 'Daytime',
+    ambience_phase_dusk: 'Dusk',
+    ambience_phase_night: 'Night',
 
     // Text adventure — "The Lost Episode"
     text_adventure: 'The Lost Episode',
@@ -461,6 +551,51 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     shelf_link_novel: '原作小説を検索',
     shelf_count: '{{count}} 件',
 
+    // Seasonal ambience (decorative, procedural)
+    ambience_title: '季節のアンビエンス',
+    ambience_open: '季節のアンビエンス設定',
+    ambience_badge: '装飾',
+    ambience_subtitle: '装飾用の季節レイヤー。天気やライブデータは使用しません。',
+    ambience_now: '現在: {{season}} · {{phase}}',
+    ambience_mode_label: 'レイヤー',
+    ambience_mode_off: 'オフ',
+    ambience_mode_calm: '静か',
+    ambience_mode_full: '動きあり',
+    ambience_mode_off_desc: 'レイヤーを表示しません。',
+    ambience_mode_calm_desc: '固定の季節トーンのみ。パーティクルはありません。',
+    ambience_mode_full_desc:
+      '固定トーンとゆっくりしたパーティクル。視差効果を減らす設定が有効ならトーンのみになります。',
+    ambience_hemisphere: '半球',
+    ambience_hemisphere_north: '北半球',
+    ambience_hemisphere_south: '南半球',
+    ambience_hemisphere_note: '位置情報の許可は求めません。季節は自分で選べます。',
+    ambience_sound_on: 'サウンドオン — 全体のサウンド設定に従います',
+    ambience_sound_off: 'サウンドオフ',
+    ambience_sound_enable: '全体のサウンドをオンにする',
+    ambience_sound_disable: '全体のサウンドをオフにする',
+    ambience_sound_note:
+      'アンビエンス音は独立したスイッチではありません。全体のサウンド設定に従い、短い自然音を一度だけ再生します。',
+    ambience_cadence_label: '頻度',
+    ambience_cadence_value: '{{minutes}} 分ごと',
+    ambience_accent_birds: '鳥のさえずり',
+    ambience_accent_crickets: '虫の音',
+    ambience_accent_wind: '風',
+    ambience_accent_hush: '雪の静けさ',
+    ambience_reduced_motion:
+      '視差効果を減らす設定が有効です。パーティクルはオフで、固定トーンのみ表示します。',
+    ambience_paused_route:
+      'この画面ではアンビエンスを停止しています（動画・音楽・マイクを使用）。',
+    ambience_decorative_note:
+      '完全に装飾用です。ライブ配信・天気・コンテンツの主張はありません。音はブラウザー内で生成し、第三者製の録音は使いません。',
+    ambience_season_spring: '春',
+    ambience_season_summer: '夏',
+    ambience_season_autumn: '秋',
+    ambience_season_winter: '冬',
+    ambience_phase_dawn: '夜明け',
+    ambience_phase_day: '昼',
+    ambience_phase_dusk: '夕方',
+    ambience_phase_night: '夜',
+
     // Text adventure — 「失われた回」
     text_adventure: '失われた回',
     ta_badge: 'テキストアドベンチャー — オリジナル',
@@ -642,6 +777,52 @@ export const productPassTranslations: Record<ProductLang, Record<string, string>
     shelf_link_anilist: 'Ouvrir sur AniList',
     shelf_link_novel: 'Chercher le roman',
     shelf_count: '{{count}} entrées',
+
+    // Seasonal ambience (decorative, procedural)
+    ambience_title: 'Ambiance saisonnière',
+    ambience_open: 'Réglages de l’ambiance saisonnière',
+    ambience_badge: 'Décoratif',
+    ambience_subtitle: 'Couche saisonnière décorative — aucune météo ni donnée en direct.',
+    ambience_now: 'Maintenant : {{season}} · {{phase}}',
+    ambience_mode_label: 'Couche',
+    ambience_mode_off: 'Désactivée',
+    ambience_mode_calm: 'Calme',
+    ambience_mode_full: 'Animée',
+    ambience_mode_off_desc: 'Aucune couche affichée.',
+    ambience_mode_calm_desc: 'Teinte saisonnière fixe uniquement ; aucune particule.',
+    ambience_mode_full_desc:
+      'Teinte fixe et particules lentes ; si la réduction des animations est active, seule la teinte reste.',
+    ambience_hemisphere: 'Hémisphère',
+    ambience_hemisphere_north: 'Nord',
+    ambience_hemisphere_south: 'Sud',
+    ambience_hemisphere_note:
+      'Aucune autorisation de localisation ; tu choisis la saison.',
+    ambience_sound_on: 'Son activé — suit la préférence sonore globale',
+    ambience_sound_off: 'Son désactivé',
+    ambience_sound_enable: 'Activer le son global',
+    ambience_sound_disable: 'Désactiver le son global',
+    ambience_sound_note:
+      'Le son d’ambiance n’a pas de commutateur séparé : il suit la préférence globale et ne joue que de brefs sons naturels uniques.',
+    ambience_cadence_label: 'Fréquence',
+    ambience_cadence_value: 'Toutes les {{minutes}} minutes',
+    ambience_accent_birds: 'Chant d’oiseaux',
+    ambience_accent_crickets: 'Grillons',
+    ambience_accent_wind: 'Vent',
+    ambience_accent_hush: 'Silence de neige',
+    ambience_reduced_motion:
+      'Réduction des animations active : particules désactivées, teinte fixe uniquement.',
+    ambience_paused_route:
+      'Ambiance en pause sur cet écran (vidéo, musique ou micro).',
+    ambience_decorative_note:
+      'Entièrement décoratif : aucune diffusion en direct, météo ou promesse de contenu. Les sons sont générés dans le navigateur, sans enregistrement tiers.',
+    ambience_season_spring: 'Printemps',
+    ambience_season_summer: 'Été',
+    ambience_season_autumn: 'Automne',
+    ambience_season_winter: 'Hiver',
+    ambience_phase_dawn: 'Aube',
+    ambience_phase_day: 'Jour',
+    ambience_phase_dusk: 'Crépuscule',
+    ambience_phase_night: 'Nuit',
 
     // Text adventure — « L’Épisode perdu »
     text_adventure: 'L’Épisode perdu',
