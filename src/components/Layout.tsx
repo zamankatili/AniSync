@@ -292,6 +292,7 @@ export const Layout = () => {
                   <NavLink
                     key={item.path}
                     to={item.path}
+                    end={item.path === '/' || item.path === '/list'}
                     style={({ isActive }) => isActive ? {
                       backgroundColor: activeConfig.accentColor,
                       borderColor: activeConfig.accentColor,
@@ -642,12 +643,26 @@ export const Layout = () => {
       {/* Mobile Bottom Navigation — en fazla 5 birincil sekme + "Daha fazla" */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black border-t-2 border-white/20 safe-area-bottom z-50">
         <div className="flex items-stretch justify-around">
+          {(() => {
+            const isMoreActive = MORE_GROUPS.some((group) =>
+              group.items.some((item) =>
+                item.path === '/'
+                  ? location.pathname === '/'
+                  : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`),
+              ),
+            );
+            return (
+              <>
           {PRIMARY_NAV_ITEMS.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive =
+              item.path === '/'
+                ? location.pathname === '/'
+                : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
+                end={item.path === '/' || item.path === '/list'}
                 aria-label={t(item.labelKey)}
                 aria-current={isActive ? 'page' : undefined}
                 className="relative flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-w-[56px] min-h-[56px] flex-1"
@@ -670,11 +685,31 @@ export const Layout = () => {
             type="button"
             onClick={() => setIsMoreNavOpen(true)}
             aria-label={t('more')}
-            className="relative flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-w-[56px] min-h-[56px] flex-1 text-neutral-500 hover:text-white transition-colors"
+            className="relative flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-w-[56px] min-h-[56px] flex-1"
           >
-            <MoreHorizontal size={22} strokeWidth={2.5} />
-            <span className="text-[9px] font-black uppercase tracking-wider">{t('more')}</span>
+            {isMoreActive && (
+              <motion.div
+                layoutId="mobile-nav-indicator"
+                className="absolute inset-x-1 inset-y-1 border-2 -z-10"
+                style={{ backgroundColor: activeConfig.accentColor, borderColor: activeConfig.accentColor }}
+              />
+            )}
+            <MoreHorizontal
+              size={22}
+              strokeWidth={2.5}
+              className={cn('transition-colors', !isMoreActive && 'text-neutral-500')}
+              style={isMoreActive ? { color: getReadableTextColor(activeConfig.accentColor) } : undefined}
+            />
+            <span
+              className={cn('text-[9px] font-black uppercase tracking-wider', !isMoreActive && 'text-neutral-500')}
+              style={isMoreActive ? { color: getReadableTextColor(activeConfig.accentColor) } : undefined}
+            >
+              {t('more')}
+            </span>
           </button>
+              </>
+            );
+          })()}
         </div>
       </nav>
 
@@ -725,8 +760,25 @@ export const Layout = () => {
                         <NavLink
                           key={item.path}
                           to={item.path}
+                          end={item.path === '/' || item.path === '/list'}
                           onClick={() => setIsMoreNavOpen(false)}
-                          className="flex items-center gap-3 border-2 border-white/15 px-3 py-3 min-h-[56px] font-black uppercase text-xs tracking-wide hover:border-white hover:bg-white hover:text-black transition-colors"
+                          style={({ isActive }) =>
+                            isActive
+                              ? {
+                                  backgroundColor: activeConfig.accentColor,
+                                  borderColor: activeConfig.accentColor,
+                                  color: getReadableTextColor(activeConfig.accentColor),
+                                }
+                              : undefined
+                          }
+                          className={({ isActive }) =>
+                            cn(
+                              'flex items-center gap-3 border-2 px-3 py-3 min-h-[56px] font-black uppercase text-xs tracking-wide transition-colors',
+                              isActive
+                                ? 'border-transparent'
+                                : 'border-white/15 hover:border-white hover:bg-white hover:text-black',
+                            )
+                          }
                         >
                           <item.icon size={20} strokeWidth={2.5} className="shrink-0" />
                           <span className="leading-tight">{t(item.labelKey)}</span>
