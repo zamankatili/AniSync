@@ -28,23 +28,59 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({ chat, onClose }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clock, setClock] = useState(() => new Date());
   const drawerCloseRef = useRef<HTMLButtonElement>(null);
+  const drawerTriggerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const drawerWasOpenRef = useRef(false);
 
   useEffect(() => {
     const id = window.setInterval(() => setClock(new Date()), 30_000);
     return () => window.clearInterval(id);
   }, []);
 
+  // Çekmece açılınca odağa taşı; kapanınca açan düğmeye geri ver.
   useEffect(() => {
-    if (drawerOpen) drawerCloseRef.current?.focus();
+    if (drawerOpen) {
+      drawerWasOpenRef.current = true;
+      drawerCloseRef.current?.focus();
+      return;
+    }
+    if (drawerWasOpenRef.current) {
+      drawerWasOpenRef.current = false;
+      drawerTriggerRef.current?.focus();
+    }
   }, [drawerOpen]);
 
+  // Escape kapatır; Tab odağı çekmecenin içinde tutar.
   useEffect(() => {
+    if (!drawerOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setDrawerOpen(false);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setDrawerOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const root = drawerRef.current;
+      if (!root) return;
+      const focusable = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [drawerOpen]);
 
   const clockText = clock.toLocaleTimeString(currentLang, { hour: '2-digit', minute: '2-digit' });
   const dateText = clock.toLocaleDateString(currentLang, { weekday: 'short', day: 'numeric', month: 'short' });
@@ -60,11 +96,13 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({ chat, onClose }) => {
       <header className="relative flex shrink-0 items-center gap-2 border-b-4 border-white bg-black px-2 py-1.5 sm:px-4 sm:py-2">
         <button
           type="button"
+          ref={drawerTriggerRef}
           onClick={() => setDrawerOpen(true)}
           className="flex min-h-11 min-w-0 items-center gap-1.5 border-2 border-white/30 bg-black px-2 text-left hover:border-amber-400 lg:hidden"
           aria-label={t('chat_rooms_open')}
           aria-haspopup="dialog"
           aria-expanded={drawerOpen}
+          aria-controls="kose-room-drawer"
         >
           <Hash size={16} className="shrink-0 text-amber-400" strokeWidth={3} />
           <span className="max-w-[112px] truncate text-[11px] font-black uppercase tracking-wider">
@@ -194,6 +232,8 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({ chat, onClose }) => {
 
       {drawerOpen && (
         <div
+          ref={drawerRef}
+          id="kose-room-drawer"
           className="fixed inset-0 z-[80] flex lg:hidden"
           role="dialog"
           aria-modal="true"

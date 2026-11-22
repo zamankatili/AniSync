@@ -125,7 +125,11 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
                 ? t('chat_input_placeholder', { room: roomLabel })
                 : t('chat_anon_placeholder')
             }
-            aria-label={t('chat_input_placeholder', { room: roomLabel })}
+            aria-label={
+              anon.signedIn
+                ? t('chat_input_placeholder', { room: roomLabel })
+                : t('chat_anon_placeholder')
+            }
             rows={1}
             maxLength={CHAT_MESSAGE_MAX}
             className="max-h-32 min-h-11 w-full resize-none bg-transparent px-3 py-2.5 text-sm font-semibold leading-relaxed text-white outline-none placeholder:text-neutral-600"

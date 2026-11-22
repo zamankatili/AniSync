@@ -66,6 +66,7 @@ export const ChatMessageBody: React.FC<ChatMessageBodyProps> = ({ text, query, c
                   onClick={() => setRevealed((current) => ({ ...current, [index]: false }))}
                   className="relative ml-1 inline-flex items-center text-[10px] font-black uppercase tracking-wider text-neutral-400 underline decoration-dotted hover:text-white after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']"
                   aria-label={t('chat_spoiler_hide')}
+                  aria-expanded
                 >
                   <EyeOff size={11} strokeWidth={3} />
                 </button>
