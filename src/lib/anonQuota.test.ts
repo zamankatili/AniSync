@@ -70,6 +70,16 @@ describe('anonQuota', () => {
     expect(loadAnonMessages('genel', storage).map((m) => m.text)).toEqual(['taze']);
   });
 
+  it('misafir yanıtı yerel mesajla birlikte saklanır', () => {
+    const reply = { id: 'target-1', name: 'Ada', text: 'orijinal' };
+    appendAnonMessage(
+      'genel',
+      { id: 'm3', text: 'yanıt', createdAt: Date.now(), name: 'Misafir', replyTo: reply },
+      storage,
+    );
+    expect(loadAnonMessages('genel', storage)[0].replyTo).toEqual(reply);
+  });
+
   it('ANON_DAILY_LIMIT — 3', () => {
     expect(ANON_DAILY_LIMIT).toBe(3);
   });

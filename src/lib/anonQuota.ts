@@ -6,6 +6,8 @@
  * - Yerel mesajlar `anisync_anon_messages_v1` anahtarında tutulur; 24 saatte bayatlar.
  * - İmza/ad: "Misafir" + ikon, 1 gün kalıcı chibi yerel avatarı.
  */
+import type { ChatReplyRef } from './chatTypes';
+
 const QUOTA_KEY = 'anisync_anon_quota_v1';
 const MESSAGES_KEY = 'anisync_anon_messages_v1';
 const MESSAGE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -59,6 +61,8 @@ export interface AnonLocalMessage {
   text: string;
   createdAt: number;
   name: string;
+  /** Misafirin yanıtladığı mesaj — yalnız bu cihazda saklanır. */
+  replyTo?: ChatReplyRef | null;
 }
 
 export function loadAnonMessages(
