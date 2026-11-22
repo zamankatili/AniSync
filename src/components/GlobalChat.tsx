@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../context/AppStore';
-import { MessageSquare, X, Plus, Vote, Maximize2, Search } from 'lucide-react';
+import { MessageSquare, X, Maximize2, Search, ChevronDown, Hash } from 'lucide-react';
 import {
   collection,
   query,
@@ -45,12 +45,14 @@ import { buildReplyRef, normalizeReplyRef } from '../lib/chatText';
 import { buildChatTimeline } from '../lib/chatTimeline';
 import { buildRoomOverview, markRoomVisited, readLastVisits } from '../lib/chatOverview';
 import { readChatDraft, writeChatDraft } from '../lib/chatDrafts';
+import { readPinnedRoomIds, togglePinnedRoomId } from '../lib/chatPins';
 import { RoomRequestModal } from './RoomRequestModal';
 import { RoomQueuePanel } from './RoomQueuePanel';
 import { ChatCafe } from './ChatCafe';
 import { ChatComposer } from './chat/ChatComposer';
 import { ChatEventBanner } from './chat/ChatEventBanner';
 import { ChatMessageList } from './chat/ChatMessageList';
+import { ChatRoomRail } from './chat/ChatRoomRail';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import type { ChatView } from './chat/types';
 
@@ -90,8 +92,10 @@ export const GlobalChat = () => {
   const [focusSignal, setFocusSignal] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [roomPickerOpen, setRoomPickerOpen] = useState(false);
   const [lastVisitByRoom, setLastVisitByRoom] = useState<Record<string, number>>({});
   const [visitTick, setVisitTick] = useState(0);
+  const [pinnedRoomIds, setPinnedRoomIds] = useState<string[]>(() => readPinnedRoomIds());
 
   const { currentUser, userProfile, watchlist } = useAppStore();
   const { addToast } = useToastStore();
@@ -438,10 +442,14 @@ export const GlobalChat = () => {
   const closeChat = () => {
     setIsOpen(false);
     setFullScreen(false);
+    setRoomPickerOpen(false);
   };
 
   const handleRoomChange = (roomId: string) => {
-    if (roomId === activeRoomId) return;
+    if (roomId === activeRoomId) {
+      setRoomPickerOpen(false);
+      return;
+    }
     writeChatDraft(activeRoomId, draft);
     markVisited(roomId);
     setActiveRoomId(roomId);
@@ -450,6 +458,7 @@ export const GlobalChat = () => {
     setReplyTo(null);
     setSearchTerm('');
     setSearchOpen(false);
+    setRoomPickerOpen(false);
     setLoading(true);
   };
 
@@ -558,6 +567,7 @@ export const GlobalChat = () => {
       setSearchOpen(false);
       setSearchTerm('');
     } else {
+      setRoomPickerOpen(false);
       setSearchOpen(true);
     }
   };
@@ -571,6 +581,8 @@ export const GlobalChat = () => {
     activeRoomId,
     onSelectRoom: handleRoomChange,
     overview,
+    pinnedRoomIds,
+    onTogglePin: (roomId) => setPinnedRoomIds(togglePinnedRoomId(roomId)),
     pendingRoomCount,
     onOpenRoomModal: () => setRoomModalOpen(true),
     onOpenQueue: () => setQueueOpen(true),
@@ -696,101 +708,129 @@ export const GlobalChat = () => {
 
               {chatView.event && <ChatEventBanner event={chatView.event} />}
 
-              <div className="flex items-center gap-1 overflow-x-auto border-b-2 border-white/20 bg-neutral-900 p-1.5">
-                {allRooms.map((room) => {
-                  const selected = room.id === activeRoomId;
-                  const unread = overview[room.id]?.unread ?? 0;
-                  return (
-                    <button
-                      key={room.id}
-                      type="button"
-                      onClick={() => handleRoomChange(room.id)}
-                      aria-current={selected ? 'page' : undefined}
-                      className={cn(
-                        'flex min-h-11 shrink-0 items-center gap-1 border px-2 text-[10px] font-black uppercase tracking-wider transition-all',
-                        selected
-                          ? 'border-white bg-white text-black shadow-[3px_3px_0_0_#fff]'
-                          : 'border-white/20 bg-black text-neutral-400 hover:border-white/40 hover:text-white',
-                      )}
-                    >
-                      <span aria-hidden="true">{room.icon}</span>
-                      <span lang="en">#{roomLabel(room)}</span>
-                      {unread > 0 && (
-                        <span
-                          className="ml-0.5 border border-black bg-rose-600 px-1 text-[8px] leading-4 text-white"
-                          aria-label={t('chat_new_messages_count', { count: unread })}
-                        >
-                          {unread > 99 ? '99+' : unread}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {currentUser && pendingRoomCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setQueueOpen(true)}
-                    className="flex min-h-11 shrink-0 items-center gap-1 border border-black bg-cyan-500 px-2 text-[10px] font-black uppercase text-black transition-colors hover:bg-white"
-                    title={t('chat_pending_requests_title')}
-                  >
-                    <Vote size={12} />
-                    <span>{t('chat_pending_requests')} ({pendingRoomCount})</span>
-                  </button>
-                )}
-
+              <div className="border-b-2 border-white/20 bg-neutral-900 p-1.5">
                 <button
                   type="button"
-                  onClick={() => setRoomModalOpen(true)}
-                  className="flex min-h-11 shrink-0 items-center gap-1 border border-white/30 bg-black px-2 text-[10px] font-black uppercase text-neutral-300 transition-colors hover:bg-white hover:text-black"
-                  title={t('chat_open_room_title')}
+                  onClick={() =>
+                    setRoomPickerOpen((value) => {
+                      const next = !value;
+                      if (next) {
+                        setSearchOpen(false);
+                        setSearchTerm('');
+                      }
+                      return next;
+                    })
+                  }
+                  aria-expanded={roomPickerOpen}
+                  aria-controls="kose-panel-rooms"
+                  className={cn(
+                    'flex min-h-11 w-full items-center gap-2 border-2 px-2.5 text-left transition-colors',
+                    roomPickerOpen
+                      ? 'border-amber-400 bg-amber-400 text-black'
+                      : 'border-white/20 bg-black text-white hover:border-white/50',
+                  )}
                 >
-                  <Plus size={12} />
-                  <span>{t(myKarma >= DIRECT_ROOM_MIN_XP ? 'chat_open_room' : 'chat_request_room')}</span>
+                  <Hash size={15} strokeWidth={3} className={roomPickerOpen ? 'text-black' : 'text-amber-400'} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span lang="en" className="truncate text-[11px] font-black uppercase tracking-wider">
+                        #{roomLabel(currentRoom)}
+                      </span>
+                      {(() => {
+                        const totalUnread = allRooms.reduce((sum, room) => sum + (overview[room.id]?.unread ?? 0), 0);
+                        return totalUnread > 0 ? (
+                          <span className="shrink-0 border border-black bg-rose-600 px-1 text-[8px] font-black leading-4 text-white">
+                            {totalUnread > 99 ? '99+' : totalUnread}
+                          </span>
+                        ) : null;
+                      })()}
+                    </span>
+                    <span className={cn('block truncate text-[9px] font-bold uppercase', roomPickerOpen ? 'text-black/70' : 'text-neutral-500')}>
+                      {roomTopic(currentRoom)}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    size={16}
+                    strokeWidth={3}
+                    className={cn('shrink-0 transition-transform', roomPickerOpen && 'rotate-180')}
+                  />
                 </button>
               </div>
 
-              {searchOpen && (
-                <ChatSearchBar
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  onClose={toggleSearch}
-                  matchCount={visibleMessages.length}
-                  focusOnMount
+              <div className="relative flex min-h-0 flex-1 flex-col">
+                {searchOpen && (
+                  <ChatSearchBar
+                    value={searchTerm}
+                    onChange={setSearchTerm}
+                    onClose={toggleSearch}
+                    matchCount={visibleMessages.length}
+                    focusOnMount
+                  />
+                )}
+
+                <ChatMessageList
+                  key={activeRoomId}
+                  timeline={timeline}
+                  loading={loading}
+                  messageCount={allMessages.length}
+                  searchTerm={searchTerm}
+                  roomLabel={roomLabel(currentRoom)}
+                  roomTopic={roomTopic(currentRoom)}
+                  roomIcon={currentRoom.icon}
+                  onDelete={(messageId) => {
+                    void handleDelete(messageId);
+                  }}
+                  onReply={handleReply}
+                  onCopy={(text) => {
+                    void handleCopy(text);
+                  }}
+                  canDelete={canDelete}
+                  compact
                 />
-              )}
 
-              <ChatMessageList
-                key={activeRoomId}
-                timeline={timeline}
-                loading={loading}
-                messageCount={allMessages.length}
-                searchTerm={searchTerm}
-                roomLabel={roomLabel(currentRoom)}
-                onDelete={(messageId) => {
-                  void handleDelete(messageId);
-                }}
-                onReply={handleReply}
-                onCopy={(text) => {
-                  void handleCopy(text);
-                }}
-                canDelete={canDelete}
-                compact
-              />
+                <ChatComposer
+                  draft={draft}
+                  onChange={handleDraftChange}
+                  onSend={() => {
+                    void handleSend();
+                  }}
+                  replyTo={replyTo}
+                  onCancelReply={() => setReplyTo(null)}
+                  anon={chatView.anon}
+                  roomLabel={roomLabel(currentRoom)}
+                  compact
+                  focusSignal={focusSignal}
+                />
 
-              <ChatComposer
-                draft={draft}
-                onChange={handleDraftChange}
-                onSend={() => {
-                  void handleSend();
-                }}
-                replyTo={replyTo}
-                onCancelReply={() => setReplyTo(null)}
-                anon={chatView.anon}
-                roomLabel={roomLabel(currentRoom)}
-                compact
-                focusSignal={focusSignal}
-              />
+                {roomPickerOpen && (
+                  <div
+                    id="kose-panel-rooms"
+                    className="absolute inset-0 z-30 flex flex-col bg-black"
+                  >
+                    <ChatRoomRail
+                      rooms={allRooms}
+                      activeRoomId={activeRoomId}
+                      overview={overview}
+                      pinnedRoomIds={pinnedRoomIds}
+                      pendingRoomCount={pendingRoomCount}
+                      signedIn={!!currentUser}
+                      roomLabel={roomLabel}
+                      roomTopic={roomTopic}
+                      onSelect={handleRoomChange}
+                      onTogglePin={(roomId) => setPinnedRoomIds(togglePinnedRoomId(roomId))}
+                      onOpenRoomModal={() => {
+                        setRoomPickerOpen(false);
+                        setRoomModalOpen(true);
+                      }}
+                      onOpenQueue={() => {
+                        setRoomPickerOpen(false);
+                        setQueueOpen(true);
+                      }}
+                      onNavigate={() => setRoomPickerOpen(false)}
+                    />
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

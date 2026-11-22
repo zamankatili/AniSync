@@ -27,6 +27,8 @@ export interface ChatView {
   activeRoomId: string;
   onSelectRoom: (roomId: string) => void;
   overview: Record<string, ChatRoomOverview>;
+  pinnedRoomIds: string[];
+  onTogglePin: (roomId: string) => void;
   pendingRoomCount: number;
   onOpenRoomModal: () => void;
   onOpenQueue: () => void;

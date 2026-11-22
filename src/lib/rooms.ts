@@ -66,6 +66,9 @@ export const OFFICIAL_ROOMS: OfficialRoom[] = [
   { id: 'muzik', name: 'muzik-ve-lofi', topic: 'Anime OST, radyo şarkıları ve favori açılışlar', icon: '🎧', badge: 'OST & LOFI', isOfficial: true },
   { id: 'vs-tartisma', name: 'guc-karsilastirma', topic: 'Karakter güç seviyeleri ve vs tartışmaları', icon: '⚔️', badge: 'VS ARENA', isOfficial: true },
   { id: 'etkinlik', name: 'online-etkinlikler', topic: 'Haftalık izleme geceleri ve canlı topluluk sohbeti', icon: '🎉', badge: 'CANLI ETKİNLİK', isOfficial: true },
+  { id: 'uykusuzlar-kulubu', name: 'uykusuzlar-kulubu', topic: 'Gece uyumayanlar burada — sessiz sohbet, anime ve geyik', icon: '🌙', badge: 'GECE', isOfficial: true },
+  { id: 'gece-kuslari', name: 'gece-kuslari', topic: 'Gece kuşlarının buluşma noktası — film, anime, dizi muhabbeti', icon: '🦉', badge: 'GECE KUŞU', isOfficial: true },
+  { id: 'sabahci-kahvesi', name: 'sabahci-kahvesi', topic: 'Erken kalkanlar için kahve eşliğinde yumuşak bir başlangıç', icon: '☕', badge: 'SABAH', isOfficial: true },
 ];
 
 export type RoomStatus = 'pending' | 'approved' | 'rejected';

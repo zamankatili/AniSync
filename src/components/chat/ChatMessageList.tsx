@@ -16,6 +16,8 @@ interface ChatMessageListProps {
   messageCount: number;
   searchTerm: string;
   roomLabel: string;
+  roomTopic?: string;
+  roomIcon?: string;
   onDelete: (messageId: string) => void;
   onReply: (message: ChatMessage) => void;
   onCopy: (text: string) => void;
@@ -60,6 +62,8 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   messageCount,
   searchTerm,
   roomLabel,
+  roomTopic,
+  roomIcon,
   onDelete,
   onReply,
   onCopy,
@@ -152,23 +156,40 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         )}
 
         {!loading && timeline.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-neutral-500">
-            <Hash size={32} className="text-neutral-700" />
+          <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
             {searchTerm.trim() ? (
-              <p className="text-xs font-black uppercase tracking-widest text-neutral-400">
-                {t('chat_search_empty')}
-              </p>
-            ) : messageCount === 0 ? (
-              <>
+              <div className="space-y-2 text-neutral-500">
+                <Hash size={32} className="mx-auto text-neutral-700" />
                 <p className="text-xs font-black uppercase tracking-widest text-neutral-400">
+                  {t('chat_search_empty')}
+                </p>
+              </div>
+            ) : messageCount === 0 ? (
+              <div className="w-full max-w-sm border-2 border-white/15 bg-neutral-950 p-5 shadow-[4px_4px_0_0_rgba(255,255,255,0.08)]">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center border-2 border-amber-400/60 bg-amber-400/10 text-2xl">
+                  <span aria-hidden="true">{roomIcon || '#'}</span>
+                </div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.35em] text-amber-400">KÖŞE</p>
+                <h3 lang="en" className="mt-1 text-lg font-black uppercase tracking-tight text-white">
+                  #{roomLabel}
+                </h3>
+                {roomTopic && (
+                  <p className="mt-2 text-[11px] font-semibold leading-relaxed text-neutral-400">
+                    {roomTopic}
+                  </p>
+                )}
+                <p className="mt-4 border-t border-white/10 pt-3 text-[10px] font-black uppercase tracking-widest text-neutral-300">
                   {t('chat_first_message', { room: roomLabel })}
                 </p>
-                <p className="text-[10px] font-bold uppercase text-neutral-600">{t('chat_rules')}</p>
-              </>
+                <p className="mt-1 text-[10px] font-bold uppercase text-neutral-600">{t('chat_rules')}</p>
+              </div>
             ) : (
-              <p className="text-xs font-black uppercase tracking-widest text-neutral-400">
-                {t('chat_search_empty')}
-              </p>
+              <div className="space-y-2 text-neutral-500">
+                <Hash size={32} className="mx-auto text-neutral-700" />
+                <p className="text-xs font-black uppercase tracking-widest text-neutral-400">
+                  {t('chat_search_empty')}
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -222,7 +243,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                   <img
                     src={msg.avatar || resolveAvatar(null, msg.uid === 'anon' ? `misafir-${msg.id}` : msg.name)}
                     alt=""
-                    className="h-6 w-6 shrink-0 border border-white bg-white object-cover grayscale"
+                    className="h-7 w-7 shrink-0 border-2 border-white/70 bg-neutral-900 object-cover"
                     referrerPolicy="no-referrer"
                     loading="lazy"
                     decoding="async"
@@ -245,11 +266,11 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
 
               <div
                 className={cn(
-                  'max-w-[85%] border-2 px-3 py-2 text-[13px] font-semibold leading-relaxed text-left',
+                  'max-w-[85%] border-2 px-3 py-2 text-[13px] font-semibold leading-relaxed text-left shadow-[3px_3px_0_0_rgba(255,255,255,0.08)]',
                   compact ? 'max-w-[92%]' : '',
                   own
-                    ? 'border-white bg-rose-700 text-white'
-                    : 'border-white/30 bg-neutral-900 text-neutral-100',
+                    ? 'border-rose-300/70 bg-rose-700 text-white'
+                    : 'border-white/20 bg-neutral-900 text-neutral-100',
                 )}
               >
                 {replyTo && (

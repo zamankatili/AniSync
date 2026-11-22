@@ -170,6 +170,15 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({ chat, onClose }) => {
         </div>
       </header>
 
+      <div className="flex items-center gap-2 border-b-2 border-white/10 bg-neutral-950 px-3 py-1.5 lg:hidden">
+        <span className="shrink-0 border border-amber-400/60 bg-amber-400/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-400">
+          {chat.roomBadge(chat.activeRoom)}
+        </span>
+        <p className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wide text-neutral-400">
+          {chat.roomTopic(chat.activeRoom)}
+        </p>
+      </div>
+
       {chat.event && <ChatEventBanner event={chat.event} />}
 
       {chat.searchOpen && (
@@ -188,11 +197,13 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({ chat, onClose }) => {
             rooms={chat.rooms}
             activeRoomId={chat.activeRoomId}
             overview={chat.overview}
+            pinnedRoomIds={chat.pinnedRoomIds}
             pendingRoomCount={chat.pendingRoomCount}
             signedIn={chat.anon.signedIn}
             roomLabel={chat.roomLabel}
             roomTopic={chat.roomTopic}
             onSelect={chat.onSelectRoom}
+            onTogglePin={chat.onTogglePin}
             onOpenRoomModal={chat.onOpenRoomModal}
             onOpenQueue={chat.onOpenQueue}
           />
@@ -206,6 +217,8 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({ chat, onClose }) => {
             messageCount={chat.messageCount}
             searchTerm={chat.searchTerm}
             roomLabel={roomLabel}
+            roomTopic={chat.roomTopic(chat.activeRoom)}
+            roomIcon={chat.activeRoom.icon}
             onDelete={chat.onDelete}
             onReply={chat.onReply}
             onCopy={chat.onCopy}
@@ -263,11 +276,13 @@ export const ChatCafe: React.FC<ChatCafeProps> = ({ chat, onClose }) => {
               rooms={chat.rooms}
               activeRoomId={chat.activeRoomId}
               overview={chat.overview}
+              pinnedRoomIds={chat.pinnedRoomIds}
               pendingRoomCount={chat.pendingRoomCount}
               signedIn={chat.anon.signedIn}
               roomLabel={chat.roomLabel}
               roomTopic={chat.roomTopic}
               onSelect={chat.onSelectRoom}
+              onTogglePin={chat.onTogglePin}
               onOpenRoomModal={chat.onOpenRoomModal}
               onOpenQueue={chat.onOpenQueue}
               onNavigate={() => setDrawerOpen(false)}
