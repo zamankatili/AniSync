@@ -93,6 +93,9 @@ export const GlobalChat = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roomPickerOpen, setRoomPickerOpen] = useState(false);
+  const roomPickerTriggerRef = useRef<HTMLButtonElement>(null);
+  const roomPickerOverlayRef = useRef<HTMLDivElement>(null);
+  const roomPickerWasOpenRef = useRef(false);
   const [lastVisitByRoom, setLastVisitByRoom] = useState<Record<string, number>>({});
   const [visitTick, setVisitTick] = useState(0);
   const [pinnedRoomIds, setPinnedRoomIds] = useState<string[]>(() => readPinnedRoomIds());
@@ -575,6 +578,76 @@ export const GlobalChat = () => {
   const canDelete = (message: ChatMessage) =>
     !!message.isLocal || (!!currentUser && message.uid === currentUser.uid);
 
+  // Yüzen panel oda seçici: odak tuzağı, Escape ve dış tıkla kapatma.
+  useEffect(() => {
+    if (roomPickerOpen) {
+      roomPickerWasOpenRef.current = true;
+      const root = roomPickerOverlayRef.current;
+      const first = root?.querySelector<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      first?.focus();
+      return;
+    }
+    if (roomPickerWasOpenRef.current) {
+      roomPickerWasOpenRef.current = false;
+      const trigger = roomPickerTriggerRef.current;
+      if (trigger?.isConnected) trigger.focus();
+    }
+  }, [roomPickerOpen]);
+
+  useEffect(() => {
+    if (!roomPickerOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setRoomPickerOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const root = roomPickerOverlayRef.current;
+      if (!root) return;
+      const focusable = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [roomPickerOpen]);
+
+  useEffect(() => {
+    if (!roomPickerOpen) return;
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (roomPickerOverlayRef.current?.contains(target)) return;
+      if (roomPickerTriggerRef.current?.contains(target)) return;
+      setRoomPickerOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+    };
+  }, [roomPickerOpen]);
+
+  useEffect(() => {
+    if (fullScreen) setRoomPickerOpen(false);
+  }, [fullScreen]);
+
   const chatView: ChatView = {
     rooms: allRooms,
     activeRoom: currentRoom,
@@ -711,6 +784,7 @@ export const GlobalChat = () => {
               <div className="border-b-2 border-white/20 bg-neutral-900 p-1.5">
                 <button
                   type="button"
+                  ref={roomPickerTriggerRef}
                   onClick={() =>
                     setRoomPickerOpen((value) => {
                       const next = !value;
@@ -721,6 +795,7 @@ export const GlobalChat = () => {
                       return next;
                     })
                   }
+                  aria-haspopup="dialog"
                   aria-expanded={roomPickerOpen}
                   aria-controls="kose-panel-rooms"
                   className={cn(
@@ -804,7 +879,11 @@ export const GlobalChat = () => {
 
                 {roomPickerOpen && (
                   <div
+                    ref={roomPickerOverlayRef}
                     id="kose-panel-rooms"
+                    role="dialog"
+                    aria-modal="false"
+                    aria-label={t('chat_rooms_title')}
                     className="absolute inset-0 z-30 flex flex-col bg-black"
                   >
                     <ChatRoomRail
