@@ -15,7 +15,7 @@ import { cn } from '../lib/utils';
 
 /**
  * Oda önerme / açma penceresi.
- * - Kalfa ve üzeri (>= 500 XP) AI filtresi geçince doğrudan oda açar.
+ * - Raid Lideri ve üzeri (>= 500 XP) AI filtresi geçince doğrudan oda açar.
  * - Altındaki her kullanıcı 50 oy + moderatör onayına tabi "oda isteği" açar.
  * - AI filtresi şüpheli bulursa istek yine kaydedilir (moderasyon kuyruğunda görünür).
  */

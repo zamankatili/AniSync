@@ -18,6 +18,8 @@ import { ThemeSwitcher } from './ThemeSwitcher';
 import { SeasonalAmbience } from './SeasonalAmbience';
 import { AmbienceControl } from './AmbienceControl';
 import { GlobalChat } from './GlobalChat';
+import { EngagementPopup } from './EngagementPopup';
+import { useEngagementPopup } from '../hooks/useEngagementPopup';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useReminderStore } from '../store/useReminderStore';
 import { useThemeStore, THEME_CONFIGS } from '../store/useThemeStore';
@@ -112,6 +114,7 @@ export const Layout = () => {
   const { checkAutoTheme, currentTheme } = useThemeStore();
   const activeConfig = THEME_CONFIGS[currentTheme] || THEME_CONFIGS.noon;
   const searchRef = useRef<HTMLDivElement>(null);
+  const { payload: engagementPayload, dismiss: dismissEngagement, dismissForDay: dismissEngagementForDay } = useEngagementPopup();
 
   // Ban bilgisi `users/{uid}` dinleyicisinden gelir; yazma kuralları da aynı alanı okur.
   const banActive = Boolean(currentUser && userProfile.banUntil && userProfile.banUntil > Date.now());
@@ -639,6 +642,7 @@ export const Layout = () => {
       <AnimeRadioPlayer />
       <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
       <ErrorConsoleModal />
+      <EngagementPopup payload={engagementPayload} onDismiss={dismissEngagement} onDismissForDay={dismissEngagementForDay} />
 
       {/* Mobile Bottom Navigation — en fazla 5 birincil sekme + "Daha fazla" */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black border-t-2 border-white/20 safe-area-bottom z-50">

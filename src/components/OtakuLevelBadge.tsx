@@ -6,7 +6,7 @@ import { useQuizStore } from '../store/useQuizStore';
 import { useToastStore } from '../store/useToastStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { computeOtakuLevel } from '../lib/otakuLevel';
-import { localizeLevelTitle } from '../lib/badgeLocalization';
+import { localizeLevelFlavor, localizeLevelTitle } from '../lib/badgeLocalization';
 import { useXpStore, selectActiveSnapshot } from '../store/useXpStore';
 import { dayXp, DAILY_GOAL_XP } from '../lib/xp';
 import { getDailyDateKey } from '../lib/dailyDate';
@@ -36,6 +36,7 @@ export const OtakuLevelBadge: React.FC = () => {
   );
   const { currentLevel, nextLevel, progressPercent } = levelInfo;
   const rankName = localizeLevelTitle(currentLevel.level, currentLevel.title);
+  const rankFlavor = localizeLevelFlavor(currentLevel.level);
 
   useEffect(() => {
     try {
@@ -86,6 +87,9 @@ export const OtakuLevelBadge: React.FC = () => {
               {rankName}
             </span>
           </div>
+          {rankFlavor && (
+            <p className="text-[10px] font-bold text-neutral-400 normal-case mt-0.5 truncate">{rankFlavor}</p>
+          )}
           <p className="text-2xl font-black text-amber-400 leading-none mt-1">
             {totalXp.toLocaleString()} <span className="text-xs text-neutral-400 font-bold uppercase">XP</span>
           </p>

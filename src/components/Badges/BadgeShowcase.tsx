@@ -17,6 +17,7 @@ import {
   localizeBadgeDescription,
   localizeBadgeRequirement,
   localizeLevelTitle,
+  localizeLevelFlavor,
 } from '../../lib/badgeLocalization';
 
 interface BadgeShowcaseProps {
@@ -95,6 +96,9 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({
                 </span>
                 <span className="text-xs font-black uppercase text-amber-400">
                   {localizeLevelTitle(levelInfo.currentLevel.level, levelInfo.currentLevel.title)}
+                </span>
+                <span className="block text-[10px] font-bold text-neutral-400 normal-case tracking-normal">
+                  {localizeLevelFlavor(levelInfo.currentLevel.level)}
                 </span>
               </div>
               <h3 className="text-2xl font-black uppercase tracking-tight text-white mt-0.5">

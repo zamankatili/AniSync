@@ -3,7 +3,7 @@
  *
  * Kurallar (istemcide + Firestore rules'da birlikte uygulanır):
  * - Resmi odalar kodda tanımlıdır: herkes okur/yazar.
- * - Kalfa ve üzeri (>= 500 karma / Lv5) doğrudan oda açabilir.
+ * - Raid Lideri ve üzeri (>= 500 karma / Lv5) doğrudan oda açabilir.
  *   Her oda yine AI moderasyon filtresinden geçer; uygunsuzsa oylamaya/reddeye düşer.
  * - 500 XP altı herkes "oda isteği" açabilir: 50 oy + moderatör onayı gerekir.
  * - Moderatör/admin istekleri görür, onaylar veya reddeder.
@@ -32,7 +32,7 @@ import { useQuizStore } from '../store/useQuizStore';
 import { useXpStore, GUEST_SCOPE } from '../store/useXpStore';
 import type { WatchlistItem } from '../types';
 
-/** Doğrudan oda açma eşiği — Kalfa (Lv5) ≈ 500 XP. */
+/** Doğrudan oda açma eşiği — Raid Lideri (Lv5) ≈ 500 XP. */
 export const DIRECT_ROOM_MIN_XP = 500;
 /** İstek odalarının açılması için gereken oy sayısı. */
 export const ROOM_VOTE_THRESHOLD = 50;
@@ -102,7 +102,7 @@ export const computeUserKarma = (watchlist: WatchlistItem[]): number => {
 
 export const isDirectRoomEligible = (karma: number): boolean => karma >= DIRECT_ROOM_MIN_XP;
 
-/** Kalfa (Lv5) ve üzeriyse true; değilse false. İstek açılmalı. */
+/** Raid Lideri (Lv5) ve üzeriyse true; değilse false. İstek açılmalı. */
 export const roomEligibility = (karma: number) => ({
   canDirectCreate: isDirectRoomEligible(karma),
 });
@@ -141,7 +141,7 @@ export async function moderateRoomProposal(name: string, topic: string): Promise
   }
 }
 
-/** Doğrudan oda açma (Kalfa+) — yine moderasyondan geçer. */
+/** Doğrudan oda açma (Raid Lideri+) — yine moderasyondan geçer. */
 export async function createRoomDirect(
   name: string,
   topic: string,

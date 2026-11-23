@@ -6,7 +6,7 @@ import {
   Sparkles, Search as SearchIcon, Image as ImageIcon, Flame,
   Activity, Music, ChevronRight, Tv2, Newspaper, BookOpen,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getSafeImageUrl } from '../lib/utils';
 import { unifiedDetailPath } from '../lib/mediaLinks';
@@ -75,9 +75,17 @@ export const Home = () => {
   /** Günün sorusu yanıtla → feed sekmesine geç, soru ile doldur, odaklan. */
   const handleDailyQuestionAnswer = (question: string) => {
     setActiveTab('feed');
-    setNewPostContent(`${question} — `);
+    setNewPostContent(`${question} - `);
     window.setTimeout(() => postInputRef.current?.focus(), 60);
   };
+
+  const location = useLocation();
+  useEffect(() => {
+    const prompt = (location.state as { engagementPrompt?: unknown } | null)?.engagementPrompt;
+    if (typeof prompt !== 'string' || !prompt.trim()) return;
+    handleDailyQuestionAnswer(prompt);
+    navigate('/', { replace: true, state: {} });
+  }, [location.state, navigate]);
 
   const { items: picksToday, personalized: picksPersonalized, state: picksState } = useDailyPicks(1);
   const todayPick = picksToday[0] ?? null;

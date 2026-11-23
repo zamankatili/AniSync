@@ -162,6 +162,9 @@ export const DailyPollModal: React.FC<DailyPollModalProps> = ({ isOpen, onClose 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('poll_title')}
             className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white border-4 border-black overflow-hidden neo-shadow"
           >
             <div className="relative shrink-0 h-32 bg-rose-500 border-b-4 border-black p-6 flex flex-col justify-end overflow-hidden">

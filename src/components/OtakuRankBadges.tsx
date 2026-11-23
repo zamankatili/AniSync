@@ -17,7 +17,8 @@ import {
   localizeBadgeTitle,
   localizeBadgeDescription,
   localizeBadgeRequirement,
-  localizeLevelTitle
+  localizeLevelTitle,
+  localizeLevelFlavor,
 } from '../lib/badgeLocalization';
 import { useXpStore, selectActiveSnapshot } from '../store/useXpStore';
 
@@ -132,6 +133,9 @@ export const OtakuRankBadges: React.FC<OtakuRankBadgesProps> = ({
                   {localizeLevelTitle(levelInfo.currentLevel.level, levelInfo.currentLevel.title)}
                 </span>
               </div>
+              <p className="text-[11px] font-bold text-neutral-400 normal-case mb-1">
+                {localizeLevelFlavor(levelInfo.currentLevel.level)}
+              </p>
               <h3 className="text-3xl font-black uppercase tracking-tight text-white">
                 {totalKarma.toLocaleString()} <span className="text-xs text-neutral-400 font-mono">{t('otaku_badge_karma_xp')}</span>
               </h3>

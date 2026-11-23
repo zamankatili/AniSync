@@ -96,12 +96,21 @@ export const BADGE_TEXTS: Record<string, BadgeTextEntry> = {
 };
 
 export const RANK_TITLES: Record<string, LocalizedText> = {
-  guest: L('Misafir', 'Guest', '見習い', 'Invité'),
-  regular: L('Müdavim', 'Regular', '常連', 'Habitué'),
-  adept: L('Kalfa', 'Adept', '職人', 'Compagnon'),
-  master: L('Usta', 'Master', '達人', 'Maître'),
-  owner: L('Mekân Sahibi', 'Householder', '持ち主', 'Hôte'),
-  legend: L('Efsane', 'Legend', '伝説', 'Légende'),
+  guest: L('Yeni Gelen', 'Newcomer', '新入り', 'Nouveau'),
+  regular: L('Kitap Kurdu', 'Bookworm', '本の虫', 'Rat de bibliothèque'),
+  adept: L('Raid Lideri', 'Raid Leader', 'レイドリーダー', 'Chef de raid'),
+  master: L('Otaku', 'Otaku', 'オタク', 'Otaku'),
+  owner: L('Lore Ustası', 'Lore Master', '設定マスター', 'Maître du lore'),
+  legend: L('Final Boss', 'Final Boss', 'ラスボス', 'Boss Final'),
+};
+
+export const RANK_FLAVORS: Record<string, LocalizedText> = {
+  guest: L('Harita yükleniyor...', 'Map loading...', 'マップ読込中…', 'Carte en chargement...'),
+  regular: L('Bir bölüm daha, sonra yatarım.', 'One more chapter, then sleep.', 'もう一章だけ…', 'Encore un chapitre...'),
+  adept: L('Party kuruldu, AFK yok.', 'Party formed, no AFK.', 'パーティー結成、AFK禁止。', 'Groupe formé, pas d’AFK.'),
+  master: L("Opening'i skip etmiyorsun.", "You don't skip the opening.", 'OPは飛ばさない。', "Tu ne skips pas l'opening."),
+  owner: L("Wiki'yi sen yazdın sanki.", 'Feels like you wrote the wiki.', 'Wikiを書いたのは君？', 'On dirait que tu as écrit le wiki.'),
+  legend: L('Credits sonrası sahne sensin.', "You're the post-credits scene.", 'エンドロール後の主役。', 'Tu es la scène post-générique.'),
 };
 
 export const localizeBadgeTitle = (badgeId: string, fallback: string): string =>
@@ -113,4 +122,8 @@ export const localizeBadgeRequirement = (badgeId: string, fallback: string): str
 export const localizeLevelTitle = (level: number, fallback: string): string => {
   const tier = RANK_TIERS.slice().reverse().find((r) => level >= r.from)?.id ?? 'guest';
   return pickText(RANK_TITLES[tier], fallback);
+};
+export const localizeLevelFlavor = (level: number): string => {
+  const tier = RANK_TIERS.slice().reverse().find((r) => level >= r.from)?.id ?? 'guest';
+  return pickText(RANK_FLAVORS[tier], '');
 };

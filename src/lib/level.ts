@@ -57,12 +57,12 @@ export interface RankTier {
 }
 
 export const RANK_TIERS: RankTier[] = [
-  { id: 'guest', title: 'Misafir', from: 1, badge: '🌱', color: '#10b981' },
-  { id: 'regular', title: 'Müdavim', from: 3, badge: '☕', color: '#06b6d4' },
-  { id: 'adept', title: 'Kalfa', from: 5, badge: '🔨', color: '#f59e0b' },
-  { id: 'master', title: 'Usta', from: 7, badge: '🔥', color: '#a855f7' },
-  { id: 'owner', title: 'Mekân Sahibi', from: 10, badge: '🏆', color: '#f97316' },
-  { id: 'legend', title: 'Efsane', from: 15, badge: '👑', color: '#ef4444' },
+  { id: 'guest', title: 'Yeni Gelen', from: 1, badge: '🌱', color: '#10b981' },
+  { id: 'regular', title: 'Kitap Kurdu', from: 3, badge: '📚', color: '#06b6d4' },
+  { id: 'adept', title: 'Raid Lideri', from: 5, badge: '🎮', color: '#f59e0b' },
+  { id: 'master', title: 'Otaku', from: 7, badge: '🔥', color: '#a855f7' },
+  { id: 'owner', title: 'Lore Ustası', from: 10, badge: '📜', color: '#f97316' },
+  { id: 'legend', title: 'Final Boss', from: 15, badge: '👑', color: '#ef4444' },
 ];
 
 export function rankForLevel(level: number): RankTier {
