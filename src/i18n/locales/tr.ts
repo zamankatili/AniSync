@@ -1952,6 +1952,7 @@ export default {
       "online_page_desc": "Son 5 dakikada görülen üyeler ve bugünkü yaklaşık aktiflik.",
       "online_page_approx": "Yaklaşık veri",
       "online_page_today_label": "Bugün aktif",
+      "online_page_members_title": "Çevrimiçi üyeler",
       "online_page_refresh": "~1 dk'da bir güncellenir",
       "online_page_privacy_title": "Gizlilik",
       "online_page_privacy": "Misafirler izlenmez. Yalnızca giriş yapan üyelerin son görülme zamanı kullanılır.",

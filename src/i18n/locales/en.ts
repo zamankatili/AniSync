@@ -1952,6 +1952,7 @@ export default {
       "online_page_desc": "Members seen in the last 5 minutes and an approximate active count for today.",
       "online_page_approx": "Approximate data",
       "online_page_today_label": "Active today",
+      "online_page_members_title": "Members online",
       "online_page_refresh": "Updates about every minute",
       "online_page_privacy_title": "Privacy",
       "online_page_privacy": "Guests are not tracked. Only the last-seen time of signed-in members is used.",

@@ -85,7 +85,7 @@ export const OnlinePage = () => {
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider">
             <Users size={16} strokeWidth={2.5} className="text-amber-400" />
-            {t('online_now_title')}
+            {t('online_page_members_title')}
           </h2>
           <span className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">
             {t('online_page_refresh')}

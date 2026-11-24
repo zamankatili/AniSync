@@ -1952,6 +1952,7 @@ export default {
       "online_page_desc": "Membres vus dans les 5 dernières minutes et activité approximative du jour.",
       "online_page_approx": "Données approximatives",
       "online_page_today_label": "Actifs aujourd'hui",
+      "online_page_members_title": "Membres en ligne",
       "online_page_refresh": "Mise à jour environ chaque minute",
       "online_page_privacy_title": "Confidentialité",
       "online_page_privacy": "Les invités ne sont pas suivis. Seule l'heure de dernière activité des membres connectés est utilisée.",

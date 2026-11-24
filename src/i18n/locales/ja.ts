@@ -1952,6 +1952,7 @@ export default {
       "online_page_desc": "過去5分以内に見られたメンバーと、今日のおおよそのアクティブ数。",
       "online_page_approx": "おおよそのデータ",
       "online_page_today_label": "今日のアクティブ",
+      "online_page_members_title": "オンラインのメンバー",
       "online_page_refresh": "約1分ごとに更新",
       "online_page_privacy_title": "プライバシー",
       "online_page_privacy": "ゲストは追跡されません。使用するのはサインイン済みメンバーの最終確認時刻のみです。",
