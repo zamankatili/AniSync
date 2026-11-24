@@ -1942,6 +1942,17 @@ export default {
       "online_now_loading": "Üyeler yükleniyor...",
       "online_now_unavailable": "Online liste şu an kullanılamıyor.",
       "online_now_guest": "Misafirler listede görünmez; giriş yaparak görünür ol.",
-      "online_now_self": "Sen"
+      "online_now_self": "Sen",
+      "online_now_open": "Tümünü gör",
+      "online_now_today_short": "Bugün: {{count}}",
+      "online_nav": "Online",
+      "online_page_title": "Kimler Online",
+      "online_page_desc": "Son 5 dakikada görülen üyeler ve bugünkü yaklaşık aktiflik.",
+      "online_page_approx": "Yaklaşık veri",
+      "online_page_today_label": "Bugün aktif",
+      "online_page_refresh": "~1 dk'da bir güncellenir",
+      "online_page_privacy_title": "Gizlilik",
+      "online_page_privacy": "Misafirler izlenmez. Yalnızca giriş yapan üyelerin son görülme zamanı kullanılır.",
+      "online_page_today_desc": "Bugün aktif sayısı, senin yerel gününde son görülme kaydı olan girişli üyeleri sayar."
     }
 };

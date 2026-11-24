@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Home, List, User, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight, Mic2, BookOpen, Terminal, ShieldAlert, Clapperboard } from 'lucide-react';
+import { Home, List, User, Users, Search, Bell, Loader2, LogIn, Compass, LayoutList, Calendar, Grid3X3, Music2, Tv2, Flame, Sparkles, MoreHorizontal, X as CloseIcon, Gamepad2, Dices, ChevronRight, Mic2, BookOpen, Terminal, ShieldAlert, Clapperboard } from 'lucide-react';
 import { cn, getSafeImageUrl, handleImageError, getReadableTextColor } from '../lib/utils';
 import { animeDetailPath } from '../lib/mediaLinks';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,6 +46,7 @@ const NAV_GROUPS: { sectionKey: string; items: { path: string; labelKey: string;
     sectionKey: 'nav_section_social',
     items: [
       { path: '/watch-party', labelKey: 'watch_party', icon: Tv2 },
+      { path: '/online', labelKey: 'online_nav', icon: Users },
       { path: '/music-quiz', labelKey: 'music_quiz', icon: Music2 },
       { path: '/voice-duel', labelKey: 'voice_duel', icon: Mic2 },
       { path: '/arcade', labelKey: 'arcade', icon: Gamepad2 },

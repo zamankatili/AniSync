@@ -1,33 +1,38 @@
 import React, { useId } from 'react';
 import { Link } from 'react-router-dom';
-import { Users } from 'lucide-react';
+import { ChevronRight, Users } from 'lucide-react';
 import { useAppStore } from '../context/AppStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
-import { useOnlineMembers } from '../hooks/usePresence';
-import { resolveAvatar } from '../lib/avatar';
+import { useActiveTodayCount, useOnlineMembers } from '../hooks/usePresence';
 import { PRESENCE_QUERY_LIMIT, PRESENCE_WINDOW_MS } from '../lib/presence';
 import { cn } from '../lib/utils';
+import { OnlineMemberGrid } from './OnlineMemberGrid';
 
 interface OnlineNowProps {
   variant?: 'card' | 'compact';
   className?: string;
+  showSeeAll?: boolean;
 }
 
 /**
  * Yaklaşık çevrimiçi üye şeridi. Misafirler yazmaz ve listede görünmez;
  * yalnızca son 5 dakikada kalp atışı gönderen girişli üyeler gösterilir.
  */
-export const OnlineNow: React.FC<OnlineNowProps> = ({ variant = 'card', className }) => {
+export const OnlineNow: React.FC<OnlineNowProps> = ({
+  variant = 'card',
+  className,
+  showSeeAll = true,
+}) => {
   const { t } = useAppTranslation();
   const { currentUser } = useAppStore();
   const { members, loading, error } = useOnlineMembers();
+  const { count: todayCount, loading: todayLoading, error: todayError } = useActiveTodayCount();
   const titleId = useId();
   const compact = variant === 'compact';
   const maxAvatars = compact ? 8 : 12;
-  const shown = members.slice(0, maxAvatars);
-  const overflow = Math.max(0, members.length - shown.length);
   const countLabel = `${members.length}${members.length >= PRESENCE_QUERY_LIMIT ? '+' : ''}`;
   const windowMinutes = Math.round(PRESENCE_WINDOW_MS / 60_000);
+  const todayLabel = todayLoading ? '…' : String(todayCount);
 
   return (
     <section
@@ -59,6 +64,12 @@ export const OnlineNow: React.FC<OnlineNowProps> = ({ variant = 'card', classNam
 
       <p className={cn('mt-1 font-bold uppercase tracking-wide text-neutral-400', compact ? 'text-[9px]' : 'text-[10px]')}>
         {t('online_now_desc', { minutes: windowMinutes })}
+        {!todayError && (
+          <>
+            {' · '}
+            {t('online_now_today_short', { count: todayLabel })}
+          </>
+        )}
       </p>
 
       {error ? (
@@ -69,49 +80,28 @@ export const OnlineNow: React.FC<OnlineNowProps> = ({ variant = 'card', classNam
         <p role="status" className="mt-3 text-[11px] font-bold text-neutral-400">
           {t('online_now_loading')}
         </p>
-      ) : shown.length === 0 ? (
+      ) : members.length === 0 ? (
         <p role="status" className="mt-3 text-[11px] font-bold text-neutral-400">
           {t('online_now_empty')}
         </p>
       ) : (
-        <ul className={cn('mt-3 grid gap-2', compact ? 'grid-cols-4' : 'grid-cols-4 sm:grid-cols-5')}>
-          {shown.map((member) => {
-            const isSelf = currentUser?.uid === member.uid;
-            const displayName = isSelf ? t('online_now_self') : member.name;
-            return (
-              <li key={member.uid} className="min-w-0">
-                <Link
-                  to={isSelf ? '/profile' : `/profile/${member.uid}`}
-                  aria-label={displayName}
-                  title={displayName}
-                  className="flex min-h-[44px] min-w-[44px] flex-col items-center gap-1 border-2 border-transparent p-0.5 transition-colors hover:border-amber-400 focus-visible:border-amber-400 focus-visible:outline-none"
-                >
-                  <span className="relative block h-11 w-11 shrink-0 border-2 border-white bg-neutral-900">
-                    <img
-                      src={resolveAvatar(member.photoURL, member.avatarSeed || member.handle || member.uid)}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <span
-                      aria-hidden="true"
-                      className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-black bg-emerald-400"
-                    />
-                  </span>
-                  <span className="w-full truncate text-center text-[9px] font-black uppercase tracking-wide text-neutral-300">
-                    {displayName}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-          {overflow > 0 && (
-            <li className="flex min-h-[44px] items-center justify-center border-2 border-dashed border-white/30 text-[10px] font-black text-amber-300">
-              +{overflow}
-            </li>
-          )}
-        </ul>
+        <div className="mt-3">
+          <OnlineMemberGrid
+            members={members}
+            currentUid={currentUser?.uid}
+            max={maxAvatars}
+          />
+        </div>
+      )}
+
+      {showSeeAll && (
+        <Link
+          to="/online"
+          className="mt-3 inline-flex min-h-[44px] items-center gap-1 border-2 border-amber-400 px-3 text-[10px] font-black uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-400 hover:text-black"
+        >
+          {t('online_now_open')}
+          <ChevronRight size={14} strokeWidth={3} />
+        </Link>
       )}
 
       {!currentUser && (

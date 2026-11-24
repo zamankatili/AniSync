@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PRESENCE_WINDOW_MS,
   filterOnlineMembers,
+  getLocalDayStart,
   mapPresenceDoc,
   readPresenceMillis,
   type OnlineMember,
@@ -52,6 +53,12 @@ describe('presence helpers', () => {
     expect(mapPresenceDoc('u1', { lastSeen: 0 }, NOW)).toBeNull();
     expect(mapPresenceDoc('u1', { lastSeen: NOW - PRESENCE_WINDOW_MS - 1 }, NOW)).toBeNull();
     expect(mapPresenceDoc('u1', { lastSeen: NOW - PRESENCE_WINDOW_MS }, NOW)).not.toBeNull();
+  });
+
+  it('returns the local midnight for the active-today count', () => {
+    const lateEvening = new Date(2026, 10, 24, 23, 45, 30);
+    expect(getLocalDayStart(lateEvening)).toBe(new Date(2026, 10, 24).getTime());
+    expect(getLocalDayStart(lateEvening)).toBeLessThan(lateEvening.getTime());
   });
 
   it('drops stale members while preserving recency order', () => {

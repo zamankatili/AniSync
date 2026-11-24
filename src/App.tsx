@@ -19,6 +19,7 @@ const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Pro
 const AnimeDetail = lazy(() => import('./pages/AnimeDetail').then(m => ({ default: m.AnimeDetail })));
 const MediaDetail = lazy(() => import('./pages/MediaDetail').then(m => ({ default: m.MediaDetail })));
 const ListsPage = lazy(() => import('./pages/Lists').then(m => ({ default: m.ListsPage })));
+const OnlinePage = lazy(() => import('./pages/OnlinePage').then(m => ({ default: m.OnlinePage })));
 const AiringCalendar = lazy(() => import('./pages/AiringCalendar').then(m => ({ default: m.AiringCalendar })));
 const AnimeGridMaker = lazy(() => import('./pages/AnimeGridMaker').then(m => ({ default: m.AnimeGridMaker })));
 const MusicQuiz = lazy(() => import('./pages/MusicQuiz').then(m => ({ default: m.MusicQuiz })));
@@ -62,6 +63,7 @@ export default function App() {
               <Route path="lore" element={<FanLore />} />
               <Route path="scenes" element={<IconicScenes />} />
               <Route path="lists" element={<ListsPage />} />
+              <Route path="online" element={<OnlinePage />} />
               <Route path="anime/:id" element={<AnimeDetail />} />
               <Route path="media/:id" element={<MediaDetail />} />
               <Route path="privacy" element={<LegalPage kind="privacy" />} />

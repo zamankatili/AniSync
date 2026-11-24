@@ -1942,6 +1942,17 @@ export default {
       "online_now_loading": "Chargement des membres…",
       "online_now_unavailable": "La liste en ligne est indisponible pour le moment.",
       "online_now_guest": "Les invités n'apparaissent pas ; connecte-toi pour apparaître.",
-      "online_now_self": "Toi"
+      "online_now_self": "Toi",
+      "online_now_open": "Tout voir",
+      "online_now_today_short": "Aujourd'hui : {{count}}",
+      "online_nav": "En ligne",
+      "online_page_title": "Qui est en ligne",
+      "online_page_desc": "Membres vus dans les 5 dernières minutes et activité approximative du jour.",
+      "online_page_approx": "Données approximatives",
+      "online_page_today_label": "Actifs aujourd'hui",
+      "online_page_refresh": "Mise à jour environ chaque minute",
+      "online_page_privacy_title": "Confidentialité",
+      "online_page_privacy": "Les invités ne sont pas suivis. Seule l'heure de dernière activité des membres connectés est utilisée.",
+      "online_page_today_desc": "Le total du jour compte les membres connectés dont la dernière activité tombe le jour de ton fuseau horaire."
     }
 };

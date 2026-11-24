@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   collection,
   doc,
+  getCountFromServer,
   limit,
   onSnapshot,
   orderBy,
@@ -14,6 +15,7 @@ import {
 import { auth, db } from '../firebase';
 import {
   filterOnlineMembers,
+  getLocalDayStart,
   mapPresenceDoc,
   PRESENCE_HEARTBEAT_MS,
   PRESENCE_QUERY_LIMIT,
@@ -122,4 +124,71 @@ export function useOnlineMembers(): {
 
   const members = useMemo(() => filterOnlineMembers(rawMembers, now), [rawMembers, now]);
   return { members, loading, error };
+}
+
+/**
+ * Bugün (izleyicinin yerel gününde) en az bir kez görülen girişli üyelerin
+ * sayısı. Aggregation sorgusu kullanır; üye dokümanlarını indirmez.
+ */
+export function useActiveTodayCount(): {
+  count: number;
+  loading: boolean;
+  error: string | null;
+} {
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let inFlight = false;
+
+    const load = async () => {
+      if (cancelled || inFlight) return;
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      inFlight = true;
+      try {
+        const start = getLocalDayStart();
+        const todayQuery = query(
+          collection(db, 'users'),
+          where('lastSeen', '>=', Timestamp.fromMillis(start)),
+        );
+        const snapshot = await getCountFromServer(todayQuery);
+        if (!cancelled) {
+          setCount(snapshot.data().count);
+          setError(null);
+        }
+      } catch (listenerError) {
+        if (!cancelled) {
+          console.warn('Active-today count failed:', listenerError);
+          setError(listenerError instanceof Error ? listenerError.message : 'presence-unavailable');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+        inFlight = false;
+      }
+    };
+
+    void load();
+    const interval = window.setInterval(() => void load(), 60_000);
+    const onFocus = () => void load();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
+  return { count, loading, error };
 }

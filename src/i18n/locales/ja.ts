@@ -1942,6 +1942,17 @@ export default {
       "online_now_loading": "メンバーを読み込み中…",
       "online_now_unavailable": "オンラインリストは現在利用できません。",
       "online_now_guest": "ゲストは表示されません。サインインすると表示されます。",
-      "online_now_self": "あなた"
+      "online_now_self": "あなた",
+      "online_now_open": "すべて見る",
+      "online_now_today_short": "今日: {{count}}",
+      "online_nav": "オンライン",
+      "online_page_title": "オンラインのメンバー",
+      "online_page_desc": "過去5分以内に見られたメンバーと、今日のおおよそのアクティブ数。",
+      "online_page_approx": "おおよそのデータ",
+      "online_page_today_label": "今日のアクティブ",
+      "online_page_refresh": "約1分ごとに更新",
+      "online_page_privacy_title": "プライバシー",
+      "online_page_privacy": "ゲストは追跡されません。使用するのはサインイン済みメンバーの最終確認時刻のみです。",
+      "online_page_today_desc": "今日のアクティブ数は、あなたのローカル日付に最終確認記録があるサインイン済みメンバーを数えます。"
     }
 };

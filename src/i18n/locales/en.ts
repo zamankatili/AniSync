@@ -1942,6 +1942,17 @@ export default {
       "online_now_loading": "Loading members...",
       "online_now_unavailable": "Online list is unavailable right now.",
       "online_now_guest": "Guests are not listed; sign in to appear.",
-      "online_now_self": "You"
+      "online_now_self": "You",
+      "online_now_open": "See all",
+      "online_now_today_short": "Today: {{count}}",
+      "online_nav": "Online",
+      "online_page_title": "Who's Online",
+      "online_page_desc": "Members seen in the last 5 minutes and an approximate active count for today.",
+      "online_page_approx": "Approximate data",
+      "online_page_today_label": "Active today",
+      "online_page_refresh": "Updates about every minute",
+      "online_page_privacy_title": "Privacy",
+      "online_page_privacy": "Guests are not tracked. Only the last-seen time of signed-in members is used.",
+      "online_page_today_desc": "The active-today count includes signed-in members whose last-seen record falls on your local day."
     }
 };

@@ -71,3 +71,8 @@ export function mapPresenceDoc(
 export function filterOnlineMembers(members: OnlineMember[], now = Date.now()): OnlineMember[] {
   return members.filter((member) => member.lastSeen > 0 && now - member.lastSeen <= PRESENCE_WINDOW_MS);
 }
+
+/** İzleyicinin yerel saat diliminde gün başlangıcı (00:00) epoch ms. */
+export function getLocalDayStart(now = new Date()): number {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+}
