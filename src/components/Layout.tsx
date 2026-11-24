@@ -20,6 +20,7 @@ import { AmbienceControl } from './AmbienceControl';
 import { GlobalChat } from './GlobalChat';
 import { EngagementPopup } from './EngagementPopup';
 import { useEngagementPopup } from '../hooks/useEngagementPopup';
+import { usePresenceHeartbeat } from '../hooks/usePresence';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { useReminderStore } from '../store/useReminderStore';
 import { useThemeStore, THEME_CONFIGS } from '../store/useThemeStore';
@@ -115,6 +116,7 @@ export const Layout = () => {
   const activeConfig = THEME_CONFIGS[currentTheme] || THEME_CONFIGS.noon;
   const searchRef = useRef<HTMLDivElement>(null);
   const { payload: engagementPayload, dismiss: dismissEngagement, dismissForDay: dismissEngagementForDay } = useEngagementPopup();
+  usePresenceHeartbeat(currentUser?.uid ?? null);
 
   // Ban bilgisi `users/{uid}` dinleyicisinden gelir; yazma kuralları da aynı alanı okur.
   const banActive = Boolean(currentUser && userProfile.banUntil && userProfile.banUntil > Date.now());

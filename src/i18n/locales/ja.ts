@@ -1932,6 +1932,16 @@ export default {
       "maarif_season_label": "季節ノート",
       "maarif_no_event": "今日のキュレーション記事はありません。下に季節ノートがあります。",
       "maarif_translation_note": "翻訳は意訳であり、公式の吹き替え・字幕ではありません。",
-      "source_label": "出典"
+      "source_label": "出典",
+      "maarif_memorial_label": "追悼",
+      "maarif_memorial_year_label": "没年",
+      "online_now_title": "オンライン",
+      "online_now_desc": "おおよそ：過去{{minutes}}分以内に見られたメンバー。",
+      "online_now_count": "{{count}}人",
+      "online_now_empty": "現在表示できるメンバーはいません。最初の一人になろう！",
+      "online_now_loading": "メンバーを読み込み中…",
+      "online_now_unavailable": "オンラインリストは現在利用できません。",
+      "online_now_guest": "ゲストは表示されません。サインインすると表示されます。",
+      "online_now_self": "あなた"
     }
 };

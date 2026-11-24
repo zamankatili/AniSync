@@ -1,4 +1,5 @@
 import { ANIME_QUOTES, type AnimeQuote, type QuoteLang } from '../data/animeQuotes';
+import { OTAKU_MEMORIALS, type OtakuMemorial } from '../data/otakuMemorials';
 import { OTAKU_ON_THIS_DAY, type OtakuDayEvent } from '../data/otakuOnThisDay';
 
 export interface DailyMaarif {
@@ -9,6 +10,8 @@ export interface DailyMaarif {
   quote: AnimeQuote;
   /** O gün için küratörlü not; yoksa null ve sezon notu öne çıkar. */
   event: OtakuDayEvent | null;
+  /** Aynı güne denk gelen anma notu (vefat yıl dönümü); yoksa null. */
+  memorial: OtakuMemorial | null;
   seasonNote: Record<QuoteLang, string>;
 }
 
@@ -109,17 +112,22 @@ export function getDailyMaarif(date = new Date()): DailyMaarif {
   const quote = ANIME_QUOTES[getDayOfYear(date) % ANIME_QUOTES.length];
   const monthDay = getMonthDayKey(date);
   const event = OTAKU_ON_THIS_DAY.find((entry) => entry.date === monthDay) ?? null;
+  const memorial = OTAKU_MEMORIALS.find((entry) => entry.date === monthDay) ?? null;
   const seasonNote = SEASON_NOTES[date.getMonth() + 1] ?? SEASON_NOTES[1];
   return {
     dateKey: getLocalDateKey(date),
     monthDay,
     quote,
     event,
+    memorial,
     seasonNote,
   };
 }
 
 export function pickLocalized<T extends Record<QuoteLang, string>>(value: T, lang: string): string {
-  const key = (['tr', 'en', 'ja', 'fr'].includes(lang) ? lang : 'en') as QuoteLang;
+  // `tr-TR`, `ja-JP`, `fr_FR` gibi BCP-47 etiketlerini de temel dile indir.
+  // Aksi halde yaprak İngilizceye düşüyordu (ör. EngagementPopup localeTag).
+  const base = (lang || '').split(/[-_]/)[0].toLowerCase();
+  const key = (['tr', 'en', 'ja', 'fr'].includes(base) ? base : 'en') as QuoteLang;
   return value[key] || value.en;
 }

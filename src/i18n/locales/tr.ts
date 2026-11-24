@@ -1932,6 +1932,16 @@ export default {
       "maarif_season_label": "Sezon Notu",
       "maarif_no_event": "Bugün için küratörlü bir not yok; sezon notu aşağıda.",
       "maarif_translation_note": "Çeviriler uyarlamadır; resmi dublaj/alt yazı metni değildir.",
-      "source_label": "Kaynak"
+      "source_label": "Kaynak",
+      "maarif_memorial_label": "Anma",
+      "maarif_memorial_year_label": "Vefat yılı",
+      "online_now_title": "Şu An Online",
+      "online_now_desc": "Yaklaşık: son {{minutes}} dakikada görülen üyeler.",
+      "online_now_count": "{{count}} kişi",
+      "online_now_empty": "Şu an görünür üye yok. İlk sen ol!",
+      "online_now_loading": "Üyeler yükleniyor...",
+      "online_now_unavailable": "Online liste şu an kullanılamıyor.",
+      "online_now_guest": "Misafirler listede görünmez; giriş yaparak görünür ol.",
+      "online_now_self": "Sen"
     }
 };

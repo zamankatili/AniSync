@@ -1,0 +1,383 @@
+import type { QuoteLang } from './animeQuotes';
+
+export interface OtakuMemorial {
+  /** `MM-DD` biçiminde anma günü. */
+  date: string;
+  /** Vefat yılı — yaprakta "† 1989" olarak gösterilir. */
+  deathYear: number;
+  name: string;
+  role: Record<QuoteLang, string>;
+  text: Record<QuoteLang, string>;
+  source?: { label: string; url: string };
+}
+
+/**
+ * Anime, manga ve oyun kültürüne iz bırakmış kişiler için anma notları.
+ * Yalnızca doğrulanabilir ölüm tarihleri kullanılır; dil saygılı ve sade tutulur.
+ */
+export const OTAKU_MEMORIALS: OtakuMemorial[] = [
+  {
+    date: '01-21',
+    deathYear: 1987,
+    name: 'Ikki Kajiwara',
+    role: { tr: 'Manga yazarı', en: 'Manga writer', ja: '漫画原作者', fr: 'Scénariste de manga' },
+    text: {
+      tr: 'Ashita no Joe ve Tiger Mask gibi serilerin senaryolarında spor ve drama geleneğini şekillendirdi.',
+      en: 'He shaped the sports and drama tradition through series such as Ashita no Joe and Tiger Mask.',
+      ja: '『あしたのジョー』や『タイガーマスク』などの原作で、スポーツ漫画のドラマ性を形づくりました。',
+      fr: 'Il a façonné la tradition du manga sportif et dramatique avec des séries comme Ashita no Joe et Tiger Mask.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Ikki_Kajiwara' },
+  },
+  {
+    date: '01-28',
+    deathYear: 1998,
+    name: 'Shotaro Ishinomori',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'Cyborg 009 ve Kamen Rider ile manga ile tokusatsu arasında köprü kurdu.',
+      en: 'He bridged manga and tokusatsu with Cyborg 009 and Kamen Rider.',
+      ja: '『サイボーグ009』や『仮面ライダー』で漫画と特撮をつなぎました。',
+      fr: 'Il a relié manga et tokusatsu avec Cyborg 009 et Kamen Rider.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Shotaro_Ishinomori' },
+  },
+  {
+    date: '02-09',
+    deathYear: 1989,
+    name: 'Osamu Tezuka',
+    role: { tr: 'Manga sanatçısı, anime öncüsü', en: 'Manga artist, anime pioneer', ja: '漫画家・アニメの開拓者', fr: 'Mangaka et pionnier de l’anime' },
+    text: {
+      tr: 'Astro Boy ile modern manga ve TV anime dilinin temellerini attı.',
+      en: 'With Astro Boy, he laid foundations for modern manga and TV anime.',
+      ja: '『鉄腕アトム』で現代の漫画とテレビアニメの基礎を築きました。',
+      fr: 'Avec Astro Boy, il a posé les bases du manga et de l’anime télévisé modernes.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Osamu_Tezuka' },
+  },
+  {
+    date: '02-13',
+    deathYear: 2023,
+    name: 'Leiji Matsumoto',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'Space Battleship Yamato ve Galaxy Express 999 ile uzay operası estetiğini derinleştirdi.',
+      en: 'He deepened the space-opera aesthetic with Space Battleship Yamato and Galaxy Express 999.',
+      ja: '『宇宙戦艦ヤマト』や『銀河鉄道999』で宇宙オペラの美学を深めました。',
+      fr: 'Il a approfondi l’esthétique space opera avec Space Battleship Yamato et Galaxy Express 999.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Leiji_Matsumoto' },
+  },
+  {
+    date: '02-20',
+    deathYear: 2013,
+    name: 'Kenji Eno',
+    role: { tr: 'Oyun tasarımcısı', en: 'Game designer', ja: 'ゲームデザイナー', fr: 'Concepteur de jeux' },
+    text: {
+      tr: 'D ve Enemy Zero ile oyun anlatısında deneysel ses ve atmosfer arayışlarını öne çıkardı.',
+      en: 'With D and Enemy Zero, he foregrounded experimental sound and atmosphere in game storytelling.',
+      ja: '『D』や『エネミーゼロ』で、ゲームにおける実験的な音と空気感の表現を追求しました。',
+      fr: 'Avec D et Enemy Zero, il a mis en avant le son expérimental et l’atmosphère dans le récit de jeu.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Kenji_Eno' },
+  },
+  {
+    date: '03-01',
+    deathYear: 2024,
+    name: 'Akira Toriyama',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'Dragon Ball ve Dr. Slump ile shōnen manga ve anime kuşaklarını derinden etkiledi; Dragon Quest tasarımları da unutulmaz.',
+      en: 'Dragon Ball and Dr. Slump deeply influenced generations of shōnen manga and anime; his Dragon Quest designs remain iconic.',
+      ja: '『ドラゴンボール』や『Dr.スランプ』で少年漫画とアニメの世代に大きな影響を与え、『ドラゴンクエスト』のデザインも愛されています。',
+      fr: 'Dragon Ball et Dr. Slump ont profondément marqué des générations de shōnen ; ses designs pour Dragon Quest restent iconiques.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Akira_Toriyama' },
+  },
+  {
+    date: '03-28',
+    deathYear: 2023,
+    name: 'Ryuichi Sakamoto',
+    role: { tr: 'Besteci', en: 'Composer', ja: '作曲家', fr: 'Compositeur' },
+    text: {
+      tr: 'Royal Space Force: Wings of Honneamise başta olmak üzere anime ve film müziklerinde elektronik ile orkestrayı buluşturdu.',
+      en: 'He united electronics and orchestra in anime and film scores, including Royal Space Force: Wings of Honneamise.',
+      ja: '『王立宇宙軍 オネアミスの翼』などをはじめ、アニメや映画音楽で電子音とオーケストラを融合しました。',
+      fr: 'Il a réuni électronique et orchestre dans des musiques d’anime et de films, dont Royal Space Force: Wings of Honneamise.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Ryuichi_Sakamoto' },
+  },
+  {
+    date: '04-05',
+    deathYear: 2018,
+    name: 'Isao Takahata',
+    role: { tr: 'Yönetmen, Studio Ghibli kurucu ortağı', en: 'Director, Studio Ghibli co-founder', ja: '監督・スタジオジブリ共同創設者', fr: 'Réalisateur, cofondateur du Studio Ghibli' },
+    text: {
+      tr: 'Grave of the Fireflies ve Only Yesterday ile animasyonun yetişkin dramaya uzanabileceğini gösterdi.',
+      en: 'With Grave of the Fireflies and Only Yesterday, he showed animation could carry adult drama.',
+      ja: '『火垂るの墓』や『おもひでぽろぽろ』で、アニメが大人のドラマを描けることを示しました。',
+      fr: 'Avec Le Tombeau des lucioles et Souvenirs goutte à goutte, il a montré que l’animation peut porter un drame adulte.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Isao_Takahata' },
+  },
+  {
+    date: '04-11',
+    deathYear: 2019,
+    name: 'Monkey Punch',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'Lupin III ile kurnaz anti-kahraman ve sürekli değişen ekip dinamiklerini popüler kültüre kazandırdı.',
+      en: 'With Lupin III, he brought a sly antihero and ever-shifting crew dynamics to pop culture.',
+      ja: '『ルパン三世』で、狡猾なアンチヒーローと変わり続ける仲間の物語を大衆文化に残しました。',
+      fr: 'Avec Lupin III, il a offert à la culture pop un antihéros malin et une équipe en constante évolution.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Monkey_Punch' },
+  },
+  {
+    date: '04-12',
+    deathYear: 2020,
+    name: 'Keiji Fujiwara',
+    role: { tr: 'Ses sanatçısı', en: 'Voice actor', ja: '声優', fr: 'Comédien de doublage' },
+    text: {
+      tr: 'Hunter × Hunter (2011) ve Kingdom Hearts gibi yapımlarda karakterlere güçlü bir ses kimliği kazandırdı.',
+      en: 'He gave characters a strong vocal identity in works such as Hunter × Hunter (2011) and Kingdom Hearts.',
+      ja: '『HUNTER×HUNTER』（2011）や『キングダムハーツ』などで、キャラクターに力強い声の個性を与えました。',
+      fr: 'Il a donné une forte identité vocale à des personnages de Hunter × Hunter (2011) et Kingdom Hearts.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Keiji_Fujiwara' },
+  },
+  {
+    date: '04-17',
+    deathYear: 2019,
+    name: 'Kazuo Koike',
+    role: { tr: 'Manga yazarı', en: 'Manga writer', ja: '漫画原作者', fr: 'Scénariste de manga' },
+    text: {
+      tr: 'Lone Wolf and Cub ile sert, sinematik ve ahlaki açıdan gri bir manga anlatısı kurdu.',
+      en: 'With Lone Wolf and Cub, he built a hard-edged, cinematic and morally grey manga narrative.',
+      ja: '『子連れ狼』で、硬質で映画的な、道徳的に灰色の漫画表現を築きました。',
+      fr: 'Avec Lone Wolf and Cub, il a construit un récit de manga dur, cinématographique et moralement gris.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Kazuo_Koike' },
+  },
+  {
+    date: '05-06',
+    deathYear: 2021,
+    name: 'Kentaro Miura',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'Berserk ile karanlık fanteziye destansı bir görsel dil ve derin karakter trajedisi kazandırdı.',
+      en: 'With Berserk, he gave dark fantasy an epic visual language and deep character tragedy.',
+      ja: '『ベルセルク』で、ダークファンタジーに壮大な映像言語と深いキャラクターの悲劇をもたらしました。',
+      fr: 'Avec Berserk, il a donné à la dark fantasy un langage visuel épique et une profonde tragédie humaine.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Kentaro_Miura' },
+  },
+  {
+    date: '05-10',
+    deathYear: 2000,
+    name: 'Kaneto Shiozawa',
+    role: { tr: 'Ses sanatçısı', en: 'Voice actor', ja: '声優', fr: 'Comédien de doublage' },
+    text: {
+      tr: '1980’ler ve 90’ların anime dublajında zarif ve soğukkanlı ses tonuyla hatırlanıyor.',
+      en: 'He is remembered for his elegant, cool-toned voice in 1980s and 1990s anime dubbing.',
+      ja: '1980〜90年代のアニメ吹き替えで、端正でクールな声として記憶されています。',
+      fr: 'Il reste connu pour sa voix élégante et froide dans le doublage d’anime des années 1980-1990.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Kaneto_Shiozawa' },
+  },
+  {
+    date: '06-09',
+    deathYear: 2011,
+    name: 'Tomoko Kawakami',
+    role: { tr: 'Ses sanatçısı', en: 'Voice actress', ja: '声優', fr: 'Comédienne de doublage' },
+    text: {
+      tr: 'Revolutionary Girl Utena ve Death Note’taki Near rolleriyle geniş bir hayran kitlesi kazandı.',
+      en: 'She won a wide fanbase with roles such as Utena Tenjou in Revolutionary Girl Utena and Near in Death Note.',
+      ja: '『少女革命ウテナ』の天上ウテナや『DEATH NOTE』のニアなどで幅広いファンを獲得しました。',
+      fr: 'Elle a conquis un large public avec des rôles comme Utena Tenjou dans Revolutionary Girl Utena et Near dans Death Note.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Tomoko_Kawakami' },
+  },
+  {
+    date: '07-11',
+    deathYear: 2015,
+    name: 'Satoru Iwata',
+    role: { tr: 'Nintendo başkanı, programcı', en: 'Nintendo president, programmer', ja: '任天堂社長・プログラマー', fr: 'Président de Nintendo, programmeur' },
+    text: {
+      tr: 'Nintendo’da oyun kültürünü ve geliştirici dostu liderliği temsil eden isimlerden biri oldu.',
+      en: 'He became one of the defining figures of Nintendo’s game culture and developer-friendly leadership.',
+      ja: '任天堂のゲーム文化と、開発者に寄り添うリーダーシップを代表する一人となりました。',
+      fr: 'Il est devenu l’une des figures de la culture du jeu Nintendo et d’un leadership proche des développeurs.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Satoru_Iwata' },
+  },
+  {
+    date: '08-02',
+    deathYear: 2008,
+    name: 'Fujio Akatsuka',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'Osomatsu-kun ve Tensai Bakabon ile absürt komedinin manga ve anime dilini kurdu.',
+      en: 'With Osomatsu-kun and Tensai Bakabon, he built a language of absurd comedy in manga and anime.',
+      ja: '『おそ松くん』や『天才バカボン』で、漫画とアニメの不条理コメディの言語を築きました。',
+      fr: 'Avec Osomatsu-kun et Tensai Bakabon, il a bâti un langage de comédie absurde dans le manga et l’anime.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Fujio_Akatsuka' },
+  },
+  {
+    date: '08-13',
+    deathYear: 2018,
+    name: 'Unsho Ishizuka',
+    role: { tr: 'Ses sanatçısı', en: 'Voice actor', ja: '声優', fr: 'Comédien de doublage' },
+    text: {
+      tr: 'Pokémon’da Professor Oak ve JoJo’da Joseph Joestar gibi rollerle geniş bir yelpazede seslendirme yaptı.',
+      en: 'He voiced a wide range of roles, including Professor Oak in Pokémon and Joseph Joestar in JoJo.',
+      ja: '『ポケットモンスター』のオーキド博士や『ジョジョの奇妙な冒険』のジョセフ・ジョースターなど幅広い役を演じました。',
+      fr: 'Il a prêté sa voix à de nombreux rôles, dont le Professeur Chen dans Pokémon et Joseph Joestar dans JoJo.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Unsh%C5%8D_Ishizuka' },
+  },
+  {
+    date: '08-24',
+    deathYear: 2010,
+    name: 'Satoshi Kon',
+    role: { tr: 'Anime yönetmeni', en: 'Anime director', ja: 'アニメ監督', fr: 'Réalisateur d’anime' },
+    text: {
+      tr: 'Perfect Blue, Millennium Actress ve Paprika ile gerçeklik algısını ve sinema dilini sorguladı.',
+      en: 'With Perfect Blue, Millennium Actress and Paprika, he questioned perception and cinematic language.',
+      ja: '『パーフェクトブルー』『千年女優』『パプリカ』で、現実認識と映像言語を問い直しました。',
+      fr: 'Avec Perfect Blue, Millennium Actress et Paprika, il a interrogé la perception et le langage cinématographique.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Satoshi_Kon' },
+  },
+  {
+    date: '09-19',
+    deathYear: 2013,
+    name: 'Hiroshi Yamauchi',
+    role: { tr: 'Nintendo eski başkanı', en: 'Former Nintendo president', ja: '元任天堂社長', fr: 'Ancien président de Nintendo' },
+    text: {
+      tr: 'Nintendo’yu oyuncak ve kart şirketinden küresel oyun markasına dönüştüren dönemde liderlik etti.',
+      en: 'He led Nintendo’s transformation from a toy and card company into a global game brand.',
+      ja: '任天堂を玩具・カード会社から世界的なゲームブランドへと導いた時代のリーダーです。',
+      fr: 'Il a dirigé la transformation de Nintendo, d’une entreprise de jouets et de cartes en marque mondiale de jeux.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Hiroshi_Yamauchi' },
+  },
+  {
+    date: '09-23',
+    deathYear: 1996,
+    name: 'Fujiko F. Fujio',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'Doraemon ile nesiller boyu süren bir dostluk ve hayal gücü simgesi yarattı.',
+      en: 'With Doraemon, he created an enduring symbol of friendship and imagination for generations.',
+      ja: '『ドラえもん』で、世代を超えて愛される友情と想像力の象徴を生み出しました。',
+      fr: 'Avec Doraemon, il a créé un symbole durable d’amitié et d’imagination pour des générations.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Fujiko_F._Fujio' },
+  },
+  {
+    date: '09-24',
+    deathYear: 2021,
+    name: 'Takao Saito',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'Golgo 13 ile uzun soluklu, soğukkanlı ve sinematik bir suikastçı anlatısı kurdu.',
+      en: 'With Golgo 13, he built a long-running, cool-headed and cinematic assassin narrative.',
+      ja: '『ゴルゴ13』で、長く続くクールで映画的なスナイパー物語を築きました。',
+      fr: 'Avec Golgo 13, il a construit un récit d’assassin long, froid et cinématographique.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Takao_Saito' },
+  },
+  {
+    date: '09-30',
+    deathYear: 2021,
+    name: 'Koichi Sugiyama',
+    role: { tr: 'Besteci', en: 'Composer', ja: '作曲家', fr: 'Compositeur' },
+    text: {
+      tr: 'Dragon Quest müzikleriyle oyun müziğinin senfonik ve melodik dilini geniş kitlelere taşıdı.',
+      en: 'His Dragon Quest scores brought a symphonic, melodic language of game music to wide audiences.',
+      ja: '『ドラゴンクエスト』の音楽で、ゲーム音楽の交響的で旋律的な表現を広く届けました。',
+      fr: 'Ses musiques de Dragon Quest ont fait découvrir un langage symphonique et mélodique du jeu à un large public.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Koichi_Sugiyama' },
+  },
+  {
+    date: '10-04',
+    deathYear: 1997,
+    name: 'Gunpei Yokoi',
+    role: { tr: 'Nintendo mühendisi', en: 'Nintendo engineer', ja: '任天堂エンジニア', fr: 'Ingénieur Nintendo' },
+    text: {
+      tr: 'Game & Watch ve Game Boy ile taşınabilir oyun tasarımının temel ilkelerini belirledi.',
+      en: 'With Game & Watch and Game Boy, he defined core principles of portable game design.',
+      ja: '『ゲーム&ウオッチ』と『ゲームボーイ』で、携帯ゲームデザインの基本原則を定めました。',
+      fr: 'Avec Game & Watch et Game Boy, il a défini les principes du design de jeu portable.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Gunpei_Yokoi' },
+  },
+  {
+    date: '10-28',
+    deathYear: 2024,
+    name: 'Kazuo Umezu',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'The Drifting Classroom ve korku mangalarıyla Japon korku görsel dilini derinden etkiledi.',
+      en: 'With The Drifting Classroom and his horror manga, he deeply influenced Japanese horror visuals.',
+      ja: '『漂流教室』などのホラー漫画で、日本のホラー表現に深い影響を与えました。',
+      fr: 'Avec The Drifting Classroom et ses mangas d’horreur, il a profondément influencé l’imaginaire horrifique japonais.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Kazuo_Umezu' },
+  },
+  {
+    date: '10-30',
+    deathYear: 2010,
+    name: 'Nachi Nozawa',
+    role: { tr: 'Ses sanatçısı', en: 'Voice actor', ja: '声優', fr: 'Comédien de doublage' },
+    text: {
+      tr: 'Sayısız anime ve dublaj rolüyle Japon seslendirme sanatının unutulmaz isimlerinden biri oldu.',
+      en: 'Through countless anime and dubbing roles, he became one of Japan’s unforgettable voice artists.',
+      ja: '数多くのアニメや吹き替えで、日本声優史に残る存在となりました。',
+      fr: 'À travers d’innombrables rôles d’anime et de doublage, il est devenu une figure inoubliable de la voix au Japon.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Nachi_Nozawa' },
+  },
+  {
+    date: '11-16',
+    deathYear: 2017,
+    name: 'Hiromi Tsuru',
+    role: { tr: 'Ses sanatçısı', en: 'Voice actress', ja: '声優', fr: 'Comédienne de doublage' },
+    text: {
+      tr: 'Dragon Ball’da Bulma ve Ranma ½’de Ukyo gibi rollerle tanınan ses sanatçısı.',
+      en: 'She was known for roles such as Bulma in Dragon Ball and Ukyo in Ranma ½.',
+      ja: '『ドラゴンボール』のブルマや『らんま1/2』の右京などで知られる声優です。',
+      fr: 'Elle était connue pour des rôles comme Bulma dans Dragon Ball et Ukyo dans Ranma ½.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Hiromi_Tsuru' },
+  },
+  {
+    date: '11-30',
+    deathYear: 2015,
+    name: 'Shigeru Mizuki',
+    role: { tr: 'Manga sanatçısı', en: 'Manga artist', ja: '漫画家', fr: 'Mangaka' },
+    text: {
+      tr: 'GeGeGe no Kitaro ile Japon yōkai folklorunu modern manga ve animeye taşıdı.',
+      en: 'With GeGeGe no Kitaro, he brought Japanese yōkai folklore into modern manga and anime.',
+      ja: '『ゲゲゲの鬼太郎』で、日本の妖怪民俗を現代の漫画とアニメへ運びました。',
+      fr: 'Avec GeGeGe no Kitaro, il a fait entrer le folklore des yōkai dans le manga et l’anime modernes.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Shigeru_Mizuki' },
+  },
+  {
+    date: '12-06',
+    deathYear: 2014,
+    name: 'Ralph Baer',
+    role: { tr: 'Oyun öncüsü', en: 'Game pioneer', ja: 'ゲームの先駆者', fr: 'Pionnier du jeu vidéo' },
+    text: {
+      tr: 'İlk ev video oyun konsolu prototipleriyle oyun endüstrisinin temellerine katkıda bulundu.',
+      en: 'He contributed to the foundations of the game industry with early home video game console prototypes.',
+      ja: '初期の家庭用ゲーム機の試作を通じて、ゲーム産業の基礎に貢献しました。',
+      fr: 'Il a contribué aux fondations de l’industrie du jeu avec les premiers prototypes de consoles domestiques.',
+    },
+    source: { label: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Ralph_Baer' },
+  },
+];

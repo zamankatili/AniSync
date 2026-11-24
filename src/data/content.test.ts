@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ANIME_FACTS } from './animeFacts';
 import { ANIME_QUOTES } from './animeQuotes';
+import { OTAKU_MEMORIALS } from './otakuMemorials';
 import { OTAKU_ON_THIS_DAY } from './otakuOnThisDay';
 
 const LANGS = ['tr', 'en', 'ja', 'fr'] as const;
@@ -45,6 +46,27 @@ describe('curated content', () => {
       }
       if (event.source) {
         expect(event.source.url.startsWith('https://')).toBe(true);
+      }
+    }
+  });
+
+  it('keeps memorial entries unique, localized and dated', () => {
+    const dates = OTAKU_MEMORIALS.map((entry) => entry.date);
+    const names = OTAKU_MEMORIALS.map((entry) => entry.name);
+    expect(new Set(dates).size).toBe(dates.length);
+    expect(new Set(names).size).toBe(names.length);
+    expect(OTAKU_MEMORIALS.length).toBeGreaterThanOrEqual(28);
+    for (const entry of OTAKU_MEMORIALS) {
+      expect(entry.date).toMatch(/^\d{2}-\d{2}$/);
+      expect(entry.name.trim().length).toBeGreaterThan(0);
+      expect(entry.deathYear).toBeGreaterThanOrEqual(1900);
+      expect(entry.deathYear).toBeLessThanOrEqual(new Date().getFullYear());
+      for (const lang of LANGS) {
+        expect(entry.role[lang].trim().length).toBeGreaterThan(0);
+        expect(entry.text[lang].trim().length).toBeGreaterThan(0);
+      }
+      if (entry.source) {
+        expect(entry.source.url.startsWith('https://')).toBe(true);
       }
     }
   });

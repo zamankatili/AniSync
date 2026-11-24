@@ -33,8 +33,6 @@ export const EngagementPopup: React.FC<EngagementPopupProps> = ({ payload, onDis
   const badge = isFact && payload.fact ? getFactTag(payload.fact, currentLang) : t('engagement_daily_badge');
   const body = isFact && payload.fact ? getFactText(payload.fact, currentLang) : payload?.question || '';
   const hint = !isFact ? payload?.hint : undefined;
-  const localeTag =
-    currentLang === 'tr' ? 'tr-TR' : currentLang === 'ja' ? 'ja-JP' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
 
   const handleAction = () => {
     if (!payload) return;
@@ -65,7 +63,7 @@ export const EngagementPopup: React.FC<EngagementPopupProps> = ({ payload, onDis
             {isMaarif && payload.maarif ? (
               <MaarifLeafCard
                 maarif={payload.maarif}
-                locale={localeTag}
+                locale={currentLang}
                 t={t}
                 closeRef={closeRef}
                 onDismiss={onDismiss}

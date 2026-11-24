@@ -13,6 +13,7 @@ import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useRadioStore, RADIO_STATIONS } from '../../store/useRadioStore';
 import { levelProgress } from '../../lib/level';
 import { cn } from '../../lib/utils';
+import { OnlineNow } from '../OnlineNow';
 
 interface ChatCafeSidebarProps {
   myKarma: number;
@@ -175,6 +176,10 @@ export const ChatCafeSidebar: React.FC<ChatCafeSidebarProps> = ({ myKarma, level
         <p className="mt-1 font-mono text-[8px] uppercase tracking-widest text-neutral-500">
           {t('chat_cafe_kalfa_hint')}
         </p>
+      </section>
+
+      <section className="border-b-4 border-white/20 p-4">
+        <OnlineNow variant="compact" />
       </section>
 
       <section className="flex-1 p-4">

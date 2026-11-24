@@ -24,6 +24,7 @@ import { QuickContinueWatching } from '../components/QuickContinueWatching';
 import { TodayAiringWidget } from '../components/TodayAiringWidget';
 import { AnimeNewsFeed } from '../components/AnimeNewsFeed';
 import { CommunityPulse } from '../components/CommunityPulse';
+import { OnlineNow } from '../components/OnlineNow';
 import { MultiMediaHub } from '../components/MultiMediaHub';
 import { useWeeklyChallengeStore } from '../store/useWeeklyChallengeStore';
 import { useAppTranslation } from '../hooks/useAppTranslation';
@@ -225,6 +226,8 @@ export const Home = () => {
           </button>
         </div>
 
+        <OnlineNow variant="compact" className="lg:hidden mb-6" />
+
         <div
           role="tabpanel"
           id="home-tabpanel"
@@ -393,7 +396,9 @@ export const Home = () => {
             <Activity size={15} strokeWidth={2.5} /> {t('open_live_stream')} →
           </button>
         </div>
-        
+
+        <OnlineNow />
+
         {/* Daily Poll Widget */}
         {activePoll ? (
           <div className="bg-black p-6 border-2 border-white neo-shadow-white relative overflow-hidden group">

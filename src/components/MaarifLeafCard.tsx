@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CalendarDays, Quote, X } from 'lucide-react';
+import { BookOpen, CalendarDays, Flame, Quote, X } from 'lucide-react';
 import { pickLocalized, type DailyMaarif } from '../lib/maarif';
 
 interface MaarifLeafCardProps {
@@ -30,6 +30,8 @@ export const MaarifLeafCard: React.FC<MaarifLeafCardProps> = ({
   const weekday = date.toLocaleDateString(locale, { weekday: 'long' });
   const quoteText = pickLocalized(maarif.quote.text, locale);
   const eventText = maarif.event ? pickLocalized(maarif.event.text, locale) : '';
+  const memorialRole = maarif.memorial ? pickLocalized(maarif.memorial.role, locale) : '';
+  const memorialText = maarif.memorial ? pickLocalized(maarif.memorial.text, locale) : '';
   const seasonNote = pickLocalized(maarif.seasonNote, locale);
 
   return (
@@ -103,6 +105,38 @@ export const MaarifLeafCard: React.FC<MaarifLeafCardProps> = ({
             <p className="text-xs font-semibold leading-relaxed text-neutral-600">{t('maarif_no_event')}</p>
           )}
         </div>
+
+        {/* Anma: vefat yıl dönümü */}
+        {maarif.memorial && (
+          <div className="px-4 py-4 border-b-2 border-black/10 bg-rose-50">
+            <div className="flex items-center gap-2 mb-2">
+              <Flame size={14} strokeWidth={2.5} className="text-rose-600" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-rose-700">
+                {t('maarif_memorial_label')}
+              </span>
+              <span className="ml-auto text-[9px] font-black uppercase tracking-widest text-neutral-600">
+                {t('maarif_memorial_year_label')}: {maarif.memorial.deathYear}
+              </span>
+            </div>
+            <p className="text-sm font-black uppercase tracking-wide text-neutral-900">
+              {maarif.memorial.name}
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-600">
+              {memorialRole}
+            </p>
+            <p className="mt-2 text-xs font-bold leading-relaxed text-neutral-900">{memorialText}</p>
+            {maarif.memorial.source && (
+              <a
+                href={maarif.memorial.source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex min-h-[32px] items-center text-[10px] font-black uppercase tracking-wider text-neutral-500 underline decoration-2 underline-offset-2 hover:text-black"
+              >
+                {t('source_label')}: {maarif.memorial.source.label}
+              </a>
+            )}
+          </div>
+        )}
 
         {/* Sezon notu */}
         <div className="px-4 py-3 bg-amber-100 border-b-4 border-black">

@@ -1932,6 +1932,16 @@ export default {
       "maarif_season_label": "Season Note",
       "maarif_no_event": "No curated note for today; the season note is below.",
       "maarif_translation_note": "Translations are adaptations, not official dub or subtitle text.",
-      "source_label": "Source"
+      "source_label": "Source",
+      "maarif_memorial_label": "In Memoriam",
+      "maarif_memorial_year_label": "Died",
+      "online_now_title": "Online Now",
+      "online_now_desc": "Approximate: members seen in the last {{minutes}} minutes.",
+      "online_now_count": "{{count}} members",
+      "online_now_empty": "No visible members right now. Be the first!",
+      "online_now_loading": "Loading members...",
+      "online_now_unavailable": "Online list is unavailable right now.",
+      "online_now_guest": "Guests are not listed; sign in to appear.",
+      "online_now_self": "You"
     }
 };

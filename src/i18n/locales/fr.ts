@@ -1932,6 +1932,16 @@ export default {
       "maarif_season_label": "Note de saison",
       "maarif_no_event": "Pas de note curatée pour aujourd'hui ; la note de saison est ci-dessous.",
       "maarif_translation_note": "Les traductions sont des adaptations, pas des textes officiels de doublage ou de sous-titres.",
-      "source_label": "Source"
+      "source_label": "Source",
+      "maarif_memorial_label": "En mémoire",
+      "maarif_memorial_year_label": "Décès",
+      "online_now_title": "En ligne",
+      "online_now_desc": "Approximatif : membres vus dans les {{minutes}} dernières minutes.",
+      "online_now_count": "{{count}} membres",
+      "online_now_empty": "Aucun membre visible pour le moment. Sois le premier !",
+      "online_now_loading": "Chargement des membres…",
+      "online_now_unavailable": "La liste en ligne est indisponible pour le moment.",
+      "online_now_guest": "Les invités n'apparaissent pas ; connecte-toi pour apparaître.",
+      "online_now_self": "Toi"
     }
 };
