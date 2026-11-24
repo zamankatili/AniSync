@@ -12,6 +12,8 @@ export default {
       "seo_list_desc": "İzleme listenizi yönetin, izlenen bölüm sürelerinizi grafiklerle analiz edin ve kişisel Otaku profilinizi özelleştirin.",
       "seo_lists_title": "Özel Listeler & Koleksiyonlar – AniSync",
       "seo_lists_desc": "Topluluk üyelerinin oluşturduğu özel anime listelerini, favori koleksiyonları ve 3x3 grid kartlarını keşfedin.",
+      "seo_online_title": "Kimler Online? & Bugün Aktif Üyeler – AniSync",
+      "seo_online_desc": "Son 5 dakikada görülen girişli üyeleri ve bugün aktif olan yaklaşık üye sayısını gör. Misafirler izlenmez, veriler yaklaşıktır.",
       "seo_profile_title": "Profilim & Otaku Rank Rozetleri – AniSync",
       "seo_profile_desc": "Kişisel Karma XP seviyenizi, kazanılan başarım rozetlerini, izleme istatistiklerinizi ve favori karakter vitrininizi yönetin.",
       "seo_watchparty_title": "Watch Party Odaları (Birlikte İzle) – AniSync",

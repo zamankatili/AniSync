@@ -12,6 +12,8 @@ export default {
       "seo_list_desc": "Gère ta liste de visionnage, analyse tes durées d'épisodes regardés avec des graphiques et personnalise ton profil Otaku.",
       "seo_lists_title": "AniSync – Listes Personnalisées & Collections",
       "seo_lists_desc": "Découvre les listes d'animes personnalisées, collections préférées et cartes grille 3x3 créées par les membres de la communauté.",
+      "seo_online_title": "Qui est en ligne & membres actifs aujourd'hui – AniSync",
+      "seo_online_desc": "Vois les membres connectés aperçus dans les 5 dernières minutes et le nombre approximatif de membres actifs aujourd'hui. Les invités ne sont pas suivis ; les données sont approximatives.",
       "seo_profile_title": "AniSync – Mon Profil & Badges Rang Otaku",
       "seo_profile_desc": "Gère ton rang Karma XP personnel, tes badges de succès débloqués, tes statistiques de liste de visionnage et ta vitrine de personnages préférés.",
       "seo_watchparty_title": "AniSync – Salles Watch Party (Regarder Ensemble)",

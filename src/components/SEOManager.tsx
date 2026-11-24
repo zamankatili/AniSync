@@ -54,6 +54,10 @@ export const SEOManager: React.FC = () => {
       title: t('seo_profile_title'),
       description: t('seo_profile_desc'),
     },
+    '/online': {
+      title: t('seo_online_title'),
+      description: t('seo_online_desc'),
+    },
     '/watch-party': {
       title: t('seo_watchparty_title'),
       description: t('seo_watchparty_desc'),

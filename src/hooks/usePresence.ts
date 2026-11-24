@@ -126,6 +126,38 @@ export function useOnlineMembers(): {
   return { members, loading, error };
 }
 
+/** Aynı sayfada birden çok kart aynı sayacı isterse tek sorgu paylaşılır. */
+const ACTIVE_TODAY_TTL_MS = 30_000;
+let activeTodayCache: { dayStart: number; at: number; count: number } | null = null;
+let activeTodayInFlight: { dayStart: number; promise: Promise<number> } | null = null;
+
+async function fetchActiveTodayCount(dayStart: number): Promise<number> {
+  const cached = activeTodayCache;
+  if (cached && cached.dayStart === dayStart && Date.now() - cached.at < ACTIVE_TODAY_TTL_MS) {
+    return cached.count;
+  }
+  if (activeTodayInFlight && activeTodayInFlight.dayStart === dayStart) {
+    return activeTodayInFlight.promise;
+  }
+
+  const promise = (async () => {
+    const snapshot = await getCountFromServer(
+      query(collection(db, 'users'), where('lastSeen', '>=', Timestamp.fromMillis(dayStart))),
+    );
+    const count = snapshot.data().count;
+    activeTodayCache = { dayStart, at: Date.now(), count };
+    return count;
+  })();
+
+  const flight = { dayStart, promise };
+  activeTodayInFlight = flight;
+  try {
+    return await promise;
+  } finally {
+    if (activeTodayInFlight === flight) activeTodayInFlight = null;
+  }
+}
+
 /**
  * Bugün (izleyicinin yerel gününde) en az bir kez görülen girişli üyelerin
  * sayısı. Aggregation sorgusu kullanır; üye dokümanlarını indirmez.
@@ -146,20 +178,20 @@ export function useActiveTodayCount(): {
     const load = async () => {
       if (cancelled || inFlight) return;
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          // Çevrimdışıyken 0 göstermek yanıltıcı olur; elimizde önbellek yoksa gizle.
+          if (activeTodayCache) setCount(activeTodayCache.count);
+          else setError('presence-offline');
+          setLoading(false);
+        }
         return;
       }
 
       inFlight = true;
       try {
-        const start = getLocalDayStart();
-        const todayQuery = query(
-          collection(db, 'users'),
-          where('lastSeen', '>=', Timestamp.fromMillis(start)),
-        );
-        const snapshot = await getCountFromServer(todayQuery);
+        const nextCount = await fetchActiveTodayCount(getLocalDayStart());
         if (!cancelled) {
-          setCount(snapshot.data().count);
+          setCount(nextCount);
           setError(null);
         }
       } catch (listenerError) {

@@ -53,6 +53,7 @@ export const PUBLIC_SITEMAP_ROUTES: SitemapRoute[] = [
 export const NOINDEX_EXACT = [
   '/list',
   '/profile',
+  '/online',
   '/watch-party',
   '/grid-maker',
   '/admin',

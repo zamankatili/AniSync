@@ -5,6 +5,7 @@ Allow: /
 Disallow: /list
 Disallow: /profile$
 Allow: /profile/
+Disallow: /online
 Disallow: /watch-party
 Disallow: /grid-maker
 Disallow: /admin

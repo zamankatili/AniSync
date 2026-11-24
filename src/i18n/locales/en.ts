@@ -11,6 +11,8 @@ export default {
       "seo_list_title": "My Watchlist & Statistics – AniSync",
       "seo_list_desc": "Manage your watchlist, analyze watched episode durations with charts and personalize your Otaku profile.",
       "seo_lists_title": "Custom Lists & Collections – AniSync",
+      "seo_online_title": "Who's Online & Members Active Today – AniSync",
+      "seo_online_desc": "See signed-in members seen in the last 5 minutes and an approximate count of members active today. Guests are not tracked; data is approximate.",
       "seo_lists_desc": "Discover custom anime lists, favorite collections and 3x3 grid cards created by community members.",
       "seo_profile_title": "My Profile & Otaku Rank Badges – AniSync",
       "seo_profile_desc": "Manage your personal Karma XP level, earned achievement badges, watchlist statistics and favorite character showcase.",
