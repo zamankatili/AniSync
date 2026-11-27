@@ -53,6 +53,15 @@ interface AnsweredRecord {
 
 const formatTime = (s: number): string => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
+const shuffleOptions = <T,>(arr: readonly T[]): T[] => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
 const loadBest = (mode: DuelMode): number => {
   try {
     return Number(localStorage.getItem(BEST_SCORE_KEY[mode])) || 0;
@@ -63,9 +72,17 @@ const loadBest = (mode: DuelMode): number => {
 
 const buildRound = (mode: DuelMode): DuelItem[] => {
   if (mode === 'voice') {
-    return getRound(ROUND_ITEMS).map((clip) => ({ ...clip, kind: 'voice' as const }));
+    return getRound(ROUND_ITEMS).map((clip) => ({
+      ...clip,
+      options: shuffleOptions(clip.options) as [string, string, string, string],
+      kind: 'voice' as const,
+    }));
   }
-  return getCharacterRound(ROUND_ITEMS).map((item) => ({ ...item, kind: 'hint' as const }));
+  return getCharacterRound(ROUND_ITEMS).map((item) => ({
+    ...item,
+    options: shuffleOptions(item.options) as [string, string, string, string],
+    kind: 'hint' as const,
+  }));
 };
 
 export const VoiceDuel = () => {
@@ -312,8 +329,11 @@ export const VoiceDuel = () => {
             <div className="border-2 border-white/20 px-4 py-3"><span className="text-amber-400 block text-2xl">{accuracy}%</span>{t('voice_duel_accuracy')}</div>
             <div className="border-2 border-white/20 px-4 py-3"><span className="text-amber-400 block text-2xl">{answered.length}</span>{t('voice_duel_played')}</div>
           </div>
+          <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-neutral-400">
+            <Trophy size={12} className="inline" /> {t('voice_duel_best_score', { score: Math.max(bestScores[mode], score).toLocaleString() })}
+          </p>
           {isNewRecord && (
-            <p className="mt-5 text-emerald-400 font-black uppercase inline-flex items-center gap-2"><Sparkles size={16} /> {t('voice_duel_new_record')}</p>
+            <p className="mt-2 text-emerald-400 font-black uppercase inline-flex items-center gap-2"><Sparkles size={16} /> {t('voice_duel_new_record')}</p>
           )}
           <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
             <button
@@ -384,10 +404,16 @@ export const VoiceDuel = () => {
                 )}
                 {/* Karakter görünmesin: yalnızca ses. Cevap verilince overlay kalkar. */}
                 {iframeSrc && selected === null && (
-                  <div className="absolute inset-0 z-10 bg-black pointer-events-none flex flex-col items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setAutoplayKey((k) => k + 1)}
+                    className="absolute inset-0 z-10 bg-black flex flex-col items-center justify-center cursor-pointer"
+                    aria-label={t('voice_duel_replay')}
+                    title={t('voice_duel_replay')}
+                  >
                     <span className="font-serif font-black text-7xl text-amber-400 leading-none">?</span>
                     <span className="mt-3 font-mono text-[10px] uppercase tracking-[0.3em] text-neutral-400">{t('voice_duel_listen_hint')}</span>
-                  </div>
+                  </button>
                 )}
               </div>
             ) : (

@@ -59,12 +59,12 @@
 
 ## Sende (5 dk – 30 dk)
 - [ ] Firebase Console → Firestore → **Rules yayınla** (`firestore.rules`)
-- [ ] **Voice Duel (/voice-duel) fix list** (Sebastian'dan istek):
-  - [ ] Doğru cevap her zaman A — şıklar rastgele karışıklmalı (`shuffleList` lokasyonda, değilse klip başına shuffle)
-  - [ ] **Karakterler ekranda görünüyor** — official PV'lerdeki görselleri kapatarak yalnızca ses oynat (ör. iframe'in üstüne `position:absolute; background:#000; display:flex; align center "?"` overlay; YouTube iframe arka planda ses oynatmaya devam eder)
+- [x] **Voice Duel (/voice-duel) fix list** (kısmi, 27 Kasım):
+  - [x] Doğru cevap her zaman A — şıklar tur oluşturulurken Fisher-Yates ile karıştırılıyor (`buildRound`).
+  - [x] **Karakterler ekranda görünüyor** — cevap verilene kadar iframe üstünde tıklanabilir siyah `?` overlay var; görsel kapalı, ses YouTube iframe'den çalıyor, overlay tıkı sesi yeniden başlatır.
   - [x] Madoka Exedra dışına genişlet (kısmi): 14 yeni resmî klip eklendi (JJKファンパレ公式, ONE PIECE Official, Bandai Namco Entertainment, アニプレックス チャンネル, Crunchyroll); toplam 21 klip, 5 seri (`docs/voice-sources.md`, tüm videolar oEmbed ile doğrulandı)
   - [ ] Kalan seriler için resmî klip bulunup eklenecek: Spy × Family (OPERATION DIARY PVs), My Hero Academia (TOHO animation), Attack on Titan (Ponic Canyon / Aniplex), bir proper Naruto karakteri (ör. サスケ・ナルト veya Haruno özel PV tabanlı)
-  - [ ] Yanlışlar puan kırılmasın? (karar) + skor kalıcı localStorage’da en iyi skorla yüzleşme
+  - [x] Yanlışlar puan kırmıyor (karar: ceza yok). En iyi skor mod başına localStorage'da kalıcı; sonuç ekranında karşılaştırma gösteriliyor.
 - [ ] **AIRecommendationsSection mock verisi**: "%98 uyumlu" `AI_FALLBACK_REASONS` gösteriliyor; Vercel'de `GEMINI_API_KEY` boş olduğu için gerçek API yerine user'lar mock görüyor.
   - [ ] Seçim: (a) dürüstçe "AI kapalı" kartı + mock gizlenir, ya da (b) ücretsiz alternatif (Groq/OpenRouter — llama) ile gerçek API'ye geçilir; (c) AI Studio ücretsiz proje (kart yok) ile aynı kod → Vercel env'e koyulması.
 - [ ] **Gemini bakiyesi**: verilen key (`AQ.Ab8…`) 402 `RESOURCE_EXHAUSTED` — prepaid credits bitmiş. Yeni key ya da bakiye yüklemesi gerekli; şu haliyle `/api/moderate-room` "flagged → moderatör kuyruğuna" düşer (calismasi: tam zamanında tercih düşer, ama yüksek XP'li kullanıcılar yine de kendi odasını açar çünkü `canDirectCreate && moderation.ok` olur — bu durumda AI olmadan `ok: false` dönecektir, **oda isteği** ve **moderatör onayına** düşer).
